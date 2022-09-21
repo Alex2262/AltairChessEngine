@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <algorithm>
 #include "position.h"
 #include "useful.h"
 #include "move.h"
@@ -289,6 +290,7 @@ bool Position::make_move(MOVE_TYPE move) {
 
     // Legal move checking.
     // Return False if we are in check after our move or castling isn't legal.
+
     if (is_attacked(king_positions[side])) return false;
     if (castled_pos[0]) {
         // If we have castled, then we already checked to_square with is_attacked since the king moved.
@@ -353,12 +355,12 @@ void Position::undo_move(MOVE_TYPE move, SQUARE_TYPE current_ep,
     else if (move_type == MOVE_TYPE_CASTLE) {
 
         SQUARE_TYPE castled_pos[2];
-        if (origin_square < target_square) {
-            castled_pos[0] = static_cast<SQUARE_TYPE>(origin_square - 1);
-            castled_pos[1] = static_cast<SQUARE_TYPE>(target_square - 2);
+        if (target_square < origin_square) {
+            castled_pos[0] = origin_square - 1;
+            castled_pos[1] = target_square - 2;
         } else {
-            castled_pos[0] = static_cast<SQUARE_TYPE>(origin_square + 1);
-            castled_pos[1] = static_cast<SQUARE_TYPE>(target_square + 2);
+            castled_pos[0] = origin_square + 1;
+            castled_pos[1] = target_square + 1;
         }
 
         board[castled_pos[0]] = EMPTY;

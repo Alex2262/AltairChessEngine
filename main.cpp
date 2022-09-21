@@ -8,10 +8,12 @@ int main() {
 
     Position main_position;
 
-    main_position.set_fen(START_FEN);
+    main_position.set_fen(KIWIPETE_FEN);
     main_position.print_board();
 
-    for (int i = 1; i <= 6; i++) {
+    std::cout << "hi" << std::endl;
+
+    for (int i = 1; i <= 5; i++) {
         Perft_Result_Type res = {0};
 
         auto start_time = std::chrono::high_resolution_clock::now();

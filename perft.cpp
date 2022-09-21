@@ -26,7 +26,6 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth) {
     for (MOVE_TYPE move : moves) {
 
         // std::cout << "move: " << get_uci_from_move(move) << std::endl;
-        // position.print_board();
 
         bool attempt = position.make_move(move);
 
