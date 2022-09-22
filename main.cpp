@@ -27,7 +27,7 @@ int main() {
                   << " castles " << res.castle_amount << " promotions " << res.promotion_amount << std::endl;
     }*/
 
-    uci_perft(main_position, 6);
+    uci_perft(main_position, 5);
 
 
     return 0;

@@ -61,7 +61,7 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth) {
 
 
 
-int fast_perft(Position& position, PLY_TYPE depth) {
+long long fast_perft(Position& position, PLY_TYPE depth) {
 
     if (depth == 0) {
         return 1;
@@ -73,7 +73,7 @@ int fast_perft(Position& position, PLY_TYPE depth) {
     uint16_t current_castle_ability_bits = position.castle_ability_bits;
     uint64_t current_hash_key = position.hash_key;
 
-    int amt = 0;
+    long long amt = 0;
 
     for (MOVE_TYPE move : moves) {
 
@@ -97,7 +97,7 @@ int fast_perft(Position& position, PLY_TYPE depth) {
 }
 
 
-int uci_perft(Position& position, PLY_TYPE depth) {
+long long uci_perft(Position& position, PLY_TYPE depth) {
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -111,7 +111,7 @@ int uci_perft(Position& position, PLY_TYPE depth) {
     uint16_t current_castle_ability_bits = position.castle_ability_bits;
     uint64_t current_hash_key = position.hash_key;
 
-    int total_amt = 0;
+    long long total_amt = 0;
 
     for (MOVE_TYPE move : moves) {
 
@@ -124,7 +124,7 @@ int uci_perft(Position& position, PLY_TYPE depth) {
 
         position.side ^= 1;
 
-        int amt = fast_perft(position, depth - 1);
+        long long amt = fast_perft(position, depth - 1);
         total_amt += amt;
 
         position.side ^= 1;
@@ -138,7 +138,7 @@ int uci_perft(Position& position, PLY_TYPE depth) {
     auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
     std::cout << "Nodes searched: " << total_amt << std::endl;
-    std::cout << "Perft speed: " << double(total_amt) / ms_int.count() / 1000 << "kn/s" << std::endl;
+    std::cout << "Perft speed: " << double(total_amt) / ms_int.count() / 1000 << "mn/s" << std::endl;
     std::cout << "Total time: " << ms_int.count();
 
     return total_amt;

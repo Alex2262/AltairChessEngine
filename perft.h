@@ -19,9 +19,9 @@ struct Perft_Result_Type {
 
 void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth);
 
-int fast_perft(Position& position, PLY_TYPE depth);
+long long fast_perft(Position& position, PLY_TYPE depth);
 
-int uci_perft(Position& position, PLY_TYPE depth);
+long long uci_perft(Position& position, PLY_TYPE depth);
 
 
 #endif //ANTARESCHESSENGINE_PERFT_H
