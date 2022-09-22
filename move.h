@@ -2,6 +2,16 @@
 #ifndef ANTARESCHESSENGINE_MOVE_H
 #define ANTARESCHESSENGINE_MOVE_H
 
+#include <string>
+#include "constants.h"
+#include "position.h"
+
+std::string get_uci_from_move(MOVE_TYPE move);
+
+MOVE_TYPE get_move_from_uci(Position& position, std::string uci);
+
+
+
 inline MOVE_TYPE encode_move(SQUARE_TYPE origin_square, SQUARE_TYPE target_square,
                              PIECE_TYPE selected, PIECE_TYPE occupied,
                              uint16_t move_type, PIECE_TYPE promotion_piece, bool is_capture) {
