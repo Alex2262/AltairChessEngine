@@ -8,6 +8,7 @@
 #define KIWIPETE_FEN "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - "
 
 #define SCORE_INF           1000000
+#define MATE_SCORE          100000
 #define NO_MOVE             0
 
 #define WHITE_PAWN          0

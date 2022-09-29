@@ -29,11 +29,15 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     if (engine.stopped) return 0;
 
+    bool in_check = position.is_attacked(position.king_positions[position.side]);
+
     std::vector<MOVE_TYPE> moves = get_pseudo_legal_moves(position);
 
     SQUARE_TYPE current_ep_square = position.ep_square;
     uint16_t current_castle_ability_bits = position.castle_ability_bits;
     uint64_t current_hash_key = position.hash_key;
+
+    int legal_moves = 0;
 
     SCORE_TYPE best_score = -SCORE_INF;
     // MOVE_TYPE best_move = NO_MOVE;
@@ -74,7 +78,12 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 }
             }
         }
+
+        legal_moves++;
     }
+
+    if (legal_moves == 0 && !in_check) return 0;
+    else if (legal_moves == 0) return -MATE_SCORE - depth;
 
     return best_score;
 }
