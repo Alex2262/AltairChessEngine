@@ -6,7 +6,7 @@
 #include "move.h"
 
 
-std::vector<MOVE_TYPE> get_pseudo_legal_moves(Position& position) {
+std::vector<MOVE_TYPE> get_pseudo_legal_moves(const Position& position) {
 
     std::vector<MOVE_TYPE> moves;
 

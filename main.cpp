@@ -3,10 +3,12 @@
 #include <chrono>
 #include "position.h"
 #include "perft.h"
+#include "search.h"
 
 int main() {
 
     Position main_position;
+    Engine main_engine;
 
     main_position.set_fen(START_FEN);
     main_position.print_board();
@@ -27,7 +29,9 @@ int main() {
                   << " castles " << res.castle_amount << " promotions " << res.promotion_amount << std::endl;
     }*/
 
-    uci_perft(main_position, 5);
+    //uci_perft(main_position, 6);
+
+    iterative_search(main_engine, main_position);
 
 
     return 0;

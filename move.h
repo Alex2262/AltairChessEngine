@@ -8,7 +8,7 @@
 
 std::string get_uci_from_move(MOVE_TYPE move);
 
-MOVE_TYPE get_move_from_uci(Position& position, std::string uci);
+MOVE_TYPE get_move_from_uci(const Position& position, std::string uci);
 
 
 
