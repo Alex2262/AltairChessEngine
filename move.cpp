@@ -1,4 +1,5 @@
 
+#include <iostream>
 #include "move.h"
 
 std::string get_uci_from_move(MOVE_TYPE move) {
@@ -41,8 +42,8 @@ MOVE_TYPE get_move_from_uci(const Position& position, std::string uci) {
 
     }
 
-    SQUARE_TYPE origin_square = STANDARD_TO_MAILBOX[8 - (uci[1] - '0') * 8 + (uci[0] - 'a')];
-    SQUARE_TYPE target_square = STANDARD_TO_MAILBOX[8 - (uci[3] - '0') * 8 + (uci[2] - 'a')];
+    SQUARE_TYPE origin_square = STANDARD_TO_MAILBOX[(8 - (uci[1] - '0')) * 8 + (uci[0] - 'a')];
+    SQUARE_TYPE target_square = STANDARD_TO_MAILBOX[(8 - (uci[3] - '0')) * 8 + (uci[2] - 'a')];
 
     PIECE_TYPE selected = position.board[origin_square];
     PIECE_TYPE occupied = position.board[target_square];

@@ -29,9 +29,10 @@ public:
 
     bool stopped = true;
 
+    void reset();
+
 
 };
-
 
 SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth);
 

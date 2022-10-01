@@ -4,10 +4,11 @@
 #include "position.h"
 #include "perft.h"
 #include "search.h"
+#include "uci.h"
 
 int main() {
 
-    Position main_position;
+    /* Position main_position;
     Engine main_engine;
 
     main_position.set_fen(START_FEN);
@@ -15,7 +16,7 @@ int main() {
 
     std::cout << "hi" << std::endl;
 
-    /*for (int i = 1; i <= 5; i++) {
+    for (int i = 1; i <= 5; i++) {
         Perft_Result_Type res = {0};
 
         auto start_time = std::chrono::high_resolution_clock::now();
@@ -31,7 +32,12 @@ int main() {
 
     //uci_perft(main_position, 6);
 
-    iterative_search(main_engine, main_position);
+    //iterative_search(main_engine, main_position);
+
+    UCI main_uci;
+
+    main_uci.initialize_uci();
+    main_uci.uci_loop();
 
 
     return 0;

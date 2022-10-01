@@ -2,12 +2,26 @@
 // Created by Alex Tian on 9/22/2022.
 //
 
+#include <chrono>
+#include <iostream>
+#include <cstring>
 #include "search.h"
 #include "move_generator.h"
 #include "evaluation.h"
 #include "move.h"
-#include <chrono>
-#include <iostream>
+#include "useful.h"
+
+
+
+void Engine::reset() {
+    node_count = 0;
+
+    current_search_depth = 0;
+    search_ply = 0;
+
+    std::memset(pv_length, 0, sizeof(pv_length));
+    std::memset(pv_table, 0, sizeof(pv_table));
+}
 
 
 SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth) {
@@ -19,7 +33,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         return evaluate(position);
     }
 
-    if (engine.node_count % 1000 == 0) {
+    if (engine.current_search_depth >= engine.min_depth && engine.node_count % 1000 == 0) {
         auto time = std::chrono::high_resolution_clock::now();
         long current_time = std::chrono::duration_cast<std::chrono::milliseconds>
                 (std::chrono::time_point_cast<std::chrono::milliseconds>(time).time_since_epoch()).count();
@@ -91,6 +105,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 void iterative_search(Engine& engine, Position& position) {
 
     engine.stopped = false;
+    engine.reset();
+
     auto start_time = std::chrono::high_resolution_clock::now();
     engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
@@ -123,6 +139,7 @@ void iterative_search(Engine& engine, Position& position) {
             best_pv = pv_line;
             best_score = return_eval;
         }
+        else running_depth--;
 
         auto end_time = std::chrono::high_resolution_clock::now();
 
@@ -135,7 +152,10 @@ void iterative_search(Engine& engine, Position& position) {
                   << " nodes " << engine.node_count << " nps " << int(engine.node_count / (elapsed_time / 1000))
                   << " pv " << best_pv << std::endl;
 
-        if (engine.stopped) break;
+        if (engine.stopped) {
+            std::cout << "bestmove " << split(best_pv, ' ')[0] << std::endl;
+            break;
+        }
 
         running_depth++;
     }
