@@ -17,11 +17,11 @@ struct Perft_Result_Type {
 
 };
 
-void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth);
+void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY_TYPE ply);
 
-long long fast_perft(Position& position, PLY_TYPE depth);
+long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply);
 
-long long uci_perft(Position& position, PLY_TYPE depth);
+long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply);
 
 
 #endif //ANTARESCHESSENGINE_PERFT_H

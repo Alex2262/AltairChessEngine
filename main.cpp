@@ -8,7 +8,7 @@
 
 int main() {
 
-    /* Position main_position;
+    /*Position main_position;
     Engine main_engine;
 
     main_position.set_fen(START_FEN);
@@ -30,7 +30,7 @@ int main() {
                   << " castles " << res.castle_amount << " promotions " << res.promotion_amount << std::endl;
     }*/
 
-    //uci_perft(main_position, 6);
+    //uci_perft(main_position, 6, 0);
 
     //iterative_search(main_engine, main_position);
 

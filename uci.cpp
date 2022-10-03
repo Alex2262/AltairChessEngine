@@ -25,12 +25,11 @@ void UCI::parse_position() {
         std::string fen;
         for (int i = 2; i < 8; i++) {
             fen += tokens[i];
+            fen += " ";
         }
 
         position.set_fen(fen);
         next_idx = 8;
-
-        position.print_board();
     }
 
     else return;

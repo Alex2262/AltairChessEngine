@@ -5,10 +5,9 @@
 #include <iostream>
 #include <chrono>
 #include "perft.h"
-#include "move_generator.h"
 #include "move.h"
 
-void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth) {
+void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY_TYPE ply) {
 
     // position.print_board();
     // std::cout << depth << std::endl;
@@ -18,13 +17,13 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth) {
         return;
     }
 
-    std::vector<MOVE_TYPE> moves = get_pseudo_legal_moves(position);
+    position.get_pseudo_legal_moves(ply);
 
     SQUARE_TYPE current_ep_square = position.ep_square;
     uint16_t current_castle_ability_bits = position.castle_ability_bits;
     uint64_t current_hash_key = position.hash_key;
 
-    for (MOVE_TYPE move : moves) {
+    for (MOVE_TYPE move : position.moves[ply]) {
 
         // std::cout << "move: " << get_uci_from_move(move) << std::endl;
 
@@ -51,7 +50,7 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth) {
             if (position.is_attacked(position.king_positions[position.side])) res.check_amount += 1;
         }
 
-        debug_perft(position, res, depth - 1);
+        debug_perft(position, res, depth - 1, ply + 1);
 
         position.side ^= 1;
         position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key);
@@ -61,13 +60,13 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth) {
 
 
 
-long long fast_perft(Position& position, PLY_TYPE depth) {
+long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 
     if (depth == 0) {
         return 1;
     }
 
-    std::vector<MOVE_TYPE> moves = get_pseudo_legal_moves(position);
+    position.get_pseudo_legal_moves(ply);
 
     SQUARE_TYPE current_ep_square = position.ep_square;
     uint16_t current_castle_ability_bits = position.castle_ability_bits;
@@ -75,7 +74,7 @@ long long fast_perft(Position& position, PLY_TYPE depth) {
 
     long long amt = 0;
 
-    for (MOVE_TYPE move : moves) {
+    for (MOVE_TYPE move : position.moves[ply]) {
 
         bool attempt = position.make_move(move);
 
@@ -86,7 +85,7 @@ long long fast_perft(Position& position, PLY_TYPE depth) {
 
         position.side ^= 1;
 
-        amt += fast_perft(position, depth - 1);
+        amt += fast_perft(position, depth - 1, ply + 1);
 
         position.side ^= 1;
         position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key);
@@ -97,7 +96,7 @@ long long fast_perft(Position& position, PLY_TYPE depth) {
 }
 
 
-long long uci_perft(Position& position, PLY_TYPE depth) {
+long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -105,7 +104,7 @@ long long uci_perft(Position& position, PLY_TYPE depth) {
         return 1;
     }
 
-    std::vector<MOVE_TYPE> moves = get_pseudo_legal_moves(position);
+    position.get_pseudo_legal_moves(ply);
 
     SQUARE_TYPE current_ep_square = position.ep_square;
     uint16_t current_castle_ability_bits = position.castle_ability_bits;
@@ -113,7 +112,7 @@ long long uci_perft(Position& position, PLY_TYPE depth) {
 
     long long total_amt = 0;
 
-    for (MOVE_TYPE move : moves) {
+    for (MOVE_TYPE move : position.moves[ply]) {
 
         bool attempt = position.make_move(move);
 
@@ -124,7 +123,7 @@ long long uci_perft(Position& position, PLY_TYPE depth) {
 
         position.side ^= 1;
 
-        long long amt = fast_perft(position, depth - 1);
+        long long amt = fast_perft(position, depth - 1, ply + 1);
         total_amt += amt;
 
         position.side ^= 1;

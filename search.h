@@ -14,7 +14,7 @@ public:
     Engine() = default;
 
     PLY_TYPE max_depth = 64;
-    PLY_TYPE max_q_depth = 256;
+    PLY_TYPE max_q_depth = 64;
     PLY_TYPE min_depth = 2;
     PLY_TYPE current_search_depth = 0;
     PLY_TYPE search_ply = 0;
@@ -27,6 +27,8 @@ public:
     MOVE_TYPE pv_table[64][64] = {0};
     unsigned short pv_length[65] = {0};
 
+    MOVE_TYPE killer_moves[2][64] = {0};  // # of killer moves (2) | max_depth (64)
+
     bool stopped = true;
 
     void reset();
@@ -34,6 +36,7 @@ public:
 
 };
 
+SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth);
 SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth);
 
 void iterative_search(Engine& engine, Position& position);

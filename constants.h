@@ -11,6 +11,8 @@
 #define MATE_SCORE          100000
 #define NO_MOVE             0
 
+#define TOTAL_MAX_DEPTH     256
+
 #define WHITE_PAWN          0
 #define WHITE_KNIGHT        1
 #define WHITE_BISHOP        2
