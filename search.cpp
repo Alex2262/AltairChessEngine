@@ -22,6 +22,7 @@ void Engine::reset() {
     std::memset(pv_table, 0, sizeof(pv_table));
 
     std::memset(killer_moves, 0, sizeof(killer_moves));
+    std::memset(history_moves, 0, sizeof(history_moves));
 }
 
 
@@ -157,6 +158,10 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             if (return_eval > alpha) {
                 alpha = return_eval;
 
+                if (!get_is_capture(move)) {
+                    engine.history_moves[get_selected(move)][MAILBOX_TO_STANDARD[get_target_square(move)]]
+                                         += depth * depth;
+                }
                 if (return_eval >= beta) {
 
                     if (!get_is_capture(move)) {
@@ -399,5 +404,138 @@ Score of AntaresCpp0.05 vs Vice1.0: 11 - 65 - 24 [0.230]
 ...      White vs Black: 38 - 38 - 24  [0.500] 100
 Elo difference: -209.9 +/- 67.2, LOS: 0.0 %, DrawRatio: 24.0 %
 100 of 100 games finished.
+
+Rank Name               Elo    +/-  Games   Wins Losses  Draws  Points  WWins  WLoss. WDraws  BWins BLoss. BDraws
+   1 AntaresCpp0.05     230     49    145     90      6     49   114.5     47      3     22     43      3     27
+   2 AntaresCpp0.04     191     46    144     80      8     56   108.0     44      3     25     36      5     31
+   3 AntaresCpp0.03     134     47    144     72     19     53    98.5     34      7     31     38     12     22
+   4 AntaresCpp0.02     -34     46    145     41     55     49    65.5     20     29     24     21     26     25
+   5 AntaresCpp0.01     -46     45    145     35     54     56    63.0     19     23     31     16     31     25
+   6 AntaresCpp0.00    -201     54    144     16     91     37    34.5      8     47     17      8     44     20
+   7 AntaresOld0.2     -299     68    145     11    112     22    22.0      7     54     11      4     58     11
+
+510 of 2100 games finished.
+
+
+
+History move heuristic move ordering
+
+info depth 1 score cp 58 time 0 nodes 21 nps 210000 pv b1c3
+info depth 2 score cp 0 time 1 nodes 157 nps 157000 pv b1c3 b8c6
+info depth 3 score cp 58 time 2 nodes 962 nps 481000 pv b1c3 b8c6 g1f3
+info depth 4 score cp 0 time 4 nodes 2824 nps 706000 pv b1c3 b8c6 g1f3 g8f6
+info depth 5 score cp 41 time 7 nodes 17829 nps 2547000 pv b1c3 b8c6 g1f3 g8f6 d2d4
+info depth 6 score cp 0 time 41 nodes 116572 nps 2843219 pv g1f3 b8c6 b1c3 g8f6 d2d4 d7d5
+info depth 7 score cp 30 time 198 nodes 728612 nps 3679858 pv e2e4 b8c6 g1f3 g8f6 e4e5 f6e4 b1c3
+info depth 8 score cp 0 time 1426 nodes 4080248 nps 2861323 pv d2d4 g8f6 g1f3 d7d5 b1c3 b8c6 e2e3 e7e6
+info depth 9 score cp 27 time 8181 nodes 27702922 nps 3386251 pv e2e4 e7e5 f1c4 g8f6 b1c3 b8c6 g1e2 f8b4 e1g1
+info depth 9 score cp 27 time 44999 nodes 134451211 nps 2987871 pv e2e4 e7e5 f1c4 g8f6 b1c3 b8c6 g1e2 f8b4 e1g1
+bestmove e2e4
+
+Score of AntaresCpp0.06 vs AntaresCpp0.05: 39 - 25 - 136 [0.535]
+...      AntaresCpp0.06 playing White: 20 - 13 - 67  [0.535] 100
+...      AntaresCpp0.06 playing Black: 19 - 12 - 69  [0.535] 100
+...      White vs Black: 32 - 32 - 136  [0.500] 200
+Elo difference: 24.4 +/- 27.2, LOS: 96.0 %, DrawRatio: 68.0 %
+200 of 200 games finished.
+
+ Score of AntaresCpp0.06 vs Vice1.0: 15 - 89 - 46 [0.253]
+...      AntaresCpp0.06 playing White: 9 - 48 - 18  [0.240] 75
+...      AntaresCpp0.06 playing Black: 6 - 41 - 28  [0.267] 75
+...      White vs Black: 50 - 54 - 46  [0.487] 150
+Elo difference: -187.8 +/- 49.8, LOS: 0.0 %, DrawRatio: 30.7 %
+150 of 150 games finished.
+
+Score of AntaresCpp0.06 vs Lynx0.11.0: 70 - 9 - 21 [0.805]
+...      AntaresCpp0.06 playing White: 35 - 4 - 11  [0.810] 50
+...      AntaresCpp0.06 playing Black: 35 - 5 - 10  [0.800] 50
+...      White vs Black: 40 - 39 - 21  [0.505] 100
+Elo difference: 246.3 +/- 72.1, LOS: 100.0 %, DrawRatio: 21.0 %
+100 of 100 games finished.
+
+
+
+LYNX VS SEB_LAGUE_ENGINE COMPARISON
+
+Score of Lynx0.11.0 vs SebLagueEngine: 41 - 48 - 11 [0.465]
+...      Lynx0.11.0 playing White: 18 - 26 - 6  [0.420] 50
+...      Lynx0.11.0 playing Black: 23 - 22 - 5  [0.510] 50
+...      White vs Black: 40 - 49 - 11  [0.455] 100
+Elo difference: -24.4 +/- 65.0, LOS: 22.9 %, DrawRatio: 11.0 %
+100 of 100 games finished.
+
+
+
+Use AntaresPy pre-pawn-eval PSTs and Piece values.
+
+info depth 1 score cp 50 time 0 nodes 21 nps 210000 pv b1c3
+info depth 2 score cp 0 time 1 nodes 176 nps 176000 pv b1c3 b8c6
+info depth 3 score cp 50 time 3 nodes 1066 nps 355333 pv b1c3 b8c6 g1f3
+info depth 4 score cp 0 time 5 nodes 2842 nps 568400 pv b1c3 b8c6 g1f3 g8f6
+info depth 5 score cp 43 time 11 nodes 18121 nps 1647363 pv b1c3 b8c6 g1f3 g8f6 e2e4
+info depth 6 score cp 0 time 39 nodes 93584 nps 2399589 pv d2d4 d7d5 g1f3 g8f6 b1c3 b8c6
+info depth 7 score cp 30 time 163 nodes 611075 nps 3748926 pv b1c3 b8c6 g1f3 d7d5 d2d4 g8f6 e2e3
+info depth 8 score cp 10 time 1426 nodes 4114859 nps 2885595 pv d2d4 d7d5 g1f3 g8f6 b1c3 b8c6 f3e5 c6e5
+info depth 9 score cp 30 time 10265 nodes 33032398 nps 3217963 pv e2e4 b8c6 d2d4 d7d5 e4d5 d8d5 g1e2 g8f6 b1c3
+info depth 9 score cp 30 time 45000 nodes 124993571 nps 2777634 pv e2e4 b8c6 d2d4 d7d5 e4d5 d8d5 g1e2 g8f6 b1c3
+bestmove e2e4
+
+Score of AntaresCpp0.07 vs AntaresCpp0.06: 47 - 37 - 116 [0.525]
+...      AntaresCpp0.07 playing White: 25 - 17 - 58  [0.540] 100
+...      AntaresCpp0.07 playing Black: 22 - 20 - 58  [0.510] 100
+...      White vs Black: 45 - 39 - 116  [0.515] 200
+Elo difference: 17.4 +/- 31.2, LOS: 86.2 %, DrawRatio: 58.0 %
+200 of 200 games finished.
+
+Score of AntaresCpp0.07 vs Vice1.0: 20 - 100 - 80 [0.300]
+...      AntaresCpp0.07 playing White: 10 - 55 - 35  [0.275] 100
+...      AntaresCpp0.07 playing Black: 10 - 45 - 45  [0.325] 100
+...      White vs Black: 55 - 65 - 80  [0.475] 200
+Elo difference: -147.2 +/- 38.2, LOS: 0.0 %, DrawRatio: 40.0 %
+200 of 200 games finished.
+
+Score of AntaresCpp0.07 vs Lynx0.11.0: 62 - 9 - 29 [0.765]
+...      AntaresCpp0.07 playing White: 30 - 8 - 12  [0.720] 50
+...      AntaresCpp0.07 playing Black: 32 - 1 - 17  [0.810] 50
+...      White vs Black: 31 - 40 - 29  [0.455] 100
+Elo difference: 205.0 +/- 63.2, LOS: 100.0 %, DrawRatio: 29.0 %
+100 of 100 games finished.
+
+
+
+Tapered Eval
+
+info depth 1 score cp 50 time 0 nodes 21 nps 210000 pv b1c3
+info depth 2 score cp 0 time 1 nodes 176 nps 176000 pv b1c3 b8c6
+info depth 3 score cp 50 time 3 nodes 1066 nps 355333 pv b1c3 b8c6 g1f3
+info depth 4 score cp 0 time 5 nodes 2840 nps 568000 pv b1c3 b8c6 g1f3 g8f6
+info depth 5 score cp 43 time 9 nodes 18066 nps 2007333 pv b1c3 b8c6 g1f3 g8f6 e2e4
+info depth 6 score cp 0 time 38 nodes 94817 nps 2495184 pv d2d4 d7d5 g1f3 g8f6 b1c3 b8c6
+info depth 7 score cp 30 time 177 nodes 618287 nps 3493146 pv b1c3 b8c6 g1f3 d7d5 d2d4 g8f6 e2e3
+info depth 8 score cp 10 time 1426 nodes 4177444 nps 2929483 pv d2d4 d7d5 b1c3 b8c6 g1f3 g8f6 f3e5 c6e5
+info depth 9 score cp 30 time 10263 nodes 33158085 nps 3230837 pv e2e4 b8c6 d2d4 d7d5 e4d5 d8d5 g1e2 g8f6 b1c3
+info depth 9 score cp 30 time 44999 nodes 122472481 nps 2721671 pv e2e4 b8c6 d2d4 d7d5 e4d5 d8d5 g1e2 g8f6 b1c3
+bestmove e2e4
+
+Score of AntaresCpp0.08 vs AntaresCpp0.07: 46 - 30 - 124 [0.540]
+...      AntaresCpp0.08 playing White: 25 - 11 - 64  [0.570] 100
+...      AntaresCpp0.08 playing Black: 21 - 19 - 60  [0.510] 100
+...      White vs Black: 44 - 32 - 124  [0.530] 200
+Elo difference: 27.9 +/- 29.7, LOS: 96.7 %, DrawRatio: 62.0 %
+200 of 200 games finished.
+
+Score of AntaresCpp0.08 vs Vice1.0: 13 - 44 - 43 [0.345]
+...      AntaresCpp0.08 playing White: 10 - 20 - 20  [0.400] 50
+...      AntaresCpp0.08 playing Black: 3 - 24 - 23  [0.290] 50
+...      White vs Black: 34 - 23 - 43  [0.555] 100
+Elo difference: -111.4 +/- 52.3, LOS: 0.0 %, DrawRatio: 43.0 %
+100 of 100 games finished.
+
+Score of AntaresCpp0.08 vs Lynx0.11.0: 109 - 11 - 30 [0.827]
+...      AntaresCpp0.08 playing White: 52 - 7 - 16  [0.800] 75
+...      AntaresCpp0.08 playing Black: 57 - 4 - 14  [0.853] 75
+...      White vs Black: 56 - 64 - 30  [0.473] 150
+Elo difference: 271.4 +/- 60.5, LOS: 100.0 %, DrawRatio: 20.0 %
+150 of 150 games finished.
 */
 

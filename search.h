@@ -28,6 +28,7 @@ public:
     unsigned short pv_length[65] = {0};
 
     MOVE_TYPE killer_moves[2][64] = {0};  // # of killer moves (2) | max_depth (64)
+    SCORE_TYPE history_moves[12][64] = {0}; // # piece | square
 
     bool stopped = true;
 
