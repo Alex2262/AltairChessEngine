@@ -26,6 +26,26 @@ void Engine::reset() {
 }
 
 
+void Engine::new_game() {
+    reset();
+    std::memset(repetition_table, 0, sizeof(repetition_table));
+    game_ply = 0;
+    fifty_move = 0;
+}
+
+
+bool Engine::detect_repetition() {
+
+    for (int i = game_ply - 2; i >= game_ply - fifty_move; i--) {
+        if (repetition_table[i] == repetition_table[game_ply]) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth) {
 
     // position.print_board();
@@ -53,6 +73,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     SQUARE_TYPE current_ep_square = position.ep_square;
     uint16_t current_castle_ability_bits = position.castle_ability_bits;
     uint64_t current_hash_key = position.hash_key;
+    PLY_TYPE current_fifty_move = engine.fifty_move;
 
     SCORE_TYPE best_score = static_eval;
     // MOVE_TYPE best_move = NO_MOVE;
@@ -62,10 +83,11 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         sort_next_move(position.moves[engine.search_ply], position.move_scores[engine.search_ply], move_index);
         MOVE_TYPE move = position.moves[engine.search_ply][move_index];
 
-        bool attempt = position.make_move(move);
+        bool attempt = position.make_move(move, engine.fifty_move);
 
         if (!attempt) {
-            position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key);
+            position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key,
+                               engine.fifty_move, current_fifty_move);
             continue;
         }
 
@@ -77,7 +99,8 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         position.side ^= 1;
         engine.search_ply--;
 
-        position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key);
+        position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key,
+                           engine.fifty_move, current_fifty_move);
 
         if (return_eval > best_score) {
             best_score = return_eval;
@@ -101,6 +124,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     engine.pv_length[engine.search_ply] = engine.search_ply;
 
+    if (engine.search_ply && (engine.fifty_move >= 100 || engine.detect_repetition())) return 0;
+
     if (depth == 0) {
         return qsearch(engine, position, alpha, beta, engine.max_q_depth);
     }
@@ -115,6 +140,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     SQUARE_TYPE current_ep_square = position.ep_square;
     uint16_t current_castle_ability_bits = position.castle_ability_bits;
     uint64_t current_hash_key = position.hash_key;
+    PLY_TYPE current_fifty_move = engine.fifty_move;
 
     bool in_check = position.is_attacked(position.king_positions[position.side]);
     if (in_check) depth++;
@@ -129,21 +155,28 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         sort_next_move(position.moves[engine.search_ply], position.move_scores[engine.search_ply], move_index);
         MOVE_TYPE move = position.moves[engine.search_ply][move_index];
 
-        bool attempt = position.make_move(move);
+        bool attempt = position.make_move(move, engine.fifty_move);
 
         if (!attempt) {
-            position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key);
+            position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key,
+                               engine.fifty_move, current_fifty_move);
             continue;
         }
 
         engine.search_ply++;
+        engine.fifty_move++;
+        engine.game_ply++;
+        engine.repetition_table[engine.game_ply] = position.hash_key;
         position.side ^= 1;
 
         SCORE_TYPE return_eval = -negamax(engine, position, -beta, -alpha, depth - 1);
 
         position.side ^= 1;
+        engine.game_ply--;
         engine.search_ply--;
-        position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key);
+
+        position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key,
+                           engine.fifty_move, current_fifty_move);
 
         if (return_eval > best_score) {
             best_score = return_eval;
@@ -218,7 +251,7 @@ void iterative_search(Engine& engine, Position& position) {
 
         position.side = original_side;
 
-        if (not engine.stopped) {
+        if (!engine.stopped) {
             best_pv = pv_line;
             best_score = return_eval;
         }
@@ -235,7 +268,7 @@ void iterative_search(Engine& engine, Position& position) {
                   << " nodes " << engine.node_count << " nps " << int(engine.node_count / (elapsed_time / 1000))
                   << " pv " << best_pv << std::endl;
 
-        if (engine.stopped) {
+        if (engine.stopped || running_depth == engine.max_depth - 1) {
             std::cout << "bestmove " << split(best_pv, ' ')[0] << std::endl;
             break;
         }
@@ -537,5 +570,57 @@ Score of AntaresCpp0.08 vs Lynx0.11.0: 109 - 11 - 30 [0.827]
 ...      White vs Black: 56 - 64 - 30  [0.473] 150
 Elo difference: 271.4 +/- 60.5, LOS: 100.0 %, DrawRatio: 20.0 %
 150 of 150 games finished.
+
+
+
+Tempo Bonus
+info depth 1 score cp 42 time 0 nodes 21 nps 210000 pv b1c3
+info depth 2 score cp 8 time 1 nodes 176 nps 176000 pv b1c3 b8c6
+info depth 3 score cp 42 time 3 nodes 1066 nps 355333 pv b1c3 b8c6 g1f3
+info depth 4 score cp 8 time 5 nodes 2832 nps 566400 pv b1c3 b8c6 g1f3 g8f6
+info depth 5 score cp 35 time 11 nodes 18020 nps 1638181 pv b1c3 b8c6 g1f3 g8f6 e2e4
+info depth 6 score cp 8 time 43 nodes 92183 nps 2143790 pv d2d4 d7d5 g1f3 g8f6 b1c3 b8c6
+info depth 7 score cp 22 time 182 nodes 612118 nps 3363285 pv b1c3 b8c6 g1f3 d7d5 d2d4 g8f6 e2e3
+info depth 8 score cp 9 time 1562 nodes 4230256 nps 2708230 pv e2e4 b8c6 g1f3 g8f6 e4e5 f6g4 d2d4 d7d5
+info depth 9 score cp 22 time 8776 nodes 28278151 nps 3222214 pv e2e4 b8c6 d2d4 d7d5 e4d5 d8d5 g1e2 g8f6 b1c3
+info depth 9 score cp 22 time 45001 nodes 131461161 nps 2921294 pv e2e4 b8c6 d2d4 d7d5 e4d5 d8d5 g1e2 g8f6 b1c3
+bestmove e2e4
+
+Score of AntaresCpp0.09 vs AntaresCpp0.08: 34 - 32 - 134 [0.505]
+...      AntaresCpp0.09 playing White: 16 - 14 - 70  [0.510] 100
+...      AntaresCpp0.09 playing Black: 18 - 18 - 64  [0.500] 100
+...      White vs Black: 34 - 32 - 134  [0.505] 200
+Elo difference: 3.5 +/- 27.7, LOS: 59.7 %, DrawRatio: 67.0 %
+200 of 200 games finished.
+
+
+
+Zobrist Hashing, Repetition Detection, 50 move rule.
+info depth 1 score cp 42 time 0 nodes 21 nps 210000 pv b1c3
+info depth 2 score cp 8 time 1 nodes 176 nps 176000 pv b1c3 b8c6
+info depth 3 score cp 42 time 3 nodes 1066 nps 355333 pv b1c3 b8c6 g1f3
+info depth 4 score cp 8 time 5 nodes 2832 nps 566400 pv b1c3 b8c6 g1f3 g8f6
+info depth 5 score cp 35 time 9 nodes 18020 nps 2002222 pv b1c3 b8c6 g1f3 g8f6 e2e4
+info depth 6 score cp 8 time 38 nodes 92182 nps 2425842 pv d2d4 d7d5 g1f3 g8f6 b1c3 b8c6
+info depth 7 score cp 22 time 173 nodes 612115 nps 3538236 pv b1c3 b8c6 g1f3 d7d5 d2d4 g8f6 e2e3
+info depth 8 score cp 9 time 1462 nodes 4230163 nps 2893408 pv e2e4 b8c6 g1f3 g8f6 e4e5 f6g4 d2d4 d7d5
+info depth 9 score cp 22 time 9126 nodes 27840921 nps 3050725 pv e2e4 b8c6 d2d4 d7d5 e4d5 d8d5 g1e2 g8f6 b1c3
+info depth 9 score cp 22 time 45144 nodes 116811778 nps 2587537 pv e2e4 b8c6 d2d4 d7d5 e4d5 d8d5 g1e2 g8f6 b1c3
+bestmove e2e4
+
+Score of AntaresCpp0.10 vs AntaresCpp0.09: 61 - 32 - 107 [0.573]
+...      AntaresCpp0.10 playing White: 29 - 18 - 53  [0.555] 100
+...      AntaresCpp0.10 playing Black: 32 - 14 - 54  [0.590] 100
+...      White vs Black: 43 - 50 - 107  [0.482] 200
+Elo difference: 50.7 +/- 32.8, LOS: 99.9 %, DrawRatio: 53.5 %
+200 of 200 games finished.
+
+Score of AntaresCpp0.10 vs Vice1.0: 56 - 74 - 20 [0.440]
+...      AntaresCpp0.10 playing White: 28 - 34 - 13  [0.460] 75
+...      AntaresCpp0.10 playing Black: 28 - 40 - 7  [0.420] 75
+...      White vs Black: 68 - 62 - 20  [0.520] 150
+Elo difference: -41.9 +/- 52.4, LOS: 5.7 %, DrawRatio: 13.3 %
+150 of 150 games finished.
+
 */
 

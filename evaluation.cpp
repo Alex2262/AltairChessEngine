@@ -59,7 +59,7 @@ SCORE_TYPE evaluate(const Position& position) {
                               (24 - game_phase) * black_end_scores) / 24;
 
 
-    return (position.side * -2 + 1) * (white_score - black_score);
+    return (position.side * -2 + 1) * (white_score - black_score) + TEMPO_BONUS;
 }
 
 

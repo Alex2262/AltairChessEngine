@@ -48,6 +48,9 @@
 #define G8      27
 
 
+#define TEMPO_BONUS     8
+
+
 typedef uint16_t PIECE_TYPE;
 typedef int16_t SQUARE_TYPE;
 typedef int16_t PLY_TYPE;
@@ -56,7 +59,7 @@ typedef uint32_t MOVE_TYPE;
 typedef uint64_t HASH_TYPE;
 
 
-const SQUARE_TYPE STANDARD_TO_MAILBOX[64] = {
+constexpr SQUARE_TYPE STANDARD_TO_MAILBOX[64] = {
         21, 22, 23, 24, 25, 26, 27, 28,
         31, 32, 33, 34, 35, 36, 37, 38,
         41, 42, 43, 44, 45, 46, 47, 48,
@@ -67,7 +70,7 @@ const SQUARE_TYPE STANDARD_TO_MAILBOX[64] = {
         91, 92, 93, 94, 95, 96, 97, 98
 };
 
-const SQUARE_TYPE MAILBOX_TO_STANDARD[120] = {
+constexpr SQUARE_TYPE MAILBOX_TO_STANDARD[120] = {
         99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
         99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
         99,  0,  1,  2,  3,  4,  5,  6,  7, 99,
@@ -82,7 +85,7 @@ const SQUARE_TYPE MAILBOX_TO_STANDARD[120] = {
         99, 99, 99, 99, 99, 99, 99, 99, 99, 99
 };
 
-const short WHITE_INCREMENTS[6][8] = {
+constexpr short WHITE_INCREMENTS[6][8] = {
         {-11,  -9, -10, -20,   0,   0,   0,   0},
         {-21, -19,  -8,  12,  21,  19,   8, -12},
         {-11,  11,   9,  -9,   0,   0,   0,   0},
@@ -91,7 +94,7 @@ const short WHITE_INCREMENTS[6][8] = {
         {-11, -10,  -9,   1,  11,  10,   9,  -1}
 };
 
-const short BLACK_INCREMENTS[6][8] = {
+constexpr short BLACK_INCREMENTS[6][8] = {
         { 11,   9,  10,  20,   0,   0,   0,   0},
         {-21, -19,  -8,  12,  21,  19,   8, -12},
         {-11,  11,   9,  -9,   0,   0,   0,   0},
@@ -100,7 +103,7 @@ const short BLACK_INCREMENTS[6][8] = {
         {-11, -10,  -9,   1,  11,  10,   9,  -1}
 };
 
-const short WHITE_ATK_INCREMENTS[6][8] = {
+constexpr short WHITE_ATK_INCREMENTS[6][8] = {
         {-11,  -9,   0,   0,   0,   0,   0,   0},
         {-21, -19,  -8,  12,  21,  19,   8, -12},
         {-11,  11,   9,  -9,   0,   0,   0,   0},
@@ -109,7 +112,7 @@ const short WHITE_ATK_INCREMENTS[6][8] = {
         {-11, -10,  -9,   1,  11,  10,   9,  -1}
 };
 
-const short BLACK_ATK_INCREMENTS[6][8] = {
+constexpr short BLACK_ATK_INCREMENTS[6][8] = {
         { 11,   9,   0,   0,   0,   0,   0,   0},
         {-21, -19,  -8,  12,  21,  19,   8, -12},
         {-11,  11,   9,  -9,   0,   0,   0,   0},
@@ -118,12 +121,12 @@ const short BLACK_ATK_INCREMENTS[6][8] = {
         {-11, -10,  -9,   1,  11,  10,   9,  -1}
 };
 
-const char PIECE_MATCHER[12] = {'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k'};
-const int GAME_PHASE_SCORES[6] = {0, 1, 1, 2, 4, 0};
-const SCORE_TYPE PIECE_VALUES_MID[6] = {82, 326, 352, 486, 982, 0};
-const SCORE_TYPE PIECE_VALUES_END[6] = {96, 292, 304, 512, 936, 0};
+constexpr char PIECE_MATCHER[12] = {'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k'};
+constexpr int GAME_PHASE_SCORES[6] = {0, 1, 1, 2, 4, 0};
+constexpr SCORE_TYPE PIECE_VALUES_MID[6] = {82, 326, 352, 486, 982, 0};
+constexpr SCORE_TYPE PIECE_VALUES_END[6] = {96, 292, 304, 512, 936, 0};
 
-const SCORE_TYPE PST_MID[6][64] = {
+constexpr SCORE_TYPE PST_MID[6][64] = {
         {    0,   0,   0,   0,   0,   0,   0,   0,
             80,  90,  95,  95,  95,  90,  80,  70,
             10,  15,  20,  30,  40,  20,  15,   5,
@@ -175,7 +178,7 @@ const SCORE_TYPE PST_MID[6][64] = {
 };
 
 
-const SCORE_TYPE PST_END[6][64] = {
+constexpr SCORE_TYPE PST_END[6][64] = {
         {    0,   0,   0,   0,   0,   0,   0,   0,
            145, 135, 130, 125, 125, 125, 135, 145,
             95,  90,  80,  70,  60,  60,  80,  85,

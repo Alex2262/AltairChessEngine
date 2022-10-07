@@ -6,6 +6,7 @@
 #include "uci.h"
 #include "useful.h"
 #include "move.h"
+#include "evaluation.h"
 
 void UCI::initialize_uci() {
     position.set_fen(START_FEN);
@@ -15,6 +16,7 @@ void UCI::parse_position() {
     if (tokens.size() < 2) return;
 
     int next_idx;
+    engine.game_ply = 0;
 
     if (tokens[1] == "startpos") {
         position.set_fen(START_FEN);
@@ -37,15 +39,21 @@ void UCI::parse_position() {
     if (tokens.size() <= next_idx || tokens[next_idx] != "moves") return;
 
     for (int i = next_idx + 1; i < tokens.size(); i++) {
-        std::cout << tokens[i] << std::endl;
+        // std::cout << tokens[i] << std::endl;
         MOVE_TYPE move = get_move_from_uci(position, tokens[i]);
-        std::cout << move << " " << get_uci_from_move(move) << std::endl;
-        position.make_move(move);
+        // std::cout << move << " " << get_uci_from_move(move) << std::endl;
+        position.make_move(move, engine.fifty_move);
+
+        engine.game_ply++;
+        engine.fifty_move++;
+        engine.repetition_table[engine.game_ply] = position.hash_key;
 
         position.side ^= 1;
     }
 
-    position.print_board();
+    // std::cout << engine.detect_repetition() << std::endl;
+
+    // position.print_board();
 }
 
 
@@ -112,7 +120,7 @@ void UCI::uci_loop() {
 
         else if (msg == "ucinewgame") {
             position.set_fen(START_FEN);
-            engine.reset();
+            engine.new_game();
         }
 
         else if (tokens[0] == "position") {

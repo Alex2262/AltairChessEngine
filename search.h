@@ -18,6 +18,8 @@ public:
     PLY_TYPE min_depth = 2;
     PLY_TYPE current_search_depth = 0;
     PLY_TYPE search_ply = 0;
+    PLY_TYPE game_ply = 0;
+    PLY_TYPE fifty_move = 0;
 
     long max_time = 60000;
     long start_time = 0;
@@ -30,9 +32,13 @@ public:
     MOVE_TYPE killer_moves[2][64] = {0};  // # of killer moves (2) | max_depth (64)
     SCORE_TYPE history_moves[12][64] = {0}; // # piece | square
 
+    HASH_TYPE repetition_table[TOTAL_MAX_DEPTH+250] = {0};
+
     bool stopped = true;
 
     void reset();
+    void new_game();
+    bool detect_repetition();
 
 
 };

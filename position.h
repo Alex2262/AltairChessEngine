@@ -17,12 +17,14 @@ public:
     Position() = default;
 
     void clear_movelist();
+    void compute_hash_key();
     void set_fen(const std::string& fen_string);
     void print_board();
     bool is_attacked(SQUARE_TYPE pos);
-    bool make_move(MOVE_TYPE move);
+    bool make_move(MOVE_TYPE move, PLY_TYPE& fifty_move);
     void undo_move(MOVE_TYPE move, SQUARE_TYPE current_ep,
-                   uint16_t current_castle_ability_bits, uint64_t current_hash_key);
+                   uint16_t current_castle_ability_bits, uint64_t current_hash_key, PLY_TYPE& fifty_move,
+                   PLY_TYPE current_fifty_move);
 
     void get_pseudo_legal_moves(PLY_TYPE ply);
     void get_pseudo_legal_captures(PLY_TYPE ply);

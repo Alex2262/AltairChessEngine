@@ -7,6 +7,7 @@
 #include "position.h"
 #include "useful.h"
 #include "move.h"
+#include "zobrist.h"
 
 
 void Position::clear_movelist() {
@@ -15,6 +16,28 @@ void Position::clear_movelist() {
         move_scores[i].clear();
     }
 }
+
+
+void Position::compute_hash_key() {
+    hash_key = 0;
+
+    for (int i = 0; i < 64; i++) {
+        SQUARE_TYPE pos = STANDARD_TO_MAILBOX[i];
+
+        if (board[pos] >= EMPTY) continue;
+
+        hash_key ^= ZobristHashKeys.piece_hash_keys[board[pos]][i];
+    }
+
+    if (ep_square) hash_key ^= ZobristHashKeys.ep_hash_keys[MAILBOX_TO_STANDARD[ep_square]];
+
+    hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+
+    if (side) hash_key ^= ZobristHashKeys.side_hash_key;
+
+    // std::cout << hash_key << std::endl;
+}
+
 
 void Position::set_fen(const std::string& fen_string) {
 
@@ -87,6 +110,8 @@ void Position::set_fen(const std::string& fen_string) {
 
     side = 0;
     if (fen_tokens[1] == "b") side = 1;
+
+    compute_hash_key();
 }
 
 
@@ -112,7 +137,7 @@ void Position::print_board() {
 
     std::cout << new_board << std::endl << std::endl;
     std::cout << "side: " << side << " ep: " << ep_square << " castle: " << castle_ability_bits
-              << "\nhash: " << hash_key << " king pos: " << king_positions[0] << " "
+              << " hash: " << hash_key << "\nking pos: " << king_positions[0] << " "
               << king_positions[1] << " white pieces: " << white_pieces.size()
               << " black pieces: " << black_pieces.size()
               << std::endl << std::endl;
@@ -222,28 +247,36 @@ bool Position::is_attacked(SQUARE_TYPE pos) {
 }
 
 
-bool Position::make_move(MOVE_TYPE move) {
+bool Position::make_move(MOVE_TYPE move, PLY_TYPE& fifty_move) {
 
     // Get move info
     SQUARE_TYPE castled_pos[2] = {0};
     SQUARE_TYPE origin_square = get_origin_square(move);
     SQUARE_TYPE target_square = get_target_square(move);
     PIECE_TYPE selected = get_selected(move);
+    PIECE_TYPE occupied = get_occupied(move);
     uint16_t move_type = get_move_type(move);
 
     if (move_type == MOVE_TYPE_NORMAL) {
+        // Set the piece to the target square and hash it
         board[target_square] = selected;
+        hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[target_square]];
     }
 
     else if (move_type == MOVE_TYPE_EP) {
+        // Set the piece to the target square and hash it
         board[target_square] = selected;
+        hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[target_square]];
 
+        // Remove the en passant captured pawn and hash it
         if (!side) {
             board[target_square + 10] = EMPTY;
+            hash_key ^= ZobristHashKeys.piece_hash_keys[BLACK_PAWN][MAILBOX_TO_STANDARD[target_square + 10]];
             auto it = std::find(std::begin(black_pieces), std::end(black_pieces), target_square + 10);
             black_pieces.erase(it);
         } else {
             board[target_square - 10] = EMPTY;
+            hash_key ^= ZobristHashKeys.piece_hash_keys[WHITE_PAWN][MAILBOX_TO_STANDARD[target_square - 10]];
             auto it = std::find(std::begin(white_pieces), std::end(white_pieces), target_square - 10);
             white_pieces.erase(it);
         }
@@ -251,26 +284,35 @@ bool Position::make_move(MOVE_TYPE move) {
 
     else if (move_type == MOVE_TYPE_CASTLE) {
         board[target_square] = selected;
+        hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[target_square]];
 
+        // Queen side castling
         if (target_square < origin_square) {
             castled_pos[0] = target_square - 2;
             castled_pos[1] = target_square + 1;
-        } else {
+        }
+        // King side castling
+        else {
             castled_pos[0] = target_square + 1;
             castled_pos[1] = target_square - 1;
         }
 
+        // Move the rook and hash it
         if (!side) {
             board[castled_pos[1]] = WHITE_ROOK;
+            hash_key ^= ZobristHashKeys.piece_hash_keys[WHITE_ROOK][MAILBOX_TO_STANDARD[castled_pos[1]]];
 
             board[castled_pos[0]] = EMPTY;
+            hash_key ^= ZobristHashKeys.piece_hash_keys[WHITE_ROOK][MAILBOX_TO_STANDARD[castled_pos[0]]];
 
             auto it = std::find(std::begin(white_pieces), std::end(white_pieces), castled_pos[0]);
             white_pieces[it - std::begin(white_pieces)] = castled_pos[1];
         } else {
             board[castled_pos[1]] = BLACK_ROOK;
+            hash_key ^= ZobristHashKeys.piece_hash_keys[BLACK_ROOK][MAILBOX_TO_STANDARD[castled_pos[1]]];
 
             board[castled_pos[0]] = EMPTY;
+            hash_key ^= ZobristHashKeys.piece_hash_keys[BLACK_ROOK][MAILBOX_TO_STANDARD[castled_pos[0]]];
 
             auto it = std::find(std::begin(black_pieces), std::end(black_pieces), castled_pos[0]);
             black_pieces[it - std::begin(black_pieces)] = castled_pos[1];
@@ -280,16 +322,20 @@ bool Position::make_move(MOVE_TYPE move) {
     else if (move_type == MOVE_TYPE_PROMOTION) {
         PIECE_TYPE promotion_piece = get_promotion_piece(move);
         board[target_square] = promotion_piece;
+        hash_key ^= ZobristHashKeys.piece_hash_keys[promotion_piece][MAILBOX_TO_STANDARD[target_square]];
     }
 
     // Remove the piece from the source square
     board[origin_square] = EMPTY;
+    hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[origin_square]];
 
     if (!side) {
         auto it_1 = std::find(std::begin(white_pieces), std::end(white_pieces), origin_square);
         white_pieces[it_1 - std::begin(white_pieces)] = target_square;
 
         if (get_is_capture(move)) {
+            fifty_move = 0;
+            hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][MAILBOX_TO_STANDARD[target_square]];
             auto it_2 = std::find(std::begin(black_pieces), std::end(black_pieces), target_square);
             black_pieces.erase(it_2);
         }
@@ -298,6 +344,8 @@ bool Position::make_move(MOVE_TYPE move) {
         black_pieces[it_1 - std::begin(black_pieces)] = target_square;
 
         if (get_is_capture(move)) {
+            fifty_move = 0;
+            hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][MAILBOX_TO_STANDARD[target_square]];
             auto it_2 = std::find(std::begin(white_pieces), std::end(white_pieces), target_square);
             white_pieces.erase(it_2);
         }
@@ -318,16 +366,23 @@ bool Position::make_move(MOVE_TYPE move) {
     }
 
     // --- The move is legal ---
+    if (selected == WHITE_PAWN || selected == BLACK_PAWN) fifty_move = 0;
 
     // Double Pawn Push
     if ((selected == WHITE_PAWN || selected == BLACK_PAWN) && abs(target_square - origin_square) == 20) {
-        // if (ep_square)
+        // Reset the hashed ep square if it exists
+        if (ep_square)  hash_key ^= ZobristHashKeys.ep_hash_keys[MAILBOX_TO_STANDARD[ep_square]];
+
         ep_square = target_square - side * 20 + 10;  // 119 - (target_square + 10)
+        hash_key ^= ZobristHashKeys.ep_hash_keys[MAILBOX_TO_STANDARD[ep_square]];  // Set new EP hash
     } else {
         if (ep_square) {
+            hash_key ^= ZobristHashKeys.ep_hash_keys[MAILBOX_TO_STANDARD[ep_square]];
             ep_square = 0;
         }
     }
+
+    hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
     if (selected == WHITE_KING) {
         castle_ability_bits &= ~(1 << 0);
@@ -343,15 +398,22 @@ bool Position::make_move(MOVE_TYPE move) {
     if (target_square == H8) castle_ability_bits &= ~(1 << 2);
     else if (target_square == A8) castle_ability_bits &= ~(1 << 3);
 
+    hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+
+    // Switch hash side (actual side is switched in loop)
+    hash_key ^= ZobristHashKeys.side_hash_key;
+
     return true;
 
 }
 
 
 void Position::undo_move(MOVE_TYPE move, SQUARE_TYPE current_ep,
-               uint16_t current_castle_ability_bits, uint64_t current_hash_key) {
+               uint16_t current_castle_ability_bits, HASH_TYPE current_hash_key, PLY_TYPE& fifty_move,
+               PLY_TYPE current_fifty_move) {
 
     hash_key = current_hash_key;
+    fifty_move = current_fifty_move;
 
     // Get move info
     SQUARE_TYPE origin_square = get_origin_square(move);
@@ -447,7 +509,7 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                     if (piece == WHITE_PAWN && increment == -20 && (pos < 81 || occupied != EMPTY)) break;
 
                     // En Passant
-                    if (piece == WHITE_PAWN && (increment == -11 || increment == -9) and occupied == EMPTY) {
+                    if (piece == WHITE_PAWN && (increment == -11 || increment == -9) && occupied == EMPTY) {
                         if (new_pos == ep_square) {
                             moves[ply].push_back(encode_move(pos, new_pos,
                                                                  WHITE_PAWN, EMPTY,
@@ -521,7 +583,7 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                     if (piece == BLACK_PAWN && increment == 20 && (pos > 38 || occupied != EMPTY)) break;
 
                     // En Passant
-                    if (piece == BLACK_PAWN && (increment == 11 || increment == 9) and occupied == EMPTY) {
+                    if (piece == BLACK_PAWN && (increment == 11 || increment == 9) && occupied == EMPTY) {
                         if (new_pos == ep_square) {
                             moves[ply].push_back(encode_move(pos, new_pos,
                                                                  BLACK_PAWN, EMPTY,
