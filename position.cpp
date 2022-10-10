@@ -247,7 +247,7 @@ bool Position::is_attacked(SQUARE_TYPE pos) {
 }
 
 
-bool Position::make_move(MOVE_TYPE move, PLY_TYPE& fifty_move) {
+bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_move) {
 
     // Get move info
     SQUARE_TYPE castled_pos[2] = {0};
@@ -256,6 +256,12 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE& fifty_move) {
     PIECE_TYPE selected = get_selected(move);
     PIECE_TYPE occupied = get_occupied(move);
     uint16_t move_type = get_move_type(move);
+
+    undo_move_stack[search_ply].move = move;
+    undo_move_stack[search_ply].current_ep_square = ep_square;
+    undo_move_stack[search_ply].current_fifty_move = fifty_move;
+    undo_move_stack[search_ply].current_hash_key = hash_key;
+    undo_move_stack[search_ply].current_castle_ability_bits = castle_ability_bits;
 
     if (move_type == MOVE_TYPE_NORMAL) {
         // Set the piece to the target square and hash it
@@ -408,12 +414,10 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE& fifty_move) {
 }
 
 
-void Position::undo_move(MOVE_TYPE move, SQUARE_TYPE current_ep,
-               uint16_t current_castle_ability_bits, HASH_TYPE current_hash_key, PLY_TYPE& fifty_move,
-               PLY_TYPE current_fifty_move) {
+void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_move) {
 
-    hash_key = current_hash_key;
-    fifty_move = current_fifty_move;
+    hash_key = undo_move_stack[search_ply].current_hash_key;
+    fifty_move = undo_move_stack[search_ply].current_fifty_move;
 
     // Get move info
     SQUARE_TYPE origin_square = get_origin_square(move);
@@ -475,13 +479,40 @@ void Position::undo_move(MOVE_TYPE move, SQUARE_TYPE current_ep,
     board[target_square] = occupied;
     board[origin_square] = selected;
 
-    if (ep_square != current_ep) ep_square = current_ep;
+    if (ep_square != undo_move_stack[search_ply].current_ep_square)
+        ep_square = undo_move_stack[search_ply].current_ep_square;
 
-    castle_ability_bits = current_castle_ability_bits;
+    castle_ability_bits = undo_move_stack[search_ply].current_castle_ability_bits;
 
     if (selected == WHITE_KING || selected == BLACK_KING) king_positions[side] = origin_square;
 }
 
+
+void Position::make_null_move(PLY_TYPE search_ply, PLY_TYPE& fifty_move) {
+
+    undo_move_stack[search_ply].move = NO_MOVE;
+    undo_move_stack[search_ply].current_ep_square = ep_square;
+    undo_move_stack[search_ply].current_fifty_move = fifty_move;
+    undo_move_stack[search_ply].current_hash_key = hash_key;
+
+    side ^= 1;
+    hash_key ^= ZobristHashKeys.side_hash_key;
+
+    if (ep_square) {
+        hash_key ^= ZobristHashKeys.ep_hash_keys[MAILBOX_TO_STANDARD[ep_square]];
+        ep_square = 0;
+    }
+
+    fifty_move = 0;
+}
+
+
+void Position::undo_null_move(PLY_TYPE search_ply, PLY_TYPE& fifty_move) {
+    side ^= 1;
+    ep_square = undo_move_stack[search_ply].current_ep_square;
+    hash_key = undo_move_stack[search_ply].current_hash_key;
+    fifty_move = undo_move_stack[search_ply].current_fifty_move;
+}
 
 
 void Position::get_pseudo_legal_moves(PLY_TYPE ply) {

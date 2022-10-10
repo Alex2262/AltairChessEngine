@@ -7,11 +7,19 @@
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - "
 #define KIWIPETE_FEN "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - "
 
+#define NO_HASH_ENTRY       2000000
+#define USE_HASH_MOVE       3000000
 #define SCORE_INF           1000000
+#define NO_EVALUATION       500000
 #define MATE_SCORE          100000
 #define NO_MOVE             0
 
 #define TOTAL_MAX_DEPTH     256
+#define MAX_TT_SIZE         2666666
+
+#define HASH_FLAG_EXACT     0
+#define HASH_FLAG_ALPHA     1
+#define HASH_FLAG_BETA      2
 
 #define WHITE_PAWN          0
 #define WHITE_KNIGHT        1
@@ -47,8 +55,19 @@
 #define G1      97
 #define G8      27
 
+#define TEMPO_BONUS                 8
 
-#define TEMPO_BONUS     8
+#define DOUBLED_PAWN_PENALTY_MID    14
+#define DOUBLED_PAWN_PENALTY_END    20  // Doubled pawns are very easy to target in the endgame.
+
+#define ISOLATED_PAWN_PENALTY_MID   18
+#define ISOLATED_PAWN_PENALTY_END   12  // The person playing with the isolated pawns should trade off pieces.
+
+#define BACKWARDS_PAWN_PENALTY_MID  6
+#define BACKWARDS_PAWN_PENALTY_END  8  // Give this a higher base score, but we reduce multipliers in eval_pawn()
+
+#define PASSED_PAWN_BONUS_MID       9
+#define PASSED_PAWN_BONUS_END       16  // These are multiplied by the pawn's row.
 
 
 typedef uint16_t PIECE_TYPE;
@@ -128,10 +147,10 @@ constexpr SCORE_TYPE PIECE_VALUES_END[6] = {96, 292, 304, 512, 936, 0};
 
 constexpr SCORE_TYPE PST_MID[6][64] = {
         {    0,   0,   0,   0,   0,   0,   0,   0,
-            80,  90,  95,  95,  95,  90,  80,  70,
-            10,  15,  20,  30,  40,  20,  15,   5,
-             3,   4,  15,  20,  25,  15,   4,  -2,
-             0,   0,  10,  15,  17,   5,   0,  -4,
+            45,  50,  55,  60,  65,  55,  30,  10,
+            35,  40,  45,  50,  60,  45,  40,  25,
+             8,   9,  20,  25,  30,  20,   7,   3,
+             0,   0,  13,  18,  20,   8,   3,  -4,
              2,   2,   0,   2,   4,  -5,  12,   0,
              0,   0,   3, -26, -26,  12,  15,  -5,
              0,   0,   0,   0,   0,   0,   0,   0},
@@ -180,9 +199,9 @@ constexpr SCORE_TYPE PST_MID[6][64] = {
 
 constexpr SCORE_TYPE PST_END[6][64] = {
         {    0,   0,   0,   0,   0,   0,   0,   0,
-           145, 135, 130, 125, 125, 125, 135, 145,
-            95,  90,  80,  70,  60,  60,  80,  85,
-            20,  20,  10,  16,  16,  10,  15,  15,
+            75,  70,  60,  55,  55,  55,  65,  70,
+            55,  50,  45,  40,  40,  45,  50,  50,
+            30,  30,  20,  26,  26,  20,  25,  30,
             10,   0,   5,   4,   4,   5,   0,   0,
              2,   2,   0,   3,   3,   0,   2,   2,
             10,  10,   5,   5,   5,   3,   1,   0,

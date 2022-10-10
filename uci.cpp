@@ -6,10 +6,13 @@
 #include "uci.h"
 #include "useful.h"
 #include "move.h"
-#include "evaluation.h"
+#include "search.h"
 
 void UCI::initialize_uci() {
     position.set_fen(START_FEN);
+    //position.undo_move_stack.resize(TOTAL_MAX_DEPTH);
+    engine.transposition_table.resize(MAX_TT_SIZE);
+    initialize_lmr_reductions();
 }
 
 void UCI::parse_position() {
@@ -42,7 +45,7 @@ void UCI::parse_position() {
         // std::cout << tokens[i] << std::endl;
         MOVE_TYPE move = get_move_from_uci(position, tokens[i]);
         // std::cout << move << " " << get_uci_from_move(move) << std::endl;
-        position.make_move(move, engine.fifty_move);
+        position.make_move(move, 0, engine.fifty_move);
 
         engine.game_ply++;
         engine.fifty_move++;

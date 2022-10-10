@@ -21,20 +21,14 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
 
     position.get_pseudo_legal_moves(ply);
 
-    SQUARE_TYPE current_ep_square = position.ep_square;
-    uint16_t current_castle_ability_bits = position.castle_ability_bits;
-    uint64_t current_hash_key = position.hash_key;
-    PLY_TYPE current_fifty = fifty;
-
     for (MOVE_TYPE move : position.moves[ply]) {
 
         // std::cout << "move: " << get_uci_from_move(move) << std::endl;
 
-        bool attempt = position.make_move(move, fifty);
+        bool attempt = position.make_move(move, ply, fifty);
 
         if (!attempt) {
-            position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key, fifty,
-                               current_fifty);
+            position.undo_move(move, ply, fifty);
             continue;
         }
 
@@ -57,8 +51,7 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
         debug_perft(position, res, depth - 1, ply + 1);
 
         position.side ^= 1;
-        position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key, fifty,
-                           current_fifty);
+        position.undo_move(move, ply, fifty);
     }
 
 }
@@ -75,20 +68,14 @@ long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 
     position.get_pseudo_legal_moves(ply);
 
-    SQUARE_TYPE current_ep_square = position.ep_square;
-    uint16_t current_castle_ability_bits = position.castle_ability_bits;
-    uint64_t current_hash_key = position.hash_key;
-    PLY_TYPE current_fifty = fifty;
-
     long long amt = 0;
 
     for (MOVE_TYPE move : position.moves[ply]) {
 
-        bool attempt = position.make_move(move, fifty);
+        bool attempt = position.make_move(move, ply, fifty);
 
         if (!attempt) {
-            position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key, fifty,
-                               current_fifty);
+            position.undo_move(move, ply, fifty);
             continue;
         }
 
@@ -97,8 +84,7 @@ long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
         amt += fast_perft(position, depth - 1, ply + 1);
 
         position.side ^= 1;
-        position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key, fifty,
-                           current_fifty);
+        position.undo_move(move, ply, fifty);
     }
 
     return amt;
@@ -118,20 +104,14 @@ long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 
     position.get_pseudo_legal_moves(ply);
 
-    SQUARE_TYPE current_ep_square = position.ep_square;
-    uint16_t current_castle_ability_bits = position.castle_ability_bits;
-    uint64_t current_hash_key = position.hash_key;
-    PLY_TYPE current_fifty = fifty;
-
     long long total_amt = 0;
 
     for (MOVE_TYPE move : position.moves[ply]) {
 
-        bool attempt = position.make_move(move, fifty);
+        bool attempt = position.make_move(move, ply, fifty);
 
         if (!attempt) {
-            position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key, fifty,
-                               current_fifty);
+            position.undo_move(move, ply, fifty);
             continue;
         }
 
@@ -141,8 +121,7 @@ long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
         total_amt += amt;
 
         position.side ^= 1;
-        position.undo_move(move, current_ep_square, current_castle_ability_bits, current_hash_key, fifty,
-                           current_fifty);
+        position.undo_move(move, ply, fifty);
 
         std::cout << "Move " + get_uci_from_move(move) << ": " << amt << std::endl;
     }
