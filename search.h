@@ -8,12 +8,12 @@
 #include "position.h"
 
 struct TT_Entry {
-    HASH_TYPE key;
-    SCORE_TYPE score;
-    SCORE_TYPE evaluation;
-    MOVE_TYPE move;
-    PLY_TYPE depth;
-    short flag;
+    HASH_TYPE key = 0;
+    SCORE_TYPE score = 0;
+    SCORE_TYPE evaluation = NO_EVALUATION;
+    MOVE_TYPE move = NO_MOVE;
+    PLY_TYPE depth = 0;
+    short flag = 0;
 };
 
 class Engine {

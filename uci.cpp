@@ -12,6 +12,10 @@ void UCI::initialize_uci() {
     position.set_fen(START_FEN);
     //position.undo_move_stack.resize(TOTAL_MAX_DEPTH);
     engine.transposition_table.resize(MAX_TT_SIZE);
+
+    //for (int i = 0; i < MAX_TT_SIZE; i++) {
+    //    std::cout << engine.transposition_table[i].evaluation << std::endl;
+    //}
     initialize_lmr_reductions();
 }
 

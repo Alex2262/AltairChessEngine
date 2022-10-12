@@ -94,6 +94,7 @@ SCORE_TYPE Engine::probe_tt_entry(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TY
 
 void Engine::record_tt_entry(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
                              SCORE_TYPE static_eval) {
+
     TT_Entry& tt_entry = transposition_table[hash_key % MAX_TT_SIZE];
 
     if (tt_entry.key != hash_key || depth > tt_entry.depth || tt_flag == HASH_FLAG_EXACT) {
@@ -329,7 +330,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     }
 
     int legal_moves = 0;
-    MOVE_TYPE last_move = engine.search_ply >= 2 ? position.undo_move_stack[engine.search_ply - 1].move : NO_MOVE;
+    MOVE_TYPE last_move = engine.search_ply ? position.undo_move_stack[engine.search_ply - 1].move : NO_MOVE;
 
     // Retrieving the pseudo legal moves in the current position as a list of integers
     // Score the moves
@@ -402,7 +403,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         }
 
         else {
-           full_depth_zero_window = !pv_node || legal_moves >= 1;
+            full_depth_zero_window = !pv_node || legal_moves >= 1;
         }
 
         // Principle Variation Search
@@ -456,7 +457,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                         engine.killer_moves[0][engine.search_ply] = move;
 
                         if (last_move != NO_MOVE)
-                            engine.counter_moves[get_selected(last_move)][get_target_square(last_move)] = move;
+                            engine.counter_moves[get_selected(last_move)]
+                                                [MAILBOX_TO_STANDARD[get_target_square(last_move)]] = move;
                     }
                     // Do not save mate scores into TT because of bugs
                     if (-MATE_SCORE < best_score && best_score < MATE_SCORE) {
