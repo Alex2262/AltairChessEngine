@@ -31,6 +31,8 @@ SCORE_TYPE evaluate_king_pawn(const Position& position, SQUARE_TYPE file, bool i
 
     return score;
 }
+
+
 void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white) {
 
     SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
@@ -145,7 +147,6 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             scores.end += (9 - row) * PASSED_PAWN_BONUS_END;
         }
     }
-
 }
 
 
@@ -160,6 +161,14 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
         scores.mid += KNIGHT_PST_MID[i ^ 56];
         scores.end += KNIGHT_PST_END[i ^ 56];
     }
+
+    double distance_to_our_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(!is_white)]]);
+    scores.mid -= static_cast<SQUARE_TYPE>(distance_to_our_king);
+    scores.end -= static_cast<SQUARE_TYPE>(0.5 * distance_to_our_king);
+
+    double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
+    scores.mid -= static_cast<SQUARE_TYPE>(2.8 * distance_to_opp_king);
+    scores.end -= static_cast<SQUARE_TYPE>(1.5 * distance_to_opp_king);
 }
 
 
@@ -174,6 +183,10 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
         scores.mid += BISHOP_PST_MID[i ^ 56];
         scores.end += BISHOP_PST_END[i ^ 56];
     }
+
+    double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
+    scores.mid -= static_cast<SQUARE_TYPE>(distance_to_opp_king);
+    scores.end -= static_cast<SQUARE_TYPE>(0.4 * distance_to_opp_king);
 }
 
 
@@ -211,6 +224,10 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             }
         }
     }
+
+    double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
+    scores.mid -= static_cast<SQUARE_TYPE>(2.2 * distance_to_opp_king);
+    scores.end -= static_cast<SQUARE_TYPE>(1.4 * distance_to_opp_king);
 }
 
 
@@ -248,6 +265,10 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
             }
         }
     }
+
+    double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
+    scores.mid -= static_cast<SQUARE_TYPE>(distance_to_opp_king);
+    scores.end -= static_cast<SQUARE_TYPE>(1.2 * distance_to_opp_king);
 }
 
 void evaluate_king(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white) {
@@ -439,6 +460,19 @@ SCORE_TYPE evaluate(Position& position) {
         black_scores.mid += BISHOP_PAIR_BONUS_MID;
         black_scores.end += BISHOP_PAIR_BONUS_END;
     }
+
+    // If our opponent's score is already very good, and our king position is still substandard,
+    // then we should be penalized. Set a cap on this at 20,
+    // so we can't gain too much bonus if our king position is good.
+    // If our opponent's score is so bad that adding 300 to it doesn't make it go near the positives,
+    // then we should cap the minimum at -50 to avoid weird insane penalties
+
+    white_scores.mid += std::min(std::max(-50, (black_scores.mid + 300)) *
+            (KING_PST_MID[MAILBOX_TO_STANDARD[position.king_positions[0]]] - 10) / 280, 20);
+
+    black_scores.mid += std::min(std::max(-50, (white_scores.mid + 300)) *
+            (KING_PST_MID[MAILBOX_TO_STANDARD[position.king_positions[1]] ^ 56] - 10) / 280, 20);
+
 
     white_scores.mid += white_material.mid;
     white_scores.end += white_material.end;

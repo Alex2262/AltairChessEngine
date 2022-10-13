@@ -26,6 +26,7 @@ public:
     PLY_TYPE max_q_depth = 64;
     PLY_TYPE min_depth = 2;
     PLY_TYPE current_search_depth = 0;
+    PLY_TYPE selective_depth = 0;
     PLY_TYPE search_ply = 0;
     PLY_TYPE game_ply = 0;
     PLY_TYPE fifty_move = 0;

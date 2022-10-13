@@ -524,7 +524,7 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
         for (SQUARE_TYPE pos : white_pieces) {
             PIECE_TYPE piece = board[pos];
 
-            for (int increment : WHITE_INCREMENTS[piece]) {
+            for (short increment : WHITE_INCREMENTS[piece]) {
                 if (!increment) break;
 
                 SQUARE_TYPE new_pos = pos;
@@ -598,7 +598,7 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
         for (SQUARE_TYPE pos : black_pieces) {
             PIECE_TYPE piece = board[pos];
 
-            for (int increment : BLACK_INCREMENTS[piece - BLACK_PAWN]) {
+            for (short increment : BLACK_INCREMENTS[piece - BLACK_PAWN]) {
                 if (!increment) break;
 
                 SQUARE_TYPE new_pos = pos;
@@ -679,7 +679,7 @@ void Position::get_pseudo_legal_captures(PLY_TYPE ply) {
         for (SQUARE_TYPE pos : white_pieces) {
             PIECE_TYPE piece = board[pos];
 
-            for (int increment : WHITE_ATK_INCREMENTS[piece]) {
+            for (short increment : WHITE_ATK_INCREMENTS[piece]) {
                 if (!increment) break;
 
                 SQUARE_TYPE new_pos = pos;
@@ -709,7 +709,7 @@ void Position::get_pseudo_legal_captures(PLY_TYPE ply) {
         for (SQUARE_TYPE pos : black_pieces) {
             PIECE_TYPE piece = board[pos];
 
-            for (int increment : BLACK_ATK_INCREMENTS[piece - BLACK_PAWN]) {
+            for (short increment : BLACK_ATK_INCREMENTS[piece - BLACK_PAWN]) {
                 if (!increment) break;
 
                 SQUARE_TYPE new_pos = pos;

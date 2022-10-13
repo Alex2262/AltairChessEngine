@@ -40,7 +40,7 @@ void Engine::clear_tt() {
 
 void Engine::reset() {
     node_count = 0;
-
+    selective_depth = 0;
     current_search_depth = 0;
     search_ply = 0;
 
@@ -152,6 +152,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     // position.print_board();
     engine.node_count++;
+    engine.selective_depth = std::max(engine.search_ply, engine.selective_depth);
 
     if (engine.current_search_depth >= engine.min_depth && (engine.node_count & 2047) == 0) {
         auto time = std::chrono::high_resolution_clock::now();
@@ -256,11 +257,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Detect repetitions and fifty move rule
     if (engine.search_ply && (engine.fifty_move >= 100 || engine.detect_repetition())) return 0;
 
-    // Start quiescence search at the end of regular negamax search to counter the horizon effect.
-    if (depth == 0) {
-        return qsearch(engine, position, alpha, beta, engine.max_q_depth);
-    }
-
     engine.node_count++;
 
     bool in_check = position.is_attacked(position.king_positions[position.side]);
@@ -288,6 +284,11 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     // Variable to record the hash flag
     short tt_hash_flag = HASH_FLAG_ALPHA;
+
+    // Start quiescence search at the end of regular negamax search to counter the horizon effect.
+    if (depth == 0) {
+        return qsearch(engine, position, alpha, beta, engine.max_q_depth);
+    }
 
     // Hack to determine pv_node, because when it is not a pv node we are being searched by
     // a zero window with alpha == beta - 1
@@ -327,6 +328,12 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
         if (return_eval >= beta) return beta;
 
+    }
+
+    if (pv_node && tt_move == NO_MOVE && depth >= 4) {
+        negamax(engine, position, alpha, beta, depth - 2, false);
+        TT_Entry& tt_entry = engine.transposition_table[position.hash_key % MAX_TT_SIZE];
+        if (position.hash_key == tt_entry.key) tt_move = tt_entry.move;
     }
 
     int legal_moves = 0;
@@ -499,6 +506,7 @@ void iterative_search(Engine& engine, Position& position) {
 
     SCORE_TYPE alpha = -SCORE_INF;
     SCORE_TYPE beta = SCORE_INF;
+    SCORE_TYPE aspiration_window = 45;
 
     PLY_TYPE running_depth = 1;
 
@@ -508,6 +516,19 @@ void iterative_search(Engine& engine, Position& position) {
     while (running_depth < engine.max_depth) {
         engine.current_search_depth = running_depth;
         SCORE_TYPE return_eval = negamax(engine, position, alpha, beta, running_depth, false);
+
+        // Reset the window
+        if (return_eval <= alpha || return_eval >= beta) {
+            alpha = -SCORE_INF;
+            beta = SCORE_INF;
+            aspiration_window = 45;
+            continue;
+        }
+
+        // Adjust the window
+        alpha = return_eval - aspiration_window;
+        beta = return_eval + aspiration_window;
+        aspiration_window -= 20 / static_cast<int>(running_depth + 3);
 
         std::string pv_line;
         for (int c = 0; c < engine.pv_length[0]; c++) {
@@ -531,7 +552,8 @@ void iterative_search(Engine& engine, Position& position) {
         double elapsed_time = ms_int.count();
         if (elapsed_time == 0) elapsed_time = 0.1;
 
-        std::cout << "info depth " << running_depth << " score cp " << best_score << " time " << int(elapsed_time)
+        std::cout << "info depth " << running_depth << " seldepth " << engine.selective_depth
+                  << " score cp " << best_score << " time " << int(elapsed_time)
                   << " nodes " << engine.node_count << " nps " << int(engine.node_count / (elapsed_time / 1000))
                   << " pv " << best_pv << std::endl;
 

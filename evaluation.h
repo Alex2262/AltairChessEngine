@@ -8,11 +8,19 @@
 #include "constants.h"
 #include "position.h"
 #include "search.h"
+#include "cmath"
 
 struct Score_Struct {
     SCORE_TYPE mid;
     SCORE_TYPE end;
 };
+
+inline double get_distance(SQUARE_TYPE square_1, SQUARE_TYPE square_2) {
+    SQUARE_TYPE row_1 = 8 - square_1 / 8, col_1 = square_1 % 8 + 1;
+    SQUARE_TYPE row_2 = 8 - square_2 / 8, col_2 = square_2 % 8 + 1;
+
+    return std::sqrt(std::pow(abs(row_1 - row_2), 2) + std::pow(abs(col_1 - col_2), 2));
+}
 
 SCORE_TYPE evaluate_king_pawn(const Position& position, SQUARE_TYPE file, bool is_white);
 void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white);
