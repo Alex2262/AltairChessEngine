@@ -28,7 +28,7 @@ public:
 
     void clear_movelist();
     void compute_hash_key();
-    void set_fen(const std::string& fen_string);
+    PLY_TYPE set_fen(const std::string& fen_string);
     void print_board();
     bool is_attacked(SQUARE_TYPE pos);
     bool make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_move);

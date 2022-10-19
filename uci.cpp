@@ -7,6 +7,7 @@
 #include "useful.h"
 #include "move.h"
 #include "search.h"
+#include "evaluation.h"
 
 void UCI::initialize_uci() {
     position.set_fen(START_FEN);
@@ -18,6 +19,45 @@ void UCI::initialize_uci() {
     //}
     initialize_lmr_reductions();
 }
+
+
+void  UCI::time_handler(long self_time, long inc, long movetime, long movestogo) {
+    double rate = 20;
+    long time_amt;
+
+    if (position.is_attacked(position.king_positions[position.side])) rate -= 3;
+    if (get_is_capture(last_move)) rate -= 1.5;
+
+    if (movetime > 0) time_amt = movetime * 0.9;
+    else if (inc > 0 && movestogo > 0) {
+        time_amt = (self_time * 0.8 / movestogo) * (20 / rate) + (inc / 2.0);
+        if (time_amt > self_time * 0.8) time_amt = self_time * 0.85 + (inc / 2.0);
+    }
+    else if (inc > 0) {
+
+        // we always want to have more time than our increment.
+        // This ensures we use a lot of our remaining time, but
+        // since our increment is larger, it doesn't matter.
+        if (self_time < inc) time_amt = self_time / (rate / 10);
+        else {
+            // If our remaining time is less than the boundary, we should use less time than our increment
+            // to get back above the boundary.
+            long bound = static_cast<long>(inc / 2.5 * sqrt(60000.0 / inc));
+            if (inc > bound / 2.5) bound = static_cast<long>(inc * sqrt(90000.0 / inc));
+            if (inc > bound / 2.5) bound = static_cast<long>(1.5 * inc * sqrt(200000.0 / inc));
+            time_amt = std::max(inc * 0.975 + (self_time - bound) / (rate * 1.8), self_time / (rate * 10));
+        }
+    }
+    else if (movestogo > 0) {
+        time_amt = (self_time * 0.9 / movestogo) * (20 / rate);
+        if (time_amt > self_time * 0.9) time_amt = self_time * 0.95;
+    }
+    else if (self_time > 0) time_amt = self_time / (rate + 6);
+    else time_amt = engine.max_time;
+
+    engine.max_time = time_amt;
+}
+
 
 void UCI::parse_position() {
     if (tokens.size() < 2) return;
@@ -37,7 +77,7 @@ void UCI::parse_position() {
             fen += " ";
         }
 
-        position.set_fen(fen);
+        engine.fifty_move = position.set_fen(fen);
         next_idx = 8;
     }
 
@@ -48,6 +88,7 @@ void UCI::parse_position() {
     for (int i = next_idx + 1; i < tokens.size(); i++) {
         // std::cout << tokens[i] << std::endl;
         MOVE_TYPE move = get_move_from_uci(position, tokens[i]);
+        last_move = move;
         // std::cout << move << " " << get_uci_from_move(move) << std::endl;
         position.make_move(move, 0, engine.fifty_move);
 
@@ -65,7 +106,8 @@ void UCI::parse_position() {
 
 
 void UCI::parse_go() {
-    int d = engine.max_depth, wtime = 0, btime = 0, winc = 0, binc = 0, movetime = 0, movestogo = 0;
+    int d = engine.max_depth;
+    long wtime = 0, btime = 0, winc = 0, binc = 0, movetime = 0, movestogo = 0;
 
     for (int i = 1; i < tokens.size(); i += 2) {
         std::string type = tokens[i];
@@ -88,8 +130,7 @@ void UCI::parse_go() {
     int self_time = (position.side == 0) ? wtime : btime;
     int inc = (position.side == 0) ? winc : binc;
 
-    if (movetime != 0) engine.max_time = movetime / 10 * 9;
-    else engine.max_time = int(self_time / 25.0 + inc / 2.0);
+    time_handler(self_time, inc, movetime, movestogo);
 
     engine.max_depth = d;
 
@@ -116,7 +157,7 @@ void UCI::uci_loop() {
         if (msg == "stop") engine.stopped = true;
 
         else if (msg == "uci") {
-            std::cout << "id name AntaresCpp0.00" << std::endl;
+            std::cout << "id name Altair" << std::endl;
             std::cout << "id author Alexander_Tian" << std::endl;
             std::cout << "uciok" << std::endl;
         }

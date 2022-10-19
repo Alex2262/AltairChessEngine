@@ -2,6 +2,7 @@
 // Created by Alex Tian on 9/29/2022.
 //
 
+#include <iostream>
 #include "evaluation.h"
 #include "move.h"
 
@@ -152,47 +153,185 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
 void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white) {
     SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
+    SCORE_TYPE mobility = 0;
 
     if (is_white) {
         scores.mid += KNIGHT_PST_MID[i];
         scores.end += KNIGHT_PST_END[i];
+
+        // Calculate Mobility
+        for (short increment : WHITE_INCREMENTS[WHITE_KNIGHT]) {
+            SQUARE_TYPE new_pos = pos + increment;
+            PIECE_TYPE occupied = position.board[new_pos];
+
+            if (occupied == PADDING) continue;
+
+            // If we hit a piece of ours, we still add 1 to mobility because
+            // that means we are protecting a piece of ours.
+            if (occupied < BLACK_PAWN) {
+                mobility += 1;
+                continue;
+            }
+
+            // If there is an enemy pawn controlling this square then we deduct 1.
+            if (position.board[new_pos - 11] == BLACK_PAWN || position.board[new_pos - 9] == BLACK_PAWN)
+                mobility -= 1;
+
+            // If we hit an enemy piece, get a score of 2.
+            // An empty square may be even better, so you get a score 3.
+            if (occupied < EMPTY) {
+                mobility += 2;
+                continue;
+            }
+
+            mobility += 3;
+        }
     }
     else {
         scores.mid += KNIGHT_PST_MID[i ^ 56];
         scores.end += KNIGHT_PST_END[i ^ 56];
+
+        // Calculate Mobility
+        for (short increment : BLACK_INCREMENTS[WHITE_KNIGHT]) {
+            SQUARE_TYPE new_pos = pos + increment;
+            PIECE_TYPE occupied = position.board[new_pos];
+
+            if (occupied == PADDING) continue;
+
+            // If we hit a piece of ours, we still add 1 to mobility because
+            // that means we are protecting a piece of ours.
+            if (WHITE_KING < occupied && occupied < EMPTY) {
+                mobility += 1;
+                continue;
+            }
+
+            // If there is an enemy pawn controlling this square then we deduct 1.
+            if (position.board[new_pos + 11] == WHITE_PAWN || position.board[new_pos + 9] == WHITE_PAWN)
+                mobility -= 1;
+
+            // If we hit an enemy piece, get a score of 2.
+            // An empty square may be even better, so you get a score 3.
+            if (occupied < BLACK_PAWN) {
+                mobility += 2;
+                continue;
+            }
+
+            mobility += 3;
+
+
+        }
     }
 
+    // Knights are good protectors for the king
     double distance_to_our_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(!is_white)]]);
     scores.mid -= static_cast<SQUARE_TYPE>(distance_to_our_king);
     scores.end -= static_cast<SQUARE_TYPE>(0.5 * distance_to_our_king);
 
+    // Knights are also very good at attacking the opponents king
     double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
     scores.mid -= static_cast<SQUARE_TYPE>(2.8 * distance_to_opp_king);
     scores.end -= static_cast<SQUARE_TYPE>(1.5 * distance_to_opp_king);
+
+    scores.mid += mobility * 1.2;
+    scores.end += mobility;
+
+    // std::cout << "KNIGHT MOBILITY: " << mobility << std::endl;
 }
 
 
 void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white) {
     SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
+    SCORE_TYPE mobility = 0;
 
     if (is_white) {
         scores.mid += BISHOP_PST_MID[i];
         scores.end += BISHOP_PST_END[i];
+
+        // Calculate Mobility
+        for (short increment : WHITE_INCREMENTS[WHITE_BISHOP]) {
+            SQUARE_TYPE new_pos = pos;
+            if (!increment) break;
+
+            while (true) {
+                new_pos += increment;
+                PIECE_TYPE occupied = position.board[new_pos];
+
+                if (occupied == PADDING) break;
+
+                // If we hit a piece of ours, we still add 1 to mobility because
+                // that means we are protecting a piece of ours.
+                if (occupied < BLACK_PAWN) {
+                    mobility += 1;
+                    break;
+                }
+
+                // If there is an enemy pawn controlling this square then we deduct 1.
+                if (position.board[new_pos - 11] == BLACK_PAWN || position.board[new_pos - 9] == BLACK_PAWN)
+                    mobility -= 1;
+
+                // If we hit an enemy piece, get a score of 2.
+                // An empty square may be even better, so you get a score 3.
+                if (occupied < EMPTY) {
+                    mobility += 2;
+                    break;
+                }
+
+                mobility += 3;
+            }
+        }
     }
     else {
         scores.mid += BISHOP_PST_MID[i ^ 56];
         scores.end += BISHOP_PST_END[i ^ 56];
+
+        // Calculate Mobility
+        for (short increment : BLACK_INCREMENTS[WHITE_BISHOP]) {
+            SQUARE_TYPE new_pos = pos;
+            if (!increment) break;
+
+            while (true) {
+                new_pos += increment;
+                PIECE_TYPE occupied = position.board[new_pos];
+
+                if (occupied == PADDING) break;
+
+                // If we hit a piece of ours, we still add 1 to mobility because
+                // that means we are protecting a piece of ours.
+                if (WHITE_KING < occupied && occupied < EMPTY) {
+                    mobility += 1;
+                    break;
+                }
+
+                // If there is an enemy pawn controlling this square then we deduct 1.
+                if (position.board[new_pos + 11] == WHITE_PAWN || position.board[new_pos + 9] == WHITE_PAWN)
+                    mobility -= 1;
+
+                // If we hit an enemy piece, get a score of 2.
+                // An empty square may be even better, so you get a score 3.
+                if (occupied < BLACK_PAWN) {
+                    mobility += 2;
+                    break;
+                }
+
+                mobility += 3;
+            }
+        }
     }
 
     double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
     scores.mid -= static_cast<SQUARE_TYPE>(distance_to_opp_king);
     scores.end -= static_cast<SQUARE_TYPE>(0.4 * distance_to_opp_king);
+
+    scores.mid += mobility / 1.5;  // Bishop can reach many squares so its mobility has to be divided
+    scores.end += mobility / 1.7;  // More likely to have higher mobility in the endgame
+    // std::cout << "BISHOP MOBILITY: " << mobility << std::endl;
 }
 
 
 void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white) {
     SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
     SQUARE_TYPE col = i % 8 + 1;
+    SCORE_TYPE mobility = 0;
 
     if (is_white) {
         scores.mid += ROOK_PST_MID[i];
@@ -206,6 +345,35 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             else {
                 scores.mid += ROOK_SEMI_OPEN_FILE_BONUS_MID;
                 scores.end += ROOK_SEMI_OPEN_FILE_BONUS_END;
+            }
+        }
+
+        // Calculate Mobility
+        for (short increment : WHITE_INCREMENTS[WHITE_ROOK]) {
+            SQUARE_TYPE new_pos = pos;
+            if (!increment) break;
+
+            while (true) {
+                new_pos += increment;
+                PIECE_TYPE occupied = position.board[new_pos];
+
+                if (occupied == PADDING) break;
+
+                // If we hit a piece of ours, we still add 1 to mobility because
+                // that means we are protecting a piece of ours.
+                if (occupied < BLACK_PAWN) {
+                    mobility += 1;
+                    break;
+                }
+
+                // If we hit an enemy piece, get a score of 2.
+                // An empty square may be even better, so you get a score 3.
+                if (occupied < EMPTY) {
+                    mobility += 2;
+                    break;
+                }
+
+                mobility += 3;
             }
         }
     }
@@ -223,17 +391,52 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 scores.end += ROOK_SEMI_OPEN_FILE_BONUS_END;
             }
         }
+
+        // Calculate Mobility
+        for (short increment : BLACK_INCREMENTS[WHITE_ROOK]) {
+            SQUARE_TYPE new_pos = pos;
+            if (!increment) break;
+
+            while (true) {
+                new_pos += increment;
+                PIECE_TYPE occupied = position.board[new_pos];
+
+                if (occupied == PADDING) break;
+
+                // If we hit a piece of ours, we still add 1 to mobility because
+                // that means we are protecting a piece of ours.
+                if (WHITE_KING < occupied && occupied < EMPTY) {
+                    mobility += 1;
+                    break;
+                }
+
+                // If we hit an enemy piece, get a score of 2.
+                // An empty square may be even better, so you get a score 3.
+                if (occupied < BLACK_PAWN) {
+                    mobility += 2;
+                    break;
+                }
+
+                mobility += 3;
+            }
+        }
     }
 
     double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
     scores.mid -= static_cast<SQUARE_TYPE>(2.2 * distance_to_opp_king);
     scores.end -= static_cast<SQUARE_TYPE>(1.4 * distance_to_opp_king);
+
+    scores.mid += mobility / 2;  // Already gets open + semi-open file bonuses
+    scores.end += mobility / 1.5;  // Active rooks in the endgame are very important
+
+    // std::cout << "ROOK MOBILITY: " << mobility << std::endl;
 }
 
 
 void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white) {
     SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
     SQUARE_TYPE col = i % 8 + 1;
+    SCORE_TYPE mobility = 0;
 
     if (is_white) {
         scores.mid += QUEEN_PST_MID[i];
@@ -247,6 +450,34 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
             else {
                 scores.mid += QUEEN_SEMI_OPEN_FILE_BONUS_MID;
                 scores.end += QUEEN_SEMI_OPEN_FILE_BONUS_END;
+            }
+        }
+
+        // Calculate Mobility
+        for (short increment : WHITE_INCREMENTS[WHITE_QUEEN]) {
+            SQUARE_TYPE new_pos = pos;
+
+            while (true) {
+                new_pos += increment;
+                PIECE_TYPE occupied = position.board[new_pos];
+
+                if (occupied == PADDING) break;
+
+                // If we hit a piece of ours, we still add 1 to mobility because
+                // that means we are protecting a piece of ours.
+                if (occupied < BLACK_PAWN) {
+                    mobility += 1;
+                    break;
+                }
+
+                // If we hit an enemy piece, get a score of 2.
+                // An empty square may be even better, so you get a score 3.
+                if (occupied < EMPTY) {
+                    mobility += 2;
+                    break;
+                }
+
+                mobility += 3;
             }
         }
     }
@@ -264,11 +495,44 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
                 scores.end += QUEEN_SEMI_OPEN_FILE_BONUS_END;
             }
         }
+
+        // Calculate Mobility
+        for (short increment : BLACK_INCREMENTS[WHITE_QUEEN]) {
+            SQUARE_TYPE new_pos = pos;
+
+            while (true) {
+                new_pos += increment;
+                PIECE_TYPE occupied = position.board[new_pos];
+
+                if (occupied == PADDING) break;
+
+                // If we hit a piece of ours, we still add 1 to mobility because
+                // that means we are protecting a piece of ours.
+                if (WHITE_KING < occupied && occupied < EMPTY) {
+                    mobility += 1;
+                    break;
+                }
+
+                // If we hit an enemy piece, get a score of 2.
+                // An empty square may be even better, so you get a score 3.
+                if (occupied < BLACK_PAWN) {
+                    mobility += 2;
+                    break;
+                }
+
+                mobility += 3;
+            }
+        }
     }
 
     double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
     scores.mid -= static_cast<SQUARE_TYPE>(distance_to_opp_king);
     scores.end -= static_cast<SQUARE_TYPE>(1.2 * distance_to_opp_king);
+
+    scores.mid += mobility / 3;  // Already gets open + semi-open file bonuses
+    scores.end += mobility / 1.8;  // Active queen in the endgame is pretty important
+
+    // std::cout << "QUEEN MOBILITY: " << mobility << std::endl;
 }
 
 void evaluate_king(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white) {
@@ -418,7 +682,9 @@ SCORE_TYPE evaluate(Position& position) {
 
         white_material.mid += PIECE_VALUES_MID[piece];
         white_material.end += PIECE_VALUES_END[piece];
+        // std::cout << piece << std::endl;
 
+        // std::cout << white_scores.mid << " " << white_scores.end << std::endl;
         if (piece == WHITE_PAWN) evaluate_pawn(position, white_scores, pos, true);
         else if (piece == WHITE_KNIGHT) evaluate_knight(position, white_scores, pos, true);
         else if (piece == WHITE_BISHOP) {
@@ -428,6 +694,8 @@ SCORE_TYPE evaluate(Position& position) {
         else if (piece == WHITE_ROOK) evaluate_rook(position, white_scores, pos, true);
         else if (piece == WHITE_QUEEN) evaluate_queen(position, white_scores, pos, true);
         else if (piece == WHITE_KING) evaluate_king(position, white_scores, pos, true);
+
+        // std::cout << white_scores.mid << " " << white_scores.end << std::endl;
     }
 
     for (SQUARE_TYPE pos : position.black_pieces) {
@@ -439,7 +707,9 @@ SCORE_TYPE evaluate(Position& position) {
 
         black_material.mid += PIECE_VALUES_MID[piece - BLACK_PAWN];
         black_material.end += PIECE_VALUES_END[piece - BLACK_PAWN];
+        // std::cout << piece << std::endl;
 
+        // std::cout << black_scores.mid << " " << black_scores.end << std::endl;
         if (piece == BLACK_PAWN) evaluate_pawn(position, black_scores, pos, false);
         else if (piece == BLACK_KNIGHT) evaluate_knight(position, black_scores, pos, false);
         else if (piece == BLACK_BISHOP) {
@@ -449,6 +719,8 @@ SCORE_TYPE evaluate(Position& position) {
         else if (piece == BLACK_ROOK) evaluate_rook(position, black_scores, pos, false);
         else if (piece == BLACK_QUEEN) evaluate_queen(position, black_scores, pos, false);
         else if (piece == BLACK_KING) evaluate_king(position, black_scores, pos, false);
+
+        // std::cout << black_scores.mid << " " << black_scores.end << std::endl;
     }
 
     if (white_piece_amounts[WHITE_BISHOP] >= 2) {
@@ -494,11 +766,13 @@ SCORE_TYPE evaluate(Position& position) {
     white_score *= drawishness;
     black_score *= drawishness;
 
+    // std::cout << white_score << " " << black_score << std::endl;
+
     return (position.side * -2 + 1) * (white_score - black_score) + TEMPO_BONUS;
 }
 
 
-SCORE_TYPE score_move(Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move) {
+SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move) {
 
     if (move == tt_move) return 100000;
 
@@ -513,42 +787,47 @@ SCORE_TYPE score_move(Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TY
         if (get_is_capture(move)) {
             score += 20000;
             score += 2 * (PIECE_VALUES_MID[occupied - BLACK_PAWN] - PIECE_VALUES_MID[selected]);
+            score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
         else {
             if (last_move != NO_MOVE &&
-                engine.counter_moves[get_selected(last_move)]
-                                    [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move) score += 620;
+                engine.counter_moves[0][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
+                                    [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move) score += 8000;
 
             // score 1st and 2nd killer move
             if (engine.killer_moves[0][engine.search_ply] == move) score += 12000;
             else if (engine.killer_moves[1][engine.search_ply] == move) score += 11000;
-            else score += engine.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
-        }
+            else score += engine.history_moves[0]
+                     [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
-        if (move_type == MOVE_TYPE_PROMOTION) score += 18000 + 5 * PIECE_VALUES_MID[get_promotion_piece(move)];
-        else if (move_type == MOVE_TYPE_EP) score += 21000;
-        else if (move_type == MOVE_TYPE_CASTLE) score += 800;
+            if (move_type == MOVE_TYPE_PROMOTION) score += 18000 +
+                                                           5 * PIECE_VALUES_MID[get_promotion_piece(move)];
+            else if (move_type == MOVE_TYPE_EP) score += 21000;
+            else if (move_type == MOVE_TYPE_CASTLE) score += 1200;
+        }
     }
     else {
         if (get_is_capture(move)) {
             score += 20000;
             score += 2 * (PIECE_VALUES_MID[occupied] - PIECE_VALUES_MID[selected - BLACK_PAWN]);
+            score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
         else {
             if (last_move != NO_MOVE &&
-                engine.counter_moves[get_selected(last_move)]
-                                    [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move) score += 620;
+                engine.counter_moves[1][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
+                                    [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move) score += 8000;
 
             // score 1st and 2nd killer move
             if (engine.killer_moves[0][engine.search_ply] == move) score += 12000;
             else if (engine.killer_moves[1][engine.search_ply] == move) score += 11000;
-            else score += engine.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
-        }
+            else score += engine.history_moves[1]
+                    [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
-        if (move_type == MOVE_TYPE_PROMOTION) score += 18000 +
-                                                       5 * PIECE_VALUES_MID[get_promotion_piece(move) - BLACK_PAWN];
-        else if (move_type == MOVE_TYPE_CASTLE) score += 21000;
-        else if (move_type == MOVE_TYPE_EP) score += 800;
+            if (move_type == MOVE_TYPE_PROMOTION) score += 18000 +
+                                                           5 * PIECE_VALUES_MID[get_promotion_piece(move) - BLACK_PAWN];
+            else if (move_type == MOVE_TYPE_EP) score += 21000;
+            else if (move_type == MOVE_TYPE_CASTLE) score += 1200;
+        }
     }
 
     return score;
@@ -575,7 +854,7 @@ SCORE_TYPE score_capture(MOVE_TYPE move, MOVE_TYPE tt_move) {
 }
 
 
-void get_move_scores(Engine& engine, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+void get_move_scores(const Engine& engine, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
                      MOVE_TYPE tt_move, MOVE_TYPE last_move) {
     move_scores.clear();
 
@@ -585,7 +864,8 @@ void get_move_scores(Engine& engine, const std::vector<MOVE_TYPE>& moves, std::v
 }
 
 
-void get_capture_scores(const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores, MOVE_TYPE tt_move) {
+void get_capture_scores(const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+                        MOVE_TYPE tt_move) {
     move_scores.clear();
 
     for (MOVE_TYPE move : moves) {

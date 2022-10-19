@@ -40,8 +40,9 @@ public:
     unsigned short pv_length[65] = {0};
 
     MOVE_TYPE killer_moves[2][64]{};  // # of killer moves (2) | max_depth (64)
-    SCORE_TYPE history_moves[12][64]{}; // # piece | square
-    MOVE_TYPE counter_moves[12][64]{}; // # piece | square
+    SCORE_TYPE history_moves[2][64][64]{}; // # color | from_square | target_square
+    SCORE_TYPE capture_history[12][12][64]{};
+    MOVE_TYPE counter_moves[2][64][64]{}; // # piece | square
 
     // TT_Entry transposition_table[MAX_TT_SIZE]{};
     std::vector<TT_Entry> transposition_table;
@@ -66,6 +67,8 @@ public:
 
 
 };
+
+void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus);
 
 SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth);
 SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,  bool do_null);

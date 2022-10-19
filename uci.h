@@ -18,11 +18,13 @@ public:
 
     Engine engine;
     Position position;
+    MOVE_TYPE last_move = NO_MOVE;
 
     void initialize_uci();
     void parse_position();
     void parse_go();
     void uci_loop();
+    void time_handler(long self_time, long inc, long movetime, long movestogo);
 };
 
 

@@ -39,7 +39,7 @@ void Position::compute_hash_key() {
 }
 
 
-void Position::set_fen(const std::string& fen_string) {
+PLY_TYPE Position::set_fen(const std::string& fen_string) {
 
     std::vector<std::string> fen_tokens = split(fen_string, ' ');
 
@@ -112,6 +112,11 @@ void Position::set_fen(const std::string& fen_string) {
     if (fen_tokens[1] == "b") side = 1;
 
     compute_hash_key();
+
+    if (fen_tokens.size() >= 5) {
+        return static_cast<PLY_TYPE>(std::stoi(fen_tokens[4]));
+    }
+    else return 0;
 }
 
 
