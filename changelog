@@ -1813,6 +1813,32 @@ info depth 20 seldepth 35 score cp 33 time 25747 nodes 24045962 nps 933932 pv e2
 info depth 20 seldepth 38 score cp 33 time 45000 nodes 42170397 nps 937119 pv e2e4 e7e6
 bestmove e2e4
 
+On Mac M1
+info depth 1 seldepth 1 score cp 65 time 0 nodes 27 nps 270000 pv b1c3
+info depth 2 seldepth 2 score cp 7 time 0 nodes 109 nps 1090000 pv b1c3 b8c6
+info depth 3 seldepth 7 score cp 63 time 0 nodes 302 nps 3020000 pv b1c3 b8c6 g1f3
+info depth 4 seldepth 8 score cp 8 time 1 nodes 954 nps 954000 pv b1c3 b8c6 g1f3 g8f6
+info depth 5 seldepth 10 score cp 52 time 3 nodes 2082 nps 694000 pv b1c3 b8c6 g1f3 g8f6 e2e4
+info depth 6 seldepth 12 score cp 7 time 8 nodes 4849 nps 606125 pv b1c3 b8c6 e2e4 g8f6 g1f3 e7e5
+info depth 7 seldepth 17 score cp 32 time 18 nodes 11193 nps 621833 pv b1c3 b8c6 g1f3 g8f6 d2d4 d7d5 c1f4
+info depth 8 seldepth 24 score cp 17 time 61 nodes 48211 nps 790344 pv e2e4 b8c6 b1c3 g8f6 g1f3 d7d5
+info depth 9 seldepth 25 score cp 30 time 78 nodes 71758 nps 919974 pv b1c3 g8f6 g1f3 d7d5 d2d4 b8c6 c1f4 c8f5 e2e3
+info depth 10 seldepth 25 score cp 17 time 107 nodes 115878 nps 1082971 pv b1c3 g8f6 e2e4 b8c6 g1f3 d7d5 e4e5 f6e4 c3e4 d5e4
+info depth 11 seldepth 26 score cp 21 time 174 nodes 221043 nps 1270362 pv b1c3 g8f6 e2e4 b8c6 g1f3 d7d5 e4e5 f6e4 f1d3 c8f5 e1g1
+info depth 12 seldepth 26 score cp 20 time 292 nodes 405895 nps 1390051 pv b1c3 d7d5 d2d4 b8c6 g1f3 g8f6
+info depth 13 seldepth 27 score cp 31 time 528 nodes 775522 nps 1468791 pv b1c3 d7d5 d2d4 b8c6 g1f3 g8f6 e2e3 e7e6 f1b5 f8b4 f3e5 e8g8 e5c6
+info depth 14 seldepth 36 score cp 21 time 1083 nodes 1619500 nps 1495383 pv e2e4 d7d5 e4d5 g8f6 g1f3 f6d5 f1c4 b8c6 e1g1 c8e6 f3g5 d8d6 g5e6 d6e6
+info depth 15 seldepth 36 score cp 21 time 1898 nodes 2862495 nps 1508163 pv e2e4 e7e5 b1c3 g8f6 g1f3 b8c6 d2d4 e5d4 f3d4 f8b4 d4c6 d7c6 d1d8 e8d8 c1g5 h8e8
+info depth 16 seldepth 38 score cp 11 time 2918 nodes 4421013 nps 1515083 pv e2e4 e7e5 b1c3 g8f6 g1f3 b8c6 d2d4 e5d4 f3d4 f8b4 d4c6 b4c3 b2c3 d7c6 d1d8 e8d8 c1g5
+info depth 17 seldepth 38 score cp 11 time 3981 nodes 6048955 nps 1519456 pv e2e4 e7e5 b1c3 g8f6 g1f3 b8c6 d2d4 e5d4 f3d4 f8b4
+info depth 18 seldepth 38 score cp 17 time 5709 nodes 8709584 nps 1525588 pv e2e4 e7e5 b1c3 g8f6 g1f3 b8c6 d2d4 e5d4 f3d4 f8b4 d4c6 b4c3 b2c3 d7c6 d1d8 e8d8 f1d3 h8e8 c1g5
+info depth 19 seldepth 38 score cp 17 time 7453 nodes 11445856 nps 1535738 pv e2e4 e7e5 b1c3 g8f6 g1f3
+info depth 20 seldepth 38 score cp 17 time 10564 nodes 16321505 nps 1545011 pv e2e4 e7e5
+info depth 21 seldepth 38 score cp 22 time 20428 nodes 31642560 nps 1548979 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 d2d4 e5d4 f3d4
+info depth 22 seldepth 38 score cp 40 time 29446 nodes 45644489 nps 1550108 pv e2e4 e7e5 g1f3 g8f6 f3e5 d7d6 e5f3 f6e4 b1c3 e4c3 d2c3 f8e7 f1b5 c7c6 b5d3 e8g8 e1g1 b8d7 f1e1 d7c5 c1f4 c8e6 f3d4
+info depth 22 seldepth 41 score cp 40 time 45000 nodes 69787666 nps 1550837 pv e2e4 e7e5 g1f3 g8f6 f3e5 d7d6 e5f3 f6e4 b1c3 e4c3 d2c3 f8e7 f1b5 c7c6 b5d3 e8g8 e1g1 b8d7 f1e1 d7c5 c1f4 c8e6 f3d4
+bestmove e2e4
+
 Score of Altair0.45 vs Altair0.44: 43 - 32 - 75 [0.537]
 ...      Altair0.45 playing White: 26 - 17 - 32  [0.560] 75
 ...      Altair0.45 playing Black: 17 - 15 - 43  [0.513] 75

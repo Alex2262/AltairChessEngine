@@ -10,7 +10,6 @@
 
 
 inline uint64_t rand_uint64() {
-
     uint64_t r = 0;
     for (int i=0; i<64; i++) {
         r = r*2 + rand()%2;
