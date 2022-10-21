@@ -77,22 +77,25 @@ bool Engine::detect_repetition() {
 }
 
 
-SCORE_TYPE Engine::probe_tt_entry(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth) {
+short Engine::probe_tt_entry(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
+                                  SCORE_TYPE& return_score, MOVE_TYPE& tt_move) {
     TT_Entry& tt_entry = transposition_table[hash_key % MAX_TT_SIZE];
 
     if (tt_entry.key == hash_key) {
+        tt_move = tt_entry.move;
+
         if (tt_entry.depth >= depth) {
 
-            SCORE_TYPE score = tt_entry.score;
-            if (score < -MATE_BOUND) score += search_ply;
-            else if (score > MATE_BOUND) score -= search_ply;
+            return_score = tt_entry.score;
+            if (return_score < -MATE_BOUND) return_score += search_ply;
+            else if (return_score > MATE_BOUND) return_score -= search_ply;
 
-            if (tt_entry.flag == HASH_FLAG_EXACT) return score;
-            if (tt_entry.flag == HASH_FLAG_ALPHA && score <= alpha) return score;
-            if (tt_entry.flag == HASH_FLAG_BETA && score >= beta) return score;
+            if (tt_entry.flag == HASH_FLAG_EXACT) return RETURN_HASH_SCORE;
+            if (tt_entry.flag == HASH_FLAG_ALPHA && return_score <= alpha) return RETURN_HASH_SCORE;
+            if (tt_entry.flag == HASH_FLAG_BETA && return_score >= beta) return RETURN_HASH_SCORE;
         }
 
-        return USE_HASH_MOVE + tt_entry.move;
+        return USE_HASH_MOVE;
     }
 
     return NO_HASH_ENTRY;
@@ -117,17 +120,23 @@ void Engine::record_tt_entry(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag
 }
 
 
-SCORE_TYPE Engine::probe_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta) {
+short Engine::probe_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
+                               SCORE_TYPE& return_score, MOVE_TYPE& tt_move) {
     TT_Entry& tt_entry = transposition_table[hash_key % MAX_TT_SIZE];
 
     if (tt_entry.key == hash_key) {
+        tt_move = tt_entry.move;
 
-        if (tt_entry.flag == HASH_FLAG_EXACT) return tt_entry.score;
-        if (tt_entry.flag == HASH_FLAG_ALPHA && tt_entry.score <= alpha) return tt_entry.score;
-        if (tt_entry.flag == HASH_FLAG_BETA && tt_entry.score >= beta) return tt_entry.score;
+        return_score = tt_entry.score;
+        if (return_score < -MATE_BOUND) return_score += search_ply;
+        else if (return_score > MATE_BOUND) return_score -= search_ply;
+
+        if (tt_entry.flag == HASH_FLAG_EXACT) return RETURN_HASH_SCORE;
+        if (tt_entry.flag == HASH_FLAG_ALPHA && return_score <= alpha) return RETURN_HASH_SCORE;
+        if (tt_entry.flag == HASH_FLAG_BETA && return_score >= beta) return RETURN_HASH_SCORE;
 
 
-        return USE_HASH_MOVE + tt_entry.move;
+        return USE_HASH_MOVE;
     }
 
     return NO_HASH_ENTRY;
@@ -137,6 +146,9 @@ SCORE_TYPE Engine::probe_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_
 void Engine::record_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move,
                                SCORE_TYPE static_eval) {
     TT_Entry& tt_entry = transposition_table[hash_key % MAX_TT_SIZE];
+
+    if (score < -MATE_BOUND) score -= search_ply;
+    else if (score > MATE_BOUND) score += search_ply;
 
     if (tt_entry.key != hash_key || tt_flag == HASH_FLAG_EXACT) {
         tt_entry.key = hash_key;
@@ -169,17 +181,11 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     engine.node_count++;
     engine.selective_depth = std::max(engine.search_ply, engine.selective_depth);
 
-    SCORE_TYPE tt_value = engine.probe_tt_entry_q(position.hash_key, alpha, beta);
+    SCORE_TYPE tt_value = 0;
     MOVE_TYPE tt_move = NO_MOVE;
+    short tt_return_type = engine.probe_tt_entry_q(position.hash_key, alpha, beta, tt_value, tt_move);
 
-    // When the tt_value is below NO_HASH_ENTRY, there is a score to return that we can use
-    if (tt_value < NO_HASH_ENTRY) {
-        if (!engine.search_ply) {
-            MOVE_TYPE move = engine.transposition_table[position.hash_key % MAX_TT_SIZE].move;
-            engine.pv_table[0][0] = move;
-            engine.pv_length[0] = 1;
-        }
-
+    if (tt_return_type == RETURN_HASH_SCORE) {
         return tt_value;
     }
 
@@ -261,6 +267,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Initialize PV length
     engine.pv_length[engine.search_ply] = engine.search_ply;
 
+    bool root = !engine.search_ply;
+
     // Check time
     if (engine.current_search_depth >= engine.min_depth && (engine.node_count & 2047) == 0) {
         auto time = std::chrono::high_resolution_clock::now();
@@ -270,19 +278,23 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         if (current_time - engine.start_time >= engine.max_time) engine.stopped = true;
     }
 
-    // Detect repetitions and fifty move rule
-    if (engine.search_ply && (engine.fifty_move >= 100 || engine.detect_repetition())) return 0;
+    // Early search exits
+    if (!root) {
+        // Detect repetitions and fifty move rule
+        if (engine.fifty_move >= 100 || engine.detect_repetition()) return 0;
 
-    // Mate Distance Pruning
-    SCORE_TYPE mating_value = MATE_SCORE - engine.search_ply;
-    if (mating_value < beta) {
-        beta = mating_value;
-        if (alpha >= mating_value) return mating_value;
-    }
-    mating_value = -MATE_SCORE + engine.search_ply;
-    if (mating_value > alpha) {
-        alpha = mating_value;
-        if (beta <= mating_value) return mating_value;
+        // Mate Distance Pruning
+        SCORE_TYPE mating_value = MATE_SCORE - engine.search_ply;
+        if (mating_value < beta) {
+            beta = mating_value;
+            if (alpha >= mating_value) return mating_value;
+        }
+        mating_value = -MATE_SCORE + engine.search_ply;
+        if (mating_value > alpha) {
+            alpha = mating_value;
+            if (beta <= mating_value) return mating_value;
+        }
+
     }
 
     bool in_check = position.is_attacked(position.king_positions[position.side]);
@@ -295,25 +307,45 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     engine.node_count++;
 
-    // Get a value from probe_tt_entry that will correspond to either returning a score immediately
-    // or returning no hash entry, or returning move int to sort
-    SCORE_TYPE tt_value = engine.probe_tt_entry(position.hash_key, alpha, beta, depth);
+    // TT probing
+    SCORE_TYPE tt_value = 0;
     MOVE_TYPE tt_move = NO_MOVE;
+    short tt_return_type = engine.probe_tt_entry(position.hash_key, alpha, beta, depth, tt_value, tt_move);
 
-    // When the tt_value is below NO_HASH_ENTRY, there is a score to return that we can use
-    if (tt_value < NO_HASH_ENTRY) {
-        if (!engine.search_ply) {
-            MOVE_TYPE move = engine.transposition_table[position.hash_key % MAX_TT_SIZE].move;
-            engine.pv_table[0][0] = move;
-            engine.pv_length[0] = 1;
+    // We are allowed to return the hash score
+    if (tt_return_type == RETURN_HASH_SCORE) {
+        bool return_tt_value = true;
+
+        // We have to check if there's a repetition before returning a score
+        if (tt_move) {
+            position.make_move(tt_move, engine.search_ply, engine.fifty_move);
+
+            engine.search_ply++;
+            engine.fifty_move++;
+            engine.game_ply++;
+            engine.repetition_table[engine.game_ply] = position.hash_key;
+            position.side ^= 1;
+
+            if (engine.fifty_move >= 100 || engine.detect_repetition()) return_tt_value = false;
+
+            position.side ^= 1;
+            engine.game_ply--;
+            engine.search_ply--;
+
+            position.undo_move(tt_move, engine.search_ply, engine.fifty_move);
         }
+        else return_tt_value = false;
 
-        return tt_value;
+        if (return_tt_value) {
+            if (!engine.search_ply) {
+                MOVE_TYPE move = engine.transposition_table[position.hash_key % MAX_TT_SIZE].move;
+                engine.pv_table[0][0] = move;
+                engine.pv_length[0] = 1;
+            }
+
+            return tt_value;
+        }
     }
-
-    // When the tt_value is above a bound (USE_HASH_MOVE), the function tells us to use the
-    // tt_entry move for move ordering
-    else if (tt_value > USE_HASH_MOVE) tt_move = tt_value - USE_HASH_MOVE;
 
     // Variable to record the hash flag
     short tt_hash_flag = HASH_FLAG_ALPHA;
@@ -327,7 +359,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Reverse Futility Pruning
     if (depth <= 5 && !in_check) {
         if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
-        if (static_eval - 160 * depth >= beta) return static_eval;
+        if (static_eval - 150 * depth >= beta) return static_eval;
     }
 
     // Null move pruning

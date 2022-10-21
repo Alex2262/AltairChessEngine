@@ -57,10 +57,12 @@ public:
     void new_game();
     bool detect_repetition();
 
-    SCORE_TYPE probe_tt_entry(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth);
+    short probe_tt_entry(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
+                                 SCORE_TYPE& return_score, MOVE_TYPE& tt_move);
     void record_tt_entry(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
                          SCORE_TYPE static_eval);
-    SCORE_TYPE probe_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta);
+    short probe_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
+                           SCORE_TYPE& return_score, MOVE_TYPE& tt_move);
     void record_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move,
                            SCORE_TYPE static_eval);
     SCORE_TYPE probe_tt_evaluation(HASH_TYPE hash_key);

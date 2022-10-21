@@ -1846,10 +1846,130 @@ Score of Altair0.45 vs Altair0.44: 43 - 32 - 75 [0.537]
 Elo difference: 25.5 +/- 39.4, LOS: 89.8 %, DrawRatio: 50.0 %
 150 of 150 games finished.
 
+Score of Altair0.45 vs Altair0.44: 4 - 0 - 16 [0.600]
+...      Altair0.45 playing White: 3 - 0 - 7  [0.650] 10
+...      Altair0.45 playing Black: 1 - 0 - 9  [0.550] 10
+...      White vs Black: 3 - 1 - 16  [0.550] 20
+Elo difference: 70.4 +/- 64.2, LOS: 97.7 %, DrawRatio: 80.0 %
+
+Score of Altair0.45 vs bienchen.1.0: 113 - 112 - 77 [0.502]
+...      Altair0.45 playing White: 57 - 54 - 40  [0.510] 151
+...      Altair0.45 playing Black: 56 - 58 - 37  [0.493] 151
+...      White vs Black: 115 - 110 - 77  [0.508] 302
+Elo difference: 1.2 +/- 33.9, LOS: 52.7 %, DrawRatio: 25.5 %
+
+1 min
 Score of Altair0.45 vs sofcheck_amd64-popcnt_windows: 32 - 51 - 37 [0.421]
 ...      Altair0.45 playing White: 16 - 27 - 17  [0.408] 60
 ...      Altair0.45 playing Black: 16 - 24 - 20  [0.433] 60
 ...      White vs Black: 40 - 43 - 37  [0.487] 120
 Elo difference: -55.5 +/- 52.4, LOS: 1.9 %, DrawRatio: 30.8 %
+120 of 120 games finished.
+```
+
+
+### Small Changes
+Lower RFP margin by 10, and do not do mate distance pruning at root of search
+
+```
+info depth 1 seldepth 1 score cp 65 time 0 nodes 27 nps 270000 pv b1c3
+info depth 2 seldepth 2 score cp 7 time 1 nodes 109 nps 109000 pv b1c3 b8c6
+info depth 3 seldepth 7 score cp 63 time 3 nodes 302 nps 100666 pv b1c3 b8c6 g1f3
+info depth 4 seldepth 8 score cp 8 time 5 nodes 953 nps 190600 pv b1c3 b8c6 g1f3 g8f6
+info depth 5 seldepth 10 score cp 52 time 7 nodes 2080 nps 297142 pv b1c3 b8c6 g1f3 g8f6 e2e4
+info depth 6 seldepth 12 score cp 7 time 10 nodes 4677 nps 467700 pv b1c3 b8c6 e2e4 g8f6 g1f3 e7e5
+info depth 7 seldepth 20 score cp 32 time 18 nodes 11506 nps 639222 pv b1c3 b8c6 d2d4 g8f6 g1f3 d7d5 c1f4
+info depth 8 seldepth 24 score cp 7 time 52 nodes 42459 nps 816519 pv b1c3 d7d5 d2d4 g8f6 g1f3 b8c6
+info depth 9 seldepth 24 score cp 30 time 72 nodes 61311 nps 851541 pv b1c3 d7d5 d2d4 g8f6 g1f3 b8c6 c1f4 c8f5 e2e3
+info depth 10 seldepth 25 score cp 20 time 120 nodes 105876 nps 882300 pv b1c3 d7d5 d2d4 g8f6 g1f3 b8c6 e2e3 c8e6 f1b5 d
+8d6
+info depth 11 seldepth 25 score cp 26 time 182 nodes 163668 nps 899274 pv b1c3 d7d5 d2d4 g8f6 g1f3 b8c6 e2e3 c8e6 f1b5 a
+7a6 b5c6 b7c6
+info depth 12 seldepth 30 score cp 24 time 424 nodes 391955 nps 924422 pv e2e4 d7d5 e4d5 g8f6 d2d4 f6d5 c2c4 d5f6 g1f3 b
+8c6 b1c3 c8f5
+info depth 13 seldepth 30 score cp 43 time 877 nodes 803185 nps 915832 pv e2e4 b8c6 b1c3 e7e6 g1f3 d7d5 d2d4 f8b4 e4d5 e
+6d5 f3e5 g8f6 f1b5
+info depth 14 seldepth 30 score cp 27 time 1264 nodes 1169201 nps 925000 pv e2e4 b8c6 b1c3 e7e6 g1f3 d7d5 d2d4 f8b4 e4e5
+ g8e7 f1b5 e8g8 e1g1 e7f5
+info depth 15 seldepth 30 score cp 44 time 2289 nodes 2152818 nps 940505 pv e2e4 b8c6 b1c3 e7e6 g1f3 d7d5 d2d4 f8b4 e4d5
+ e6d5 f1b5 g8f6 d1e2 f6e4 e1g1 c8f5
+info depth 16 seldepth 38 score cp 29 time 4761 nodes 4517335 nps 948820 pv e2e4 e7e5 d2d4 e5d4 g1f3 b8c6 f3d4 g8f6 d4c6
+ d7c6 d1d8 e8d8 b1d2 f8c5 f1d3 h8e8 e1g1
+info depth 17 seldepth 38 score cp 29 time 5857 nodes 5574546 nps 951774 pv e2e4 e7e5 d2d4 e5d4 g1f3 b8c6
+info depth 18 seldepth 38 score cp 37 time 9919 nodes 9425520 nps 950249 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 d2d4 e5d4 f3d4
+ f8b4 d4c6 b7c6 d1d4 d8e7 e4e5 e8g8 c1g5 c6c5
+info depth 19 seldepth 38 score cp 37 time 14020 nodes 12731529 nps 908097 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 d2d4 e5d4 f3
+d4
+info depth 20 seldepth 38 score cp 37 time 16894 nodes 15487627 nps 916753 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 d2d4
+info depth 21 seldepth 38 score cp 30 time 25230 nodes 23527706 nps 932528 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 d2d4 e5d4 f3
+d4 f8b4 d4c6 b7c6 f1d3 e8g8 e1g1 d7d5 e4e5 c8g4 d1d2 f6e4
+info depth 22 seldepth 38 score cp 30 time 34468 nodes 31687819 nps 919340 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 d2d4
+bestmove e2e4
+
+8 + 0.05
+Score of Altair0.46 vs Altair0.45: 50 - 49 - 101 [0.502]
+...      Altair0.46 playing White: 29 - 24 - 47  [0.525] 100
+...      Altair0.46 playing Black: 21 - 25 - 54  [0.480] 100
+...      White vs Black: 54 - 45 - 101  [0.522] 200
+Elo difference: 1.7 +/- 33.9, LOS: 54.0 %, DrawRatio: 50.5 %
+200 of 200 games finished.
+
+1 min
+Score of Altair0.46 vs sofcheck_amd64-popcnt_windows: 36 - 51 - 33 [0.438]
+...      Altair0.46 playing White: 17 - 27 - 16  [0.417] 60
+...      Altair0.46 playing Black: 19 - 24 - 17  [0.458] 60
+...      White vs Black: 41 - 46 - 33  [0.479] 120
+Elo difference: -43.7 +/- 53.6, LOS: 5.4 %, DrawRatio: 27.5 %
+120 of 120 games finished.
+```
+
+
+### Reformatting TT to not allow returning scores if it causes a draw
+
+```
+info depth 1 seldepth 1 score cp 65 time 0 nodes 27 nps 270000 pv b1c3
+info depth 2 seldepth 2 score cp 7 time 1 nodes 109 nps 109000 pv b1c3 b8c6
+info depth 3 seldepth 7 score cp 63 time 3 nodes 302 nps 100666 pv b1c3 b8c6 g1f3
+info depth 4 seldepth 8 score cp 8 time 5 nodes 953 nps 190600 pv b1c3 b8c6 g1f3 g8f6
+info depth 5 seldepth 10 score cp 52 time 8 nodes 2080 nps 260000 pv b1c3 b8c6 g1f3 g8f6 e2e4
+info depth 6 seldepth 12 score cp 7 time 12 nodes 4677 nps 389750 pv b1c3 b8c6 e2e4 g8f6 g1f3 e7e5
+info depth 7 seldepth 20 score cp 32 time 20 nodes 11116 nps 555800 pv b1c3 b8c6 d2d4 g8f6 g1f3 d7d5 c1f4
+info depth 8 seldepth 24 score cp 7 time 58 nodes 45144 nps 778344 pv b1c3 d7d5 d2d4 g8f6 g1f3 b8c6
+info depth 9 seldepth 25 score cp 30 time 75 nodes 60300 nps 804000 pv b1c3 d7d5 d2d4 g8f6 g1f3 b8c6 c1f4 c8f5 e2e3
+info depth 10 seldepth 25 score cp 17 time 176 nodes 146029 nps 829710 pv e2e4 b8c6 b1c3 g8f6 g1f3 d7d5 e4e5 f6e4 c3e4 d
+5e4
+info depth 11 seldepth 25 score cp 42 time 305 nodes 266021 nps 872200 pv e2e4 b8c6 b1c3 g8f6 d2d4 d7d5 e4e5 f6e4 c3e4 d
+5e4 g1e2
+info depth 12 seldepth 27 score cp 41 time 521 nodes 469045 nps 900278 pv e2e4 b8c6 g1f3 e7e6 b1c3 d7d5 d2d4 g8f6 c1g5 h
+7h6 e4d5 e6d5
+info depth 13 seldepth 27 score cp 36 time 945 nodes 866953 nps 917410 pv e2e4 e7e5 b1c3 g8f6 g1f3 b8c6
+info depth 14 seldepth 27 score cp 36 time 1267 nodes 1172504 nps 925417 pv e2e4 e7e5 b1c3 g8f6 g1f3 b8c6 d2d4 e5d4 f3d4
+ f8b4 d4c6 b4c3 b2c3 d7c6 d1d3
+info depth 15 seldepth 34 score cp 21 time 2205 nodes 2049976 nps 929694 pv e2e4 e7e5 b1c3 g8f6 g1f3 b8c6 d2d4 e5d4 f3d4
+ f8b4 d4c6 d7c6 d1d8 e8d8 c1g5 h8e8
+info depth 16 seldepth 34 score cp 21 time 2814 nodes 2626489 nps 933364 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6
+info depth 17 seldepth 34 score cp 21 time 4163 nodes 3899478 nps 936699 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2d4 e5d4 f3d4
+
+info depth 18 seldepth 34 score cp 21 time 9416 nodes 7908353 nps 839884 pv e2e4 e7e5
+info depth 19 seldepth 34 score cp 21 time 12351 nodes 10578404 nps 856481 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6
+info depth 20 seldepth 36 score cp 21 time 17131 nodes 14916633 nps 870739 pv e2e4 e7e5
+info depth 21 seldepth 36 score cp 37 time 28605 nodes 25381808 nps 887320 pv e2e4 e7e5 b1c3 b8c6 g1f3 f8c5 f3e5 g8f6 e5
+c6 d7c6 e4e5 d8d4 d1e2 f6g4 c3e4 c5e7 c2c3 d4e5 d2d4 e5e6
+info depth 22 seldepth 36 score cp 37 time 37106 nodes 33266794 nps 896534 pv e2e4 e7e5 b1c3 b8c6 g1f3 f8c5 f3e5 g8f6 e5
+c6 d7c6 e4e5
+bestmove e2e4
+
+Score of Altair0.47 vs Altair0.46: 61 - 53 - 86 [0.520]
+...      Altair0.47 playing White: 32 - 22 - 46  [0.550] 100
+...      Altair0.47 playing Black: 29 - 31 - 40  [0.490] 100
+...      White vs Black: 63 - 51 - 86  [0.530] 200
+Elo difference: 13.9 +/- 36.4, LOS: 77.3 %, DrawRatio: 43.0 %
+200 of 200 games finished.
+
+Score of Altair0.47 vs sofcheck_amd64-popcnt_windows: 43 - 46 - 31 [0.487]
+...      Altair0.47 playing White: 20 - 21 - 19  [0.492] 60
+...      Altair0.47 playing Black: 23 - 25 - 12  [0.483] 60
+...      White vs Black: 45 - 44 - 31  [0.504] 120
+Elo difference: -8.7 +/- 53.9, LOS: 37.5 %, DrawRatio: 25.8 %
 120 of 120 games finished.
 ```

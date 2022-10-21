@@ -7,8 +7,10 @@
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - "
 #define KIWIPETE_FEN "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - "
 
-#define NO_HASH_ENTRY       2000000
-#define USE_HASH_MOVE       3000000
+#define NO_HASH_ENTRY       0
+#define USE_HASH_MOVE       1
+#define RETURN_HASH_SCORE   2
+
 #define SCORE_INF           1000000
 #define NO_EVALUATION       500000
 #define MATE_SCORE          100000
