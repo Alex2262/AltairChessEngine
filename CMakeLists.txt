@@ -5,9 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
 
-set(GCC_COVERAGE_LINK_FLAGS "-static")
-
-set(CMAKE_EXE_LINKER_FLAGS "${GCC_COVERAGE_LINK_FLAGS}")
 include_directories(.)
 
 add_executable(AltairChess
