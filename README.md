@@ -25,6 +25,7 @@ legality, and if the move is not legal, we skip to the next move.
     - Alpha-Beta Pruning
       - Reverse Futility Pruning
       - Null Move Pruning
+      - Idea similar to Internal Iterative Deepening
       - Principal Variation Search
       - Late Move Reductions
     - Transposition Tables
