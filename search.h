@@ -50,6 +50,7 @@ public:
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH+250] = {0};
 
     bool stopped = true;
+    bool terminated = true;
 
     void clear_tt();
 

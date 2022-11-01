@@ -5,6 +5,7 @@
 #ifndef ANTARESCHESSENGINE_UCI_H
 #define ANTARESCHESSENGINE_UCI_H
 
+#include <thread>
 #include "position.h"
 #include "search.h"
 
@@ -19,6 +20,8 @@ public:
     Engine engine;
     Position position;
     MOVE_TYPE last_move = NO_MOVE;
+
+    std::vector<std::thread> search_threads;
 
     void initialize_uci();
     void parse_position();

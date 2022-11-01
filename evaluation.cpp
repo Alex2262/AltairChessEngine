@@ -802,7 +802,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
 
             if (move_type == MOVE_TYPE_PROMOTION) score += 18000 +
                                                            5 * PIECE_VALUES_MID[get_promotion_piece(move)];
-            else if (move_type == MOVE_TYPE_EP) score += 21000;
+            else if (move_type == MOVE_TYPE_EP) score += 20050;
             else if (move_type == MOVE_TYPE_CASTLE) score += 1200;
         }
     }
@@ -825,7 +825,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
 
             if (move_type == MOVE_TYPE_PROMOTION) score += 18000 +
                                                            5 * PIECE_VALUES_MID[get_promotion_piece(move) - BLACK_PAWN];
-            else if (move_type == MOVE_TYPE_EP) score += 21000;
+            else if (move_type == MOVE_TYPE_EP) score += 20050;
             else if (move_type == MOVE_TYPE_CASTLE) score += 1200;
         }
     }

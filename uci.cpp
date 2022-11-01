@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <unistd.h>
 #include "uci.h"
 #include "useful.h"
 #include "move.h"
@@ -106,12 +107,16 @@ void UCI::parse_position() {
 
 
 void UCI::parse_go() {
-    int d = engine.max_depth;
+    int d = 0;
     long wtime = 0, btime = 0, winc = 0, binc = 0, movetime = 0, movestogo = 0;
+    bool infinite = false;
 
     for (int i = 1; i < tokens.size(); i += 2) {
         std::string type = tokens[i];
-        int value = std::stoi(tokens[i + 1]);
+
+        int value = 0;
+
+        if (tokens.size() > i + 1) value = std::stoi(tokens[i + 1]);
 
         if (type == "depth") d = value;
 
@@ -124,19 +129,28 @@ void UCI::parse_go() {
         else if (type == "binc") binc = value;
 
         else if (type == "movestogo") movestogo = value;
+        else if (type == "infinite") infinite = true;
 
     }
 
-    int self_time = (position.side == 0) ? wtime : btime;
-    int inc = (position.side == 0) ? winc : binc;
+    if (infinite || (d && tokens.size() == 3)) {
+        engine.max_time = 86400000;
+    }
+    else {
+        int self_time = (position.side == 0) ? wtime : btime;
+        int inc = (position.side == 0) ? winc : binc;
 
-    time_handler(self_time, inc, movetime, movestogo);
+        time_handler(self_time, inc, movetime, movestogo);
+    }
 
-    engine.max_depth = d;
+    if (d) engine.max_depth = d;
 
     std::cout << engine.max_time << std::endl;
 
-    iterative_search(engine, position);
+
+    search_threads.emplace_back(iterative_search, std::ref(engine), std::ref(position));
+
+    //iterative_search(engine, position);
 }
 
 
@@ -150,11 +164,18 @@ void UCI::uci_loop() {
         tokens = split(msg, ' ');
 
         if (msg == "quit") {
-            engine.stopped = true;
             break;
         }
 
-        if (msg == "stop") engine.stopped = true;
+        if (msg == "stop") {
+            engine.stopped = true;
+            if (!search_threads.empty()) {
+                search_threads[0].join();
+
+                while (!engine.terminated);  // to prevent some stupid exceptions
+                if (engine.terminated) search_threads.erase(search_threads.end() - 1);
+            }
+        }
 
         else if (msg == "uci") {
             std::cout << "id name Altair" << std::endl;

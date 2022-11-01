@@ -51,6 +51,9 @@ void Engine::reset() {
     std::memset(history_moves, 0, sizeof(history_moves));
     std::memset(capture_history, 0, sizeof(capture_history));
     std::memset(counter_moves, 0, sizeof(counter_moves));
+
+    stopped = false;
+    terminated = false;
 }
 
 
@@ -178,8 +181,8 @@ void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
 SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth) {
 
     // position.print_board();
-    engine.node_count++;
-    engine.selective_depth = std::max(engine.search_ply, engine.selective_depth);
+    // engine.node_count++;
+    // engine.selective_depth = std::max(engine.search_ply, engine.selective_depth);
 
     SCORE_TYPE tt_value = 0;
     MOVE_TYPE tt_move = NO_MOVE;
@@ -195,6 +198,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
     if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
+    engine.node_count++;
     // SCORE_TYPE static_eval = evaluate(position);
 
     if (depth == 0 || static_eval >= beta) return static_eval;
@@ -266,6 +270,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     // Initialize PV length
     engine.pv_length[engine.search_ply] = engine.search_ply;
+    engine.selective_depth = std::max(engine.search_ply, engine.selective_depth);
 
     bool root = !engine.search_ply;
 
@@ -305,7 +310,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         return qsearch(engine, position, alpha, beta, engine.max_q_depth);
     }
 
-    engine.node_count++;
+    //engine.node_count++;
 
     // TT probing
     SCORE_TYPE tt_value = 0;
@@ -355,11 +360,22 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     bool pv_node = alpha != beta - 1;
 
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
+    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
+    engine.node_count++;
+
+    // Razoring
+    // Implementation from Stockfish
+    // If the evaluation is really low, and we cannot improve alpha even with qsearch, then return.
+    if (depth <= 1 && static_eval + 640 < alpha) {
+        SCORE_TYPE return_eval = qsearch(engine, position, alpha, beta, engine.max_q_depth);
+        if (return_eval < alpha) return return_eval;
+    }
 
     // Reverse Futility Pruning
-    if (depth <= 5 && !in_check) {
-        if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
-        if (static_eval - 150 * depth >= beta) return static_eval;
+    // If the last move was very bad, such that the static evaluation - a margin is still greater
+    // than the opponent's best score, then return the static evaluation.
+    if (depth <= 5 && !in_check && static_eval - 165 * depth >= beta) {
+        return static_eval;
     }
 
     // Null move pruning
@@ -390,17 +406,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     }
 
-
+    // Internal Iterative Reduction. Rebel's idea
     if (tt_move == NO_MOVE && depth >= 4) {
-
-        // Normal IID
-        /*
-        negamax(engine, position, alpha, beta, depth - 2, false);
-        TT_Entry& tt_entry = engine.transposition_table[position.hash_key % MAX_TT_SIZE];
-        if (position.hash_key == tt_entry.key) tt_move = tt_entry.move;
-         */
-
-        // Different IID idea
         depth--;
     }
 
@@ -443,7 +450,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         SCORE_TYPE return_eval;
         PLY_TYPE reduction = 0;
 
-        bool quiet = !get_is_capture(move);
+        bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
         bool is_killer_move = move == engine.killer_moves[0][engine.search_ply - 1] ||
                               move == engine.killer_moves[1][engine.search_ply - 1];
 
@@ -455,8 +462,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         if (legal_moves >= 2
                 && ((engine.search_ply && !pv_node) || legal_moves >= 4)
                 && depth >= 3
+                && quiet
                 && !in_check
-                && get_move_type(move) == 0
                 ){
 
             reduction = LMR_REDUCTIONS[quiet][depth][legal_moves];
@@ -469,7 +476,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                      [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]]
                      / 8000.0);
 
-            reduction += quiet && get_is_capture(tt_move);
+            // reduction += quiet && get_is_capture(tt_move);
 
             reduction = std::min(depth - 2, std::max(0, static_cast<int>(reduction)));
 
@@ -582,7 +589,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
 void iterative_search(Engine& engine, Position& position) {
 
-    engine.stopped = false;
     position.clear_movelist();
 
     engine.reset();
@@ -606,7 +612,7 @@ void iterative_search(Engine& engine, Position& position) {
     double prev_node_count = 1;
     PLY_TYPE full_searches = 0;
 
-    while (running_depth < engine.max_depth) {
+    while (running_depth <= engine.max_depth) {
         engine.current_search_depth = running_depth;
         SCORE_TYPE return_eval = negamax(engine, position, alpha, beta, running_depth, false);
 
@@ -649,7 +655,7 @@ void iterative_search(Engine& engine, Position& position) {
             SCORE_TYPE score = best_score >= MATE_BOUND ?
                     (MATE_SCORE - best_score) / 2 + 1: (-MATE_SCORE -  best_score) / 2 - 1;
 
-            std::cout << "info depth " << running_depth << " seldepth " << engine.selective_depth
+            std::cout << "info multipv 1 depth " << running_depth << " seldepth " << engine.selective_depth
                       << " score mate " << score << " time " << int(elapsed_time)
                       << " nodes " << engine.node_count << " nps " << int(engine.node_count / (elapsed_time / 1000))
                       << " pv " << best_pv << std::endl;
@@ -657,13 +663,13 @@ void iterative_search(Engine& engine, Position& position) {
             break;
         }
         else {
-            std::cout << "info depth " << running_depth << " seldepth " << engine.selective_depth
+            std::cout << "info multipv 1 depth " << running_depth << " seldepth " << engine.selective_depth
                       << " score cp " << best_score << " time " << int(elapsed_time)
                       << " nodes " << engine.node_count << " nps " << int(engine.node_count / (elapsed_time / 1000))
                       << " pv " << best_pv << std::endl;
         }
 
-        if (engine.stopped || running_depth == engine.max_depth - 1) {
+        if (engine.stopped || running_depth == engine.max_depth) {
             break;
         }
 
@@ -690,6 +696,8 @@ void iterative_search(Engine& engine, Position& position) {
     }
 
     std::cout << "bestmove " << split(best_pv, ' ')[0] << std::endl;
+
+    engine.terminated = true;
 }
 
 
