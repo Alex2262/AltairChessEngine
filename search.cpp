@@ -48,8 +48,8 @@ void Engine::reset() {
     std::memset(pv_table, 0, sizeof(pv_table));
 
     std::memset(killer_moves, 0, sizeof(killer_moves));
-    std::memset(history_moves, 0, sizeof(history_moves));
-    std::memset(capture_history, 0, sizeof(capture_history));
+    //std::memset(history_moves, 0, sizeof(history_moves));
+    //std::memset(capture_history, 0, sizeof(capture_history));
     std::memset(counter_moves, 0, sizeof(counter_moves));
 
     stopped = false;
@@ -61,6 +61,13 @@ void Engine::new_game() {
     reset();
 
     std::memset(repetition_table, 0, sizeof(repetition_table));
+    std::memset(pv_length, 0, sizeof(pv_length));
+    std::memset(pv_table, 0, sizeof(pv_table));
+
+    std::memset(killer_moves, 0, sizeof(killer_moves));
+    std::memset(history_moves, 0, sizeof(history_moves));
+    std::memset(capture_history, 0, sizeof(capture_history));
+    std::memset(counter_moves, 0, sizeof(counter_moves));
     clear_tt();
 
     game_ply = 0;
@@ -181,7 +188,7 @@ void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
 SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth) {
 
     // position.print_board();
-    // engine.node_count++;
+    engine.node_count++;
     // engine.selective_depth = std::max(engine.search_ply, engine.selective_depth);
 
     SCORE_TYPE tt_value = 0;
@@ -198,7 +205,6 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
     if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
-    engine.node_count++;
     // SCORE_TYPE static_eval = evaluate(position);
 
     if (depth == 0 || static_eval >= beta) return static_eval;
@@ -310,7 +316,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         return qsearch(engine, position, alpha, beta, engine.max_q_depth);
     }
 
-    //engine.node_count++;
+    engine.node_count++;
 
     // TT probing
     SCORE_TYPE tt_value = 0;
@@ -361,7 +367,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
     if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
-    engine.node_count++;
 
     // Razoring
     // Implementation from Stockfish
@@ -457,6 +462,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         bool full_depth_zero_window;
 
         // Late Move Reductions
+
         // The idea that if moves are ordered well, then moves that are searched
         // later shouldn't be as good, and therefore we don't need to search them to a very high depth
         if (legal_moves >= 2

@@ -91,6 +91,18 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
             scores.mid += row * PASSED_PAWN_BONUS_MID;
             scores.end += row * PASSED_PAWN_BONUS_END;
+
+            // Blocker right in front of pawn
+            if (WHITE_KING < position.board[pos - 10] && position.board[pos - 10] < EMPTY) {
+                scores.mid -= BLOCKER_VALUES_MID[position.board[pos - 10] - 6];
+                scores.end -= BLOCKER_VALUES_END[position.board[pos - 10] - 6];
+            }
+
+            // Blocker two squares in front of pawn
+            if (row < 7 && WHITE_KING < position.board[pos - 20] && position.board[pos - 20] < EMPTY) {
+                scores.mid -= BLOCKER_VALUES_MID[position.board[pos - 20] - 6] / 2;
+                scores.end -= BLOCKER_VALUES_END[position.board[pos - 20] - 6] / 2;
+            }
         }
     }
 
@@ -146,6 +158,18 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
             scores.mid += (9 - row) * PASSED_PAWN_BONUS_MID;
             scores.end += (9 - row) * PASSED_PAWN_BONUS_END;
+
+            // Blocker right in front of pawn
+            if (position.board[pos + 10] < BLACK_PAWN) {
+                scores.mid -= BLOCKER_VALUES_MID[position.board[pos + 10]];
+                scores.end -= BLOCKER_VALUES_END[position.board[pos + 10]];
+            }
+
+            // Blocker two squares in front of pawn
+            if (row > 2 && position.board[pos + 20] < BLACK_PAWN) {
+                scores.mid -= BLOCKER_VALUES_MID[position.board[pos + 20]] / 2;
+                scores.end -= BLOCKER_VALUES_END[position.board[pos + 20]] / 2;
+            }
         }
     }
 }
