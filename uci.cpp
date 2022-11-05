@@ -114,11 +114,13 @@ void UCI::parse_go() {
     for (int i = 1; i < tokens.size(); i += 2) {
         std::string type = tokens[i];
 
-        int value = 0;
+        uint64_t value = 0;
 
         if (tokens.size() > i + 1) value = std::stoi(tokens[i + 1]);
 
         if (type == "depth") d = value;
+
+        else if (type == "nodes") engine.max_nodes = value;
 
         else if (type == "movetime") movetime = value;
 
@@ -147,6 +149,13 @@ void UCI::parse_go() {
 
     std::cout << engine.max_time << std::endl;
 
+    engine.stopped = true;
+    if (!search_threads.empty()) {
+        search_threads[0].join();
+
+        while (!engine.terminated);  // to prevent some stupid exceptions
+        if (engine.terminated) search_threads.erase(search_threads.end() - 1);
+    }
 
     search_threads.emplace_back(iterative_search, std::ref(engine), std::ref(position));
 

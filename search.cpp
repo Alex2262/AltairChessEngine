@@ -191,6 +191,17 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     engine.node_count++;
     // engine.selective_depth = std::max(engine.search_ply, engine.selective_depth);
 
+    // Check time and max nodes
+    if (engine.current_search_depth >= engine.min_depth && (engine.node_count & 2047) == 0 ) {
+        auto time = std::chrono::high_resolution_clock::now();
+        long current_time = std::chrono::duration_cast<std::chrono::milliseconds>
+                (std::chrono::time_point_cast<std::chrono::milliseconds>(time).time_since_epoch()).count();
+
+        if (current_time - engine.start_time >= engine.max_time ||
+            (engine.max_nodes && engine.node_count >= engine.max_nodes))
+            engine.stopped = true;
+    }
+
     SCORE_TYPE tt_value = 0;
     MOVE_TYPE tt_move = NO_MOVE;
     short tt_return_type = engine.probe_tt_entry_q(position.hash_key, alpha, beta, tt_value, tt_move);
@@ -279,15 +290,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     engine.selective_depth = std::max(engine.search_ply, engine.selective_depth);
 
     bool root = !engine.search_ply;
-
-    // Check time
-    if (engine.current_search_depth >= engine.min_depth && (engine.node_count & 2047) == 0) {
-        auto time = std::chrono::high_resolution_clock::now();
-        long current_time = std::chrono::duration_cast<std::chrono::milliseconds>
-                (std::chrono::time_point_cast<std::chrono::milliseconds>(time).time_since_epoch()).count();
-
-        if (current_time - engine.start_time >= engine.max_time) engine.stopped = true;
-    }
 
     // Early search exits
     if (!root) {

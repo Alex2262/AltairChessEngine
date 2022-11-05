@@ -24,7 +24,7 @@ public:
 
     PLY_TYPE max_depth = 64;
     PLY_TYPE max_q_depth = 64;
-    PLY_TYPE min_depth = 2;
+    PLY_TYPE min_depth = 1;
     PLY_TYPE current_search_depth = 0;
     PLY_TYPE selective_depth = 0;
     PLY_TYPE search_ply = 0;
@@ -34,7 +34,8 @@ public:
     long max_time = 60000;
     long start_time = 0;
 
-    long long node_count = 0;
+    uint64_t max_nodes = 0;
+    uint64_t node_count = 0;
 
     MOVE_TYPE pv_table[64][64]{};
     unsigned short pv_length[65] = {0};
