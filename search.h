@@ -40,10 +40,10 @@ public:
     MOVE_TYPE pv_table[64][64]{};
     unsigned short pv_length[65] = {0};
 
-    MOVE_TYPE killer_moves[2][64]{};  // # of killer moves (2) | max_depth (64)
-    SCORE_TYPE history_moves[2][64][64]{}; // # color | from_square | target_square
+    MOVE_TYPE killer_moves[2][64]{};  // killer moves (2) | max_depth (64)
+    SCORE_TYPE history_moves[2][64][64]{}; // color | from_square | target_square
     SCORE_TYPE capture_history[12][12][64]{};
-    MOVE_TYPE counter_moves[2][64][64]{}; // # piece | square
+    MOVE_TYPE counter_moves[2][64][64]{}; // side | piece | square
 
     // TT_Entry transposition_table[MAX_TT_SIZE]{};
     std::vector<TT_Entry> transposition_table;

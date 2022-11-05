@@ -13,13 +13,12 @@
 #include "move.h"
 #include "useful.h"
 
-static PLY_TYPE LMR_REDUCTIONS[2][TOTAL_MAX_DEPTH][64];
+static double LMR_REDUCTIONS[TOTAL_MAX_DEPTH][64];
 
 void initialize_lmr_reductions() {
     for (PLY_TYPE depth = 0; depth < TOTAL_MAX_DEPTH; depth++) {
         for (int moves = 0; moves < 64; moves++) {
-            LMR_REDUCTIONS[0][depth][moves] = std::max(0.0, std::log(depth) * std::log(moves) / 5.5);
-            LMR_REDUCTIONS[1][depth][moves] = std::max(0.0, std::log(depth) * std::log(moves) / 1.9 + 1.5);
+            LMR_REDUCTIONS[depth][moves] = std::max(0.0, std::log(depth) * std::log(moves) / 1.9 + 1.2);
         }
     }
 }
@@ -366,6 +365,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Hack to determine pv_node, because when it is not a pv node we are being searched by
     // a zero window with alpha == beta - 1
     bool pv_node = alpha != beta - 1;
+    // if (!pv_node) std::cout << alpha << " " << beta << std::endl;
 
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
     if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
@@ -434,6 +434,9 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Iterate through moves and recursively search with Negamax
     for (int move_index = 0; move_index < position.moves[engine.search_ply].size(); move_index++) {
 
+        // Late Move Pruning
+        if (!pv_node && depth <= 3 && legal_moves > depth * 8) break;
+
         // Sort the next move. If an early move causes a cutoff then we have saved time
         // by only sorting one or a few moves rather than the whole list.
         sort_next_move(position.moves[engine.search_ply], position.move_scores[engine.search_ply], move_index);
@@ -455,11 +458,14 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         position.side ^= 1;
 
         SCORE_TYPE return_eval;
-        PLY_TYPE reduction = 0;
+        double reduction = 0.0;
 
         bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
         bool is_killer_move = move == engine.killer_moves[0][engine.search_ply - 1] ||
                               move == engine.killer_moves[1][engine.search_ply - 1];
+        bool is_counter_move = last_move != NO_MOVE &&
+                               engine.counter_moves[position.side][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
+                               [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move;
 
         bool full_depth_zero_window;
 
@@ -474,19 +480,22 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 && !in_check
                 ){
 
-            reduction = LMR_REDUCTIONS[quiet][depth][legal_moves];
+            reduction = LMR_REDUCTIONS[depth][legal_moves];
 
             reduction -= pv_node;
 
             reduction -= is_killer_move;
 
-            reduction -= static_cast<PLY_TYPE>(engine.history_moves[position.side]
+            reduction -= is_counter_move * 0.25;
+
+            reduction -= engine.history_moves[position.side]
                      [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]]
-                     / 8000.0);
+                     / 8000.0;
 
-            // reduction += quiet && get_is_capture(tt_move);
+            // Idea from Weiss, where you reduce more if the move is quiet and TT move is a capture
+            reduction += get_is_capture(tt_move) * 0.5;
 
-            reduction = std::min(depth - 2, std::max(0, static_cast<int>(reduction)));
+            reduction = static_cast<PLY_TYPE>(std::min(depth - 1, std::max(0, static_cast<int>(reduction))));
 
             return_eval = -negamax(engine, position, -alpha - 1, -alpha, depth - reduction - 1, true);
 
@@ -514,6 +523,9 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         position.undo_move(move, engine.search_ply, engine.fifty_move);
 
         if (engine.stopped) return 0;
+
+        // Update legal move count
+        legal_moves++;
 
         // This move is better than other moves searched
         if (return_eval > best_score) {
@@ -574,15 +586,11 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                                                 [MAILBOX_TO_STANDARD[get_target_square(last_move)]] = move;
                     }
 
-                    engine.record_tt_entry(position.hash_key, best_score, HASH_FLAG_BETA, best_move, depth,
-                                           static_eval);
-
-                    return best_score;
+                    tt_hash_flag = HASH_FLAG_BETA;
+                    break;
                 }
             }
         }
-
-        legal_moves++;
     }
 
     if (legal_moves == 0 && !in_check) return 0;
