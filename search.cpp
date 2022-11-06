@@ -313,7 +313,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     if (in_check) depth++;  // Check extension
 
     // Start quiescence search at the start of regular negamax search to counter the horizon effect.
-    if (depth == 0) {
+    if (depth <= 0) {
         return qsearch(engine, position, alpha, beta, engine.max_q_depth);
     }
 
@@ -389,13 +389,9 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // We give the opponent an extra move and if they are not able to make their position
     // any better, then our position is too good, and we don't need to search any deeper.
     if (depth >= 3 && do_null && !in_check && !pv_node) {
-        // Adaptive NMP
-        // depth 3 == 2
-        // depth 8 == 3
-        // depth 13 == 4
-        // depth 18 == 5
 
-        int reduction = (depth + 2)/5 + 1;
+        // Adaptive NMP
+        int reduction = depth/4 + 2;
 
         position.make_null_move(engine.search_ply, engine.fifty_move);
 
@@ -434,13 +430,15 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Iterate through moves and recursively search with Negamax
     for (int move_index = 0; move_index < position.moves[engine.search_ply].size(); move_index++) {
 
-        // Late Move Pruning
-        if (!pv_node && depth <= 3 && legal_moves > depth * 8) break;
-
         // Sort the next move. If an early move causes a cutoff then we have saved time
         // by only sorting one or a few moves rather than the whole list.
         sort_next_move(position.moves[engine.search_ply], position.move_scores[engine.search_ply], move_index);
         MOVE_TYPE move = position.moves[engine.search_ply][move_index];
+
+        bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
+
+        // Late Move Pruning
+        if (!pv_node && depth <= (3 + 2 * quiet) && legal_moves > depth * (8 - 2 * quiet)) break;
 
         // Make the move
         bool attempt = position.make_move(move, engine.search_ply, engine.fifty_move);
@@ -460,7 +458,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         SCORE_TYPE return_eval;
         double reduction = 0.0;
 
-        bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
         bool is_killer_move = move == engine.killer_moves[0][engine.search_ply - 1] ||
                               move == engine.killer_moves[1][engine.search_ply - 1];
         bool is_counter_move = last_move != NO_MOVE &&
