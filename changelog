@@ -1972,6 +1972,13 @@ Score of Altair0.47 vs sofcheck_amd64-popcnt_windows: 43 - 46 - 31 [0.487]
 ...      White vs Black: 45 - 44 - 31  [0.504] 120
 Elo difference: -8.7 +/- 53.9, LOS: 37.5 %, DrawRatio: 25.8 %
 120 of 120 games finished.
+
+Score of Altair1.0.0 vs Cosette-Win64: 73 - 140 - 37 [0.366]
+...      Altair1.0.0 playing White: 26 - 79 - 20  [0.288] 125
+...      Altair1.0.0 playing Black: 47 - 61 - 17  [0.444] 125
+...      White vs Black: 87 - 126 - 37  [0.422] 250
+Elo difference: -95.4 +/- 41.2, LOS: 0.0 %, DrawRatio: 14.8 %
+250 of 250 games finished.
 ```
 
 
@@ -2550,4 +2557,202 @@ Score of Altair1.1.2 vs Vice10-64: 414 - 41 - 45 [0.873]
 ...      White vs Black: 226 - 229 - 45  [0.497] 500
 Elo difference: 334.9 +/- 41.3, LOS: 100.0 %, DrawRatio: 9.0 %
 500 of 500 games finished.
+
+Score of Altair1.1.2 vs Altair1.0.1: 92 - 23 - 85 [0.672]
+...      Altair1.1.2 playing White: 47 - 9 - 44  [0.690] 100
+...      Altair1.1.2 playing Black: 45 - 14 - 41  [0.655] 100
+...      White vs Black: 61 - 54 - 85  [0.517] 200
+Elo difference: 125.0 +/- 37.0, LOS: 100.0 %, DrawRatio: 42.5 %
+200 of 200 games finished.
+
+STS Rating v14.2
+Engine: Altair
+Hash: 128, Threads: 1, time/pos: 0.150s
+
+Number of positions in ./epd/STS1-STS15_LAN_v4.epd: 1500
+Max score = 1500 x 10 = 15000
+Test duration: 00h:03m:36s
+Expected time to finish: 00h:04m:30s
+STS rating: 2770
+
+  STS ID   STS1   STS2   STS3   STS4   STS5   STS6   STS7   STS8   STS9  STS10  STS11  STS12  STS13  STS14  STS15    ALL
+  NumPos    100    100    100    100    100    100    100    100    100    100    100    100    100    100    100   1500
+ BestCnt     46     34     49     34     58     50     35     23     28     54     14     44     49     51     22    591
+   Score    693    595    673    613    802    890    628    487    550    812    551    730    759    739    628  10150
+Score(%)   69.3   59.5   67.3   61.3   80.2   89.0   62.8   48.7   55.0   81.2   55.1   73.0   75.9   73.9   62.8   67.7
+  Rating   2843   2406   2754   2486   3328   3720   2553   1925   2206   3372   2210   3007   3136   3047   2553   2770
+
+:: STS ID and Titles ::
+STS 01: Undermining
+STS 02: Open Files and Diagonals
+STS 03: Knight Outposts
+STS 04: Square Vacancy
+STS 05: Bishop vs Knight
+STS 06: Re-Capturing
+STS 07: Offer of Simplification
+STS 08: Advancement of f/g/h Pawns
+STS 09: Advancement of a/b/c Pawns
+STS 10: Simplification
+STS 11: Activity of the King
+STS 12: Center Control
+STS 13: Pawn Play in the Center
+STS 14: Queens and Rooks to the 7th rank
+STS 15: Avoid Pointless Exchange
+
+:: Top 5 STS with high result ::
+1. STS 06, 89.0%, "Re-Capturing"
+2. STS 10, 81.2%, "Simplification"
+3. STS 05, 80.2%, "Bishop vs Knight"
+4. STS 13, 75.9%, "Pawn Play in the Center"
+5. STS 14, 73.9%, "Queens and Rooks to the 7th rank"
+
+:: Top 5 STS with low result ::
+1. STS 08, 48.7%, "Advancement of f/g/h Pawns"
+2. STS 09, 55.0%, "Advancement of a/b/c Pawns"
+3. STS 11, 55.1%, "Activity of the King"
+4. STS 02, 59.5%, "Open Files and Diagonals"
+5. STS 04, 61.3%, "Square Vacancy"
+
+STS Rating v14.2
+Engine: Altair
+Hash: 128, Threads: 1, time/pos: 1.000s
+
+Number of positions in ./epd/STS1-STS15_LAN_v4.epd: 1500
+Max score = 1500 x 10 = 15000
+Test duration: 00h:20m:21s
+Expected time to finish: 00h:25m:45s
+
+  STS ID   STS1   STS2   STS3   STS4   STS5   STS6   STS7   STS8   STS9  STS10  STS11  STS12  STS13  STS14  STS15    ALL
+  NumPos    100    100    100    100    100    100    100    100    100    100    100    100    100    100    100   1500
+ BestCnt     49     41     54     41     58     51     43     29     32     57     28     48     50     52     29    662
+   Score    724    653    728    649    823    884    705    582    604    847    592    762    768    789    689  10799
+Score(%)   72.4   65.3   72.8   64.9   82.3   88.4   70.5   58.2   60.4   84.7   59.2   76.2   76.8   78.9   68.9   72.0
+
+:: STS ID and Titles ::
+STS 01: Undermining
+STS 02: Open Files and Diagonals
+STS 03: Knight Outposts
+STS 04: Square Vacancy
+STS 05: Bishop vs Knight
+STS 06: Re-Capturing
+STS 07: Offer of Simplification
+STS 08: Advancement of f/g/h Pawns
+STS 09: Advancement of a/b/c Pawns
+STS 10: Simplification
+STS 11: Activity of the King
+STS 12: Center Control
+STS 13: Pawn Play in the Center
+STS 14: Queens and Rooks to the 7th rank
+STS 15: Avoid Pointless Exchange
+
+:: Top 5 STS with high result ::
+1. STS 06, 88.4%, "Re-Capturing"
+2. STS 10, 84.7%, "Simplification"
+3. STS 05, 82.3%, "Bishop vs Knight"
+4. STS 14, 78.9%, "Queens and Rooks to the 7th rank"
+5. STS 13, 76.8%, "Pawn Play in the Center"
+
+:: Top 5 STS with low result ::
+1. STS 08, 58.2%, "Advancement of f/g/h Pawns"
+2. STS 11, 59.2%, "Activity of the King"
+3. STS 09, 60.4%, "Advancement of a/b/c Pawns"
+4. STS 04, 64.9%, "Square Vacancy"
+5. STS 02, 65.3%, "Open Files and Diagonals"
+```
+
+
+### 1.1.3
+Improving Drawishness calculator. Hand tuning some other eval terms.
+
+```
+info multipv 1 depth 1 seldepth 1 score cp 65 time 0 nodes 27 nps 270000 pv b1c3
+info multipv 1 depth 2 seldepth 2 score cp 7 time 1 nodes 109 nps 109000 pv b1c3 b8c6
+info multipv 1 depth 3 seldepth 3 score cp 63 time 3 nodes 251 nps 83666 pv b1c3 b8c6 g1f3
+info multipv 1 depth 4 seldepth 4 score cp 8 time 5 nodes 910 nps 182000 pv b1c3 b8c6 g1f3 g8f6
+info multipv 1 depth 5 seldepth 6 score cp 52 time 7 nodes 1510 nps 215714 pv b1c3 b8c6 g1f3 g8f6 e2e4
+info multipv 1 depth 6 seldepth 7 score cp 7 time 12 nodes 3891 nps 324250 pv b1c3 b8c6 e2e4 g8f6 g1f3 e7e5
+info multipv 1 depth 7 seldepth 8 score cp 32 time 18 nodes 7371 nps 409500 pv b1c3 b8c6 d2d4 d7d5 g1f3 g8f6 c1f4
+info multipv 1 depth 8 seldepth 10 score cp 7 time 38 nodes 22311 nps 587131 pv b1c3 d7d5 g1f3 g8f6 d2d4
+info multipv 1 depth 9 seldepth 11 score cp 29 time 55 nodes 34281 nps 623290 pv b1c3 d7d5 d2d4 e7e6 g1f3 b8c6 e2e4 g8f6
+
+info multipv 1 depth 10 seldepth 13 score cp 13 time 130 nodes 85337 nps 656438 pv b1c3 d7d5 d2d4 g8f6 g1f3 b8c6 e2e3 d8
+d6 c3b5 d6b4 b5c3
+info multipv 1 depth 11 seldepth 13 score cp 29 time 176 nodes 122751 nps 697448 pv b1c3 d7d5 d2d4 g8f6 g1f3 b8c6 e2e3 f
+6e4 c3e4 d5e4 f3g5
+info multipv 1 depth 12 seldepth 16 score cp 31 time 222 nodes 158156 nps 712414 pv b1c3 d7d5 d2d4 g8f6 g1f3 b8c6 e2e3 c
+8f5 f1d3 f6e4 c3e4 d5e4
+info multipv 1 depth 13 seldepth 17 score cp 42 time 975 nodes 727225 nps 745871 pv e2e4 e7e6 d2d4 g8f6 e4e5 f6e4 b1d2 d
+7d5 d2e4 d5e4 c1f4 b8c6 g1e2
+info multipv 1 depth 14 seldepth 18 score cp 36 time 1260 nodes 948751 nps 752976 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2d4
+e5d4 f3d4 f8b4 d4c6 b4c3 b2c3 d7c6 d1d3
+info multipv 1 depth 15 seldepth 19 score cp 21 time 1560 nodes 1183600 nps 758717 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2d4
+ e5d4 f3d4 f8b4 d4c6 d7c6 d1d8 e8d8 c1g5 h8e8
+info multipv 1 depth 16 seldepth 20 score cp 23 time 2046 nodes 1563994 nps 764415 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 f1b5
+ f8b4 a2a3 b4c5 e1g1 e8g8 b2b4 c5b6 b5c6 d7c6
+info multipv 1 depth 17 seldepth 23 score cp 21 time 2738 nodes 2114003 nps 772097 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 f1b5
+ f8b4 a2a3 b4c3 d2c3 f6e4 e1g1 d7d6 d1d5 c8f5 c1e3
+info multipv 1 depth 18 seldepth 23 score cp 24 time 3885 nodes 3021191 nps 777655 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 f1b5
+ f8c5 e1g1 e8g8 d2d3 c6d4 f3d4 c5d4 c3e2 d4c5 c1e3 d7d6
+info multipv 1 depth 19 seldepth 25 score cp 37 time 5379 nodes 4204676 nps 781683 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2d4
+ e5d4 f3d4 f8b4 d4c6 b7c6 f1d3 d7d5 e4e5 f6e4 e1g1 e4c3 b2c3
+info multipv 1 depth 20 seldepth 27 score cp 37 time 7572 nodes 5813321 nps 767739 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6
+info multipv 1 depth 21 seldepth 28 score cp 26 time 16531 nodes 11191162 nps 676980 pv e2e4 e7e5 b1c3 b8c6 g1f3 f8c5 f3
+e5 g8f6 e5c6 d7c6 f1e2 e8g8 e1g1 f8e8 e2f3 d8d6 d2d3 c8e6 c1g5 c5d4 a1c1
+info multipv 1 depth 22 seldepth 28 score cp 26 time 22572 nodes 15642319 nps 692996 pv e2e4 e7e5 b1c3 b8c6
+info multipv 1 depth 23 seldepth 28 score cp 28 time 30801 nodes 21698656 nps 704478 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2
+d4 e5d4 f3d4 f8b4 d4c6 b7c6 d1d4 d8e7 f1d3 b4c5 d4a4 e8g8 e1g1 a8b8 f1d1 e7e6
+info multipv 1 depth 23 seldepth 31 score cp 28 time 44999 nodes 28944443 nps 643224 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2
+d4 e5d4 f3d4 f8b4 d4c6 b7c6 d1d4 d8e7 f1d3 b4c5 d4a4 e8g8 e1g1 a8b8 f1d1 e7e6
+bestmove e2e4
+
+Score of Altair1.1.3 vs Altair1.1.2: 97 - 86 - 117 [0.518]
+...      Altair1.1.3 playing White: 45 - 46 - 59  [0.497] 150
+...      Altair1.1.3 playing Black: 52 - 40 - 58  [0.540] 150
+...      White vs Black: 85 - 98 - 117  [0.478] 300
+Elo difference: 12.7 +/- 30.8, LOS: 79.2 %, DrawRatio: 39.0 %
+300 of 300 games finished.
+
+1 min
+Score of Altair1.1.3 vs cinnamon_2.4_x64-INTEL: 61 - 36 - 23 [0.604]
+...      Altair1.1.3 playing White: 27 - 20 - 13  [0.558] 60
+...      Altair1.1.3 playing Black: 34 - 16 - 10  [0.650] 60
+...      White vs Black: 43 - 54 - 23  [0.454] 120
+Elo difference: 73.5 +/- 57.3, LOS: 99.4 %, DrawRatio: 19.2 %
+120 of 120 games finished.
+
+Score of Altair1.1.3 vs bienchen.1.0: 482 - 328 - 190 [0.577]
+...      Altair1.1.3 playing White: 242 - 167 - 91  [0.575] 500
+...      Altair1.1.3 playing Black: 240 - 161 - 99  [0.579] 500
+...      White vs Black: 403 - 407 - 190  [0.498] 1000
+Elo difference: 53.9 +/- 19.6, LOS: 100.0 %, DrawRatio: 19.0 %
+1000 of 1000 games finished.
+
+Score of Altair1.1.3 vs tantabus-windows-2019-x86-64-v3: 291 - 499 - 210 [0.396]
+...      Altair1.1.3 playing White: 141 - 256 - 103  [0.385] 500
+...      Altair1.1.3 playing Black: 150 - 243 - 107  [0.407] 500
+...      White vs Black: 384 - 406 - 210  [0.489] 1000
+Elo difference: -73.3 +/- 19.4, LOS: 0.0 %, DrawRatio: 21.0 %
+1000 of 1000 games finished.
+
+Score of Altair1.1.3 vs Cosette-Win64: 173 - 228 - 99 [0.445]
+...      Altair1.1.3 playing White: 90 - 118 - 42  [0.444] 250
+...      Altair1.1.3 playing Black: 83 - 110 - 57  [0.446] 250
+...      White vs Black: 200 - 201 - 99  [0.499] 500
+Elo difference: -38.4 +/- 27.4, LOS: 0.3 %, DrawRatio: 19.8 %
+500 of 500 games finished.
+
+Score of Altair1.1.3 vs kimbo-0.3.0: 355 - 431 - 214 [0.462]
+...      Altair1.1.3 playing White: 184 - 207 - 109  [0.477] 500
+...      Altair1.1.3 playing Black: 171 - 224 - 105  [0.447] 500
+...      White vs Black: 408 - 378 - 214  [0.515] 1000
+Elo difference: -26.5 +/- 19.1, LOS: 0.3 %, DrawRatio: 21.4 %
+1000 of 1000 games finished.
+
+1 min
+Score of Altair1.1.3 vs eggnog-chess-engine-avx2-win: 33 - 23 - 4 [0.583]
+...      Altair1.1.3 playing White: 23 - 6 - 1  [0.783] 30
+...      Altair1.1.3 playing Black: 10 - 17 - 3  [0.383] 30
+...      White vs Black: 40 - 16 - 4  [0.700] 60
+Elo difference: 58.5 +/- 87.9, LOS: 90.9 %, DrawRatio: 6.7 %
+60 of 60 games finished.
 ```

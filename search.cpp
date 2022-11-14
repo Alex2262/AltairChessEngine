@@ -370,10 +370,25 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
     if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
 
+
+    // bool improving = false;
+
+    // if (!in_check && engine.search_ply >= 3) {
+    //     HASH_TYPE key = position.undo_move_stack[engine.search_ply - 2].current_hash_key;
+    //     TT_Entry entry = engine.transposition_table[key % MAX_TT_SIZE];
+    //
+    //     if (entry.key == key && entry.evaluation != NO_EVALUATION && static_eval > entry.evaluation) {
+    //         improving = true;
+    //     }
+    // }
+
     // Razoring
-    // Implementation from Stockfish
+    // Partial implementation from Stockfish
     // If the evaluation is really low, and we cannot improve alpha even with qsearch, then return.
-    if (depth <= 1 && static_eval + 640 < alpha) {
+    // If the evaluation is improving then increase the margin (this shouldn't really matter though).
+    // int razoring_margins[3] = {0, 480, 1320};
+    int razoring_margins[2] = {0, 670};
+    if (depth <= 1 && static_eval + razoring_margins[depth] < alpha) {
         SCORE_TYPE return_eval = qsearch(engine, position, alpha, beta, engine.max_q_depth);
         if (return_eval < alpha) return return_eval;
     }
@@ -381,7 +396,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Reverse Futility Pruning
     // If the last move was very bad, such that the static evaluation - a margin is still greater
     // than the opponent's best score, then return the static evaluation.
-    if (depth <= 5 && !in_check && static_eval - 165 * depth >= beta) {
+    if (depth <= 5 && !in_check && static_eval - 170 * depth >= beta) {
         return static_eval;
     }
 

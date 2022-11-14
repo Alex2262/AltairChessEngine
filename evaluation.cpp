@@ -622,12 +622,19 @@ double evaluate_drawishness(const int white_piece_amounts[6], const int black_pi
     // return a decimal from 0.0 - 1.0 that will multiply the eval by
 
     if (white_piece_amounts[WHITE_QUEEN] + black_piece_amounts[WHITE_QUEEN] > 0) return 1.0;
-    if (white_piece_amounts[WHITE_ROOK] + black_piece_amounts[WHITE_ROOK] >= 2) return 1.0;
+    if (white_piece_amounts[WHITE_ROOK] + black_piece_amounts[WHITE_ROOK] >= 3) return 1.0;
     if (white_piece_amounts[WHITE_PAWN] + black_piece_amounts[WHITE_PAWN] >= 1) {
         if (white_piece_amounts[1] + white_piece_amounts[3] +
             black_piece_amounts[1] + black_piece_amounts[3] >= 1) return 1.0;
-        if (white_piece_amounts[2] == 1 && black_piece_amounts[2] == 1 && opp_colored_bishops)
-            return 0.25 + abs(white_piece_amounts[0] - black_piece_amounts[0]) * 0.2;
+
+        if (white_piece_amounts[2] == 1 && black_piece_amounts[2] == 1 && opp_colored_bishops) {
+            double pawn_difference = static_cast<double>(std::max(white_piece_amounts[0], black_piece_amounts[0])) /
+                    std::max(1, std::min(white_piece_amounts[0], black_piece_amounts[0]));
+
+            return std::min(0.05 + pawn_difference *
+                                   pawn_difference * 0.12, 1.0);
+        }
+
         return 1.0;
     }
     if (white_material <= PIECE_VALUES_MID[WHITE_BISHOP] && black_material <= PIECE_VALUES_MID[WHITE_BISHOP])
@@ -650,8 +657,14 @@ double evaluate_drawishness(const int white_piece_amounts[6], const int black_pi
         // this means they either have a rook, and the other player has a minor piece,
         // or this means one player has two minor pieces, and the other players has one minor piece.
 
-        return 0.6;
+        return 0.2;
     }
+
+    if (white_material <= PIECE_VALUES_MID[WHITE_ROOK] + PIECE_VALUES_MID[WHITE_BISHOP] &&
+        black_material == PIECE_VALUES_MID[WHITE_ROOK]) return 0.23;
+
+    if (black_material <= PIECE_VALUES_MID[WHITE_ROOK] + PIECE_VALUES_MID[WHITE_BISHOP] &&
+        white_material == PIECE_VALUES_MID[WHITE_ROOK]) return 0.23;
 
     return 1.0;
 
@@ -785,7 +798,7 @@ SCORE_TYPE evaluate(Position& position) {
 
     double drawishness = evaluate_drawishness(white_piece_amounts, black_piece_amounts,
                                               white_material.mid, black_material.mid,
-                                              bishop_colors[0] == bishop_colors[1]);
+                                              bishop_colors[0] != bishop_colors[1]);
 
     white_score *= drawishness;
     black_score *= drawishness;
