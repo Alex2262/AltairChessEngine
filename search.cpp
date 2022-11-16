@@ -224,6 +224,9 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     alpha = (static_eval > alpha) ? static_eval : alpha;
 
+    // Set values for State
+    position.set_state(engine.search_ply, engine.fifty_move, static_eval);
+
     position.get_pseudo_legal_captures(engine.search_ply);
     get_capture_scores(position.moves[engine.search_ply], position.move_scores[engine.search_ply], tt_move);
 
@@ -317,7 +320,15 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         return qsearch(engine, position, alpha, beta, engine.max_q_depth);
     }
 
+    // Increase node count
     engine.node_count++;
+
+    // Get evaluation
+    SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
+    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
+
+    // Set values for State
+    position.set_state(engine.search_ply, engine.fifty_move, static_eval);
 
     // TT probing
     SCORE_TYPE tt_value = 0;
@@ -367,20 +378,13 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     bool pv_node = alpha != beta - 1;
     // if (!pv_node) std::cout << alpha << " " << beta << std::endl;
 
-    SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
 
+    bool improving = false;
 
-    // bool improving = false;
-
-    // if (!in_check && engine.search_ply >= 3) {
-    //     HASH_TYPE key = position.undo_move_stack[engine.search_ply - 2].current_hash_key;
-    //     TT_Entry entry = engine.transposition_table[key % MAX_TT_SIZE];
-    //
-    //     if (entry.key == key && entry.evaluation != NO_EVALUATION && static_eval > entry.evaluation) {
-    //         improving = true;
-    //     }
-    // }
+    if (!in_check && engine.search_ply >= 2) {
+        SCORE_TYPE past_eval = position.state_stack[engine.search_ply - 2].evaluation;
+        if (past_eval != NO_EVALUATION && static_eval > past_eval) improving = true;
+    }
 
     // Razoring
     // Partial implementation from Stockfish
@@ -396,7 +400,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Reverse Futility Pruning
     // If the last move was very bad, such that the static evaluation - a margin is still greater
     // than the opponent's best score, then return the static evaluation.
-    if (depth <= 5 && !in_check && static_eval - 170 * depth >= beta) {
+    if (depth <= 5 && !in_check && static_eval - ((190 - improving * 45) * depth) >= beta) {
         return static_eval;
     }
 
@@ -430,7 +434,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     }
 
     int legal_moves = 0;
-    MOVE_TYPE last_move = engine.search_ply ? position.undo_move_stack[engine.search_ply - 1].move : NO_MOVE;
+    MOVE_TYPE last_move = engine.search_ply ? position.state_stack[engine.search_ply - 1].move : NO_MOVE;
 
     // Retrieving the pseudo legal moves in the current position as a list of integers
     // Score the moves
@@ -453,7 +457,10 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
 
         // Late Move Pruning
-        if (!pv_node && depth <= (3 + 2 * quiet) && legal_moves > depth * (8 - 2 * quiet)) break;
+        if (!pv_node && depth <= 3 && legal_moves > depth * 8) break;
+
+        // Quiet Late Move Pruning
+        if (quiet && !pv_node && depth <= 5 && legal_moves > depth * 6) break;
 
         // Make the move
         bool attempt = position.make_move(move, engine.search_ply, engine.fifty_move);
@@ -496,7 +503,9 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
             reduction -= pv_node;
 
-            reduction -= is_killer_move;
+            reduction -= improving * 0.9;
+
+            reduction -= is_killer_move * 0.75;
 
             reduction -= is_counter_move * 0.25;
 

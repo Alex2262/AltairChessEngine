@@ -11,11 +11,12 @@
 #include "constants.h"
 
 
-struct Undo_Move_Struct {
-    MOVE_TYPE move;
+struct State_Struct {
+    uint64_t current_hash_key;
+    MOVE_TYPE move = NO_MOVE;
+    SCORE_TYPE evaluation = NO_EVALUATION;
     SQUARE_TYPE current_ep_square;
     uint16_t current_castle_ability_bits;
-    uint64_t current_hash_key;
     PLY_TYPE current_fifty_move;
 };
 
@@ -28,9 +29,14 @@ public:
 
     void clear_movelist();
     void compute_hash_key();
+
     PLY_TYPE set_fen(const std::string& fen_string);
     void print_board();
+
     bool is_attacked(SQUARE_TYPE pos);
+
+    void set_state(PLY_TYPE search_ply, PLY_TYPE fifty_move, SCORE_TYPE evaluation);
+
     bool make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_move);
     void undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_move);
     void make_null_move(PLY_TYPE search_ply, PLY_TYPE& fifty_move);
@@ -46,7 +52,7 @@ public:
     std::array<std::vector<MOVE_TYPE>, TOTAL_MAX_DEPTH> moves;
     std::array<std::vector<SCORE_TYPE>, TOTAL_MAX_DEPTH> move_scores;
 
-    std::array<Undo_Move_Struct, TOTAL_MAX_DEPTH> undo_move_stack{};
+    std::array<State_Struct, TOTAL_MAX_DEPTH> state_stack{};
 
     SQUARE_TYPE king_positions[2]{};
 

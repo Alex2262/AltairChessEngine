@@ -249,12 +249,12 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
     // Knights are good protectors for the king
     double distance_to_our_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(!is_white)]]);
     scores.mid -= static_cast<SQUARE_TYPE>(distance_to_our_king);
-    scores.end -= static_cast<SQUARE_TYPE>(0.5 * distance_to_our_king);
+    scores.end -= static_cast<SQUARE_TYPE>(0.3 * distance_to_our_king);
 
     // Knights are also very good at attacking the opponents king
     double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
-    scores.mid -= static_cast<SQUARE_TYPE>(2.8 * distance_to_opp_king);
-    scores.end -= static_cast<SQUARE_TYPE>(1.5 * distance_to_opp_king);
+    scores.mid -= static_cast<SQUARE_TYPE>(2.6 * distance_to_opp_king);
+    scores.end -= static_cast<SQUARE_TYPE>(1.2 * distance_to_opp_king);
 
     scores.mid += mobility * 1.2;
     scores.end += mobility;
@@ -343,8 +343,8 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
     }
 
     double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
-    scores.mid -= static_cast<SQUARE_TYPE>(distance_to_opp_king);
-    scores.end -= static_cast<SQUARE_TYPE>(0.4 * distance_to_opp_king);
+    scores.mid -= static_cast<SQUARE_TYPE>(0.7 * distance_to_opp_king);
+    scores.end -= static_cast<SQUARE_TYPE>(0.2 * distance_to_opp_king);
 
     scores.mid += mobility / 1.5;  // Bishop can reach many squares so its mobility has to be divided
     scores.end += mobility / 1.7;  // More likely to have higher mobility in the endgame
@@ -447,8 +447,8 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
     }
 
     double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
-    scores.mid -= static_cast<SQUARE_TYPE>(2.2 * distance_to_opp_king);
-    scores.end -= static_cast<SQUARE_TYPE>(1.4 * distance_to_opp_king);
+    scores.mid -= static_cast<SQUARE_TYPE>(1.8 * distance_to_opp_king);
+    scores.end -= static_cast<SQUARE_TYPE>(1.1 * distance_to_opp_king);
 
     scores.mid += mobility / 2;  // Already gets open + semi-open file bonuses
     scores.end += mobility / 1.5;  // Active rooks in the endgame are very important
@@ -550,8 +550,8 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
     }
 
     double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
-    scores.mid -= static_cast<SQUARE_TYPE>(distance_to_opp_king);
-    scores.end -= static_cast<SQUARE_TYPE>(1.2 * distance_to_opp_king);
+    scores.mid -= static_cast<SQUARE_TYPE>(0.7 * distance_to_opp_king);
+    scores.end -= static_cast<SQUARE_TYPE>(distance_to_opp_king);
 
     scores.mid += mobility / 3;  // Already gets open + semi-open file bonuses
     scores.end += mobility / 1.8;  // Active queen in the endgame is pretty important
