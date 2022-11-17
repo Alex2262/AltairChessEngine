@@ -7,6 +7,11 @@
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - "
 #define KIWIPETE_FEN "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - "
 
+#define NO_PIECE_INDEX      -1
+
+#define WHITE_COLOR         0
+#define BLACK_COLOR         1
+
 #define NO_HASH_ENTRY       0
 #define USE_HASH_MOVE       1
 #define RETURN_HASH_SCORE   2
@@ -178,6 +183,8 @@ constexpr SCORE_TYPE PIECE_VALUES_END[6] = {96, 292, 304, 512, 936, 0};
 
 constexpr SCORE_TYPE BLOCKER_VALUES_MID[6] = {0, 31, 14, 22,  8,  3};
 constexpr SCORE_TYPE BLOCKER_VALUES_END[6] = {0, 37, 21, 26, 11, 28};
+
+constexpr SCORE_TYPE PIECE_ATTACK_MOBILITY[6] = {2, 3, 3, 4, 4, 10};
 
 
 constexpr SCORE_TYPE PAWN_PST_MID[64] = {

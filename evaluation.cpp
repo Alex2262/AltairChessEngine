@@ -197,18 +197,17 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
                 continue;
             }
 
-            // If there is an enemy pawn controlling this square then we deduct 1.
+            // If there is an enemy pawn controlling this square then we deduct 2.
             if (position.board[new_pos - 11] == BLACK_PAWN || position.board[new_pos - 9] == BLACK_PAWN)
-                mobility -= 1;
+                mobility -= 2;
 
-            // If we hit an enemy piece, get a score of 2.
-            // An empty square may be even better, so you get a score 3.
+            // Attacking pieces means more pressure which is good
             if (occupied < EMPTY) {
-                mobility += 2;
+                mobility += PIECE_ATTACK_MOBILITY[occupied - BLACK_PAWN];
                 continue;
             }
 
-            mobility += 3;
+            mobility += 2;
         }
     }
     else {
@@ -229,18 +228,17 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
                 continue;
             }
 
-            // If there is an enemy pawn controlling this square then we deduct 1.
+            // If there is an enemy pawn controlling this square then we deduct 2.
             if (position.board[new_pos + 11] == WHITE_PAWN || position.board[new_pos + 9] == WHITE_PAWN)
-                mobility -= 1;
+                mobility -= 2;
 
-            // If we hit an enemy piece, get a score of 2.
-            // An empty square may be even better, so you get a score 3.
+            // Attacking pieces means more pressure which is good
             if (occupied < BLACK_PAWN) {
-                mobility += 2;
+                mobility += PIECE_ATTACK_MOBILITY[occupied];
                 continue;
             }
 
-            mobility += 3;
+            mobility += 2;
 
 
         }
@@ -256,8 +254,8 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
     scores.mid -= static_cast<SQUARE_TYPE>(2.6 * distance_to_opp_king);
     scores.end -= static_cast<SQUARE_TYPE>(1.2 * distance_to_opp_king);
 
-    scores.mid += mobility * 1.2;
-    scores.end += mobility;
+    scores.mid += mobility * 1.6;
+    scores.end += mobility * 1.5;
 
     // std::cout << "KNIGHT MOBILITY: " << mobility << std::endl;
 }
@@ -265,7 +263,7 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
 void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white) {
     SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
-    SCORE_TYPE mobility = 0;
+    double mobility = 0;
 
     if (is_white) {
         scores.mid += BISHOP_PST_MID[i];
@@ -289,18 +287,17 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
                     break;
                 }
 
-                // If there is an enemy pawn controlling this square then we deduct 1.
+                // If there is an enemy pawn controlling this square then we deduct 2.
                 if (position.board[new_pos - 11] == BLACK_PAWN || position.board[new_pos - 9] == BLACK_PAWN)
-                    mobility -= 1;
+                    mobility -= 2;
 
-                // If we hit an enemy piece, get a score of 2.
-                // An empty square may be even better, so you get a score 3.
+                // Attacking pieces means more pressure which is good
                 if (occupied < EMPTY) {
-                    mobility += 2;
+                    mobility += PIECE_ATTACK_MOBILITY[occupied - BLACK_PAWN];
                     break;
                 }
 
-                mobility += 3;
+                mobility += 2;
             }
         }
     }
@@ -326,18 +323,17 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
                     break;
                 }
 
-                // If there is an enemy pawn controlling this square then we deduct 1.
+                // If there is an enemy pawn controlling this square then we deduct 2.
                 if (position.board[new_pos + 11] == WHITE_PAWN || position.board[new_pos + 9] == WHITE_PAWN)
-                    mobility -= 1;
+                    mobility -= 2;
 
-                // If we hit an enemy piece, get a score of 2.
-                // An empty square may be even better, so you get a score 3.
+                // Attacking pieces means more pressure which is good
                 if (occupied < BLACK_PAWN) {
-                    mobility += 2;
+                    mobility += PIECE_ATTACK_MOBILITY[occupied];
                     break;
                 }
 
-                mobility += 3;
+                mobility += 2;
             }
         }
     }
@@ -346,8 +342,8 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
     scores.mid -= static_cast<SQUARE_TYPE>(0.7 * distance_to_opp_king);
     scores.end -= static_cast<SQUARE_TYPE>(0.2 * distance_to_opp_king);
 
-    scores.mid += mobility / 1.5;  // Bishop can reach many squares so its mobility has to be divided
-    scores.end += mobility / 1.7;  // More likely to have higher mobility in the endgame
+    scores.mid += mobility * 1.2;
+    scores.end += mobility * 1.1;
     // std::cout << "BISHOP MOBILITY: " << mobility << std::endl;
 }
 
@@ -450,8 +446,8 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
     scores.mid -= static_cast<SQUARE_TYPE>(1.8 * distance_to_opp_king);
     scores.end -= static_cast<SQUARE_TYPE>(1.1 * distance_to_opp_king);
 
-    scores.mid += mobility / 2;  // Already gets open + semi-open file bonuses
-    scores.end += mobility / 1.5;  // Active rooks in the endgame are very important
+    scores.mid += mobility / 1.8;  // Already gets open + semi-open file bonuses
+    scores.end += mobility / 1.4;  // Active rooks in the endgame are very important
 
     // std::cout << "ROOK MOBILITY: " << mobility << std::endl;
 }
@@ -553,8 +549,8 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
     scores.mid -= static_cast<SQUARE_TYPE>(0.7 * distance_to_opp_king);
     scores.end -= static_cast<SQUARE_TYPE>(distance_to_opp_king);
 
-    scores.mid += mobility / 3;  // Already gets open + semi-open file bonuses
-    scores.end += mobility / 1.8;  // Active queen in the endgame is pretty important
+    scores.mid += mobility / 2.8;  // Already gets open + semi-open file bonuses
+    scores.end += mobility / 1.7;  // Active queen in the endgame is pretty important
 
     // std::cout << "QUEEN MOBILITY: " << mobility << std::endl;
 }

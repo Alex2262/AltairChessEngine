@@ -38,7 +38,9 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
         if (depth == 1) {
             int move_type = get_move_type(move);
 
-            if (get_is_capture(move)) res.capture_amount += 1;
+            if (get_is_capture(move)) {
+                res.capture_amount += 1;
+            }
             else if (move_type == MOVE_TYPE_EP) {
                 res.capture_amount += 1;
                 res.ep_amount += 1;

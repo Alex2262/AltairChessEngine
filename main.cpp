@@ -11,16 +11,16 @@ int main() {
     /*Position main_position;
     Engine main_engine;
 
-    main_position.set_fen(START_FEN);
+    main_position.set_fen(KIWIPETE_FEN);
     main_position.print_board();
 
-    std::cout << "hi" << std::endl; */
+    std::cout << "hi" << std::endl;*/
 
     /*for (int i = 1; i <= 5; i++) {
         Perft_Result_Type res = {0};
 
         auto start_time = std::chrono::high_resolution_clock::now();
-        debug_perft(main_position, res, i);
+        debug_perft(main_position, res, i, 0);
         auto end_time = std::chrono::high_resolution_clock::now();
 
         auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
@@ -30,9 +30,9 @@ int main() {
                   << " castles " << res.castle_amount << " promotions " << res.promotion_amount << std::endl;
     }*/
 
-    //uci_perft(main_position, 6, 0);
+    // uci_perft(main_position, 5, 0);
 
-    //iterative_search(main_engine, main_position);
+    // iterative_search(main_engine, main_position);
 
     UCI main_uci;
 

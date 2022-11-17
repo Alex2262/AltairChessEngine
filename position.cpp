@@ -51,6 +51,10 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
 
     clear_movelist();
 
+    for (SQUARE_TYPE& i : piece_list_index) {
+        i = NO_PIECE_INDEX;
+    }
+
     for (int i = 0; i < 21; i++) {
         board[pos++] = PADDING;
     }
@@ -75,8 +79,14 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
 
             board[pos] = piece_to_num(c);
 
-            if (std::isupper(c)) white_pieces.push_back(pos);
-            else black_pieces.push_back(pos);
+            if (std::isupper(c)) {
+                white_pieces.push_back(pos);
+                piece_list_index[pos] = white_pieces.size() - 1;
+            }
+            else {
+                black_pieces.push_back(pos);
+                piece_list_index[pos] = black_pieces.size() - 1;
+            }
 
             if (c == 'K') king_positions[0] = pos;
             else if (c == 'k') king_positions[1] = pos;
@@ -150,100 +160,108 @@ void Position::print_board() {
 }
 
 
+void Position::print_piece_index_board() {
+    std::string new_board;
+
+    for (SQUARE_TYPE pos : STANDARD_TO_MAILBOX) {
+        if (MAILBOX_TO_STANDARD[pos] % 8 == 0) {
+            new_board += '\n';
+        }
+        new_board += std::to_string(piece_list_index[pos]);
+        new_board += " ";
+    }
+
+    std::cout << new_board << std::endl;
+}
+
+
 bool Position::is_attacked(SQUARE_TYPE pos) {
 
     if (!side) {
-        for (PIECE_TYPE piece : {WHITE_QUEEN, WHITE_KNIGHT}) {
-            for (int increment : BLACK_ATK_INCREMENTS[piece]) {
-                if (!increment) break;
+        // Check if pawns are attacking you
+        if (board[pos - 11] == BLACK_PAWN || board[pos - 9] == BLACK_PAWN) return true;
 
-                SQUARE_TYPE new_pos = pos;
+        // Search with the increments of a knight to see if any opponent knights are attacking you
+        for (int increment : BLACK_ATK_INCREMENTS[WHITE_KNIGHT]) {
+            SQUARE_TYPE new_pos = pos + increment;
+            PIECE_TYPE occupied = board[new_pos];
 
-                while (true) {
-                    new_pos += increment;
-                    PIECE_TYPE occupied = board[new_pos];
+            if (occupied == BLACK_KNIGHT) return true;
+        }
 
-                    if (occupied == PADDING || occupied < BLACK_PAWN) break;
+        // Search with the increments of a queen to see if any opponent queens, bishops, or rooks are attacking you.
+        for (int increment : BLACK_ATK_INCREMENTS[WHITE_QUEEN]) {
+            SQUARE_TYPE new_pos = pos;
 
-                    if (occupied < EMPTY) {
-                        if (piece == occupied - BLACK_PAWN) return true;
-                        if (piece == WHITE_KNIGHT) break;
+            while (true) {
+                new_pos += increment;
+                PIECE_TYPE occupied = board[new_pos];
 
-                        if (occupied == BLACK_KNIGHT) break;
+                // Break if you hit your own piece or if you are out of bounds
+                if (occupied == PADDING || occupied < BLACK_PAWN) break;
+                if (occupied == EMPTY) continue;  // Continue if there is no piece on this square
 
-                        if (occupied == BLACK_KING) {
-                            if (new_pos == pos + increment) return true;
-                            break;
-                        }
+                if (occupied == BLACK_QUEEN) return true;
 
-                        if (occupied == BLACK_PAWN) {
-                            if (new_pos == pos - 11 || new_pos == pos - 9) return true;
-                            break;
-                        }
-
-                        if (occupied == BLACK_BISHOP) {
-                            if (increment == -11 || increment == 11 ||
-                                increment == 9 || increment == -9) return true;
-                            break;
-                        }
-
-                        if (occupied == BLACK_ROOK) {
-                            if (increment == -10 || increment == 1 ||
-                                increment == 10 || increment == -1) return true;
-                            break;
-                        }
-                    }
-
-                    if (piece == WHITE_KNIGHT) break;
+                else if (occupied == BLACK_BISHOP) {
+                    if (increment == -11 || increment == 11 || increment == 9 || increment == -9) return true;
                 }
+
+                else if (occupied == BLACK_ROOK) {
+                    if (increment == -10 || increment == 1 || increment == 10 || increment == -1) return true;
+                }
+
+                else if (occupied == BLACK_KING) {
+                    if (new_pos == pos + increment) return true;
+                }
+
+                break;
+
             }
         }
     }
 
     else {
-        for (PIECE_TYPE piece : {BLACK_QUEEN, BLACK_KNIGHT}) {
-            for (int increment : WHITE_ATK_INCREMENTS[piece - BLACK_PAWN]) {
-                if (!increment) break;
 
-                SQUARE_TYPE new_pos = pos;
+        // Check if pawns are attacking you
+        if (board[pos + 11] == WHITE_PAWN || board[pos + 9] == WHITE_PAWN) return true;
 
-                while (true) {
-                    new_pos += increment;
-                    PIECE_TYPE occupied = board[new_pos];
+        // Search with the increments of a knight to see if any opponent knights are attacking you
+        for (int increment : WHITE_ATK_INCREMENTS[WHITE_KNIGHT]) {
+            SQUARE_TYPE new_pos = pos + increment;
+            PIECE_TYPE occupied = board[new_pos];
 
-                    if (occupied != EMPTY && occupied > WHITE_KING) break;
+            if (occupied == WHITE_KNIGHT) return true;
+        }
 
-                    if (occupied < BLACK_PAWN) {
-                        if (piece == occupied + BLACK_PAWN) return true;
-                        if (piece == BLACK_KNIGHT) break;
+        // Search with the increments of a queen to see if any opponent queens, bishops, or rooks are attacking you.
+        for (int increment : WHITE_ATK_INCREMENTS[WHITE_QUEEN]) {
+            SQUARE_TYPE new_pos = pos;
 
-                        if (occupied == WHITE_KNIGHT) break;
+            while (true) {
+                new_pos += increment;
+                PIECE_TYPE occupied = board[new_pos];
 
-                        if (occupied == WHITE_KING) {
-                            if (new_pos == pos + increment) return true;
-                            break;
-                        }
+                // Break if you hit your own piece or if you are out of bounds
+                if (occupied != EMPTY && occupied > WHITE_KING) break;
+                if (occupied == EMPTY) continue;  // Continue if there is no piece on this square
 
-                        if (occupied == WHITE_PAWN) {
-                            if (new_pos == pos + 11 || new_pos == pos + 9) return true;
-                            break;
-                        }
+                if (occupied == WHITE_QUEEN) return true;
 
-                        if (occupied == WHITE_BISHOP) {
-                            if (increment == -11 || increment == 11 ||
-                                increment == 9 || increment == -9) return true;
-                            break;
-                        }
-
-                        if (occupied == WHITE_ROOK) {
-                            if (increment == -10 || increment == 1 ||
-                                increment == 10 || increment == -1) return true;
-                            break;
-                        }
-                    }
-
-                    if (piece == BLACK_KNIGHT) break;
+                else if (occupied == WHITE_BISHOP) {
+                    if (increment == -11 || increment == 11 || increment == 9 || increment == -9) return true;
                 }
+
+                else if (occupied == WHITE_ROOK) {
+                    if (increment == -10 || increment == 1 || increment == 10 || increment == -1) return true;
+                }
+
+                else if (occupied == WHITE_KING) {
+                    if (new_pos == pos + increment) return true;
+                }
+
+                break;
+
             }
         }
     }
@@ -269,10 +287,13 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
     SQUARE_TYPE target_square = get_target_square(move);
     PIECE_TYPE selected = get_selected(move);
     PIECE_TYPE occupied = get_occupied(move);
+    SQUARE_TYPE selected_index = piece_list_index[origin_square];
+    SQUARE_TYPE occupied_index = piece_list_index[target_square];
     uint16_t move_type = get_move_type(move);
 
     state_stack[search_ply].move = move;
 
+    piece_list_index[target_square] = selected_index;
     if (move_type == MOVE_TYPE_NORMAL) {
         // Set the piece to the target square and hash it
         board[target_square] = selected;
@@ -288,13 +309,19 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
         if (!side) {
             board[target_square + 10] = EMPTY;
             hash_key ^= ZobristHashKeys.piece_hash_keys[BLACK_PAWN][MAILBOX_TO_STANDARD[target_square + 10]];
-            auto it = std::find(std::begin(black_pieces), std::end(black_pieces), target_square + 10);
-            black_pieces.erase(it);
+
+            black_pieces.erase(black_pieces.begin() + piece_list_index[target_square + 10]);
+            update_piece_list_index(piece_list_index[target_square + 10], black_pieces.size(), BLACK_COLOR);
+
+            piece_list_index[target_square + 10] = NO_PIECE_INDEX;
         } else {
             board[target_square - 10] = EMPTY;
             hash_key ^= ZobristHashKeys.piece_hash_keys[WHITE_PAWN][MAILBOX_TO_STANDARD[target_square - 10]];
-            auto it = std::find(std::begin(white_pieces), std::end(white_pieces), target_square - 10);
-            white_pieces.erase(it);
+
+            white_pieces.erase(white_pieces.begin() + piece_list_index[target_square - 10]);
+            update_piece_list_index(piece_list_index[target_square - 10], white_pieces.size(), WHITE_COLOR);
+
+            piece_list_index[target_square - 10] = NO_PIECE_INDEX;
         }
     }
 
@@ -313,6 +340,8 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             castled_pos[1] = target_square - 1;
         }
 
+        piece_list_index[castled_pos[1]] = piece_list_index[castled_pos[0]];
+
         // Move the rook and hash it
         if (!side) {
             board[castled_pos[1]] = WHITE_ROOK;
@@ -321,8 +350,7 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             board[castled_pos[0]] = EMPTY;
             hash_key ^= ZobristHashKeys.piece_hash_keys[WHITE_ROOK][MAILBOX_TO_STANDARD[castled_pos[0]]];
 
-            auto it = std::find(std::begin(white_pieces), std::end(white_pieces), castled_pos[0]);
-            white_pieces[it - std::begin(white_pieces)] = castled_pos[1];
+            white_pieces[piece_list_index[castled_pos[0]]] = castled_pos[1];
         } else {
             board[castled_pos[1]] = BLACK_ROOK;
             hash_key ^= ZobristHashKeys.piece_hash_keys[BLACK_ROOK][MAILBOX_TO_STANDARD[castled_pos[1]]];
@@ -330,9 +358,10 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             board[castled_pos[0]] = EMPTY;
             hash_key ^= ZobristHashKeys.piece_hash_keys[BLACK_ROOK][MAILBOX_TO_STANDARD[castled_pos[0]]];
 
-            auto it = std::find(std::begin(black_pieces), std::end(black_pieces), castled_pos[0]);
-            black_pieces[it - std::begin(black_pieces)] = castled_pos[1];
+            black_pieces[piece_list_index[castled_pos[0]]] = castled_pos[1];
         }
+
+        piece_list_index[castled_pos[0]] = NO_PIECE_INDEX;
     }
 
     else if (move_type == MOVE_TYPE_PROMOTION) {
@@ -346,26 +375,26 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
     hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[origin_square]];
 
     if (!side) {
-        auto it_1 = std::find(std::begin(white_pieces), std::end(white_pieces), origin_square);
-        white_pieces[it_1 - std::begin(white_pieces)] = target_square;
+        white_pieces[selected_index] = target_square;
 
         if (get_is_capture(move)) {
             fifty_move = 0;
             hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][MAILBOX_TO_STANDARD[target_square]];
-            auto it_2 = std::find(std::begin(black_pieces), std::end(black_pieces), target_square);
-            black_pieces.erase(it_2);
+            black_pieces.erase(black_pieces.begin() + occupied_index);
+            update_piece_list_index(occupied_index, black_pieces.size(), BLACK_COLOR);
         }
     } else {
-        auto it_1 = std::find(std::begin(black_pieces), std::end(black_pieces), origin_square);
-        black_pieces[it_1 - std::begin(black_pieces)] = target_square;
+        black_pieces[selected_index] = target_square;
 
         if (get_is_capture(move)) {
             fifty_move = 0;
             hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][MAILBOX_TO_STANDARD[target_square]];
-            auto it_2 = std::find(std::begin(white_pieces), std::end(white_pieces), target_square);
-            white_pieces.erase(it_2);
+            white_pieces.erase(white_pieces.begin() + occupied_index);
+            update_piece_list_index(occupied_index, white_pieces.size(), WHITE_COLOR);
         }
     }
+
+    piece_list_index[origin_square] = NO_PIECE_INDEX;
 
     // Change the king position for check detection
     if (selected == WHITE_KING || selected == BLACK_KING) king_positions[side] = target_square;
@@ -440,9 +469,11 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
         if (!side) {
             board[target_square + 10] = BLACK_PAWN;
             black_pieces.push_back(target_square + 10);
+            piece_list_index[target_square + 10] = black_pieces.size() - 1;
         } else {
             board[target_square - 10] = WHITE_PAWN;
             white_pieces.push_back(target_square - 10);
+            piece_list_index[target_square - 10] = white_pieces.size() - 1;
         }
     }
 
@@ -457,37 +488,42 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             castled_pos[1] = target_square + 1;
         }
 
-        board[castled_pos[0]] = EMPTY;
+        piece_list_index[castled_pos[1]] = piece_list_index[castled_pos[0]];
+
         if (!side) {
             board[castled_pos[1]] = WHITE_ROOK;
-            auto it = std::find(std::begin(white_pieces), std::end(white_pieces), castled_pos[0]);
-            white_pieces[it - std::begin(white_pieces)] = castled_pos[1];
+            white_pieces[piece_list_index[castled_pos[0]]] = castled_pos[1];
         } else {
             board[castled_pos[1]] = BLACK_ROOK;
-            auto it = std::find(std::begin(black_pieces), std::end(black_pieces), castled_pos[0]);
-            black_pieces[it - std::begin(black_pieces)] = castled_pos[1];
+            black_pieces[piece_list_index[castled_pos[0]]] = castled_pos[1];
         }
 
-    }
+        board[castled_pos[0]] = EMPTY;
+        piece_list_index[castled_pos[0]] = NO_PIECE_INDEX;
 
-    if (!side) {
-        auto it_1 = std::find(std::begin(white_pieces), std::end(white_pieces), target_square);
-        white_pieces[it_1 - std::begin(white_pieces)] = origin_square;
-
-        if (get_is_capture(move)) {
-            black_pieces.push_back(target_square);
-        }
-    } else {
-        auto it_1 = std::find(std::begin(black_pieces), std::end(black_pieces), target_square);
-        black_pieces[it_1 - std::begin(black_pieces)] = origin_square;
-
-        if (get_is_capture(move)) {
-            white_pieces.push_back(target_square);
-        }
     }
 
     board[target_square] = occupied;
     board[origin_square] = selected;
+
+    piece_list_index[origin_square] = piece_list_index[target_square];
+    piece_list_index[target_square] = NO_PIECE_INDEX;
+
+    if (!side) {
+        white_pieces[piece_list_index[origin_square]] = origin_square;
+
+        if (get_is_capture(move)) {
+            black_pieces.push_back(target_square);
+            piece_list_index[target_square] = black_pieces.size() - 1;
+        }
+    } else {
+        black_pieces[piece_list_index[origin_square]] = origin_square;
+
+        if (get_is_capture(move)) {
+            white_pieces.push_back(target_square);
+            piece_list_index[target_square] = white_pieces.size() - 1;
+        }
+    }
 
     if (ep_square != state_stack[search_ply].current_ep_square)
         ep_square = state_stack[search_ply].current_ep_square;

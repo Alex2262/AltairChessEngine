@@ -32,6 +32,7 @@ public:
 
     PLY_TYPE set_fen(const std::string& fen_string);
     void print_board();
+    void print_piece_index_board();
 
     bool is_attacked(SQUARE_TYPE pos);
 
@@ -46,6 +47,8 @@ public:
     void get_pseudo_legal_captures(PLY_TYPE ply);
 
     PIECE_TYPE board[120]{};
+    SQUARE_TYPE piece_list_index[120] = {NO_PIECE_INDEX};
+
     std::vector<PIECE_TYPE> white_pieces;
     std::vector<PIECE_TYPE> black_pieces;
 
@@ -62,6 +65,18 @@ public:
     SQUARE_TYPE ep_square = 0;
     SQUARE_TYPE side = 0;
     HASH_TYPE hash_key = 0;
+
+    inline void update_piece_list_index(SQUARE_TYPE left_range, SQUARE_TYPE right_range, SQUARE_TYPE side_to_use) {
+        if (!side_to_use) {
+            for (int i = left_range; i < right_range; i++) {
+                piece_list_index[white_pieces[i]] = i;
+            }
+        } else {
+            for (int i = left_range; i < right_range; i++) {
+                piece_list_index[black_pieces[i]] = i;
+            }
+        }
+    }
 
 
 };
