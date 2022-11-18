@@ -1,3 +1,4 @@
+
 //
 // Created by Alex Tian on 9/22/2022.
 //
@@ -298,7 +299,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // Detect repetitions and fifty move rule
         if (engine.fifty_move >= 100 || engine.detect_repetition()) return 0;
 
-        // Mate Distance Pruning
+        // Mate Distance Pruning from CPW
         SCORE_TYPE mating_value = MATE_SCORE - engine.search_ply;
         if (mating_value < beta) {
             beta = mating_value;
@@ -378,7 +379,11 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     bool pv_node = alpha != beta - 1;
     // if (!pv_node) std::cout << alpha << " " << beta << std::endl;
 
-
+    // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
+    // from a full-move or two plies ago. When this is true, we can be more aggressive with
+    // beta-reductions (eval is too high) as we will have more certainty that the position is better;
+    // however, we should be less aggressive with alpha-reductions (eval is too low) as we have less certainty
+    // that the position is awful.
     bool improving = false;
 
     if (!in_check && engine.search_ply >= 2) {
@@ -389,10 +394,10 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Razoring
     // Partial implementation from Stockfish
     // If the evaluation is really low, and we cannot improve alpha even with qsearch, then return.
-    // If the evaluation is improving then increase the margin (this shouldn't really matter though).
-    // int razoring_margins[3] = {0, 480, 1320};
-    int razoring_margins[2] = {0, 670};
-    if (depth <= 1 && static_eval + razoring_margins[depth] < alpha) {
+    // If the evaluation is improving then increase the margin because we are less certain that the
+    // position is terrible.
+    int razoring_margins[3] = {0, 480, 1320};
+    if (depth <= 2 && static_eval + razoring_margins[depth] + improving * 120 < alpha) {
         SCORE_TYPE return_eval = qsearch(engine, position, alpha, beta, engine.max_q_depth);
         if (return_eval < alpha) return return_eval;
     }
@@ -478,7 +483,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         position.side ^= 1;
 
         SCORE_TYPE return_eval;
-        double reduction = 0.0;
+        double reduction;
 
         bool is_killer_move = move == engine.killer_moves[0][engine.search_ply - 1] ||
                               move == engine.killer_moves[1][engine.search_ply - 1];
@@ -516,11 +521,12 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             // Idea from Weiss, where you reduce more if the move is quiet and TT move is a capture
             reduction += get_is_capture(tt_move) * 0.5;
 
-            reduction = static_cast<PLY_TYPE>(std::min(depth - 1, std::max(0, static_cast<int>(reduction))));
+            PLY_TYPE new_depth = static_cast<PLY_TYPE>(depth -
+                    std::min(depth - 1, std::max(0, static_cast<int>(reduction))) - 1);
 
-            return_eval = -negamax(engine, position, -alpha - 1, -alpha, depth - reduction - 1, true);
+            return_eval = -negamax(engine, position, -alpha - 1, -alpha, new_depth, true);
 
-            full_depth_zero_window = return_eval > alpha && reduction;
+            full_depth_zero_window = return_eval > alpha && new_depth != depth;
         }
 
         else {
@@ -634,7 +640,7 @@ void iterative_search(Engine& engine, Position& position) {
     engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
 
-    int original_side = position.side;
+    SQUARE_TYPE original_side = position.side;
 
     SCORE_TYPE alpha = -SCORE_INF;
     SCORE_TYPE beta = SCORE_INF;
@@ -646,7 +652,7 @@ void iterative_search(Engine& engine, Position& position) {
     SCORE_TYPE best_score = 0;
 
     double average_branching_factor = 1;
-    double prev_node_count = 1;
+    uint64_t prev_node_count = 1;
     PLY_TYPE full_searches = 0;
 
     while (running_depth <= engine.max_depth) {
@@ -685,8 +691,8 @@ void iterative_search(Engine& engine, Position& position) {
 
         auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
                                                                                                         - start_time);
-        double elapsed_time = ms_int.count();
-        if (elapsed_time == 0) elapsed_time = 0.1;
+        long elapsed_time = ms_int.count();
+        elapsed_time = std::max(elapsed_time, 1L);
 
         if (abs(best_score) >= MATE_BOUND) {
             SCORE_TYPE score = best_score >= MATE_BOUND ?
@@ -714,13 +720,15 @@ void iterative_search(Engine& engine, Position& position) {
             if (full_searches >= 1) {
                 // get new average branching factor with higher priority on last node counts
                 average_branching_factor *= full_searches;
-                average_branching_factor += engine.node_count / prev_node_count * 3;
+                average_branching_factor += static_cast<double>(engine.node_count) /
+                                            static_cast<double>(prev_node_count) * 3;
                 average_branching_factor /= full_searches + 3;
 
                 double uncertainty = ((running_depth / (running_depth + 3.1)) +
                                      (full_searches / (full_searches + 2.5))) / 2;
 
-                if (full_searches >= 2 && average_branching_factor * uncertainty * elapsed_time > engine.max_time)
+                if (full_searches >= 2 && static_cast<long>(average_branching_factor * uncertainty) * elapsed_time
+                    > engine.max_time)
                     break;
             }
 
@@ -736,5 +744,3 @@ void iterative_search(Engine& engine, Position& position) {
 
     engine.terminated = true;
 }
-
-
