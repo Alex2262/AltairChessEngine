@@ -118,7 +118,7 @@ void Engine::record_tt_entry(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag
     if (score < -MATE_BOUND) score -= search_ply;
     else if (score > MATE_BOUND) score += search_ply;
 
-    if (tt_entry.key != hash_key || depth > tt_entry.depth || tt_flag == HASH_FLAG_EXACT) {
+    if (tt_entry.key != hash_key || depth + 2 > tt_entry.depth || tt_flag == HASH_FLAG_EXACT) {
         tt_entry.key = hash_key;
         tt_entry.depth = depth;
         tt_entry.flag = tt_flag;
