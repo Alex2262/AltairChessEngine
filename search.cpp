@@ -25,7 +25,6 @@ void initialize_lmr_reductions() {
 }
 
 
-
 void Engine::clear_tt() {
     for (TT_Entry& tt_entry : transposition_table) {
         tt_entry.key = 0;
@@ -391,22 +390,22 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         if (past_eval != NO_EVALUATION && static_eval > past_eval) improving = true;
     }
 
+    // Reverse Futility Pruning
+    // If the last move was very bad, such that the static evaluation - a margin is still greater
+    // than the opponent's best score, then return the static evaluation.
+    if (!pv_node && depth <= 5 && !in_check && static_eval - ((190 - improving * 45) * depth) >= beta) {
+        return static_eval;
+    }
+
     // Razoring
-    // Partial implementation from Stockfish
+    // Ideas from Stockfish
     // If the evaluation is really low, and we cannot improve alpha even with qsearch, then return.
     // If the evaluation is improving then increase the margin because we are less certain that the
     // position is terrible.
     int razoring_margins[3] = {0, 480, 1320};
-    if (depth <= 2 && static_eval + razoring_margins[depth] + improving * 120 < alpha) {
+    if (!pv_node && depth <= 2 && static_eval + razoring_margins[depth] + improving * 120 < alpha) {
         SCORE_TYPE return_eval = qsearch(engine, position, alpha, beta, engine.max_q_depth);
         if (return_eval < alpha) return return_eval;
-    }
-
-    // Reverse Futility Pruning
-    // If the last move was very bad, such that the static evaluation - a margin is still greater
-    // than the opponent's best score, then return the static evaluation.
-    if (depth <= 5 && !in_check && static_eval - ((190 - improving * 45) * depth) >= beta) {
-        return static_eval;
     }
 
     // Null move pruning
@@ -494,7 +493,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         bool full_depth_zero_window;
 
         // Late Move Reductions
-
         // The idea that if moves are ordered well, then moves that are searched
         // later shouldn't be as good, and therefore we don't need to search them to a very high depth
         if (legal_moves >= 2
@@ -644,7 +642,7 @@ void iterative_search(Engine& engine, Position& position) {
 
     SCORE_TYPE alpha = -SCORE_INF;
     SCORE_TYPE beta = SCORE_INF;
-    SCORE_TYPE aspiration_window = 45;
+    SCORE_TYPE aspiration_window = STARTING_WINDOW;
 
     PLY_TYPE running_depth = 1;
 
@@ -663,7 +661,7 @@ void iterative_search(Engine& engine, Position& position) {
         if (return_eval <= alpha || return_eval >= beta) {
             alpha = -SCORE_INF;
             beta = SCORE_INF;
-            aspiration_window = 45;
+            aspiration_window = STARTING_WINDOW;
             continue;
         }
 
@@ -699,16 +697,16 @@ void iterative_search(Engine& engine, Position& position) {
                     (MATE_SCORE - best_score) / 2 + 1: (-MATE_SCORE -  best_score) / 2 - 1;
 
             std::cout << "info multipv 1 depth " << running_depth << " seldepth " << engine.selective_depth
-                      << " score mate " << score << " time " << int(elapsed_time)
-                      << " nodes " << engine.node_count << " nps " << int(engine.node_count / (elapsed_time / 1000))
+                      << " score mate " << score << " time " << elapsed_time
+                      << " nodes " << engine.node_count << " nps " << int(engine.node_count / (elapsed_time / 1000.0))
                       << " pv " << best_pv << std::endl;
 
             break;
         }
         else {
             std::cout << "info multipv 1 depth " << running_depth << " seldepth " << engine.selective_depth
-                      << " score cp " << best_score << " time " << int(elapsed_time)
-                      << " nodes " << engine.node_count << " nps " << int(engine.node_count / (elapsed_time / 1000))
+                      << " score cp " << best_score << " time " << elapsed_time
+                      << " nodes " << engine.node_count << " nps " << int(engine.node_count / (elapsed_time / 1000.0))
                       << " pv " << best_pv << std::endl;
         }
 

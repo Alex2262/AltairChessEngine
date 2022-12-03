@@ -3109,3 +3109,275 @@ Score of Altair1.1.9 vs Altair1.1.8: 131 - 123 - 146 [0.510]
 Elo difference: 6.9 +/- 27.2, LOS: 69.2 %, DrawRatio: 36.5 %
 400 of 400 games finished.
 ```
+
+
+### 1.2.0
+Improving for Razoring (no other engine does this?)
+
+
+```
+info multipv 1 depth 1 seldepth 1 score cp 64 time 1 nodes 28 nps 28000 pv b1c3
+info multipv 1 depth 2 seldepth 2 score cp 7 time 1 nodes 110 nps 110000 pv b1c3 b8c6
+info multipv 1 depth 3 seldepth 3 score cp 64 time 3 nodes 252 nps 84000 pv b1c3 b8c6 g1f3
+info multipv 1 depth 4 seldepth 5 score cp 8 time 5 nodes 910 nps 182000 pv b1c3 b8c6 g1f3 g8f6
+info multipv 1 depth 5 seldepth 6 score cp 53 time 6 nodes 1844 nps 307333 pv b1c3 b8c6 g1f3 g8f6 e2e4
+info multipv 1 depth 6 seldepth 8 score cp 7 time 10 nodes 4431 nps 443100 pv e2e4 b8c6 g1f3 e7e5 b1c3 g8f6
+info multipv 1 depth 7 seldepth 9 score cp 33 time 19 nodes 10872 nps 572210 pv b1c3 b8c6 g1f3 g8f6 d2d4 d7d5 c1f4
+info multipv 1 depth 8 seldepth 11 score cp 17 time 30 nodes 19983 nps 666100 pv b1c3 b8c6 g1f3 g8f6 e2e4 d7d5 e4e5 f6e4
+
+info multipv 1 depth 9 seldepth 12 score cp 23 time 57 nodes 43200 nps 757894 pv b1c3 b8c6 d2d4 d7d5 d1d3 g8f6 g1f3 c6b4
+ d3b5 b4c6
+info multipv 1 depth 10 seldepth 14 score cp 25 time 116 nodes 94489 nps 814560 pv b1c3 d7d5 d2d4 g8f6 d1d3 e7e6 g1f3 b8
+c6 e2e4 f8b4
+info multipv 1 depth 11 seldepth 15 score cp 25 time 232 nodes 195504 nps 842689 pv g1f3 g8f6 e2e3 b8c6 d2d4 d7d5 b1c3 c
+8g4
+info multipv 1 depth 12 seldepth 16 score cp 28 time 352 nodes 290555 nps 825440 pv g1f3 g8f6 d2d4 d7d5 b1c3 b8c6 e2e3
+info multipv 1 depth 13 seldepth 18 score cp 7 time 995 nodes 861161 nps 865488 pv g1f3 g8f6 d2d4 d7d5 b1c3 e7e6 e2e3 f8
+d6 f1d3 b8c6 e1g1 e8g8 c1d2
+info multipv 1 depth 14 seldepth 18 score cp 39 time 1504 nodes 1317838 nps 876222 pv e2e4 d7d5 e4d5 g8f6 d2d4 f6d5 c2c4
+ d5b4 d1a4 b8c6 a2a3 e7e5 a3b4 e5d4 c1d2
+info multipv 1 depth 15 seldepth 20 score cp 9 time 2518 nodes 2224239 nps 883335 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2d4
+e5d4 f3d4 f8b4 d4c6 d7c6 d1d8 e8d8 c1g5 h8e8
+info multipv 1 depth 16 seldepth 22 score cp 36 time 3049 nodes 2709124 nps 888528 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4
+ g8f6 d4c6 d7c6 d1d8 e8d8 b1d2 f8b4 c2c3 b4c5 f1c4
+info multipv 1 depth 17 seldepth 23 score cp 40 time 3926 nodes 3518690 nps 896253 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4
+ g8f6 d4c6 d7c6 d1d8 e8d8 b1c3 f8b4 c1g5 d8e8 g5f6 g7f6
+info multipv 1 depth 18 seldepth 24 score cp 39 time 5027 nodes 4526514 nps 900440 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4
+ d8f6 d4f3 c6e5 b1c3 e5f3 d1f3 f6f3 g2f3 g8e7 c1f4 d7d6 a1d1
+info multipv 1 depth 19 seldepth 24 score cp 39 time 6368 nodes 5740936 nps 901528 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4
+ d8f6
+info multipv 1 depth 20 seldepth 26 score cp 21 time 9672 nodes 8706343 nps 900159 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2d4
+ e5d4 f3d4 f8b4 d4c6 b7c6 d1d4 d8e7 f1d3 b4c5 d4a4 e8g8 e1g1
+info multipv 1 depth 21 seldepth 26 score cp 27 time 14330 nodes 12046394 nps 840641 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2
+d4 e5d4 f3d4 f8b4 d4c6 b7c6 d1d4 d8e7 f1d3 b4c5 d4a4 e8g8 e1g1 a8b8 f1d1
+info multipv 1 depth 22 seldepth 26 score cp 27 time 18861 nodes 15450307 nps 819166 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2
+d4
+info multipv 1 depth 23 seldepth 27 score cp 27 time 24729 nodes 20294681 nps 820683 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2
+d4 e5d4 f3d4 f8b4 d4c6 b7c6 d1d4 d8e7 f1d3 c6c5 d4e3 c8b7 c1d2 e8g8 e1g1 b4c3
+info multipv 1 depth 24 seldepth 32 score cp 44 time 38337 nodes 32584763 nps 849955 pv e2e4 e7e5 g1f3 g8f6 f3e5 d7d6 e5
+f3 f6e4 b1c3 e4c3 d2c3 f8e7 f1c4 e8g8 e1g1 b8c6 f1e1 c8f5 c1f4 d8d7 d1e2 a8e8 a1d1 e7g5
+info multipv 1 depth 24 seldepth 32 score cp 44 time 45001 nodes 38805538 nps 862326 pv e2e4 e7e5 g1f3 g8f6 f3e5 d7d6 e5
+f3 f6e4 b1c3 e4c3 d2c3 f8e7 f1c4 e8g8 e1g1 b8c6 f1e1 c8f5 c1f4 d8d7 d1e2 a8e8 a1d1 e7g5
+bestmove e2e4
+
+Score of Altair1.2.0 vs Altair1.1.9: 168 - 153 - 179 [0.515]
+...      Altair1.2.0 playing White: 82 - 70 - 98  [0.524] 250
+...      Altair1.2.0 playing Black: 86 - 83 - 81  [0.506] 250
+...      White vs Black: 165 - 156 - 179  [0.509] 500
+Elo difference: 10.4 +/- 24.4, LOS: 79.9 %, DrawRatio: 35.8 %
+500 of 500 games finished.
+
+Score of Altair1.2.0 vs bienchen.1.0: 522 - 281 - 197 [0.621]
+...      Altair1.2.0 playing White: 250 - 150 - 100  [0.600] 500
+...      Altair1.2.0 playing Black: 272 - 131 - 97  [0.641] 500
+...      White vs Black: 381 - 422 - 197  [0.479] 1000
+Elo difference: 85.4 +/- 19.7, LOS: 100.0 %, DrawRatio: 19.7 %
+1000 of 1000 games finished.
+
+Score of Altair1.2.0 vs Cosette-Win64: 162 - 240 - 98 [0.422]
+...      Altair1.2.0 playing White: 88 - 117 - 45  [0.442] 250
+...      Altair1.2.0 playing Black: 74 - 123 - 53  [0.402] 250
+...      White vs Black: 211 - 191 - 98  [0.520] 500
+Elo difference: -54.6 +/- 27.6, LOS: 0.0 %, DrawRatio: 19.6 %
+500 of 500 games finished.
+
+Rank Name                          Elo     +/-   Games    Wins  Losses   Draws   Points   Score    Draw   White   Black 
+   0 Altair1.2.0                    -0      11    3000    1189    1190     621   1499.5   50.0%   20.7%   50.1%   49.9% 
+   1 tantabus-windows...            23      19    1000     434     369     197    532.5   53.3%   19.7%   53.8%   52.7% 
+   2 kimbo-0.3.0                    -6      19    1000     392     408     200    492.0   49.2%   20.0%   51.2%   47.2% 
+   3 sofcheck_amd64-popcnt_windows -17      19    1000     364     412     224    476.0   47.6%   22.4%   45.4%   49.8% 
+
+3000 of 3000 games finished.
+
+Equivalent to -23 against tantabus-windows-2019-x86-64-v3
+Equivalent to +6  against kimbo-0.3.0
+Equivalent to +17 against sofcheck_amd64-popcnt_windows
+```
+
+
+### 1.2.1
+Not doing RFP in pv_nodes
+
+```
+info multipv 1 depth 1 seldepth 1 score cp 64 time 1 nodes 28 nps 28000 pv b1c3
+info multipv 1 depth 2 seldepth 2 score cp 7 time 1 nodes 110 nps 110000 pv b1c3 b8c6
+info multipv 1 depth 3 seldepth 3 score cp 64 time 3 nodes 252 nps 84000 pv b1c3 b8c6 g1f3
+info multipv 1 depth 4 seldepth 5 score cp 8 time 5 nodes 910 nps 182000 pv b1c3 b8c6 g1f3 g8f6
+info multipv 1 depth 5 seldepth 6 score cp 53 time 7 nodes 1844 nps 263428 pv b1c3 b8c6 g1f3 g8f6 e2e4
+info multipv 1 depth 6 seldepth 8 score cp 7 time 12 nodes 4431 nps 369250 pv e2e4 b8c6 g1f3 e7e5 b1c3 g8f6
+info multipv 1 depth 7 seldepth 9 score cp 33 time 21 nodes 10872 nps 517714 pv b1c3 b8c6 g1f3 g8f6 d2d4 d7d5 c1f4
+info multipv 1 depth 8 seldepth 11 score cp 17 time 34 nodes 19983 nps 587735 pv b1c3 b8c6 g1f3 g8f6 e2e4 d7d5 e4e5 f6e4
+
+info multipv 1 depth 9 seldepth 12 score cp 23 time 63 nodes 43186 nps 685492 pv b1c3 b8c6 d2d4 d7d5 d1d3 g8f6 g1f3 c6b4
+ d3b5 b4c6
+info multipv 1 depth 10 seldepth 14 score cp 20 time 134 nodes 101937 nps 760723 pv d2d4 g8f6 g1f3 e7e6 b1c3 d7d5 c1g5 f
+8e7 f3e5 e8g8
+info multipv 1 depth 11 seldepth 14 score cp 21 time 171 nodes 136492 nps 798198 pv d2d4 g8f6 g1f3 e7e6 b1c3 d7d5 d1d3 b
+8c6 e2e4 f8b4 e4e5
+info multipv 1 depth 12 seldepth 17 score cp 32 time 405 nodes 345662 nps 853486 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2d4 e
+5d4 f3d4 f8b4 d4c6 d7c6
+info multipv 1 depth 13 seldepth 17 score cp 29 time 521 nodes 434460 nps 833896 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 f1c4 f
+8b4 e1g1 e8g8 d2d3 d7d6 c1g5
+info multipv 1 depth 14 seldepth 19 score cp 45 time 901 nodes 783914 nps 870048 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2d4 e
+5d4 f3d4 f8b4 d4c6 b4c3 b2c3 d7c6 d1d3
+info multipv 1 depth 15 seldepth 20 score cp 34 time 1271 nodes 1126195 nps 886070 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 f1c4
+ f8b4 a2a3 b4c5 e1g1 e8g8 d2d3 d7d6
+info multipv 1 depth 16 seldepth 21 score cp 20 time 3126 nodes 2652322 nps 848471 pv b1c3 d7d5 d2d4 g8f6 g1f3 e7e6 e2e3
+ f8b4 f1d3 e8g8 e1g1 b8c6 a2a3 b4d6
+info multipv 1 depth 17 seldepth 22 score cp 40 time 6763 nodes 5498651 nps 813049 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4
+ g8f6 d4c6 d7c6 d1d8 e8d8 b1c3 f8b4 c1g5 d8e8 g5f6 g7f6
+info multipv 1 depth 18 seldepth 22 score cp 40 time 7676 nodes 6268698 nps 816662 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4
+ g8f6 d4c6 d7c6 d1d8 e8d8 b1c3
+info multipv 1 depth 19 seldepth 25 score cp 40 time 8875 nodes 7343972 nps 827489 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4
+ g8f6
+info multipv 1 depth 20 seldepth 26 score cp 40 time 11213 nodes 9181958 nps 818867 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d
+4 g8f6 d4c6 d7c6 d1d8 e8d8 b1d2 f8c5 f1c4 h8e8 e1g1 f6e4 c4f7 e8e5
+info multipv 1 depth 21 seldepth 27 score cp 22 time 17002 nodes 13964492 nps 821344 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2
+d4 e5d4 f3d4 f8b4 d4c6 b7c6 d1d4 d8e7 f1d3 b4c5 d4a4 e8g8 e1g1 a8b8 f1d1
+info multipv 1 depth 22 seldepth 27 score cp 22 time 21043 nodes 17654365 nps 838966 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2
+d4 e5d4 f3d4
+info multipv 1 depth 23 seldepth 27 score cp 22 time 26991 nodes 22984571 nps 851564 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6
+info multipv 1 depth 24 seldepth 30 score cp 37 time 38598 nodes 33324063 nps 863362 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2
+d4 f8b4 d4d5 c6e7 d1d3 e7g6 a2a3 b4c3 b2c3 e8g8 f1e2
+info multipv 1 depth 24 seldepth 34 score cp 37 time 45000 nodes 39032911 nps 867398 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2
+d4 f8b4 d4d5 c6e7 d1d3 e7g6 a2a3 b4c3 b2c3 e8g8 f1e2
+bestmove e2e4
+
+Score of Altair1.2.1 vs Altair1.2.0: 327 - 304 - 369 [0.511]
+...      Altair1.2.1 playing White: 211 - 99 - 190  [0.612] 500
+...      Altair1.2.1 playing Black: 116 - 205 - 179  [0.411] 500
+...      White vs Black: 416 - 215 - 369  [0.601] 1000
+Elo difference: 8.0 +/- 17.1, LOS: 82.0 %, DrawRatio: 36.9 %
+1000 of 1000 games finished.
+```
+
+
+### 1.2.2
+Razoring after RFP
+
+```
+info multipv 1 depth 1 seldepth 1 score cp 64 time 1 nodes 28 nps 28000 pv b1c3
+info multipv 1 depth 2 seldepth 2 score cp 7 time 1 nodes 110 nps 110000 pv b1c3 b8c6
+info multipv 1 depth 3 seldepth 3 score cp 64 time 3 nodes 252 nps 84000 pv b1c3 b8c6 g1f3
+info multipv 1 depth 4 seldepth 5 score cp 8 time 5 nodes 910 nps 182000 pv b1c3 b8c6 g1f3 g8f6
+info multipv 1 depth 5 seldepth 6 score cp 53 time 7 nodes 1844 nps 263428 pv b1c3 b8c6 g1f3 g8f6 e2e4
+info multipv 1 depth 6 seldepth 8 score cp 7 time 12 nodes 4431 nps 369250 pv e2e4 b8c6 g1f3 e7e5 b1c3 g8f6
+info multipv 1 depth 7 seldepth 9 score cp 33 time 21 nodes 10872 nps 517714 pv b1c3 b8c6 g1f3 g8f6 d2d4 d7d5 c1f4
+info multipv 1 depth 8 seldepth 11 score cp 17 time 34 nodes 19983 nps 587735 pv b1c3 b8c6 g1f3 g8f6 e2e4 d7d5 e4e5 f6e4
+
+info multipv 1 depth 9 seldepth 12 score cp 23 time 63 nodes 43186 nps 685492 pv b1c3 b8c6 d2d4 d7d5 d1d3 g8f6 g1f3 c6b4
+ d3b5 b4c6
+info multipv 1 depth 10 seldepth 14 score cp 20 time 134 nodes 101937 nps 760723 pv d2d4 g8f6 g1f3 e7e6 b1c3 d7d5 c1g5 f
+8e7 f3e5 e8g8
+info multipv 1 depth 11 seldepth 14 score cp 21 time 171 nodes 136492 nps 798198 pv d2d4 g8f6 g1f3 e7e6 b1c3 d7d5 d1d3 b
+8c6 e2e4 f8b4 e4e5
+info multipv 1 depth 12 seldepth 17 score cp 32 time 405 nodes 345662 nps 853486 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2d4 e
+5d4 f3d4 f8b4 d4c6 d7c6
+info multipv 1 depth 13 seldepth 17 score cp 29 time 521 nodes 434460 nps 833896 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 f1c4 f
+8b4 e1g1 e8g8 d2d3 d7d6 c1g5
+info multipv 1 depth 14 seldepth 19 score cp 45 time 901 nodes 783914 nps 870048 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2d4 e
+5d4 f3d4 f8b4 d4c6 b4c3 b2c3 d7c6 d1d3
+info multipv 1 depth 15 seldepth 20 score cp 34 time 1271 nodes 1126195 nps 886070 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 f1c4
+ f8b4 a2a3 b4c5 e1g1 e8g8 d2d3 d7d6
+info multipv 1 depth 16 seldepth 21 score cp 20 time 3126 nodes 2652322 nps 848471 pv b1c3 d7d5 d2d4 g8f6 g1f3 e7e6 e2e3
+ f8b4 f1d3 e8g8 e1g1 b8c6 a2a3 b4d6
+info multipv 1 depth 17 seldepth 22 score cp 40 time 6763 nodes 5498651 nps 813049 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4
+ g8f6 d4c6 d7c6 d1d8 e8d8 b1c3 f8b4 c1g5 d8e8 g5f6 g7f6
+info multipv 1 depth 18 seldepth 22 score cp 40 time 7676 nodes 6268698 nps 816662 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4
+ g8f6 d4c6 d7c6 d1d8 e8d8 b1c3
+info multipv 1 depth 19 seldepth 25 score cp 40 time 8875 nodes 7343972 nps 827489 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4
+ g8f6
+info multipv 1 depth 20 seldepth 26 score cp 40 time 11213 nodes 9181958 nps 818867 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d
+4 g8f6 d4c6 d7c6 d1d8 e8d8 b1d2 f8c5 f1c4 h8e8 e1g1 f6e4 c4f7 e8e5
+info multipv 1 depth 21 seldepth 27 score cp 22 time 17002 nodes 13964492 nps 821344 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2
+d4 e5d4 f3d4 f8b4 d4c6 b7c6 d1d4 d8e7 f1d3 b4c5 d4a4 e8g8 e1g1 a8b8 f1d1
+info multipv 1 depth 22 seldepth 27 score cp 22 time 21043 nodes 17654365 nps 838966 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2
+d4 e5d4 f3d4
+info multipv 1 depth 23 seldepth 27 score cp 22 time 26991 nodes 22984571 nps 851564 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6
+info multipv 1 depth 24 seldepth 30 score cp 37 time 38598 nodes 33324063 nps 863362 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2
+d4 f8b4 d4d5 c6e7 d1d3 e7g6 a2a3 b4c3 b2c3 e8g8 f1e2
+info multipv 1 depth 24 seldepth 34 score cp 37 time 45000 nodes 39032911 nps 867398 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2
+d4 f8b4 d4d5 c6e7 d1d3 e7g6 a2a3 b4c3 b2c3 e8g8 f1e2
+bestmove e2e4
+
+Score of Altair1.2.2 vs Altair1.2.1: 286 - 243 - 271 [0.527]
+...      Altair1.2.2 playing White: 194 - 77 - 129  [0.646] 400
+...      Altair1.2.2 playing Black: 92 - 166 - 142  [0.407] 400
+...      White vs Black: 360 - 169 - 271  [0.619] 800
+Elo difference: 18.7 +/- 19.6, LOS: 96.9 %, DrawRatio: 33.9 %
+800 of 800 games finished.
+```
+
+
+### 1.2.3
+No razoring in pv nodes
+
+```
+info multipv 1 depth 1 seldepth 1 score cp 64 time 1 nodes 28 nps 28000 pv b1c3
+info multipv 1 depth 2 seldepth 2 score cp 7 time 1 nodes 110 nps 110000 pv b1c3 b8c6
+info multipv 1 depth 3 seldepth 3 score cp 64 time 3 nodes 252 nps 84000 pv b1c3 b8c6 g1f3
+info multipv 1 depth 4 seldepth 5 score cp 8 time 5 nodes 910 nps 182000 pv b1c3 b8c6 g1f3 g8f6
+info multipv 1 depth 5 seldepth 6 score cp 53 time 7 nodes 1844 nps 263428 pv b1c3 b8c6 g1f3 g8f6 e2e4
+info multipv 1 depth 6 seldepth 8 score cp 7 time 11 nodes 4431 nps 402818 pv e2e4 b8c6 g1f3 e7e5 b1c3 g8f6
+info multipv 1 depth 7 seldepth 9 score cp 33 time 19 nodes 10872 nps 572210 pv b1c3 b8c6 g1f3 g8f6 d2d4 d7d5 c1f4
+info multipv 1 depth 8 seldepth 11 score cp 17 time 30 nodes 19983 nps 666100 pv b1c3 b8c6 g1f3 g8f6 e2e4 d7d5 e4e5 f6e4
+
+info multipv 1 depth 9 seldepth 12 score cp 23 time 56 nodes 43186 nps 771178 pv b1c3 b8c6 d2d4 d7d5 d1d3 g8f6 g1f3 c6b4
+ d3b5 b4c6
+info multipv 1 depth 10 seldepth 14 score cp 20 time 119 nodes 101937 nps 856613 pv d2d4 g8f6 g1f3 e7e6 b1c3 d7d5 c1g5 f
+8e7 f3e5 e8g8
+info multipv 1 depth 11 seldepth 14 score cp 21 time 158 nodes 136492 nps 863873 pv d2d4 g8f6 g1f3 e7e6 b1c3 d7d5 d1d3 b
+8c6 e2e4 f8b4 e4e5
+info multipv 1 depth 12 seldepth 17 score cp 32 time 387 nodes 345688 nps 893250 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2d4 e
+5d4 f3d4 f8b4 d4c6 d7c6
+info multipv 1 depth 13 seldepth 17 score cp 29 time 479 nodes 434485 nps 907066 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 f1c4 f
+8b4 e1g1 e8g8 d2d3 d7d6 c1g5
+info multipv 1 depth 14 seldepth 19 score cp 45 time 895 nodes 783928 nps 875897 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2d4 e
+5d4 f3d4 f8b4 d4c6 b4c3 b2c3 d7c6 d1d3
+info multipv 1 depth 15 seldepth 20 score cp 34 time 1266 nodes 1126209 nps 889580 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 f1c4
+ f8b4 a2a3 b4c5 e1g1 e8g8 d2d3 d7d6
+info multipv 1 depth 16 seldepth 21 score cp 20 time 2890 nodes 2652383 nps 917779 pv b1c3 d7d5 d2d4 g8f6 g1f3 e7e6 e2e3
+ f8b4 f1d3 e8g8 e1g1 b8c6 a2a3 b4d6
+info multipv 1 depth 17 seldepth 22 score cp 40 time 7603 nodes 5498820 nps 723243 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4
+ g8f6 d4c6 d7c6 d1d8 e8d8 b1c3 f8b4 c1g5 d8e8 g5f6 g7f6
+info multipv 1 depth 18 seldepth 22 score cp 40 time 8642 nodes 6268867 nps 725395 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4
+ g8f6 d4c6 d7c6 d1d8 e8d8 b1c3
+info multipv 1 depth 19 seldepth 25 score cp 40 time 10384 nodes 7487223 nps 721034 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d
+4 g8f6
+info multipv 1 depth 20 seldepth 26 score cp 37 time 12890 nodes 9527873 nps 739167 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d
+4 g8f6 d4c6 b7c6 f1d3 d7d5 e4d5 c6d5 e1g1 f8e7 b1c3 e8g8 c1f4 c8g4
+info multipv 1 depth 21 seldepth 26 score cp 37 time 16433 nodes 12422515 nps 755949 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4
+info multipv 1 depth 22 seldepth 29 score cp 42 time 40256 nodes 33665507 nps 836285 pv e2e4 e7e6 d2d4 d7d5 b1c3 d5e4 c3
+e4 g8f6 e4f6 d8f6 g1f3 h7h6 f1c4 b8c6 e1g1 f8d6 c2c3
+info multipv 1 depth 22 seldepth 31 score cp 42 time 45000 nodes 37746707 nps 838815 pv e2e4 e7e6 d2d4 d7d5 b1c3 d5e4 c3
+e4 g8f6 e4f6 d8f6 g1f3 h7h6 f1c4 b8c6 e1g1 f8d6 c2c3
+bestmove e2e4
+
+Score of Altair1.2.3 vs Altair1.2.2: 280 - 246 - 274 [0.521]
+...      Altair1.2.3 playing White: 175 - 96 - 129  [0.599] 400
+...      Altair1.2.3 playing Black: 105 - 150 - 145  [0.444] 400
+...      White vs Black: 325 - 201 - 274  [0.578] 800
+Elo difference: 14.8 +/- 19.5, LOS: 93.1 %, DrawRatio: 34.3 %
+800 of 800 games finished.
+
+Score of Altair1.2.3 vs sofcheck_amd64-popcnt_windows: 115 - 65 - 60 [0.604]
+...      Altair1.2.3 playing White: 59 - 27 - 34  [0.633] 120
+...      Altair1.2.3 playing Black: 56 - 38 - 26  [0.575] 120
+...      White vs Black: 97 - 83 - 60  [0.529] 240
+Elo difference: 73.5 +/- 38.8, LOS: 100.0 %, DrawRatio: 25.0 %
+240 of 240 games finished.
+
+Score of Altair1.2.3 vs Cosette-Win64: 181 - 229 - 90 [0.452]
+...      Altair1.2.3 playing White: 117 - 87 - 46  [0.560] 250
+...      Altair1.2.3 playing Black: 64 - 142 - 44  [0.344] 250
+...      White vs Black: 259 - 151 - 90  [0.608] 500
+Elo difference: -33.5 +/- 27.7, LOS: 0.9 %, DrawRatio: 18.0 %
+500 of 500 games finished.
+
+Score of Altair1.2.3 vs Altair1.0.0: 282 - 63 - 155 [0.719]
+...      Altair1.2.3 playing White: 160 - 21 - 69  [0.778] 250
+...      Altair1.2.3 playing Black: 122 - 42 - 86  [0.660] 250
+...      White vs Black: 202 - 143 - 155  [0.559] 500
+Elo difference: 163.2 +/- 26.6, LOS: 100.0 %, DrawRatio: 31.0 %
+500 of 500 games finished.
+```
