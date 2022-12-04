@@ -19,7 +19,7 @@ static double LMR_REDUCTIONS[TOTAL_MAX_DEPTH][64];
 void initialize_lmr_reductions() {
     for (PLY_TYPE depth = 0; depth < TOTAL_MAX_DEPTH; depth++) {
         for (int moves = 0; moves < 64; moves++) {
-            LMR_REDUCTIONS[depth][moves] = std::max(0.0, std::log(depth) * std::log(moves) / 1.9 + 1.2);
+            LMR_REDUCTIONS[depth][moves] = std::max(0.0, std::log(depth) * std::log(moves) / 1.8 + 1.4);
         }
     }
 }

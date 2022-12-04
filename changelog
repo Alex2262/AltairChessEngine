@@ -3401,5 +3401,44 @@ Rank Name                          Elo     +/-   Games    Wins  Losses   Draws  
 
 1000 of 1000 games finished.
 
-Altair1.2.4-2: W 369 L 356 D 358 | Points: 548 / 1083 | Win Percent: 50.6 | Elo: +4 Error: +-17
+Altair1.2.4: W 369 L 356 D 358 | Points: 548 / 1083 | Win Percent: 50.6 | Elo: +4 Error: +-17
+```
+
+
+### 1.2.5
+Tuning LMR divisor value. 1.9 -> 1.8
+
+
+```
+Result:
+--------------------------------------------------------------------------
+  #  name          games    wins   draws  losses   score    elo    +    -
+  1. Altair125-18   1500     495     559     446   774.5      5    8    8
+  2. Altair124      1500     446     559     495   725.5     -5    8    8
+
+Results based on https://www.3dkingdoms.com/chess/elo.htm:
+  Elo difference: +11
+  Error Margin: +-14
+
+Tech:
+--------------------------------------------------------------------------
+
+Tech (average nodes, depths, time/m per move, others per game), counted for computing moves only,
+ignored moves with zero nodes:
+
+  #  name            nodes/m         NPS  depth/m   time/m    moves     time
+  1. Altair125-18        90K     1579467     12.8      0.1     68.5      3.9
+  2. Altair124           90K     1579771     12.6      0.1     68.5      3.9
+```
+
+### 1.2.6
+Tuning LMR +n value. 1.2 -> 1.1
+
+```
+W 482 L 464 D 554
+
+Results based on https://www.3dkingdoms.com/chess/elo.htm:
+  Elo difference: +4
+  Error Margin: +-11
+
 ```
