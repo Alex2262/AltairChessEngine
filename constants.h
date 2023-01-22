@@ -183,6 +183,8 @@ constexpr int GAME_PHASE_SCORES[6] = {0, 1, 1, 2, 4, 0};
 constexpr SCORE_TYPE PIECE_VALUES_MID[6] = {82, 326, 352, 486, 982, 0};
 constexpr SCORE_TYPE PIECE_VALUES_END[6] = {96, 292, 304, 512, 936, 0};
 
+constexpr SCORE_TYPE MVV_LVA_VALUES[6] = {100, 300, 350, 500, 950, 3000};
+
 constexpr SCORE_TYPE BLOCKER_VALUES_MID[6] = {0, 31, 14, 22,  8,  3};
 constexpr SCORE_TYPE BLOCKER_VALUES_END[6] = {0, 37, 21, 26, 11, 28};
 

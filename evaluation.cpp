@@ -819,7 +819,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
     if (selected < BLACK_PAWN) {
         if (get_is_capture(move)) {
             score += 20000;
-            score += 2 * (PIECE_VALUES_MID[occupied - BLACK_PAWN] - PIECE_VALUES_MID[selected]);
+            score += 2 * (MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected]);
             score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
         else {
@@ -842,7 +842,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
     else {
         if (get_is_capture(move)) {
             score += 20000;
-            score += 2 * (PIECE_VALUES_MID[occupied] - PIECE_VALUES_MID[selected - BLACK_PAWN]);
+            score += 2 * (MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN]);
             score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
         else {
@@ -877,10 +877,10 @@ SCORE_TYPE score_capture(MOVE_TYPE move, MOVE_TYPE tt_move) {
     PIECE_TYPE occupied = get_occupied(move);
 
     if (selected < BLACK_PAWN) {
-        score += PIECE_VALUES_MID[occupied - BLACK_PAWN] - PIECE_VALUES_MID[selected];
+        score += MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected];
     }
     else {
-        score += PIECE_VALUES_MID[occupied] - PIECE_VALUES_MID[selected - BLACK_PAWN];
+        score += MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN];
     }
 
     return score;
