@@ -3493,7 +3493,8 @@ Elo difference: 4.8 +/- 19.6, LOS: 68.3 %, DrawRatio: 33.6 %
 ```
 
 
-### 1.2.8 Eval tweaks
+### 1.2.8
+Eval tweaks
 
 ```
 info multipv 1 depth 1 seldepth 1 score cp 65 time 1 nodes 28 nps 28000 pv b1c3
