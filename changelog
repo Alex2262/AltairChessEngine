@@ -3491,3 +3491,56 @@ Score of Altair1.2.7 vs Altair1.2.6: 271 - 260 - 269 [0.507]
 Elo difference: 4.8 +/- 19.6, LOS: 68.3 %, DrawRatio: 33.6 %
 800 of 800 games finished.
 ```
+
+
+### 1.2.8 Eval tweaks
+
+```
+info multipv 1 depth 1 seldepth 1 score cp 65 time 1 nodes 28 nps 28000 pv b1c3
+info multipv 1 depth 2 seldepth 2 score cp 8 time 1 nodes 110 nps 110000 pv b1c3 b8c6
+info multipv 1 depth 3 seldepth 3 score cp 64 time 3 nodes 256 nps 85333 pv b1c3 b8c6 g1f3
+info multipv 1 depth 4 seldepth 4 score cp 7 time 4 nodes 666 nps 166500 pv b1c3 b8c6 g1f3 g8f6
+info multipv 1 depth 5 seldepth 6 score cp 49 time 6 nodes 1162 nps 193666 pv b1c3 b8c6 g1f3 g8f6 e2e4
+info multipv 1 depth 6 seldepth 7 score cp 7 time 8 nodes 2467 nps 308375 pv b1c3 b8c6 g1f3 g8f6 e2e4 e7e5
+info multipv 1 depth 7 seldepth 8 score cp 29 time 13 nodes 5907 nps 454384 pv b1c3 b8c6 d2d4 d7d5 e2e3 g8f6 g1f3
+info multipv 1 depth 8 seldepth 10 score cp 25 time 31 nodes 21775 nps 702419 pv b1c3 b8c6 d2d4 d7d5 g1f3 e7e6 e2e4 g8f6
+
+info multipv 1 depth 9 seldepth 11 score cp 22 time 45 nodes 33106 nps 735688 pv b1c3 b8c6 d2d4 d7d5 g1f3 c8f5 f3h4 f5g4
+ h4f3
+info multipv 1 depth 10 seldepth 12 score cp 21 time 63 nodes 46507 nps 738206 pv b1c3 b8c6 d2d4 d7d5 g1f3 c8f5 e2e3 g8f
+6 f1d3 d8d7
+info multipv 1 depth 11 seldepth 14 score cp 27 time 115 nodes 92878 nps 807634 pv g1f3 b8c6 d2d4 d7d5 e2e3 g8f6 b1c3 c8
+g4 h2h3 g4f5 f1b5
+info multipv 1 depth 12 seldepth 14 score cp 40 time 176 nodes 146711 nps 833585 pv g1f3 b8c6 d2d4 d7d5 e2e3 g8f6 b1c3 d
+8d6 f1d3 c6b4 e1g1 b4d3
+info multipv 1 depth 13 seldepth 17 score cp 12 time 761 nodes 616196 nps 809718 pv b1c3 g8f6 d2d4 d7d5 e2e3 b8d7 g1f3 e
+7e6 f1d3 f8b4 e1g1 e8g8 c1d2
+info multipv 1 depth 14 seldepth 20 score cp 17 time 1309 nodes 1115758 nps 852374 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 f1b5
+ f8b4 e1g1 e8g8 f1e1 b4c5 b5c6 d7c6
+info multipv 1 depth 15 seldepth 20 score cp 33 time 1616 nodes 1397776 nps 864960 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6
+info multipv 1 depth 16 seldepth 22 score cp 42 time 2073 nodes 1796061 nps 866406 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 f1c4
+ f8c5 e1g1 e8g8 d2d3 d7d6 c3d5 h7h6 c1e3 c8g4
+info multipv 1 depth 17 seldepth 23 score cp 42 time 2565 nodes 2225598 nps 867679 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 f1c4
+ f8c5 e1g1 e8g8
+info multipv 1 depth 18 seldepth 23 score cp 36 time 3387 nodes 2990402 nps 882905 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 f1c4
+ f8c5 e1g1 e8g8 d2d3 d7d6 c3d5 h7h6 c1e3 c5e3 d5e3 c8e6
+info multipv 1 depth 19 seldepth 24 score cp 36 time 4725 nodes 4224266 nps 894024 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 f1c4
+ f8c5 e1g1 e8g8 d2d3 d7d6 c3d5 c6a5 c1g5 a5c4 d3c4 c8g4
+info multipv 1 depth 20 seldepth 26 score cp 26 time 6958 nodes 6261377 nps 899881 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 f1c4
+ f8c5 e1g1 e8g8 d2d3 d7d6 c3d5 f6d5 c4d5 c6d4 f3d4 c5d4 d1f3 d8h4
+info multipv 1 depth 21 seldepth 29 score cp 45 time 12938 nodes 11680952 nps 902840 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3
+d4 g8f6 d4c6 b7c6 f1d3 f8d6 e1g1 e8g8 b1d2 d8e7 d2c4 f6e4
+info multipv 1 depth 22 seldepth 29 score cp 45 time 15918 nodes 14400969 nps 904697 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4
+info multipv 1 depth 23 seldepth 29 score cp 21 time 25575 nodes 23199470 nps 907115 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2
+d4 e5d4 f3d4 f8b4 d4c6 b7c6
+info multipv 1 depth 24 seldepth 29 score cp 21 time 33871 nodes 30742058 nps 907621 pv e2e4 e7e5 g1f3
+info multipv 1 depth 24 seldepth 30 score cp 21 time 45000 nodes 40863763 nps 908083 pv e2e4 e7e5 g1f3
+bestmove e2e4
+
+Score of Altair1.2.8 vs Altair1.2.7: 218 - 188 - 194 [0.525]
+...      Altair1.2.8 playing White: 137 - 68 - 95  [0.615] 300
+...      Altair1.2.8 playing Black: 81 - 120 - 99  [0.435] 300
+...      White vs Black: 257 - 149 - 194  [0.590] 600
+Elo difference: 17.4 +/- 22.9, LOS: 93.2 %, DrawRatio: 32.3 %
+600 of 600 games finished.
+```

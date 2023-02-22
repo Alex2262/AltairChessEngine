@@ -67,11 +67,11 @@
 
 #define TEMPO_BONUS                 8
 
-#define DOUBLED_PAWN_PENALTY_MID    14
-#define DOUBLED_PAWN_PENALTY_END    20  // Doubled pawns are very easy to target in the endgame.
+#define DOUBLED_PAWN_PENALTY_MID    18
+#define DOUBLED_PAWN_PENALTY_END    26  // Doubled pawns are very easy to target in the endgame.
 
-#define ISOLATED_PAWN_PENALTY_MID   18
-#define ISOLATED_PAWN_PENALTY_END   12  // The person playing with the isolated pawns should trade off pieces.
+#define ISOLATED_PAWN_PENALTY_MID   23
+#define ISOLATED_PAWN_PENALTY_END   34  // Pawn islands are very bad in the endgame
 
 #define BACKWARDS_PAWN_PENALTY_MID  6
 #define BACKWARDS_PAWN_PENALTY_END  8  // Give this a higher base score, but we reduce multipliers in eval_pawn()
@@ -79,10 +79,10 @@
 #define PASSED_PAWN_BONUS_MID       9
 #define PASSED_PAWN_BONUS_END       16  // These are multiplied by the pawn's row.
 
-#define BISHOP_PAIR_BONUS_MID       46
-#define BISHOP_PAIR_BONUS_END       39
+#define BISHOP_PAIR_BONUS_MID       39
+#define BISHOP_PAIR_BONUS_END       56
 
-#define ROOK_SEMI_OPEN_FILE_BONUS_MID   15
+#define ROOK_SEMI_OPEN_FILE_BONUS_MID   18
 #define ROOK_SEMI_OPEN_FILE_BONUS_END   20
 
 #define ROOK_OPEN_FILE_BONUS_MID        27
@@ -91,8 +91,8 @@
 #define QUEEN_SEMI_OPEN_FILE_BONUS_MID  5
 #define QUEEN_SEMI_OPEN_FILE_BONUS_END  8
 
-#define QUEEN_OPEN_FILE_BONUS_MID       10
-#define QUEEN_OPEN_FILE_BONUS_END       12
+#define QUEEN_OPEN_FILE_BONUS_MID       22
+#define QUEEN_OPEN_FILE_BONUS_END       26
 
 
 typedef uint16_t PIECE_TYPE;
@@ -188,7 +188,8 @@ constexpr SCORE_TYPE MVV_LVA_VALUES[6] = {100, 300, 350, 500, 950, 3000};
 constexpr SCORE_TYPE BLOCKER_VALUES_MID[6] = {0, 31, 14, 22,  8,  3};
 constexpr SCORE_TYPE BLOCKER_VALUES_END[6] = {0, 37, 21, 26, 11, 28};
 
-constexpr SCORE_TYPE PIECE_ATTACK_MOBILITY[6] = {2, 3, 3, 4, 4, 10};
+constexpr SCORE_TYPE PIECE_ATTACK_MOBILITY[6] = {6, 8, 8, 10, 14, 35};
+constexpr SCORE_TYPE PIECE_ATTACK_MOBILITY_PENALTY[6] = {0, 2, 1, 3, 4, 0};
 
 
 constexpr SCORE_TYPE PAWN_PST_MID[64] = {

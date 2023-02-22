@@ -203,7 +203,7 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
             // Attacking pieces means more pressure which is good
             if (occupied < EMPTY) {
-                mobility += PIECE_ATTACK_MOBILITY[occupied - BLACK_PAWN];
+                mobility += PIECE_ATTACK_MOBILITY[occupied - BLACK_PAWN] - PIECE_ATTACK_MOBILITY_PENALTY[WHITE_KNIGHT];
                 continue;
             }
 
@@ -234,7 +234,7 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
             // Attacking pieces means more pressure which is good
             if (occupied < BLACK_PAWN) {
-                mobility += PIECE_ATTACK_MOBILITY[occupied];
+                mobility += PIECE_ATTACK_MOBILITY[occupied] - PIECE_ATTACK_MOBILITY_PENALTY[WHITE_KNIGHT];
                 continue;
             }
 
@@ -293,7 +293,8 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
                 // Attacking pieces means more pressure which is good
                 if (occupied < EMPTY) {
-                    mobility += PIECE_ATTACK_MOBILITY[occupied - BLACK_PAWN];
+                    mobility += PIECE_ATTACK_MOBILITY[occupied - BLACK_PAWN] -
+                                PIECE_ATTACK_MOBILITY_PENALTY[WHITE_BISHOP];
                     break;
                 }
 
@@ -329,7 +330,7 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
                 // Attacking pieces means more pressure which is good
                 if (occupied < BLACK_PAWN) {
-                    mobility += PIECE_ATTACK_MOBILITY[occupied];
+                    mobility += PIECE_ATTACK_MOBILITY[occupied] - PIECE_ATTACK_MOBILITY_PENALTY[WHITE_BISHOP];
                     break;
                 }
 
@@ -389,7 +390,8 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 // If we hit an enemy piece, get a score of 2.
                 // An empty square may be even better, so you get a score 3.
                 if (occupied < EMPTY) {
-                    mobility += 2;
+                    mobility += PIECE_ATTACK_MOBILITY[occupied - BLACK_PAWN] -
+                                PIECE_ATTACK_MOBILITY_PENALTY[WHITE_ROOK];
                     break;
                 }
 
@@ -433,7 +435,7 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 // If we hit an enemy piece, get a score of 2.
                 // An empty square may be even better, so you get a score 3.
                 if (occupied < BLACK_PAWN) {
-                    mobility += 2;
+                    mobility += PIECE_ATTACK_MOBILITY[occupied] - PIECE_ATTACK_MOBILITY_PENALTY[WHITE_ROOK];
                     break;
                 }
 
@@ -493,7 +495,8 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
                 // If we hit an enemy piece, get a score of 2.
                 // An empty square may be even better, so you get a score 3.
                 if (occupied < EMPTY) {
-                    mobility += 2;
+                    mobility += PIECE_ATTACK_MOBILITY[occupied - BLACK_PAWN] -
+                                PIECE_ATTACK_MOBILITY_PENALTY[WHITE_QUEEN];
                     break;
                 }
 
@@ -536,7 +539,7 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
                 // If we hit an enemy piece, get a score of 2.
                 // An empty square may be even better, so you get a score 3.
                 if (occupied < BLACK_PAWN) {
-                    mobility += 2;
+                    mobility += PIECE_ATTACK_MOBILITY[occupied] - PIECE_ATTACK_MOBILITY_PENALTY[WHITE_QUEEN];
                     break;
                 }
 

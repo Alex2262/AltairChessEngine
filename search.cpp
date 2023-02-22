@@ -9,6 +9,7 @@
 #include <cmath>
 #include <algorithm>
 #include <cassert>
+#include <unordered_set>
 #include "search.h"
 #include "evaluation.h"
 #include "move.h"
@@ -653,6 +654,8 @@ void iterative_search(Engine& engine, Position& position) {
     uint64_t prev_node_count = 1;
     PLY_TYPE full_searches = 0;
 
+    // std::unordered_set<MOVE_TYPE> possible_moves;
+
     while (running_depth <= engine.max_depth) {
         engine.current_search_depth = running_depth;
         SCORE_TYPE return_eval = negamax(engine, position, alpha, beta, running_depth, false);
@@ -669,6 +672,8 @@ void iterative_search(Engine& engine, Position& position) {
         alpha = return_eval - aspiration_window;
         beta = return_eval + aspiration_window;
         aspiration_window -= 20 / static_cast<int>(running_depth + 3);
+
+        // possible_moves.insert(engine.pv_table[0][0]);
 
         std::string pv_line;
         for (int c = 0; c < engine.pv_length[0]; c++) {
@@ -724,6 +729,19 @@ void iterative_search(Engine& engine, Position& position) {
 
                 double uncertainty = ((running_depth / (running_depth + 3.1)) +
                                      (full_searches / (full_searches + 2.5))) / 2;
+
+                // std::cout << uncertainty << std::endl;
+
+                // Formula of my own to try and predict with this uncertainty score if
+                // there is only one or two moves considered to think for less time.
+                // double low_uncertainty = (uncertainty - 0.1) * (uncertainty - 0.1) * (uncertainty - 0.1);
+                // uncertainty += low_uncertainty *
+                //         ((5.0 + static_cast<double>(running_depth) / 64)
+                //         / (possible_moves.size() * possible_moves.size()));
+
+                // std::cout << uncertainty << std::endl;
+                // std::cout << average_branching_factor << " " << elapsed_time << std::endl;
+                // std::cout << static_cast<long>(average_branching_factor * uncertainty) * elapsed_time << std::endl;
 
                 if (full_searches >= 2 && static_cast<long>(average_branching_factor * uncertainty) * elapsed_time
                     > engine.max_time)
