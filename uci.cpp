@@ -102,7 +102,7 @@ void UCI::parse_position() {
 
     // std::cout << engine.detect_repetition() << std::endl;
 
-    // position.print_board();
+    position.print_board();
 }
 
 
