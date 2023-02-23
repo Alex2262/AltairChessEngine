@@ -702,14 +702,14 @@ void iterative_search(Engine& engine, Position& position) {
 
         if (abs(best_score) >= MATE_BOUND) {
             SCORE_TYPE score = best_score >= MATE_BOUND ?
-                    (MATE_SCORE - best_score) / 2 + 1: (-MATE_SCORE -  best_score) / 2 - 1;
+                    (MATE_SCORE - best_score) / 2 + 1: (-MATE_SCORE - best_score) / 2;
 
             std::cout << "info multipv 1 depth " << running_depth << " seldepth " << engine.selective_depth
                       << " score mate " << score << " time " << elapsed_time
                       << " nodes " << engine.node_count << " nps " << int(engine.node_count / (elapsed_time / 1000.0))
                       << " pv " << best_pv << std::endl;
 
-            break;
+            // break;
         }
         else {
             std::cout << "info multipv 1 depth " << running_depth << " seldepth " << engine.selective_depth

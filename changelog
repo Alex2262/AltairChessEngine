@@ -2443,7 +2443,8 @@ Elo difference: 13.9 +/- 23.2, LOS: 88.0 %, DrawRatio: 42.0 %
 ### 1.1.1
 More aggressive LMP for quiets
 
-```info multipv 1 depth 1 seldepth 1 score cp 65 time 0 nodes 27 nps 270000 pv b1c3
+```
+info multipv 1 depth 1 seldepth 1 score cp 65 time 0 nodes 27 nps 270000 pv b1c3
 info multipv 1 depth 2 seldepth 2 score cp 7 time 2 nodes 109 nps 54500 pv b1c3 b8c6
 info multipv 1 depth 3 seldepth 3 score cp 63 time 3 nodes 251 nps 83666 pv b1c3 b8c6 g1f3
 info multipv 1 depth 4 seldepth 4 score cp 8 time 6 nodes 910 nps 151666 pv b1c3 b8c6 g1f3 g8f6
@@ -3544,4 +3545,47 @@ Score of Altair1.2.8 vs Altair1.2.7: 218 - 188 - 194 [0.525]
 ...      White vs Black: 257 - 149 - 194  [0.590] 600
 Elo difference: 17.4 +/- 22.9, LOS: 93.2 %, DrawRatio: 32.3 %
 600 of 600 games finished.
+
+Score of Altair1.2.8 vs tantabus-windows-2019-x86-64-v3: 91 - 107 - 42 [0.467]
+...      Altair1.2.8 playing White: 48 - 52 - 20  [0.483] 120
+...      Altair1.2.8 playing Black: 43 - 55 - 22  [0.450] 120
+...      White vs Black: 103 - 95 - 42  [0.517] 240
+Elo difference: -23.2 +/- 40.1, LOS: 12.8 %, DrawRatio: 17.5 %
+240 of 240 games finished.
+
+noob 4 moves book
+Score of Altair1.2.8 vs Altair1.0.0: 258 - 96 - 146 [0.662]
+...      Altair1.2.8 playing White: 133 - 53 - 64  [0.660] 250
+...      Altair1.2.8 playing Black: 125 - 43 - 82  [0.664] 250
+...      White vs Black: 176 - 178 - 146  [0.498] 500
+Elo difference: 116.8 +/- 26.5, LOS: 100.0 %, DrawRatio: 29.2 %
+
+1 min
+Score of Altair1.2.8 vs kimbo-0.3.0: 71 - 53 - 29 [0.559]
+...      Altair1.2.8 playing White: 31 - 29 - 16  [0.513] 76
+...      Altair1.2.8 playing Black: 40 - 24 - 13  [0.604] 77
+...      White vs Black: 55 - 69 - 29  [0.454] 153
+Elo difference: 41.1 +/- 50.1, LOS: 94.7 %, DrawRatio: 19.0 %
+153 of 240 games finished.
+```
+
+
+### 1.2.9
+Some safety checks to prevent index out of bounds.
+Also, not immediately playing mates.
+
+```
+Score of Altair1.2.9 vs Altair1.2.8: 321 - 326 - 353 [0.497]
+...      Altair1.2.9 playing White: 204 - 124 - 172  [0.580] 500
+...      Altair1.2.9 playing Black: 117 - 202 - 181  [0.415] 500
+...      White vs Black: 406 - 241 - 353  [0.583] 1000
+Elo difference: -1.7 +/- 17.3, LOS: 42.2 %, DrawRatio: 35.3 %
+1000 of 1000 games finished.
+
+Score of Altair1.2.9 vs admete_1.5.0_windows_x86-64: 243 - 209 - 48 [0.534]
+...      Altair1.2.9 playing White: 145 - 82 - 23  [0.626] 250
+...      Altair1.2.9 playing Black: 98 - 127 - 25  [0.442] 250
+...      White vs Black: 272 - 180 - 48  [0.592] 500
+Elo difference: 23.7 +/- 29.0, LOS: 94.5 %, DrawRatio: 9.6 %
+500 of 500 games finished.
 ```
