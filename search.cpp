@@ -380,6 +380,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Hack to determine pv_node, because when it is not a pv node we are being searched by
     // a zero window with alpha == beta - 1
     bool pv_node = alpha != beta - 1;
+    bool null_search = !do_null && !root;
+
     // if (!pv_node) std::cout << alpha << " " << beta << std::endl;
 
     // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
@@ -397,7 +399,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Reverse Futility Pruning
     // If the last move was very bad, such that the static evaluation - a margin is still greater
     // than the opponent's best score, then return the static evaluation.
-    if (!pv_node && depth <= 5 && !in_check && static_eval - ((190 - improving * 45) * depth) >= beta) {
+    if (!pv_node && depth <= 7 && !in_check && static_eval - ((206 - improving * 58) * depth) >= beta) {
         return static_eval;
     }
 
@@ -465,10 +467,10 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
 
         // Late Move Pruning
-        if (!pv_node && depth <= 3 && legal_moves > depth * 8) break;
+        if (!in_check && !pv_node && depth <= 3 && legal_moves > depth * 8) break;
 
         // Quiet Late Move Pruning
-        if (quiet && !pv_node && depth <= 5 && legal_moves > depth * 6) break;
+        if (!in_check && quiet && !pv_node && depth <= 5 && legal_moves > depth * 6) break;
 
         // Make the move
         bool attempt = position.make_move(move, engine.search_ply, engine.fifty_move);
@@ -520,6 +522,9 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                      [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]]
                      / 8000.0;
 
+            // My idea that in a null move search you can be more aggressive with LMR
+            reduction += null_search;
+
             // Idea from Weiss, where you reduce more if the move is quiet and TT move is a capture
             reduction += get_is_capture(tt_move) * 0.5;
 
@@ -538,7 +543,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // Principle Variation Search
         // We assume that the first move should be the principle variation / best move, so the rest of the moves
         // should be searched with a zero window
-
         if (full_depth_zero_window)
             return_eval = -negamax(engine, position, -alpha - 1, -alpha, depth - 1, true);
 
@@ -576,7 +580,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 tt_hash_flag = HASH_FLAG_EXACT;
 
                 // History Heuristic for move ordering
-                SCORE_TYPE bonus = depth * (depth + 1) - 1;
+                SCORE_TYPE bonus = depth * (depth + 1 - null_search) - 1;
                 if (quiet) {
                     update_history_entry(engine.history_moves[position.side]
                         [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]],
