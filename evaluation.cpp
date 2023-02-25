@@ -47,8 +47,8 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
         // Doubled pawns. The pawn we are checking is higher in row compared to
         // the least advanced pawn in our column.
         if (row > position.pawn_rank[0][col]) {
-            scores.mid -= DOUBLED_PAWN_PENALTY_MID;
-            scores.end -= DOUBLED_PAWN_PENALTY_END;
+            scores.mid += DOUBLED_PAWN_PENALTY_MID;
+            scores.end += DOUBLED_PAWN_PENALTY_END;
         }
 
         // Isolated pawns. We do not have pawns on the columns next to our pawn.
@@ -57,14 +57,14 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             if (position.pawn_rank[1][col] == 0) {
                 // The isolated pawn in the middle game is worse if the opponent
                 // has the semi open file to attack it.
-                scores.mid -= 1.5 * ISOLATED_PAWN_PENALTY_MID;
+                scores.mid += 1.5 * ISOLATED_PAWN_PENALTY_MID;
 
-                // In the endgame it can be slightly better since it has the chance to become passed
-                scores.end -= 0.8 * ISOLATED_PAWN_PENALTY_END;
+                // In the endgame it can be very bad since it's very easy to attack
+                scores.end += 0.8 * ISOLATED_PAWN_PENALTY_END;
             }
             else {
-                scores.mid -= ISOLATED_PAWN_PENALTY_MID;
-                scores.end -= ISOLATED_PAWN_PENALTY_END;
+                scores.mid += ISOLATED_PAWN_PENALTY_MID;
+                scores.end += ISOLATED_PAWN_PENALTY_END;
             }
         }
 
@@ -72,16 +72,16 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
         else if (row < position.pawn_rank[0][col - 1] && row < position.pawn_rank[0][col + 1]) {
             // In the middle game it's worse to have a very backwards pawn
             // since then, the 'forwards' pawns won't be protected
-            scores.mid -= BACKWARDS_PAWN_PENALTY_MID +
+            scores.mid += BACKWARDS_PAWN_PENALTY_MID -
                           2 * (position.pawn_rank[0][col - 1] - row + position.pawn_rank[0][col + 1] - row - 2);
 
             // In the end game the backwards pawn should be worse, but if it's very backwards it's not awful.
-            scores.end -= BACKWARDS_PAWN_PENALTY_END +
-                          position.pawn_rank[0][col - 1] - row + position.pawn_rank[0][col + 1] - row - 2;
+            scores.end += BACKWARDS_PAWN_PENALTY_END -
+                    (position.pawn_rank[0][col - 1] - row + position.pawn_rank[0][col + 1] - row - 2);
 
             // If there's no enemy pawn in front of our pawn then it's even worse, since
             // we allow outposts and pieces to attack us easily
-            if (position.pawn_rank[1][col] == 0) scores.mid -= 3 * BACKWARDS_PAWN_PENALTY_MID;
+            if (position.pawn_rank[1][col] == 0) scores.mid += 3 * BACKWARDS_PAWN_PENALTY_MID;
         }
 
         // Passed Pawn Bonus
@@ -89,19 +89,23 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             row >= position.pawn_rank[1][col] &&
             row >= position.pawn_rank[1][col + 1]) {
 
-            scores.mid += row * PASSED_PAWN_BONUS_MID;
-            scores.end += row * PASSED_PAWN_BONUS_END;
+            scores.mid += PASSED_PAWN_BONUSES_MID[row - 1];
+            scores.end += PASSED_PAWN_BONUSES_END[row - 1];
 
             // Blocker right in front of pawn
             if (WHITE_KING < position.board[pos - 10] && position.board[pos - 10] < EMPTY) {
-                scores.mid -= BLOCKER_VALUES_MID[position.board[pos - 10] - 6];
-                scores.end -= BLOCKER_VALUES_END[position.board[pos - 10] - 6];
+                scores.mid += BLOCKER_COEFFICIENTS[row] * BLOCKER_VALUES_MID[position.board[pos - 10] - 6];
+                scores.end += BLOCKER_COEFFICIENTS[row] * BLOCKER_VALUES_END[position.board[pos - 10] - 6];
+                //scores.mid += BLOCKER_VALUES_MID[position.board[pos - 10] - 6];
+                //scores.end += BLOCKER_VALUES_END[position.board[pos - 10] - 6];
             }
 
             // Blocker two squares in front of pawn
             if (row < 7 && WHITE_KING < position.board[pos - 20] && position.board[pos - 20] < EMPTY) {
-                scores.mid -= BLOCKER_VALUES_MID[position.board[pos - 20] - 6] / 2;
-                scores.end -= BLOCKER_VALUES_END[position.board[pos - 20] - 6] / 2;
+                scores.mid += BLOCKER_COEFFICIENTS[row + 1] * BLOCKER_VALUES_MID[position.board[pos - 20] - 6] * 0.6;
+                scores.end += BLOCKER_COEFFICIENTS[row + 1] * BLOCKER_VALUES_END[position.board[pos - 20] - 6] * 0.6;
+                //scores.mid += BLOCKER_VALUES_MID[position.board[pos - 20] - 6] / 2;
+                //scores.end += BLOCKER_VALUES_END[position.board[pos - 20] - 6] / 2;
             }
         }
     }
@@ -114,8 +118,8 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
         // Doubled pawns. The pawn we are checking is higher in row compared to
         // the least advanced pawn in our column.
         if (row < position.pawn_rank[1][col]) {
-            scores.mid -= DOUBLED_PAWN_PENALTY_MID;
-            scores.end -= DOUBLED_PAWN_PENALTY_END;
+            scores.mid += DOUBLED_PAWN_PENALTY_MID;
+            scores.end += DOUBLED_PAWN_PENALTY_END;
         }
 
         // Isolated pawns. We do not have pawns on the columns next to our pawn.
@@ -124,14 +128,14 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             if (position.pawn_rank[0][col] == 9) {
                 // The isolated pawn in the middle game is worse if the opponent
                 // has the semi open file to attack it.
-                scores.mid -= 1.5 * ISOLATED_PAWN_PENALTY_MID;
+                scores.mid += 1.5 * ISOLATED_PAWN_PENALTY_MID;
 
-                // In the endgame it can be slightly better since it has the chance to become passed
-                scores.end -= 0.8 * ISOLATED_PAWN_PENALTY_END;
+                // In the endgame it can be very bad since it's very easy to attack
+                scores.end += 0.8 * ISOLATED_PAWN_PENALTY_END;
             }
             else {
-                scores.mid -= ISOLATED_PAWN_PENALTY_MID;
-                scores.end -= ISOLATED_PAWN_PENALTY_END;
+                scores.mid += ISOLATED_PAWN_PENALTY_MID;
+                scores.end += ISOLATED_PAWN_PENALTY_END;
             }
         }
 
@@ -139,16 +143,16 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
         else if (row > position.pawn_rank[1][col - 1] && row > position.pawn_rank[1][col + 1]) {
             // In the middle game it's worse to have a very backwards pawn
             // since then, the 'forwards' pawns won't be protected
-            scores.mid -= BACKWARDS_PAWN_PENALTY_MID +
+            scores.mid += BACKWARDS_PAWN_PENALTY_MID -
                           2 * (row - position.pawn_rank[1][col - 1] + row - position.pawn_rank[1][col + 1] - 2);
 
             // In the end game the backwards pawn should be worse, but if it's very backwards it's not awful.
-            scores.end -= BACKWARDS_PAWN_PENALTY_END +
-                          row - position.pawn_rank[1][col - 1] + row - position.pawn_rank[1][col + 1]- 2;
+            scores.end += BACKWARDS_PAWN_PENALTY_END +
+                    (row - position.pawn_rank[1][col - 1] + row - position.pawn_rank[1][col + 1] - 2);
 
             // If there's no enemy pawn in front of our pawn then it's even worse, since
             // we allow outposts and pieces to attack us easily
-            if (position.pawn_rank[0][col] == 9) scores.mid -= 3 * BACKWARDS_PAWN_PENALTY_MID;
+            if (position.pawn_rank[0][col] == 9) scores.mid += 3 * BACKWARDS_PAWN_PENALTY_MID;
         }
 
         // Passed Pawn Bonus
@@ -156,19 +160,23 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             row <= position.pawn_rank[0][col] &&
             row <= position.pawn_rank[0][col + 1]) {
 
-            scores.mid += (9 - row) * PASSED_PAWN_BONUS_MID;
-            scores.end += (9 - row) * PASSED_PAWN_BONUS_END;
+            scores.mid += PASSED_PAWN_BONUSES_MID[8 - row];
+            scores.end += PASSED_PAWN_BONUSES_END[8 - row];
 
             // Blocker right in front of pawn
             if (position.board[pos + 10] < BLACK_PAWN) {
-                scores.mid -= BLOCKER_VALUES_MID[position.board[pos + 10]];
-                scores.end -= BLOCKER_VALUES_END[position.board[pos + 10]];
+                scores.mid += BLOCKER_COEFFICIENTS[9 - row] * BLOCKER_VALUES_MID[position.board[pos + 10]];
+                scores.end += BLOCKER_COEFFICIENTS[9 - row] * BLOCKER_VALUES_END[position.board[pos + 10]];
+                //scores.mid += BLOCKER_VALUES_MID[position.board[pos + 10]];
+                //scores.end += BLOCKER_VALUES_END[position.board[pos + 10]];
             }
 
             // Blocker two squares in front of pawn
             if (row > 2 && position.board[pos + 20] < BLACK_PAWN) {
-                scores.mid -= BLOCKER_VALUES_MID[position.board[pos + 20]] / 2;
-                scores.end -= BLOCKER_VALUES_END[position.board[pos + 20]] / 2;
+                scores.mid += BLOCKER_COEFFICIENTS[9 - row - 1] * BLOCKER_VALUES_MID[position.board[pos + 20]] * 0.6;
+                scores.end += BLOCKER_COEFFICIENTS[9 - row - 1] * BLOCKER_VALUES_END[position.board[pos + 20]] * 0.6;
+                //scores.mid += BLOCKER_VALUES_MID[position.board[pos + 20]] / 2;
+                //scores.end += BLOCKER_VALUES_END[position.board[pos + 20]] / 2;
             }
         }
     }
@@ -449,7 +457,7 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
     scores.end -= static_cast<SQUARE_TYPE>(1.1 * distance_to_opp_king);
 
     scores.mid += mobility / 1.8;  // Already gets open + semi-open file bonuses
-    scores.end += mobility / 1.4;  // Active rooks in the endgame are very important
+    scores.end += mobility;  // Active rooks in the endgame are very important
 
     // std::cout << "ROOK MOBILITY: " << mobility << std::endl;
 }
@@ -553,7 +561,7 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
     scores.end -= static_cast<SQUARE_TYPE>(distance_to_opp_king);
 
     scores.mid += mobility / 2.8;  // Already gets open + semi-open file bonuses
-    scores.end += mobility / 1.7;  // Active queen in the endgame is pretty important
+    scores.end += mobility;  // Active queen in the endgame is pretty important
 
     // std::cout << "QUEEN MOBILITY: " << mobility << std::endl;
 }

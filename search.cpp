@@ -89,7 +89,7 @@ bool Engine::detect_repetition() {
 
 short Engine::probe_tt_entry(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
                                   SCORE_TYPE& return_score, MOVE_TYPE& tt_move) {
-    TT_Entry& tt_entry = transposition_table[hash_key % MAX_TT_SIZE];
+    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
 
     if (tt_entry.key == hash_key) {
         tt_move = tt_entry.move;
@@ -114,7 +114,7 @@ short Engine::probe_tt_entry(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE be
 void Engine::record_tt_entry(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
                              SCORE_TYPE static_eval) {
 
-    TT_Entry& tt_entry = transposition_table[hash_key % MAX_TT_SIZE];
+    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
 
     if (score < -MATE_BOUND) score -= search_ply;
     else if (score > MATE_BOUND) score += search_ply;
@@ -132,7 +132,7 @@ void Engine::record_tt_entry(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag
 
 short Engine::probe_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
                                SCORE_TYPE& return_score, MOVE_TYPE& tt_move) {
-    TT_Entry& tt_entry = transposition_table[hash_key % MAX_TT_SIZE];
+    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
 
     if (tt_entry.key == hash_key) {
         tt_move = tt_entry.move;
@@ -155,7 +155,7 @@ short Engine::probe_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE 
 
 void Engine::record_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move,
                                SCORE_TYPE static_eval) {
-    TT_Entry& tt_entry = transposition_table[hash_key % MAX_TT_SIZE];
+    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
 
     if (score < -MATE_BOUND) score -= search_ply;
     else if (score > MATE_BOUND) score += search_ply;
@@ -172,7 +172,7 @@ void Engine::record_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE score, short tt_fl
 
 
 SCORE_TYPE Engine::probe_tt_evaluation(HASH_TYPE hash_key) {
-    TT_Entry& tt_entry = transposition_table[hash_key % MAX_TT_SIZE];
+    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
 
     if (tt_entry.key == hash_key && tt_entry.evaluation != NO_EVALUATION) return tt_entry.evaluation;
     return NO_EVALUATION;
@@ -365,7 +365,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
         if (return_tt_value) {
             if (!engine.search_ply) {
-                MOVE_TYPE move = engine.transposition_table[position.hash_key % MAX_TT_SIZE].move;
+                MOVE_TYPE move = engine.transposition_table[position.hash_key % engine.transposition_table.size()].move;
                 engine.pv_table[0][0] = move;
                 engine.pv_length[0] = 1;
             }

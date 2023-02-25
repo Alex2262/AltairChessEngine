@@ -12,13 +12,11 @@
 
 void UCI::initialize_uci() {
     position.set_fen(START_FEN);
-    //position.undo_move_stack.resize(TOTAL_MAX_DEPTH);
     engine.transposition_table.resize(MAX_TT_SIZE);
 
-    //for (int i = 0; i < MAX_TT_SIZE; i++) {
-    //    std::cout << engine.transposition_table[i].evaluation << std::endl;
-    //}
     initialize_lmr_reductions();
+
+    std::cout << engine.transposition_table.size() << " number of hash entries" << std::endl;
 }
 
 
@@ -200,6 +198,7 @@ void UCI::uci_loop() {
             int mb = std::stoi(tokens[4]);
             mb = std::min(1024, std::max(1, mb));
             engine.transposition_table.resize(mb * (1000000 / 24));
+            std::cout << engine.transposition_table.size() << " number of hash entries" << std::endl;
         }
 
         else if (msg == "isready") {

@@ -68,17 +68,14 @@
 
 #define TEMPO_BONUS                 8
 
-#define DOUBLED_PAWN_PENALTY_MID    18
-#define DOUBLED_PAWN_PENALTY_END    26  // Doubled pawns are very easy to target in the endgame.
+#define DOUBLED_PAWN_PENALTY_MID    -18
+#define DOUBLED_PAWN_PENALTY_END    -26  // Doubled pawns are very easy to target in the endgame.
 
-#define ISOLATED_PAWN_PENALTY_MID   23
-#define ISOLATED_PAWN_PENALTY_END   34  // Pawn islands are very bad in the endgame
+#define ISOLATED_PAWN_PENALTY_MID   -23
+#define ISOLATED_PAWN_PENALTY_END   -34  // Pawn islands are very bad in the endgame
 
-#define BACKWARDS_PAWN_PENALTY_MID  6
-#define BACKWARDS_PAWN_PENALTY_END  8  // Give this a higher base score, but we reduce multipliers in eval_pawn()
-
-#define PASSED_PAWN_BONUS_MID       9
-#define PASSED_PAWN_BONUS_END       16  // These are multiplied by the pawn's row.
+#define BACKWARDS_PAWN_PENALTY_MID  -6
+#define BACKWARDS_PAWN_PENALTY_END  -8  // Give this a higher base score, but we reduce multipliers in eval_pawn()
 
 #define BISHOP_PAIR_BONUS_MID       39
 #define BISHOP_PAIR_BONUS_END       56
@@ -186,8 +183,13 @@ constexpr SCORE_TYPE PIECE_VALUES_END[6] = {96, 292, 304, 512, 936, 0};
 
 constexpr SCORE_TYPE MVV_LVA_VALUES[6] = {100, 300, 350, 500, 950, 3000};
 
-constexpr SCORE_TYPE BLOCKER_VALUES_MID[6] = {0, 31, 14, 22,  8,  3};
-constexpr SCORE_TYPE BLOCKER_VALUES_END[6] = {0, 37, 21, 26, 11, 28};
+constexpr SCORE_TYPE PASSED_PAWN_BONUSES_MID[8] = {0,   5,  18,  27,  45,  60,  78,   0};
+constexpr SCORE_TYPE PASSED_PAWN_BONUSES_END[8] = {0,  25,  40,  50,  80, 100, 130,   0};
+
+constexpr double BLOCKER_COEFFICIENTS[8] = {0.0, 0.0, 0.5, 0.4, 0.3, 0.8, 1.0, 1.0};
+
+constexpr SCORE_TYPE BLOCKER_VALUES_MID[6] = {0, -31, -14, -22,  -8,  -3};
+constexpr SCORE_TYPE BLOCKER_VALUES_END[6] = {0, -37, -21, -26, -11, -28};
 
 constexpr SCORE_TYPE PIECE_ATTACK_MOBILITY[6] = {6, 8, 8, 10, 14, 35};
 constexpr SCORE_TYPE PIECE_ATTACK_MOBILITY_PENALTY[6] = {0, 2, 1, 3, 4, 0};
