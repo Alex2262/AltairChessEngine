@@ -58,8 +58,6 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 // The isolated pawn in the middle game is worse if the opponent
                 // has the semi open file to attack it.
                 scores.mid += 1.5 * ISOLATED_PAWN_PENALTY_MID;
-
-                // In the endgame it can be very bad since it's very easy to attack
                 scores.end += 0.8 * ISOLATED_PAWN_PENALTY_END;
             }
             else {
@@ -129,8 +127,6 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 // The isolated pawn in the middle game is worse if the opponent
                 // has the semi open file to attack it.
                 scores.mid += 1.5 * ISOLATED_PAWN_PENALTY_MID;
-
-                // In the endgame it can be very bad since it's very easy to attack
                 scores.end += 0.8 * ISOLATED_PAWN_PENALTY_END;
             }
             else {
@@ -830,7 +826,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
     if (selected < BLACK_PAWN) {
         if (get_is_capture(move)) {
             score += 20000;
-            score += 2 * (MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected]);
+            score += 2 * (PIECE_VALUES_MID[occupied - BLACK_PAWN] - PIECE_VALUES_MID[selected]);
             score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
         else {
@@ -853,7 +849,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
     else {
         if (get_is_capture(move)) {
             score += 20000;
-            score += 2 * (MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN]);
+            score += 2 * (PIECE_VALUES_MID[occupied] - PIECE_VALUES_MID[selected - BLACK_PAWN]);
             score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
         else {
@@ -888,10 +884,10 @@ SCORE_TYPE score_capture(MOVE_TYPE move, MOVE_TYPE tt_move) {
     PIECE_TYPE occupied = get_occupied(move);
 
     if (selected < BLACK_PAWN) {
-        score += MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected];
+        score += PIECE_VALUES_MID[occupied - BLACK_PAWN] - PIECE_VALUES_MID[selected];
     }
     else {
-        score += MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN];
+        score += PIECE_VALUES_MID[occupied] - PIECE_VALUES_MID[selected - BLACK_PAWN];
     }
 
     return score;

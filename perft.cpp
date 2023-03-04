@@ -137,7 +137,7 @@ long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 
     std::cout << "Nodes searched: " << total_amt << std::endl;
     std::cout << "Perft speed: " << double(total_amt) / ms_int.count() / 1000 << "mn/s" << std::endl;
-    std::cout << "Total time: " << ms_int.count();
+    std::cout << "Total time: " << ms_int.count() << std::endl;
 
     return total_amt;
 

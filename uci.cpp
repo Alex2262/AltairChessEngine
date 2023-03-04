@@ -9,6 +9,7 @@
 #include "move.h"
 #include "search.h"
 #include "evaluation.h"
+#include "perft.h"
 
 void UCI::initialize_uci() {
     position.set_fen(START_FEN);
@@ -105,7 +106,7 @@ void UCI::parse_position() {
 
 
 void UCI::parse_go() {
-    int d = 0;
+    int d = 0, perft_depth = -1;
     long wtime = 0, btime = 0, winc = 0, binc = 0, movetime = 0, movestogo = 0;
     bool infinite = false;
 
@@ -117,6 +118,8 @@ void UCI::parse_go() {
         if (tokens.size() > i + 1) value = std::stoi(tokens[i + 1]);
 
         if (type == "depth") d = value;
+
+        else if (type == "perft") perft_depth = value;
 
         else if (type == "nodes") engine.max_nodes = value;
 
@@ -133,6 +136,10 @@ void UCI::parse_go() {
 
     }
 
+    if (perft_depth > -1) {
+        uci_perft(position, perft_depth, 0);
+        return;
+    }
     if (infinite || (d && tokens.size() == 3)) {
         engine.max_time = 86400000;
     }

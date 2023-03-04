@@ -3858,4 +3858,115 @@ Score of Altair1.3.4 vs Altair1.3.3: 352 - 312 - 336 [0.520]
 ...      White vs Black: 432 - 232 - 336  [0.600] 1000
 Elo difference: 13.9 +/- 17.5, LOS: 94.0 %, DrawRatio: 33.6 %
 1000 of 1000 games finished.
+
+Rank Name                          Elo     +/-   Games    Wins  Losses   Draws   Points   Score    Draw   White   Black 
+   0 Altair1.3.4                    26      19    1153     545     460     148    619.0   53.7%   12.8%   53.0%   54.3% 
+   1 tantabus-windows-2019-x86-64-v3      61      26     576     283     183     110    338.0   58.7%   19.1%   58.3%   59.0% 
+   2 admete_1.5.0_windows_x86-64    -115      29     577     177     362      38    196.0   34.0%    6.6%   33.0%   34.9% 
+
+1157 of 2000 games finished.
+
+5 + 0.05
+Score of Altair1.3.4 vs Altair1.0.0: 210 - 74 - 116 [0.670]
+...      Altair1.3.4 playing White: 103 - 36 - 61  [0.667] 200
+...      Altair1.3.4 playing Black: 107 - 38 - 55  [0.672] 200
+...      White vs Black: 141 - 143 - 116  [0.497] 400
+Elo difference: 123.0 +/- 29.7, LOS: 100.0 %, DrawRatio: 29.0 %
+
+3 + 2
+Score of Altair1.3.4 vs Altair1.0.0: 23 - 7 - 10 [0.700]
+...      Altair1.3.4 playing White: 13 - 1 - 6  [0.800] 20
+...      Altair1.3.4 playing Black: 10 - 6 - 4  [0.600] 20
+...      White vs Black: 19 - 11 - 10  [0.600] 40
+Elo difference: 147.2 +/- 102.6, LOS: 99.8 %, DrawRatio: 25.0 %
+44 of 500 games finished.
+
+   1 Altair1.2.3                   111      81      55      28      11      16     36.0   65.5%   29.1%   74.1%   57.1% 
+   2 Altair1.3.1                    57      81      55      25      16      14     32.0   58.2%   25.5%   57.1%   59.3% 
+   3 Altair1.3.4                    32      80      54      22      17      15     29.5   54.6%   27.8%   51.9%   57.4% 
+   4 Altair1.1.2                    25      75      55      20      16      19     29.5   53.6%   34.5%   61.1%   46.4% 
+   5 Altair1.0.0                   -64      76      55      13      23      19     22.5   40.9%   34.5%   39.3%   42.6% 
+   6 Altair1.0.1                  -174      93      54       9      34      11     14.5   26.9%   20.4%   29.6%   24.1% 
+
+168 of 30000 games finished.
+
+Rank Name                          Elo     +/-   Games    Wins  Losses   Draws   Points   Score    Draw   White   Black 
+   1 Altair1.2.3                    19      73      54      18      15      21     28.5   52.8%   38.9%   59.3%   46.3% 
+   2 Altair1.3.1                    -6      78      54      18      19      17     26.5   49.1%   31.5%   55.6%   42.6% 
+   3 Altair1.3.4                   -13      75      54      16      18      20     26.0   48.1%   37.0%   50.0%   46.3% 
+
+85 of 6000 games finished.
+```
+
+
+### 1.3.5
+Removing changes from 1.2.7
+
+```
+info multipv 1 depth 1 seldepth 1 score cp 65 time 1 nodes 28 nps 28000 pv b1c3
+info multipv 1 depth 2 seldepth 2 score cp 8 time 1 nodes 110 nps 110000 pv b1c3 b8c6
+info multipv 1 depth 3 seldepth 3 score cp 64 time 3 nodes 256 nps 85333 pv b1c3 b8c6 g1f3
+info multipv 1 depth 4 seldepth 4 score cp 7 time 4 nodes 666 nps 166500 pv b1c3 b8c6 g1f3 g8f6
+info multipv 1 depth 5 seldepth 6 score cp 49 time 6 nodes 1162 nps 193666 pv b1c3 b8c6 g1f3 g8f6 e2e4
+info multipv 1 depth 6 seldepth 7 score cp 7 time 8 nodes 2465 nps 308125 pv b1c3 b8c6 g1f3 g8f6 e2e4 e7e5
+info multipv 1 depth 7 seldepth 8 score cp 29 time 13 nodes 5965 nps 458846 pv b1c3 b8c6 d2d4 d7d5 e2e3 g8f6 g1f3
+info multipv 1 depth 8 seldepth 9 score cp 25 time 26 nodes 16096 nps 619076 pv b1c3 b8c6 d2d4 d7d5 g1f3 e7e6 e2e4 g8f6
+
+info multipv 1 depth 9 seldepth 11 score cp 28 time 40 nodes 27787 nps 694675 pv b1c3 b8c6 d2d4 d7d5 g1f3 g8f6 c1f4 c8f5
+ e2e3
+info multipv 1 depth 10 seldepth 14 score cp 12 time 108 nodes 89462 nps 828351 pv g1f3 d7d5 d2d4 b8c6 d1d3 g8f6 c1f4 f6
+h5 f4e5 c6e5
+info multipv 1 depth 11 seldepth 16 score cp 13 time 165 nodes 140664 nps 852509 pv g1f3 d7d5 d2d4 b8c6 b1c3 c8f5 f3e5 c
+6e5 d4e5 e7e6 c1f4
+info multipv 1 depth 12 seldepth 16 score cp 22 time 352 nodes 292820 nps 831875 pv d2d4 d7d5 e2e3 g8f6 g1f3 e7e6 f1d3 b
+8c6
+info multipv 1 depth 13 seldepth 16 score cp 21 time 445 nodes 358520 nps 805662 pv d2d4 d7d5 e2e3 g8f6 g1f3 e7e6 f1d3 b
+8c6 e1g1 f8e7 b1c3 e8g8 c1d2
+info multipv 1 depth 14 seldepth 18 score cp 35 time 1244 nodes 1082525 nps 870196 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4
+ g8f6 d4c6 d7c6 d1d8 e8d8 c1g5 f8b4 b1d2 h8e8
+info multipv 1 depth 15 seldepth 22 score cp 13 time 1692 nodes 1484897 nps 877598 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 d2d4
+ e5d4 f3d4 f8b4 d4c6 d7c6 d1d8 e8d8 c1g5 b4c3 b2c3
+info multipv 1 depth 16 seldepth 22 score cp 31 time 2268 nodes 1864575 nps 822123 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 f1c4
+ f8c5 e1g1 e8g8 d2d3 h7h6 c1e3 c5e3 f2e3 d7d6
+info multipv 1 depth 17 seldepth 24 score cp 20 time 3425 nodes 2866222 nps 836853 pv e2e4 e7e5 g1f3 g8f6 d2d4 f6e4 d4e5
+ d7d5 e5d6 d8d6 d1e2 d6e6 b1d2 f8b4 c2c3 e4d2 c1d2
+info multipv 1 depth 18 seldepth 24 score cp 28 time 4230 nodes 3605704 nps 852412 pv e2e4 e7e5 g1f3 g8f6 d2d4 f6e4 d4e5
+ d7d5 b1d2 b8d7 f1e2 f8e7 e1g1 e8g8 c2c4 d7c5 c4d5 d8d5
+info multipv 1 depth 19 seldepth 24 score cp 20 time 8084 nodes 5549827 nps 686519 pv e2e4 e7e5 g1f3 g8f6 d2d4 f6e4 f1d3
+ d7d5 f3e5 b8d7 e5d7 c8d7 b1d2 e4d2 c1d2 d8e7 d1e2 e7e2 d3e2 d7f5 e1c1
+info multipv 1 depth 20 seldepth 27 score cp 19 time 11499 nodes 8108637 nps 705160 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2d
+4 e5d4 f3d4 f8b4 d4c6 b7c6 d1d4 d8e7 f1d3 c6c5 d4e3 b4c3 b2c3 c5c4 d3c4
+info multipv 1 depth 21 seldepth 27 score cp 19 time 15452 nodes 11673648 nps 755478 pv e2e4 e7e5 g1f3
+info multipv 1 depth 22 seldepth 29 score cp 26 time 19663 nodes 15494153 nps 787985 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2
+d4 e5d4 f3d4 f8b4 d4c6 b7c6 f1d3 b4c3 b2c3 d7d5 e4e5 d8e7 d1e2 f6g4 c1f4 e8g8
+info multipv 1 depth 23 seldepth 30 score cp 27 time 42567 nodes 36246744 nps 851522 pv e2e4 e7e6 b1c3 d7d5 e4d5 e6d5 d2
+d4 f8b4 f1b5 c8d7 b5d3 g8f6 d1e2 d8e7 c1g5 e8g8 e2e7 b4e7 g1f3 b8c6 e1g1 d7g4 a1e1
+info multipv 1 depth 23 seldepth 31 score cp 27 time 44999 nodes 38434840 nps 854126 pv e2e4 e7e6 b1c3 d7d5 e4d5 e6d5 d2
+d4 f8b4 f1b5 c8d7 b5d3 g8f6 d1e2 d8e7 c1g5 e8g8 e2e7 b4e7 g1f3 b8c6 e1g1 d7g4 a1e1
+bestmove e2e4
+
+Score of Altair1.3.5 vs Altair1.3.4: 3276 - 3070 - 3223  [0.511] 9569
+...      Altair1.3.5 playing White: 2073 - 1100 - 1612  [0.602] 4785
+...      Altair1.3.5 playing Black: 1203 - 1970 - 1611  [0.420] 4784
+...      White vs Black: 4043 - 2303 - 3223  [0.591] 9569
+Elo difference: 7.5 +/- 5.7, LOS: 99.5 %, DrawRatio: 33.7 %
+SPRT: llr 2.97 (100.7%), lbound -2.94, ubound 2.94 - H1 was accepted
+```
+
+
+```
+Rank Name                          Elo     +/-   Games    Wins  Losses   Draws   Points   Score    Draw
+   1 Altair1.2.6                    28      14    1710     673     536     501    923.5   54.0%   29.3%
+   2 Altair1.2.3                     9      14    1710     647     602     461    877.5   51.3%   27.0%
+   3 Altair1.3.5                     5      14    1711     619     594     498    868.0   50.7%   29.1%
+   4 Altair1.3.0                     5      14    1710     620     596     494    867.0   50.7%   28.9%
+   5 Altair1.2.7                     0      14    1709     619     619     471    854.5   50.0%   27.6%
+   6 Altair1.2.4                    -1      14    1710     608     612     490    853.0   49.9%   28.7%
+   7 Altair1.3.3                    -4      14    1709     600     618     491    845.5   49.5%   28.7%
+   8 Altair1.3.4                    -6      14    1710     591     621     498    840.0   49.1%   29.1%
+   9 Altair1.3.2                    -6      14    1710     591     621     498    840.0   49.1%   29.1%
+  10 Altair1.3.1                    -8      14    1710     595     632     483    836.5   48.9%   28.2%
+  11 Altair1.2.9                    -8      14    1711     573     612     526    836.0   48.9%   30.7%
+  12 Altair1.2.8                   -15      14    1710     558     631     521    818.5   47.9%   30.5%
+
 ```

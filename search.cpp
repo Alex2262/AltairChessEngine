@@ -365,8 +365,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
         if (return_tt_value) {
             if (!engine.search_ply) {
-                MOVE_TYPE move = engine.transposition_table[position.hash_key % engine.transposition_table.size()].move;
-                engine.pv_table[0][0] = move;
+                engine.pv_table[0][0] = tt_move;
                 engine.pv_length[0] = 1;
             }
 
@@ -580,7 +579,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 tt_hash_flag = HASH_FLAG_EXACT;
 
                 // History Heuristic for move ordering
-                SCORE_TYPE bonus = depth * (depth + 1 - null_search) - 1;
+                SCORE_TYPE bonus = depth * (depth + 1) - 1;
                 if (quiet) {
                     update_history_entry(engine.history_moves[position.side]
                         [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]],
