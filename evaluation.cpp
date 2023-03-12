@@ -2,7 +2,6 @@
 // Created by Alex Tian on 9/29/2022.
 //
 
-#include <iostream>
 #include "evaluation.h"
 #include "move.h"
 
@@ -11,26 +10,26 @@ SCORE_TYPE evaluate_king_pawn(const Position& position, SQUARE_TYPE file, bool i
     SCORE_TYPE score = 0;
 
     if (is_white) {
-        if (position.pawn_rank[0][file] == 3) score -= 6;  // Pawn moved one square
-        else if (position.pawn_rank[0][file] == 4) score -= 14;  // Pawn moved two squares
-        else if (position.pawn_rank[0][file] != 2) score -= 23;  // Pawn moved > 2 squares, or it doesn't exist
+        if (position.pawn_rank[0][file] == 3) score += KING_PAWN_SHIELD_OUR_PENALTIES[0];  // Pawn moved one square
+        else if (position.pawn_rank[0][file] == 4) score += KING_PAWN_SHIELD_OUR_PENALTIES[1];  // Pawn moved two squares
+        else if (position.pawn_rank[0][file] != 2) score += KING_PAWN_SHIELD_OUR_PENALTIES[2];  // Pawn moved > 2 squares, or it doesn't exist
 
-        if (position.pawn_rank[1][file] == 0) score -= 19;  // No enemy pawn on this file
-        else if (position.pawn_rank[1][file] == 4) score -= 8;  // Enemy pawn is on the 4th rank
-        else if (position.pawn_rank[1][file] != 3) score -= 16;  // Enemy pawn is on the 3rd rank
+        if (position.pawn_rank[1][file] == 0) score += KING_PAWN_SHIELD_OPP_PENALTIES[0];  // No enemy pawn on this file
+        else if (position.pawn_rank[1][file] == 4) score += KING_PAWN_SHIELD_OPP_PENALTIES[1];  // Enemy pawn is on the 4th rank
+        else if (position.pawn_rank[1][file] != 3) score += KING_PAWN_SHIELD_OPP_PENALTIES[2];  // Enemy pawn is on the 3rd rank
     }
 
     else {
-        if (position.pawn_rank[1][file] == 6) score -= 6;  // Pawn moved one square
-        else if (position.pawn_rank[1][file] == 5) score -= 14;  // Pawn moved two squares
-        else if (position.pawn_rank[1][file] != 7) score -= 23;  // Pawn moved > 2 squares, or it doesn't exist
+        if (position.pawn_rank[1][file] == 6) score += KING_PAWN_SHIELD_OUR_PENALTIES[0];  // Pawn moved one square
+        else if (position.pawn_rank[1][file] == 5) score += KING_PAWN_SHIELD_OUR_PENALTIES[1];  // Pawn moved two squares
+        else if (position.pawn_rank[1][file] != 7) score += KING_PAWN_SHIELD_OUR_PENALTIES[2];  // Pawn moved > 2 squares, or it doesn't exist
 
-        if (position.pawn_rank[0][file] == 9) score -= 19;  // No enemy pawn on this file
-        else if (position.pawn_rank[0][file] == 5) score -= 8;  // Enemy pawn is on the 5th rank
-        else if (position.pawn_rank[0][file] != 6) score -= 16;  // Enemy pawn is on the 6th rank
+        if (position.pawn_rank[0][file] == 9) score += KING_PAWN_SHIELD_OPP_PENALTIES[0];  // No enemy pawn on this file
+        else if (position.pawn_rank[0][file] == 5) score += KING_PAWN_SHIELD_OPP_PENALTIES[1];  // Enemy pawn is on the 5th rank
+        else if (position.pawn_rank[0][file] != 6) score += KING_PAWN_SHIELD_OPP_PENALTIES[2];  // Enemy pawn is on the 6th rank
     }
 
-    return score;
+    return static_cast<SCORE_TYPE>(score * KING_PAWN_SHIELD_COEFFICIENTS[file - 1]);
 }
 
 
@@ -57,8 +56,8 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             if (position.pawn_rank[1][col] == 0) {
                 // The isolated pawn in the middle game is worse if the opponent
                 // has the semi open file to attack it.
-                scores.mid += 1.5 * ISOLATED_PAWN_PENALTY_MID;
-                scores.end += 0.8 * ISOLATED_PAWN_PENALTY_END;
+                scores.mid += ISOLATED_PAWN_SEMI_OPEN_FILE_PENALTY_MID;
+                scores.end += ISOLATED_PAWN_SEMI_OPEN_FILE_PENALTY_END;
             }
             else {
                 scores.mid += ISOLATED_PAWN_PENALTY_MID;
@@ -75,11 +74,14 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
             // In the end game the backwards pawn should be worse, but if it's very backwards it's not awful.
             scores.end += BACKWARDS_PAWN_PENALTY_END -
-                    (position.pawn_rank[0][col - 1] - row + position.pawn_rank[0][col + 1] - row - 2);
+                          (position.pawn_rank[0][col - 1] - row + position.pawn_rank[0][col + 1] - row - 2);
 
             // If there's no enemy pawn in front of our pawn then it's even worse, since
             // we allow outposts and pieces to attack us easily
-            if (position.pawn_rank[1][col] == 0) scores.mid += 3 * BACKWARDS_PAWN_PENALTY_MID;
+            if (position.pawn_rank[1][col] == 0) {
+                scores.mid += BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_MID;
+                scores.end += BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_END;
+            }
         }
 
         // Passed Pawn Bonus
@@ -92,18 +94,14 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
             // Blocker right in front of pawn
             if (WHITE_KING < position.board[pos - 10] && position.board[pos - 10] < EMPTY) {
-                //scores.mid += BLOCKER_COEFFICIENTS[row] * BLOCKER_VALUES_MID[position.board[pos - 10] - 6];
-                //scores.end += BLOCKER_COEFFICIENTS[row] * BLOCKER_VALUES_END[position.board[pos - 10] - 6];
                 scores.mid += BLOCKER_VALUES_MID[position.board[pos - 10] - 6];
                 scores.end += BLOCKER_VALUES_END[position.board[pos - 10] - 6];
             }
 
             // Blocker two squares in front of pawn
             if (row < 7 && WHITE_KING < position.board[pos - 20] && position.board[pos - 20] < EMPTY) {
-                //scores.mid += BLOCKER_COEFFICIENTS[row + 1] * BLOCKER_VALUES_MID[position.board[pos - 20] - 6] * 0.6;
-                //scores.end += BLOCKER_COEFFICIENTS[row + 1] * BLOCKER_VALUES_END[position.board[pos - 20] - 6] * 0.6;
-                scores.mid += BLOCKER_VALUES_MID[position.board[pos - 20] - 6] / 2;
-                scores.end += BLOCKER_VALUES_END[position.board[pos - 20] - 6] / 2;
+                scores.mid += BLOCKER_TWO_SQUARE_VALUES_MID[position.board[pos - 20] - 6];
+                scores.end += BLOCKER_TWO_SQUARE_VALUES_END[position.board[pos - 20] - 6];
             }
         }
     }
@@ -126,8 +124,8 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             if (position.pawn_rank[0][col] == 9) {
                 // The isolated pawn in the middle game is worse if the opponent
                 // has the semi open file to attack it.
-                scores.mid += 1.5 * ISOLATED_PAWN_PENALTY_MID;
-                scores.end += 0.8 * ISOLATED_PAWN_PENALTY_END;
+                scores.mid += ISOLATED_PAWN_SEMI_OPEN_FILE_PENALTY_MID;
+                scores.end += ISOLATED_PAWN_SEMI_OPEN_FILE_PENALTY_END;
             }
             else {
                 scores.mid += ISOLATED_PAWN_PENALTY_MID;
@@ -144,11 +142,14 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
             // In the end game the backwards pawn should be worse, but if it's very backwards it's not awful.
             scores.end += BACKWARDS_PAWN_PENALTY_END +
-                    (row - position.pawn_rank[1][col - 1] + row - position.pawn_rank[1][col + 1] - 2);
+                          (row - position.pawn_rank[1][col - 1] + row - position.pawn_rank[1][col + 1] - 2);
 
             // If there's no enemy pawn in front of our pawn then it's even worse, since
             // we allow outposts and pieces to attack us easily
-            if (position.pawn_rank[0][col] == 9) scores.mid += 3 * BACKWARDS_PAWN_PENALTY_MID;
+            if (position.pawn_rank[0][col] == 9) {
+                scores.mid += BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_MID;
+                scores.end += BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_END;
+            }
         }
 
         // Passed Pawn Bonus
@@ -161,18 +162,14 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
             // Blocker right in front of pawn
             if (position.board[pos + 10] < BLACK_PAWN) {
-                //scores.mid += BLOCKER_COEFFICIENTS[9 - row] * BLOCKER_VALUES_MID[position.board[pos + 10]];
-                //scores.end += BLOCKER_COEFFICIENTS[9 - row] * BLOCKER_VALUES_END[position.board[pos + 10]];
                 scores.mid += BLOCKER_VALUES_MID[position.board[pos + 10]];
                 scores.end += BLOCKER_VALUES_END[position.board[pos + 10]];
             }
 
             // Blocker two squares in front of pawn
             if (row > 2 && position.board[pos + 20] < BLACK_PAWN) {
-                //scores.mid += BLOCKER_COEFFICIENTS[9 - row - 1] * BLOCKER_VALUES_MID[position.board[pos + 20]] * 0.6;
-                //scores.end += BLOCKER_COEFFICIENTS[9 - row - 1] * BLOCKER_VALUES_END[position.board[pos + 20]] * 0.6;
-                scores.mid += BLOCKER_VALUES_MID[position.board[pos + 20]] / 2;
-                scores.end += BLOCKER_VALUES_END[position.board[pos + 20]] / 2;
+                scores.mid += BLOCKER_TWO_SQUARE_VALUES_MID[position.board[pos + 20]];
+                scores.end += BLOCKER_TWO_SQUARE_VALUES_END[position.board[pos + 20]];
             }
         }
     }
@@ -250,16 +247,16 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
     // Knights are good protectors for the king
     double distance_to_our_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(!is_white)]]);
-    scores.mid -= static_cast<SQUARE_TYPE>(distance_to_our_king);
-    scores.end -= static_cast<SQUARE_TYPE>(0.3 * distance_to_our_king);
+    scores.mid -= static_cast<SQUARE_TYPE>(OUR_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_our_king);
+    scores.end -= static_cast<SQUARE_TYPE>(OUR_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_our_king);
 
     // Knights are also very good at attacking the opponents king
     double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
-    scores.mid -= static_cast<SQUARE_TYPE>(2.6 * distance_to_opp_king);
-    scores.end -= static_cast<SQUARE_TYPE>(1.2 * distance_to_opp_king);
+    scores.mid -= static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_opp_king);
+    scores.end -= static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_opp_king);
 
-    scores.mid += mobility * 1.6;
-    scores.end += mobility * 1.5;
+    scores.mid += mobility * MOBILITY_COEFFICIENTS_MID[WHITE_KNIGHT];
+    scores.end += mobility * MOBILITY_COEFFICIENTS_END[WHITE_KNIGHT];
 
     // std::cout << "KNIGHT MOBILITY: " << mobility << std::endl;
 }
@@ -344,11 +341,11 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
     }
 
     double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
-    scores.mid -= static_cast<SQUARE_TYPE>(0.7 * distance_to_opp_king);
-    scores.end -= static_cast<SQUARE_TYPE>(0.2 * distance_to_opp_king);
+    scores.mid -= static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_BISHOP] * distance_to_opp_king);
+    scores.end -= static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_BISHOP] * distance_to_opp_king);
 
-    scores.mid += mobility * 1.2;
-    scores.end += mobility * 1.1;
+    scores.mid += mobility * MOBILITY_COEFFICIENTS_MID[WHITE_BISHOP];
+    scores.end += mobility * MOBILITY_COEFFICIENTS_END[WHITE_BISHOP];
     // std::cout << "BISHOP MOBILITY: " << mobility << std::endl;
 }
 
@@ -449,11 +446,11 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
     }
 
     double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
-    scores.mid -= static_cast<SQUARE_TYPE>(1.8 * distance_to_opp_king);
-    scores.end -= static_cast<SQUARE_TYPE>(1.1 * distance_to_opp_king);
+    scores.mid -= static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_ROOK] * distance_to_opp_king);
+    scores.end -= static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_ROOK] * distance_to_opp_king);
 
-    scores.mid += mobility / 1.8;  // Already gets open + semi-open file bonuses
-    scores.end += mobility;  // Active rooks in the endgame are very important
+    scores.mid += mobility * MOBILITY_COEFFICIENTS_MID[WHITE_ROOK];  // Already gets open + semi-open file bonuses
+    scores.end += mobility * MOBILITY_COEFFICIENTS_END[WHITE_ROOK];  // Active rooks in the endgame are very important
 
     // std::cout << "ROOK MOBILITY: " << mobility << std::endl;
 }
@@ -553,11 +550,11 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
     }
 
     double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
-    scores.mid -= static_cast<SQUARE_TYPE>(0.7 * distance_to_opp_king);
-    scores.end -= static_cast<SQUARE_TYPE>(distance_to_opp_king);
+    scores.mid -= static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_QUEEN] * distance_to_opp_king);
+    scores.end -= static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_QUEEN] * distance_to_opp_king);
 
-    scores.mid += mobility / 2.8;  // Already gets open + semi-open file bonuses
-    scores.end += mobility;  // Active queen in the endgame is pretty important
+    scores.mid += mobility * MOBILITY_COEFFICIENTS_MID[WHITE_QUEEN];  // Already gets open + semi-open file bonuses
+    scores.end += mobility * MOBILITY_COEFFICIENTS_END[WHITE_QUEEN];  // Active queen in the endgame is pretty important
 
     // std::cout << "QUEEN MOBILITY: " << mobility << std::endl;
 }
@@ -571,14 +568,14 @@ void evaluate_king(const Position& position, Score_Struct& scores, SQUARE_TYPE p
         scores.end += KING_PST_END[i];
 
         if (col < 4) {  // Queen side
-            scores.mid += evaluate_king_pawn(position, 1, true) * 0.8; // A file pawn
+            scores.mid += evaluate_king_pawn(position, 1, true);
             scores.mid += evaluate_king_pawn(position, 2, true);
-            scores.mid += evaluate_king_pawn(position, 3, true) * 0.6; // C file pawn
+            scores.mid += evaluate_king_pawn(position, 3, true);
         }
         else if (col > 5) {
-            scores.mid += evaluate_king_pawn(position, 8, true) * 0.5; // H file pawn
+            scores.mid += evaluate_king_pawn(position, 8, true);
             scores.mid += evaluate_king_pawn(position, 7, true);
-            scores.mid += evaluate_king_pawn(position, 6, true) * 0.3; // F file pawn
+            scores.mid += evaluate_king_pawn(position, 6, true);
         }
         else {
             for (SQUARE_TYPE pawn_file = col - 1; pawn_file < col + 2; pawn_file++) {
@@ -596,14 +593,14 @@ void evaluate_king(const Position& position, Score_Struct& scores, SQUARE_TYPE p
         scores.end += KING_PST_END[i ^ 56];
 
         if (col < 4) {  // Queen side
-            scores.mid += evaluate_king_pawn(position, 1, false) * 0.8; // A file pawn
+            scores.mid += evaluate_king_pawn(position, 1, false); // A file pawn
             scores.mid += evaluate_king_pawn(position, 2, false);
-            scores.mid += evaluate_king_pawn(position, 3, false) * 0.6; // C file pawn
+            scores.mid += evaluate_king_pawn(position, 3, false); // C file pawn
         }
         else if (col > 5) {
-            scores.mid += evaluate_king_pawn(position, 8, false) * 0.5; // H file pawn
+            scores.mid += evaluate_king_pawn(position, 8, false); // H file pawn
             scores.mid += evaluate_king_pawn(position, 7, false);
-            scores.mid += evaluate_king_pawn(position, 6, false) * 0.3; // F file pawn
+            scores.mid += evaluate_king_pawn(position, 6, false); // F file pawn
         }
         else {
             for (SQUARE_TYPE pawn_file = col - 1; pawn_file < col + 2; pawn_file++) {
@@ -773,24 +770,18 @@ SCORE_TYPE evaluate(Position& position) {
         black_scores.end += BISHOP_PAIR_BONUS_END;
     }
 
-    // If our opponent's score is already very good, and our king position is still substandard,
-    // then we should be penalized. Set a cap on this at 20,
-    // so we can't gain too much bonus if our king position is good.
-    // If our opponent's score is so bad that adding 300 to it doesn't make it go near the positives,
-    // then we should cap the minimum at -50 to avoid weird insane penalties
-
-    white_scores.mid += std::min(std::max(-50, (black_scores.mid + 300)) *
-            (KING_PST_MID[MAILBOX_TO_STANDARD[position.king_positions[0]]] - 10) / 280, 20);
-
-    black_scores.mid += std::min(std::max(-50, (white_scores.mid + 300)) *
-            (KING_PST_MID[MAILBOX_TO_STANDARD[position.king_positions[1]] ^ 56] - 10) / 280, 20);
-
-
     white_scores.mid += white_material.mid;
     white_scores.end += white_material.end;
 
     black_scores.mid += black_material.mid;
     black_scores.end += black_material.end;
+
+    double drawishness = evaluate_drawishness(white_piece_amounts, black_piece_amounts,
+                                              white_material.mid, black_material.mid,
+                                              bishop_colors[0] != bishop_colors[1]);
+
+    white_scores.end *= drawishness;
+    black_scores.end *= drawishness;
 
     if (game_phase > 24) game_phase = 24; // In case of early promotions
     SCORE_TYPE white_score = (white_scores.mid * game_phase +
@@ -798,13 +789,6 @@ SCORE_TYPE evaluate(Position& position) {
 
     SCORE_TYPE black_score = (black_scores.mid * game_phase +
                               (24 - game_phase) * black_scores.end) / 24;
-
-    double drawishness = evaluate_drawishness(white_piece_amounts, black_piece_amounts,
-                                              white_material.mid, black_material.mid,
-                                              bishop_colors[0] != bishop_colors[1]);
-
-    white_score *= drawishness;
-    black_score *= drawishness;
 
     // std::cout << white_score << " " << black_score << std::endl;
 
@@ -826,7 +810,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
     if (selected < BLACK_PAWN) {
         if (get_is_capture(move)) {
             score += 20000;
-            score += 2 * (PIECE_VALUES_MID[occupied - BLACK_PAWN] - PIECE_VALUES_MID[selected]);
+            score += 2 * (MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected]);
             score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
         else {
@@ -841,7 +825,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
                      [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
             if (move_type == MOVE_TYPE_PROMOTION) score += 18000 +
-                                                           5 * PIECE_VALUES_MID[get_promotion_piece(move)];
+                                                           5 * MVV_LVA_VALUES[get_promotion_piece(move)];
             else if (move_type == MOVE_TYPE_EP) score += 20050;
             else if (move_type == MOVE_TYPE_CASTLE) score += 1200;
         }
@@ -849,7 +833,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
     else {
         if (get_is_capture(move)) {
             score += 20000;
-            score += 2 * (PIECE_VALUES_MID[occupied] - PIECE_VALUES_MID[selected - BLACK_PAWN]);
+            score += 2 * (MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN]);
             score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
         else {
@@ -864,7 +848,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
                     [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
             if (move_type == MOVE_TYPE_PROMOTION) score += 18000 +
-                                                           5 * PIECE_VALUES_MID[get_promotion_piece(move) - BLACK_PAWN];
+                                                           5 * MVV_LVA_VALUES[get_promotion_piece(move) - BLACK_PAWN];
             else if (move_type == MOVE_TYPE_EP) score += 20050;
             else if (move_type == MOVE_TYPE_CASTLE) score += 1200;
         }
@@ -884,10 +868,10 @@ SCORE_TYPE score_capture(MOVE_TYPE move, MOVE_TYPE tt_move) {
     PIECE_TYPE occupied = get_occupied(move);
 
     if (selected < BLACK_PAWN) {
-        score += PIECE_VALUES_MID[occupied - BLACK_PAWN] - PIECE_VALUES_MID[selected];
+        score += MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected];
     }
     else {
-        score += PIECE_VALUES_MID[occupied] - PIECE_VALUES_MID[selected - BLACK_PAWN];
+        score += MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN];
     }
 
     return score;
