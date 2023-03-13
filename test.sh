@@ -2,8 +2,8 @@
 cd "C:\Users\Alex Tian\AppData\Local\Programs\Cute Chess"
 
 # Engine Paths and Names
-ENGINE_NEW_PATH="C:\Users\Alex Tian\Documents\ChessEngines\Altair1.3.6.exe"
-ENGINE_OLD_PATH="C:\Users\Alex Tian\Documents\ChessEngines\Altair1.3.5.exe"
+ENGINE_NEW_PATH="C:\Users\Alex Tian\Documents\ChessEngines\Altair1.3.7.exe"
+ENGINE_OLD_PATH="C:\Users\Alex Tian\Documents\ChessEngines\Altair1.3.6.exe"
 
 ENGINE_3_PATH="C:\Users\Alex Tian\Documents\ChessEngines\Altair1.2.4.exe"
 ENGINE_4_PATH="C:\Users\Alex Tian\Documents\ChessEngines\Altair1.2.6.exe"
@@ -16,8 +16,8 @@ ENGINE_10_PATH="C:\Users\Alex Tian\Documents\ChessEngines\Altair1.3.2.exe"
 ENGINE_11_PATH="C:\Users\Alex Tian\Documents\ChessEngines\Altair1.3.3.exe"
 ENGINE_12_PATH="C:\Users\Alex Tian\Documents\ChessEngines\Altair1.3.4.exe"
 
-ENGINE_NEW_NAME=Altair1.3.6
-ENGINE_OLD_NAME=Altair1.3.5
+ENGINE_NEW_NAME=Altair1.3.7
+ENGINE_OLD_NAME=Altair1.3.6
 
 ENGINE_3_NAME=Altair1.2.4
 ENGINE_4_NAME=Altair1.2.6

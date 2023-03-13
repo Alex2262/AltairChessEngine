@@ -3983,3 +3983,16 @@ Score of Altair1.3.6 vs Altair1.3.5: 168 - 111 - 67 [0.582]
 Elo difference: 57.8 +/- 33.3, LOS: 100.0 %, DrawRatio: 19.4 %
 350 of 6000 games finished.
 ```
+
+
+### 1.3.7
+Bug fix in tuner and K values
+
+```
+Score of Altair1.3.7 vs Altair1.3.6: 305 - 198 - 236 [0.572]
+...      Altair1.3.7 playing White: 198 - 69 - 103  [0.674] 370
+...      Altair1.3.7 playing Black: 107 - 129 - 133  [0.470] 369
+...      White vs Black: 327 - 176 - 236  [0.602] 739
+Elo difference: 50.7 +/- 20.8, LOS: 100.0 %, DrawRatio: 31.9 %
+743 of 4000 games finished.
+```
