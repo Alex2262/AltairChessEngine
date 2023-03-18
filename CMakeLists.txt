@@ -3,7 +3,7 @@ project(AltairChessEngine)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 #set(GCC_COVERAGE_LINK_FLAGS "-static")
 

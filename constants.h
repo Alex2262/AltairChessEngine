@@ -154,7 +154,7 @@ constexpr SCORE_TYPE TEMPO_BONUS = 8;
 constexpr char PIECE_MATCHER[12] = {'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k'};
 constexpr int GAME_PHASE_SCORES[6] = {0, 1, 1, 2, 4, 0};
 
-constexpr int MVV_LVA_VALUES[6] = {100, 300, 350, 500, 900, 2000};
+constexpr int MVV_LVA_VALUES[6] = { 106, 456, 457, 592,1360,   0};
 
 constexpr double KING_PAWN_SHIELD_COEFFICIENTS[8] = {0.8, 1.0, 0.6, 0.0, 0.0, 0.3, 1.0, 0.5};
 constexpr int KING_PAWN_SHIELD_OUR_PENALTIES[3] = {-6, -14, -23};

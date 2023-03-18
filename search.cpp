@@ -160,7 +160,7 @@ void Engine::record_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE score, short tt_fl
     if (score < -MATE_BOUND) score -= search_ply;
     else if (score > MATE_BOUND) score += search_ply;
 
-    if (tt_entry.key != hash_key || tt_flag == HASH_FLAG_EXACT) {
+    if (tt_entry.key != hash_key || tt_flag == HASH_FLAG_EXACT) { // TODO: try doing || depth == -1 for always replace in qs.
         tt_entry.key = hash_key;
         tt_entry.depth = -1;
         tt_entry.flag = tt_flag;
