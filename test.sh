@@ -10,8 +10,8 @@ TIME_CONTROL=2+0.02
 CONCURRENCY=4
 
 ./cutechess-cli \
+    -engine conf=Altair1.4.0 \
     -engine conf=Altair1.3.9 \
-    -engine conf=Altair1.3.8 \
     -repeat 2 \
     -recover \
     -each tc=$TIME_CONTROL \

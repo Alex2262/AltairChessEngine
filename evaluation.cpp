@@ -243,8 +243,8 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
     // Knights are good protectors for the king
     double distance_to_our_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(!is_white)]]);
-    scores.mid += static_cast<SQUARE_TYPE>(OUR_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_our_king);
-    scores.end += static_cast<SQUARE_TYPE>(OUR_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_our_king);
+    scores.mid += static_cast<SQUARE_TYPE>(OWN_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_our_king);
+    scores.end += static_cast<SQUARE_TYPE>(OWN_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_our_king);
 
     // Knights are also very good at attacking the opponents king
     double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
