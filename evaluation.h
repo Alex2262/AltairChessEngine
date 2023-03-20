@@ -22,7 +22,7 @@ inline double get_distance(SQUARE_TYPE square_1, SQUARE_TYPE square_2) {
     return abs(row_1 - row_2) + abs(col_1 - col_2);
 }
 
-SCORE_TYPE evaluate_king_pawn(const Position& position, SQUARE_TYPE file, bool is_white);
+void evaluate_king_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE file, bool is_white);
 void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white);
 void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white);
 void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white);

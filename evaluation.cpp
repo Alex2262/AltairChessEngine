@@ -6,30 +6,63 @@
 #include "move.h"
 
 
-SCORE_TYPE evaluate_king_pawn(const Position& position, SQUARE_TYPE file, bool is_white) {
-    SCORE_TYPE score = 0;
-
+void evaluate_king_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE file, bool is_white) {
+    SQUARE_TYPE col = file - 1;
     if (is_white) {
-        if (position.pawn_rank[0][file] == 3) score += KING_PAWN_SHIELD_OUR_PENALTIES[0];  // Pawn moved one square
-        else if (position.pawn_rank[0][file] == 4) score += KING_PAWN_SHIELD_OUR_PENALTIES[1];  // Pawn moved two squares
-        else if (position.pawn_rank[0][file] != 2) score += KING_PAWN_SHIELD_OUR_PENALTIES[2];  // Pawn moved > 2 squares, or it doesn't exist
+        if (position.pawn_rank[0][file] == 3) {
+            scores.mid += KING_PAWN_SHIELD_OWN_PENALTIES_MID[0][col];  // Pawn moved one square
+            scores.end += KING_PAWN_SHIELD_OWN_PENALTIES_END[0][col];  // Pawn moved one square
+        }
+        else if (position.pawn_rank[0][file] == 4) {
+            scores.mid += KING_PAWN_SHIELD_OWN_PENALTIES_MID[1][col];  // Pawn moved two squares
+            scores.end += KING_PAWN_SHIELD_OWN_PENALTIES_END[1][col];  // Pawn moved two squares
+        }
+        else if (position.pawn_rank[0][file] != 2) {
+            scores.mid += KING_PAWN_SHIELD_OWN_PENALTIES_MID[2][col];  // Pawn moved > 2 squares, or it doesn't exist
+            scores.end += KING_PAWN_SHIELD_OWN_PENALTIES_END[2][col];  // Pawn moved > 2 squares, or it doesn't exist
+        }
 
-        if (position.pawn_rank[1][file] == 0) score += KING_PAWN_SHIELD_OPP_PENALTIES[0];  // No enemy pawn on this file
-        else if (position.pawn_rank[1][file] == 4) score += KING_PAWN_SHIELD_OPP_PENALTIES[1];  // Enemy pawn is on the 4th rank
-        else if (position.pawn_rank[1][file] != 3) score += KING_PAWN_SHIELD_OPP_PENALTIES[2];  // Enemy pawn is on the 3rd rank
+        if (position.pawn_rank[1][file] == 0) {
+            scores.mid += KING_PAWN_SHIELD_OPP_PENALTIES_MID[0][col];
+            scores.end += KING_PAWN_SHIELD_OPP_PENALTIES_END[0][col];
+        }
+        else if (position.pawn_rank[1][file] == 4) {
+            scores.mid += KING_PAWN_SHIELD_OPP_PENALTIES_MID[1][col];  // Enemy pawn is on the 4th rank
+            scores.end += KING_PAWN_SHIELD_OPP_PENALTIES_END[1][col];  // Enemy pawn is on the 4th rank
+        }
+        else if (position.pawn_rank[1][file] == 3) {
+            scores.mid += KING_PAWN_SHIELD_OPP_PENALTIES_MID[2][col];  // Enemy pawn is on the 3rd rank
+            scores.end += KING_PAWN_SHIELD_OPP_PENALTIES_END[2][col];  // Enemy pawn is on the 3rd rank
+        }
     }
 
     else {
-        if (position.pawn_rank[1][file] == 6) score += KING_PAWN_SHIELD_OUR_PENALTIES[0];  // Pawn moved one square
-        else if (position.pawn_rank[1][file] == 5) score += KING_PAWN_SHIELD_OUR_PENALTIES[1];  // Pawn moved two squares
-        else if (position.pawn_rank[1][file] != 7) score += KING_PAWN_SHIELD_OUR_PENALTIES[2];  // Pawn moved > 2 squares, or it doesn't exist
+        if (position.pawn_rank[1][file] == 6) {
+            scores.mid += KING_PAWN_SHIELD_OWN_PENALTIES_MID[0][col];  // Pawn moved one square
+            scores.end += KING_PAWN_SHIELD_OWN_PENALTIES_END[0][col];  // Pawn moved one square
+        }
+        else if (position.pawn_rank[1][file] == 5) {
+            scores.mid += KING_PAWN_SHIELD_OWN_PENALTIES_MID[1][col];  // Pawn moved two squares
+            scores.end += KING_PAWN_SHIELD_OWN_PENALTIES_END[1][col];  // Pawn moved two squares
+        }
+        else if (position.pawn_rank[1][file] != 7) {
+            scores.mid += KING_PAWN_SHIELD_OWN_PENALTIES_MID[2][col];  // Pawn moved > 2 squares, or it doesn't exist
+            scores.end += KING_PAWN_SHIELD_OWN_PENALTIES_END[2][col];  // Pawn moved > 2 squares, or it doesn't exist
+        }
 
-        if (position.pawn_rank[0][file] == 9) score += KING_PAWN_SHIELD_OPP_PENALTIES[0];  // No enemy pawn on this file
-        else if (position.pawn_rank[0][file] == 5) score += KING_PAWN_SHIELD_OPP_PENALTIES[1];  // Enemy pawn is on the 5th rank
-        else if (position.pawn_rank[0][file] != 6) score += KING_PAWN_SHIELD_OPP_PENALTIES[2];  // Enemy pawn is on the 6th rank
+        if (position.pawn_rank[0][file] == 9) {
+            scores.mid += KING_PAWN_SHIELD_OPP_PENALTIES_MID[0][col];  // No enemy pawn on this file
+            scores.end += KING_PAWN_SHIELD_OPP_PENALTIES_END[0][col];  // No enemy pawn on this file
+        }
+        else if (position.pawn_rank[0][file] == 5) {
+            scores.mid += KING_PAWN_SHIELD_OPP_PENALTIES_MID[1][col];  // Enemy pawn is on the 5th rank
+            scores.end += KING_PAWN_SHIELD_OPP_PENALTIES_END[1][col];  // Enemy pawn is on the 5th rank
+        }
+        else if (position.pawn_rank[0][file] == 6) {
+            scores.mid += KING_PAWN_SHIELD_OPP_PENALTIES_MID[2][col];  // Enemy pawn is on the 6th rank
+            scores.end += KING_PAWN_SHIELD_OPP_PENALTIES_END[2][col];  // Enemy pawn is on the 6th rank
+        }
     }
-
-    return static_cast<SCORE_TYPE>(score * KING_PAWN_SHIELD_COEFFICIENTS[file - 1]);
 }
 
 
@@ -564,14 +597,14 @@ void evaluate_king(const Position& position, Score_Struct& scores, SQUARE_TYPE p
         scores.end += KING_PST_END[i];
 
         if (col < 4) {  // Queen side
-            scores.mid += evaluate_king_pawn(position, 1, true);
-            scores.mid += evaluate_king_pawn(position, 2, true);
-            scores.mid += evaluate_king_pawn(position, 3, true);
+            evaluate_king_pawn(position, scores, 1, true);
+            evaluate_king_pawn(position, scores, 2, true);
+            evaluate_king_pawn(position, scores, 3, true);
         }
         else if (col > 5) {
-            scores.mid += evaluate_king_pawn(position, 8, true);
-            scores.mid += evaluate_king_pawn(position, 7, true);
-            scores.mid += evaluate_king_pawn(position, 6, true);
+            evaluate_king_pawn(position, scores, 8, true);
+            evaluate_king_pawn(position, scores, 7, true);
+            evaluate_king_pawn(position, scores, 6, true);
         }
         else {
             for (SQUARE_TYPE pawn_file = col - 1; pawn_file < col + 2; pawn_file++) {
@@ -591,14 +624,14 @@ void evaluate_king(const Position& position, Score_Struct& scores, SQUARE_TYPE p
         scores.end += KING_PST_END[i ^ 56];
 
         if (col < 4) {  // Queen side
-            scores.mid += evaluate_king_pawn(position, 1, false); // A file pawn
-            scores.mid += evaluate_king_pawn(position, 2, false);
-            scores.mid += evaluate_king_pawn(position, 3, false); // C file pawn
+            evaluate_king_pawn(position, scores, 1, false); // A file pawn
+            evaluate_king_pawn(position, scores, 2, false);
+            evaluate_king_pawn(position, scores, 3, false); // C file pawn
         }
         else if (col > 5) {
-            scores.mid += evaluate_king_pawn(position, 8, false); // H file pawn
-            scores.mid += evaluate_king_pawn(position, 7, false);
-            scores.mid += evaluate_king_pawn(position, 6, false); // F file pawn
+            evaluate_king_pawn(position, scores, 8, false); // H file pawn
+            evaluate_king_pawn(position, scores, 7, false);
+            evaluate_king_pawn(position, scores, 6, false); // F file pawn
         }
         else {
             for (SQUARE_TYPE pawn_file = col - 1; pawn_file < col + 2; pawn_file++) {
@@ -783,6 +816,14 @@ SCORE_TYPE evaluate(Position& position) {
     white_scores.end *= drawishness;
     black_scores.end *= drawishness;
 
+    if (position.side == WHITE_COLOR) {
+        white_scores.mid += TEMPO_BONUS_MID;
+        white_scores.end += TEMPO_BONUS_END;
+    } else {
+        black_scores.mid += TEMPO_BONUS_MID;
+        black_scores.end += TEMPO_BONUS_END;
+    }
+
     if (game_phase > 24) game_phase = 24; // In case of early promotions
     SCORE_TYPE white_score = (white_scores.mid * game_phase +
                               (24 - game_phase) * white_scores.end) / 24;
@@ -792,7 +833,7 @@ SCORE_TYPE evaluate(Position& position) {
 
     // std::cout << white_score << " " << black_score << std::endl;
 
-    return (position.side * -2 + 1) * (white_score - black_score) + TEMPO_BONUS;
+    return (position.side * -2 + 1) * (white_score - black_score);
 }
 
 

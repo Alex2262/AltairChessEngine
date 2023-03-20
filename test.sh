@@ -6,12 +6,12 @@ SUITE_1="C:\Users\Alex Tian\Documents\UHO_XXL_+0.90_+1.19.pgn"
 
 # Test Variables
 TEST_OPENING_BOOK=$SUITE_1
-TIME_CONTROL=2+0.02
+TIME_CONTROL=1+0.02
 CONCURRENCY=4
 
 ./cutechess-cli \
-    -engine conf=Altair1.4.0 \
-    -engine conf=Altair1.3.9 \
+    -engine conf=Altair1.4.2 \
+    -engine conf=Altair1.4.1 \
     -repeat 2 \
     -recover \
     -each tc=$TIME_CONTROL \
