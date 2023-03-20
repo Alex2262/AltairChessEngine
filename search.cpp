@@ -51,9 +51,6 @@ void Engine::reset() {
     //std::memset(history_moves, 0, sizeof(history_moves));
     //std::memset(capture_history, 0, sizeof(capture_history));
     std::memset(counter_moves, 0, sizeof(counter_moves));
-
-    stopped = false;
-    terminated = false;
 }
 
 
@@ -72,6 +69,8 @@ void Engine::new_game() {
 
     game_ply = 0;
     fifty_move = 0;
+
+    stopped = true;
 }
 
 
@@ -637,8 +636,10 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
 void iterative_search(Engine& engine, Position& position) {
 
-    position.clear_movelist();
+    engine.stopped = false;
+    engine.terminated = false;
 
+    position.clear_movelist();
     engine.reset();
 
     auto start_time = std::chrono::high_resolution_clock::now();
