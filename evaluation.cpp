@@ -670,9 +670,9 @@ double evaluate_drawishness(const int white_piece_amounts[6], const int black_pi
 
         return 1.0;
     }
-    if (white_material <= PIECE_VALUES_MID[WHITE_BISHOP] && black_material <= PIECE_VALUES_MID[WHITE_BISHOP])
+    if (white_material <= MAX_MINOR_PIECE_VALUE_MID && black_material <= MAX_MINOR_PIECE_VALUE_MID)
         return 0.0;
-    if (white_material <= 2 * PIECE_VALUES_MID[WHITE_BISHOP] && black_material <= 2 * PIECE_VALUES_MID[WHITE_BISHOP]) {
+    if (white_material <= 2 * MAX_MINOR_PIECE_VALUE_MID && black_material <= 2 * MAX_MINOR_PIECE_VALUE_MID) {
 
         // With only 2 knights, it's impossible to checkmate
         if (white_piece_amounts[WHITE_KNIGHT] == 2 || black_piece_amounts[WHITE_KNIGHT] == 2)
@@ -693,10 +693,10 @@ double evaluate_drawishness(const int white_piece_amounts[6], const int black_pi
         return 0.2;
     }
 
-    if (white_material <= PIECE_VALUES_MID[WHITE_ROOK] + PIECE_VALUES_MID[WHITE_BISHOP] &&
+    if (white_material <= PIECE_VALUES_MID[WHITE_ROOK] + MAX_MINOR_PIECE_VALUE_MID &&
         black_material == PIECE_VALUES_MID[WHITE_ROOK]) return 0.23;
 
-    if (black_material <= PIECE_VALUES_MID[WHITE_ROOK] + PIECE_VALUES_MID[WHITE_BISHOP] &&
+    if (black_material <= PIECE_VALUES_MID[WHITE_ROOK] + MAX_MINOR_PIECE_VALUE_MID &&
         white_material == PIECE_VALUES_MID[WHITE_ROOK]) return 0.23;
 
     return 1.0;

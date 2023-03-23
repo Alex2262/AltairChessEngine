@@ -4203,3 +4203,14 @@ SPRT: llr 2.97 (101.0%), lbound -2.94, ubound 2.94 - H1 was accepted
 ```
 
 
+### 1.4.2
+Bug fix to drawishness calculator
+
+```
+Score of Altair142 vs Altair141: 1432 - 1373 - 1695  [0.507] 4500
+...      Altair142 playing White: 957 - 459 - 834  [0.611] 2250
+...      Altair142 playing Black: 475 - 914 - 861  [0.402] 2250
+...      White vs Black: 1871 - 934 - 1695  [0.604] 4500
+Elo difference: 4.6 +/- 8.0, LOS: 86.7 %, DrawRatio: 37.7 %
+```
+
