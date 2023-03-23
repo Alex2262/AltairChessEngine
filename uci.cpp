@@ -66,7 +66,7 @@ void UCI::parse_position() {
     engine.game_ply = 0;
 
     if (tokens[1] == "startpos") {
-        position.set_fen(START_FEN);
+        engine.fifty_move = position.set_fen(START_FEN);
         next_idx = 2;
     }
 
@@ -137,6 +137,7 @@ void UCI::parse_go() {
     }
 
     if (perft_depth > -1) {
+        position.print_board();
         uci_perft(position, perft_depth, 0);
         return;
     }

@@ -157,6 +157,35 @@ void Position::print_board() {
               << " black pieces: " << black_pieces.size()
               << std::endl << std::endl;
 
+    /*
+    for (SQUARE_TYPE pos : white_pieces) {
+        SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
+        std::cout << i << " " << board[pos] << std::endl;
+    }
+
+    std::cout << "BLACK\n";
+    for (SQUARE_TYPE pos : black_pieces) {
+        SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
+        std::cout << i << " " << board[pos] << std::endl;
+    }
+    std::cout << "ARR\n";
+
+    new_board = "";
+    for (SQUARE_TYPE pos : STANDARD_TO_MAILBOX) {
+        if (MAILBOX_TO_STANDARD[pos] % 8 == 0) {
+            new_board += '\n';
+        }
+
+        int idx = piece_list_index[pos];
+
+        new_board += std::to_string(idx);
+        new_board += ' ';
+    }
+
+    std::cout << new_board << std::endl << std::endl;
+
+    */
+
 }
 
 
@@ -437,11 +466,10 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
         castle_ability_bits &= ~(1 << 3);
     }
 
-    if (origin_square == H1) castle_ability_bits &= ~(1 << 0);
-    else if (origin_square == A1) castle_ability_bits &= ~(1 << 1);
-
-    if (target_square == H8) castle_ability_bits &= ~(1 << 2);
-    else if (target_square == A8) castle_ability_bits &= ~(1 << 3);
+    if (origin_square == H1 || target_square == H1) castle_ability_bits &= ~(1 << 0);
+    else if (origin_square == A1 || target_square == A1) castle_ability_bits &= ~(1 << 1);
+    else if (origin_square == H8 || target_square == H8) castle_ability_bits &= ~(1 << 2);
+    else if (origin_square == A8 || target_square == A8) castle_ability_bits &= ~(1 << 3);
 
     hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
