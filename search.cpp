@@ -437,8 +437,9 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     }
 
     // Internal Iterative Reduction. Rebel's idea
-    if (tt_move == NO_MOVE && depth >= 4) {
-        depth--;
+    if (tt_move == NO_MOVE) {
+        if (depth >= 4) depth--;
+        if (depth >= 8) depth--;
     }
 
     int legal_moves = 0;

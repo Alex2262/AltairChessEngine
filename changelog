@@ -4214,3 +4214,14 @@ Score of Altair142 vs Altair141: 1432 - 1373 - 1695  [0.507] 4500
 Elo difference: 4.6 +/- 8.0, LOS: 86.7 %, DrawRatio: 37.7 %
 ```
 
+
+### 1.4.3
+More reductions to IIR
+
+```
+Score of Altair143 vs Altair142: 1796 - 1717 - 2147  [0.507] 5660
+...      Altair143 playing White: 1152 - 605 - 1072  [0.597] 2829
+...      Altair143 playing Black: 644 - 1112 - 1075  [0.417] 2831
+...      White vs Black: 2264 - 1249 - 2147  [0.590] 5660
+Elo difference: 4.8 +/- 7.1, LOS: 90.9 %, DrawRatio: 37.9 %
+```
