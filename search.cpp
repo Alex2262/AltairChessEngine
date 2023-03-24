@@ -463,13 +463,23 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         sort_next_move(position.moves[engine.search_ply], position.move_scores[engine.search_ply], move_index);
         MOVE_TYPE move = position.moves[engine.search_ply][move_index];
 
+        SCORE_TYPE move_history_score = engine.history_moves[position.side]
+                [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]];
+
         bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
 
-        // Late Move Pruning
-        if (!in_check && !pv_node && depth <= 3 && legal_moves > depth * 8) break;
+        // Pruning
+        if (!pv_node && get_move_type(move) != MOVE_TYPE_PROMOTION && legal_moves > 0) {
+            // Late Move Pruning
+            if (depth <= 3 && legal_moves > depth * 8) break;
 
-        // Quiet Late Move Pruning
-        if (!in_check && quiet && !pv_node && depth <= 5 && legal_moves > depth * 6) break;
+            // Quiet Late Move Pruning
+            if (quiet && depth <= 5 && legal_moves > depth * 6) break;
+
+            // History Pruning
+            if (depth <= 8 && move_history_score < (depth + improving) * -12000) continue;
+        }
+
 
         // Make the move
         bool attempt = position.make_move(move, engine.search_ply, engine.fifty_move);
@@ -517,9 +527,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
             reduction -= is_counter_move * 0.25;
 
-            reduction -= engine.history_moves[position.side]
-                     [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]]
-                     / 8000.0;
+            reduction -= move_history_score / 8000.0;
 
             // My idea that in a null move search you can be more aggressive with LMR
             reduction += null_search;
