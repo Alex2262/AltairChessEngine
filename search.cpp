@@ -415,10 +415,10 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Null move pruning
     // We give the opponent an extra move and if they are not able to make their position
     // any better, then our position is too good, and we don't need to search any deeper.
-    if (depth >= 3 && do_null && !in_check && !pv_node) {
+    if (depth >= 2 && do_null && !in_check && !pv_node && static_eval >= beta) {
 
         // Adaptive NMP
-        int reduction = depth/4 + 2;
+        int reduction = 3 + depth / 3 + std::min(3, (static_eval - beta) / 256);
 
         position.make_null_move(engine.search_ply, engine.fifty_move);
 
@@ -426,7 +426,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         engine.game_ply++;
 
         // zero window search with reduced depth
-        SCORE_TYPE return_eval = -negamax(engine, position, -beta, -beta + 1, depth - 1 - reduction, false);
+        SCORE_TYPE return_eval = -negamax(engine, position, -beta, -beta + 1, depth - reduction, false);
 
         engine.game_ply--;
         engine.search_ply--;
