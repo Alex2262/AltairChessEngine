@@ -4285,4 +4285,11 @@ info multipv 1 depth 24 seldepth 28 score cp 27 time 13351 nodes 19295431 nps 14
 info multipv 1 depth 25 seldepth 32 score cp 29 time 40350 nodes 58209302 nps 1442609 pv g1f3 d7d5 e2e3 g8f6 c2c4 e7e6 d2d4 f8e7 
 info multipv 1 depth 25 seldepth 32 score cp 29 time 45000 nodes 64796701 nps 1439926 pv g1f3 d7d5 e2e3 g8f6 c2c4 e7e6 d2d4 f8e7 
 bestmove g1f3
+
+Score of Altair144 vs Altair143: 3689 - 3742 - 4529  [0.498] 11960
+...      Altair144 playing White: 2430 - 1285 - 2266  [0.596] 5981
+...      Altair144 playing Black: 1259 - 2457 - 2263  [0.400] 5979
+...      White vs Black: 4887 - 2544 - 4529  [0.598] 11960
+Elo difference: -1.5 +/- 4.9, LOS: 26.9 %, DrawRatio: 37.9 %
+SPRT: llr 0.766 (26.0%), lbound -2.94, ubound 2.94
 ```
