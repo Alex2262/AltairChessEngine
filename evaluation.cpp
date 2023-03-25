@@ -98,7 +98,7 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             }
         }
 
-        // Backwards pawn
+            // Backwards pawn
         else if (row < position.pawn_rank[0][col - 1] && row < position.pawn_rank[0][col + 1]) {
             // In the middle game it's worse to have a very backwards pawn
             // since then, the 'forwards' pawns won't be protected
@@ -120,8 +120,12 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             row >= position.pawn_rank[1][col] &&
             row >= position.pawn_rank[1][col + 1]) {
 
-            scores.mid += PASSED_PAWN_BONUSES_MID[row - 1];
-            scores.end += PASSED_PAWN_BONUSES_END[row - 1];
+            int protectors = 0;
+            if (position.board[pos + 11] == WHITE_PAWN) protectors++;
+            if (position.board[pos + 9] == WHITE_PAWN) protectors++;
+
+            scores.mid += PASSED_PAWN_BONUSES_MID[protectors][row - 1];
+            scores.end += PASSED_PAWN_BONUSES_END[protectors][row - 1];
 
             // Blocker right in front of pawn
             if (WHITE_KING < position.board[pos - 10] && position.board[pos - 10] < EMPTY) {
@@ -134,6 +138,8 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 scores.mid += BLOCKER_TWO_SQUARE_VALUES_MID[position.board[pos - 20] - 6];
                 scores.end += BLOCKER_TWO_SQUARE_VALUES_END[position.board[pos - 20] - 6];
             }
+
+
         }
     }
 
@@ -164,7 +170,7 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             }
         }
 
-        // Backwards pawn
+            // Backwards pawn
         else if (row > position.pawn_rank[1][col - 1] && row > position.pawn_rank[1][col + 1]) {
             // In the middle game it's worse to have a very backwards pawn
             // since then, the 'forwards' pawns won't be protected
@@ -186,8 +192,12 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             row <= position.pawn_rank[0][col] &&
             row <= position.pawn_rank[0][col + 1]) {
 
-            scores.mid += PASSED_PAWN_BONUSES_MID[8 - row];
-            scores.end += PASSED_PAWN_BONUSES_END[8 - row];
+            int protectors = 0;
+            if (position.board[pos - 11] == BLACK_PAWN) protectors++;
+            if (position.board[pos - 9] == BLACK_PAWN) protectors++;
+
+            scores.mid += PASSED_PAWN_BONUSES_MID[protectors][8 - row];
+            scores.end += PASSED_PAWN_BONUSES_END[protectors][8 - row];
 
             // Blocker right in front of pawn
             if (position.board[pos + 10] < BLACK_PAWN) {

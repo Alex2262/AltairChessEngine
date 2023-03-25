@@ -4419,3 +4419,44 @@ Score of Altair147 vs Altair146: 174 - 110 - 221  [0.563] 505
 Elo difference: 44.3 +/- 22.8, LOS: 100.0 %, DrawRatio: 43.8 %
 SPRT: llr 2.95 (100.3%), lbound -2.94, ubound 2.94 - H1 was accepted
 ```
+
+
+### 1.4.8
+Protected Passed Pawn Eval
+
+```
+info multipv 1 depth 1 seldepth 1 score cp 55 time 1 nodes 28 nps 28000 pv e2e4 
+info multipv 1 depth 2 seldepth 2 score cp 16 time 1 nodes 116 nps 116000 pv e2e4 e7e5 
+info multipv 1 depth 3 seldepth 3 score cp 43 time 1 nodes 230 nps 230000 pv e2e4 e7e5 d2d4 
+info multipv 1 depth 4 seldepth 5 score cp 22 time 5 nodes 1029 nps 205800 pv g1f3 b8c6 d2d4 d7d5 
+info multipv 1 depth 5 seldepth 7 score cp 34 time 9 nodes 2104 nps 233777 pv g1f3 d7d5 d2d4 g8f6 b1c3 
+info multipv 1 depth 6 seldepth 8 score cp 15 time 30 nodes 4496 nps 149866 pv g1f3 d7d5 d2d4 g8f6 b1c3 b8c6 
+info multipv 1 depth 7 seldepth 9 score cp 31 time 40 nodes 9112 nps 227800 pv e2e4 d7d5 e4d5 g8f6 d2d4 f6d5 g1f3 
+info multipv 1 depth 8 seldepth 10 score cp 35 time 46 nodes 13193 nps 286804 pv e2e4 d7d5 e4d5 g8f6 d2d4 f6d5 c2c4 d5b4 
+info multipv 1 depth 9 seldepth 12 score cp 41 time 65 nodes 32553 nps 500815 pv e2e4 d7d5 e4d5 c7c6 d5c6 b8c6 b1c3 e7e5 g1f3 
+info multipv 1 depth 10 seldepth 12 score cp 20 time 82 nodes 54744 nps 667609 pv e2e4 d7d5 e4d5 c7c6 d5c6 b8c6 b1c3 e7e5 g1f3 g8f6 
+info multipv 1 depth 11 seldepth 15 score cp 36 time 95 nodes 75478 nps 794505 pv e2e4 d7d5 e4d5 c7c6 d5c6 b8c6 b1c3 e7e5 g1f3 g8f6 f1d3 
+info multipv 1 depth 12 seldepth 16 score cp 40 time 180 nodes 202239 nps 1123550 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2d4 e5d4 f3d4 c6d4 d1d4 f8d6 
+info multipv 1 depth 13 seldepth 17 score cp 43 time 215 nodes 257971 nps 1199865 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 d2d4 e5d4 f3d4 c6d4 d1d4 f8d6 c1g5 
+info multipv 1 depth 14 seldepth 19 score cp 38 time 371 nodes 490950 nps 1323315 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6 d4c6 d7c6 d1d8 e8d8 c1g5 h7h6 g5f6 g7f6 
+info multipv 1 depth 15 seldepth 19 score cp 23 time 510 nodes 701648 nps 1375780 pv e2e4 e7e5 g1f3 b8c6 f1b5 g8f6 d2d3 f8c5 b5c6 d7c6 f3e5 e8g8 c1e3 c5e3 f2e3 
+info multipv 1 depth 16 seldepth 21 score cp 18 time 967 nodes 1398384 nps 1446105 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6 d4c6 b7c6 e4e5 d8e7 d1e2 f6d5 b1c3 d5c3 
+info multipv 1 depth 17 seldepth 22 score cp 18 time 1172 nodes 1705370 nps 1455093 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6 d4c6 b7c6 e4e5 d8e7 d1e2 f6d5 b1c3 d5c3 b2c3 
+info multipv 1 depth 18 seldepth 24 score cp 20 time 2041 nodes 3016529 nps 1477966 pv d2d4 d7d5 e2e3 g8f6 g1f3 e7e6 c2c4 b8c6 f1d3 f8e7 c1d2 e8g8 e1g1 c6b4 d2b4 e7b4 b1c3 d5c4 
+info multipv 1 depth 19 seldepth 25 score cp 17 time 2713 nodes 4024513 nps 1483417 pv d2d4 d7d5 e2e3 g8f6 g1f3 e7e6 c2c4 b8c6 b1c3 f8e7 f1e2 e8g8 e1g1 a7a5 c1d2 f6g4 a1c1 f8e8 c4d5 
+info multipv 1 depth 20 seldepth 27 score cp 26 time 4878 nodes 7297174 nps 1495935 pv g1f3 d7d5 d2d4 c7c5 d4c5 e7e6 e2e4 f8c5 e4d5 e6d5 f1b5 b8c6 e1g1 g8e7 f1e1 d8b6 b5c6 b7c6 c1e3 e8g8 e3c5 
+info multipv 1 depth 21 seldepth 27 score cp 26 time 5894 nodes 8837938 nps 1499480 pv g1f3 d7d5 d2d4 c7c5 d4c5 e7e6 e2e4 f8c5 e4d5 e6d5 
+info multipv 1 depth 22 seldepth 27 score cp 26 time 7011 nodes 10523969 nps 1501065 pv g1f3 d7d5 d2d4 
+info multipv 1 depth 23 seldepth 27 score cp 26 time 8478 nodes 12721022 nps 1500474 pv g1f3 d7d5 d2d4 
+info multipv 1 depth 24 seldepth 33 score cp 28 time 18342 nodes 27380451 nps 1492773 pv g1f3 d7d5 d2d4 c7c5 e2e3 e7e6 c2c4 g8f6 c4d5 e6d5 f1b5 c8d7 b1c3 c5d4 b5d7 b8d7 d1d4 f8c5 d4d3 e8g8 e1g1 a8c8 c3d5 f6d5 
+info multipv 1 depth 25 seldepth 33 score cp 27 time 20513 nodes 30598416 nps 1491659 pv g1f3 d7d5 e2e3 g8f6 d2d4 e7e6 c2c4 b8c6 f1d3 f8e7 c1d2 e8g8 e1g1 h7h6 b1c3 c8d7 c4d5 e6d5 a2a3 
+info multipv 1 depth 25 seldepth 33 score cp 27 time 45000 nodes 67280932 nps 1495131 pv g1f3 d7d5 e2e3 g8f6 d2d4 e7e6 c2c4 b8c6 f1d3 f8e7 c1d2 e8g8 e1g1 h7h6 b1c3 c8d7 c4d5 e6d5 a2a3 
+bestmove g1f3
+
+Score of Altair148 vs Altair147: 1386 - 1261 - 1838  [0.514] 4485
+...      Altair148 playing White: 924 - 412 - 908  [0.614] 2244
+...      Altair148 playing Black: 462 - 849 - 930  [0.414] 2241
+...      White vs Black: 1773 - 874 - 1838  [0.600] 4485
+Elo difference: 9.7 +/- 7.8, LOS: 99.2 %, DrawRatio: 41.0 %
+SPRT: llr 2.95 (100.2%), lbound -2.94, ubound 2.94 - H1 was accepted
+```
