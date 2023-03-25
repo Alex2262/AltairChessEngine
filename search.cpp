@@ -196,7 +196,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         long current_time = std::chrono::duration_cast<std::chrono::milliseconds>
                 (std::chrono::time_point_cast<std::chrono::milliseconds>(time).time_since_epoch()).count();
 
-        if (current_time - engine.start_time >= engine.max_time ||
+        if (current_time - engine.start_time >= engine.hard_time_limit ||
             (engine.max_nodes && engine.node_count >= engine.max_nodes))
             engine.stopped = true;
     }
@@ -666,12 +666,6 @@ void iterative_search(Engine& engine, Position& position) {
     std::string best_pv;
     SCORE_TYPE best_score = 0;
 
-    double average_branching_factor = 1;
-    uint64_t prev_node_count = 1;
-    PLY_TYPE full_searches = 0;
-
-    // std::unordered_set<MOVE_TYPE> possible_moves;
-
     while (running_depth <= engine.max_depth) {
         engine.current_search_depth = running_depth;
         SCORE_TYPE return_eval = negamax(engine, position, alpha, beta, running_depth, false);
@@ -688,8 +682,6 @@ void iterative_search(Engine& engine, Position& position) {
         alpha = return_eval - aspiration_window;
         beta = return_eval + aspiration_window;
         aspiration_window -= 20 / static_cast<int>(running_depth + 3);
-
-        // possible_moves.insert(engine.pv_table[0][0]);
 
         std::string pv_line;
         for (int c = 0; c < engine.pv_length[0]; c++) {
@@ -713,6 +705,10 @@ void iterative_search(Engine& engine, Position& position) {
         long elapsed_time = ms_int.count();
         elapsed_time = std::max(elapsed_time, 1L);
 
+        if (running_depth >= engine.min_depth) {
+            if (elapsed_time >= engine.soft_time_limit) engine.stopped = true;
+        }
+
         if (abs(best_score) >= MATE_BOUND) {
             SCORE_TYPE score = best_score >= MATE_BOUND ?
                     (MATE_SCORE - best_score) / 2 + 1: (-MATE_SCORE - best_score) / 2;
@@ -721,8 +717,6 @@ void iterative_search(Engine& engine, Position& position) {
                       << " score mate " << score << " time " << elapsed_time
                       << " nodes " << engine.node_count << " nps " << int(engine.node_count / (elapsed_time / 1000.0))
                       << " pv " << best_pv << std::endl;
-
-            // break;
         }
         else {
             std::cout << "info multipv 1 depth " << running_depth << " seldepth " << engine.selective_depth
@@ -734,40 +728,6 @@ void iterative_search(Engine& engine, Position& position) {
         if (engine.stopped || running_depth == engine.max_depth) {
             break;
         }
-
-        if (engine.node_count != running_depth && running_depth > 1) {
-            if (full_searches >= 1) {
-                // get new average branching factor with higher priority on last node counts
-                average_branching_factor *= full_searches;
-                average_branching_factor += static_cast<double>(engine.node_count) /
-                                            static_cast<double>(prev_node_count) * 3;
-                average_branching_factor /= full_searches + 3;
-
-                double uncertainty = ((running_depth / (running_depth + 3.1)) +
-                                     (full_searches / (full_searches + 2.5))) / 2;
-
-                // std::cout << uncertainty << std::endl;
-
-                // Formula of my own to try and predict with this uncertainty score if
-                // there is only one or two moves considered to think for less time.
-                // double low_uncertainty = (uncertainty - 0.1) * (uncertainty - 0.1) * (uncertainty - 0.1);
-                // uncertainty += low_uncertainty *
-                //         ((5.0 + static_cast<double>(running_depth) / 64)
-                //         / (possible_moves.size() * possible_moves.size()));
-
-                // std::cout << uncertainty << std::endl;
-                // std::cout << average_branching_factor << " " << elapsed_time << std::endl;
-                // std::cout << static_cast<long>(average_branching_factor * uncertainty) * elapsed_time << std::endl;
-
-                if (full_searches >= 2 && static_cast<long>(average_branching_factor * uncertainty) * elapsed_time
-                    > engine.max_time)
-                    break;
-            }
-
-            full_searches++;
-        }
-
-        prev_node_count = engine.node_count;
 
         running_depth++;
     }

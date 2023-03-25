@@ -31,7 +31,8 @@ public:
     PLY_TYPE game_ply = 0;
     PLY_TYPE fifty_move = 0;
 
-    long max_time = 60000;
+    long hard_time_limit = 60000;
+    long soft_time_limit = 60000;
     long start_time = 0;
 
     uint64_t max_nodes = 0;

@@ -27,7 +27,7 @@ public:
     void parse_position();
     void parse_go();
     void uci_loop();
-    void time_handler(long self_time, long inc, long movetime, long movestogo);
+    void time_handler(double self_time, double inc, double movetime, long movestogo);
 };
 
 
