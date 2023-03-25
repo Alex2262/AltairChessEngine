@@ -4460,3 +4460,45 @@ Score of Altair148 vs Altair147: 1386 - 1261 - 1838  [0.514] 4485
 Elo difference: 9.7 +/- 7.8, LOS: 99.2 %, DrawRatio: 41.0 %
 SPRT: llr 2.95 (100.2%), lbound -2.94, ubound 2.94 - H1 was accepted
 ```
+
+
+### 1.4.9
+Phalanx Pawn Eval
+
+```
+info multipv 1 depth 1 seldepth 1 score cp 65 time 1 nodes 30 nps 30000 pv e2e4 
+info multipv 1 depth 2 seldepth 2 score cp 19 time 1 nodes 131 nps 131000 pv d2d4 d7d5 
+info multipv 1 depth 3 seldepth 3 score cp 49 time 1 nodes 242 nps 242000 pv d2d4 d7d5 g1f3 
+info multipv 1 depth 4 seldepth 6 score cp 19 time 1 nodes 694 nps 694000 pv d2d4 d7d5 g1f3 g8f6 
+info multipv 1 depth 5 seldepth 7 score cp 35 time 3 nodes 1500 nps 500000 pv d2d4 d7d5 g1f3 g8f6 b1c3 
+info multipv 1 depth 6 seldepth 8 score cp 19 time 6 nodes 3542 nps 590333 pv d2d4 d7d5 g1f3 g8f6 b1c3 b8c6 
+info multipv 1 depth 7 seldepth 9 score cp 35 time 14 nodes 9111 nps 650785 pv e2e4 d7d5 e4d5 g8f6 d2d4 f6d5 g1f3 
+info multipv 1 depth 8 seldepth 10 score cp 37 time 19 nodes 12765 nps 671842 pv e2e4 d7d5 e4d5 g8f6 d2d4 c7c6 d5c6 b8c6 
+info multipv 1 depth 9 seldepth 12 score cp 46 time 36 nodes 28514 nps 792055 pv e2e4 e7e6 d2d4 d7d5 b1c3 b8c6 e4e5 g8e7 c1g5 
+info multipv 1 depth 10 seldepth 13 score cp 35 time 66 nodes 65575 nps 993560 pv e2e4 e7e5 b1c3 b8c6 g1f3 g8f6 f1b5 f8d6 d2d4 e5d4 
+info multipv 1 depth 11 seldepth 13 score cp 33 time 91 nodes 100539 nps 1104824 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6 d4c6 d7c6 d1d8 e8d8 
+info multipv 1 depth 12 seldepth 15 score cp 38 time 118 nodes 142199 nps 1205076 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6 b1c3 c6d4 d1d4 f8d6 
+info multipv 1 depth 13 seldepth 18 score cp 20 time 285 nodes 383844 nps 1346821 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 f1b5 f8b4 e1g1 e8g8 d2d3 d7d6 c1e3 
+info multipv 1 depth 14 seldepth 18 score cp 26 time 336 nodes 459083 nps 1366318 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 f1b5 f8b4 e1g1 e8g8 d2d3 d7d6 a2a3 b4c5 
+info multipv 1 depth 15 seldepth 19 score cp 40 time 486 nodes 684215 nps 1407849 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2d4 e5d4 f3d4 f8b4 d4c6 d7c6 d1d8 e8d8 
+info multipv 1 depth 16 seldepth 20 score cp 42 time 822 nodes 1177040 nps 1431922 pv e2e4 e7e5 g1f3 b8c6 f1c4 g8f6 d2d3 d7d5 e4d5 f6d5 e1g1 f8e7 f1e1 c8g4 b1c3 d5c3 
+info multipv 1 depth 17 seldepth 21 score cp 20 time 1227 nodes 1764430 nps 1438003 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6 d4c6 b7c6 e4e5 d8e7 d1e2 f6d5 b1c3 d5c3 b2c3 
+info multipv 1 depth 18 seldepth 24 score cp 34 time 1545 nodes 2234675 nps 1446391 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6 d4c6 b7c6 e4e5 d8e7 d1e2 f6d5 c1d2 c8b7 b1c3 e8c8 
+info multipv 1 depth 19 seldepth 24 score cp 34 time 2338 nodes 3364840 nps 1439195 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6 
+info multipv 1 depth 20 seldepth 26 score cp 34 time 2782 nodes 3980076 nps 1430652 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6 
+info multipv 1 depth 21 seldepth 26 score cp 33 time 3601 nodes 5179514 nps 1438354 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6 d4c6 b7c6 e4e5 d8e7 d1e2 f6d5 c1d2 d5b4 e2e4 d7d5 
+info multipv 1 depth 22 seldepth 26 score cp 33 time 4347 nodes 6273084 nps 1443083 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 
+info multipv 1 depth 23 seldepth 27 score cp 33 time 5524 nodes 7978870 nps 1444400 pv e2e4 e7e5 g1f3 
+info multipv 1 depth 24 seldepth 27 score cp 33 time 6600 nodes 9534290 nps 1444589 pv e2e4 e7e5 g1f3 b8c6 
+info multipv 1 depth 25 seldepth 31 score cp 36 time 16188 nodes 23588224 nps 1457142 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 f1c4 f6e4 c3e4 d7d5 c4d3 d5e4 d3e4 f8d6 e1g1 e8g8 c2c3 c8g4 f1e1 
+info multipv 1 depth 26 seldepth 34 score cp 31 time 34509 nodes 50370384 nps 1459630 pv d2d4 g8f6 c2c4 e7e6 b1c3 f8b4 g1f3 e8g8 e2e3 d7d5 c4d5 e6d5 f1d3 c7c5 d4c5 b8d7 e1g1 d7c5 d3c2 b4c3 b2c3 c5e4 c1b2 c8g4 
+bestmove d2d4
+
+Score of Altair149 vs Altair148: 290 - 216 - 331  [0.544] 837
+...      Altair149 playing White: 194 - 72 - 153  [0.646] 419
+...      Altair149 playing Black: 96 - 144 - 178  [0.443] 418
+...      White vs Black: 338 - 168 - 331  [0.602] 837
+Elo difference: 30.8 +/- 18.3, LOS: 99.9 %, DrawRatio: 39.5 %
+SPRT: llr 2.97 (100.8%), lbound -2.94, ubound 2.94 - H1 was accepted
+```
+

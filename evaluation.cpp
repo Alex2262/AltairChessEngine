@@ -98,7 +98,7 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             }
         }
 
-            // Backwards pawn
+        // Backwards pawn
         else if (row < position.pawn_rank[0][col - 1] && row < position.pawn_rank[0][col + 1]) {
             // In the middle game it's worse to have a very backwards pawn
             // since then, the 'forwards' pawns won't be protected
@@ -141,6 +141,12 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
 
         }
+
+        // Pawn Phalanx
+        if (position.board[pos - 1] == WHITE_PAWN) {
+            scores.mid += PHALANX_PAWN_BONUS_MID[row - 1];
+            scores.end += PHALANX_PAWN_BONUS_END[row - 1];
+        }
     }
 
     else {
@@ -170,7 +176,7 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             }
         }
 
-            // Backwards pawn
+        // Backwards pawn
         else if (row > position.pawn_rank[1][col - 1] && row > position.pawn_rank[1][col + 1]) {
             // In the middle game it's worse to have a very backwards pawn
             // since then, the 'forwards' pawns won't be protected
@@ -210,6 +216,12 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 scores.mid += BLOCKER_TWO_SQUARE_VALUES_MID[position.board[pos + 20]];
                 scores.end += BLOCKER_TWO_SQUARE_VALUES_END[position.board[pos + 20]];
             }
+        }
+
+        // Pawn Phalanx
+        if (position.board[pos - 1] == BLACK_PAWN) {
+            scores.mid += PHALANX_PAWN_BONUS_MID[8 - row];
+            scores.end += PHALANX_PAWN_BONUS_END[8 - row];
         }
     }
 }
