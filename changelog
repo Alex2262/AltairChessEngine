@@ -4203,6 +4203,19 @@ Score of Altair1.4.1 vs Altair1.4.0: 1225 - 1106 - 1195  [0.517] 3526
 ...      White vs Black: 1459 - 872 - 1195  [0.583] 3526
 Elo difference: 11.7 +/- 9.3, LOS: 99.3 %, DrawRatio: 33.9 %
 SPRT: llr 2.97 (101.0%), lbound -2.94, ubound 2.94 - H1 was accepted
+
+Score of Altair1.4.1 vs tantabus-windows-2019-x86-64-v3: 187 - 56 - 86 [0.699]
+...      Altair1.4.1 playing White: 92 - 31 - 42  [0.685] 165
+...      Altair1.4.1 playing Black: 95 - 25 - 44  [0.713] 164
+...      White vs Black: 117 - 126 - 86  [0.486] 329
+Elo difference: 146.4 +/- 34.1, LOS: 100.0 %, DrawRatio: 26.1 %
+
+Score of Altair1.4.1 vs wyldchess1.51_popcnt: 258 - 270 - 115 [0.491]
+...      Altair1.4.1 playing White: 116 - 142 - 64  [0.460] 322
+...      Altair1.4.1 playing Black: 142 - 128 - 51  [0.522] 321
+...      White vs Black: 244 - 284 - 115  [0.469] 643
+Elo difference: -6.5 +/- 24.3, LOS: 30.1 %, DrawRatio: 17.9 %
+647 of 1000 games finished.
 ```
 
 
