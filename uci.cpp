@@ -24,16 +24,16 @@ void UCI::initialize_uci() {
 }
 
 
-void  UCI::time_handler(long self_time, long inc, long movetime, long movestogo) {
+void  UCI::time_handler(double self_time, double inc, double movetime, long movestogo) {
     double rate = 20;
-    long time_amt;
+    double time_amt;
 
     if (position.is_attacked(position.king_positions[position.side])) rate -= 3;
     if (get_is_capture(last_move)) rate -= 1.5;
 
     if (movetime > 0) time_amt = movetime * 0.9;
     else if (inc > 0 && movestogo > 0) {
-        time_amt = (self_time * 0.8 / movestogo) * (20 / rate) + (inc / 2.0);
+        time_amt = (self_time * 0.8 / static_cast<double>(movestogo)) * (20 / rate) + (inc / 2.0);
         if (time_amt > self_time * 0.8) time_amt = self_time * 0.85 + (inc / 2.0);
     }
     else if (inc > 0) {
@@ -45,20 +45,34 @@ void  UCI::time_handler(long self_time, long inc, long movetime, long movestogo)
         else {
             // If our remaining time is less than the boundary, we should use less time than our increment
             // to get back above the boundary.
-            long bound = static_cast<long>(inc / 2.5 * sqrt(60000.0 / inc));
-            if (inc > bound / 2.5) bound = static_cast<long>(inc * sqrt(90000.0 / inc));
-            if (inc > bound / 2.5) bound = static_cast<long>(1.5 * inc * sqrt(200000.0 / inc));
+            double bound = inc / 2.5 * sqrt(60000.0 / inc);
+            if (inc > bound / 2.5) bound = inc * sqrt(90000.0 / inc);
+            if (inc > bound / 2.5) bound = 1.5 * inc * sqrt(200000.0 / inc);
             time_amt = std::max(inc * 0.975 + (self_time - bound) / (rate * 1.8), self_time / (rate * 10));
         }
     }
     else if (movestogo > 0) {
-        time_amt = (self_time * 0.9 / movestogo) * (20 / rate);
+        time_amt = (self_time * 0.9 / static_cast<double>(movestogo)) * (20 / rate);
         if (time_amt > self_time * 0.9) time_amt = self_time * 0.95;
     }
     else if (self_time > 0) time_amt = self_time / (rate + 6);
-    else time_amt = engine.max_time;
+    else time_amt = static_cast<double>(engine.hard_time_limit);
 
-    engine.max_time = time_amt;
+    engine.hard_time_limit = static_cast<long>(time_amt * 2.3);
+    engine.soft_time_limit = static_cast<long>(time_amt * 0.7);
+
+    if (engine.hard_time_limit > static_cast<long>(self_time * 0.7)) {
+        for (int multiplier = 18; multiplier >= 10; multiplier -= 1) {
+            engine.hard_time_limit = static_cast<long>(time_amt * (multiplier / 10.0));
+            if (engine.hard_time_limit <= static_cast<long>(self_time * 0.7)) break;
+        }
+    }
+
+    if (engine.hard_time_limit > static_cast<long>(movetime) && movetime != 0.0) {
+        engine.hard_time_limit = static_cast<long>(time_amt);
+    }
+
+    std::cout << time_amt << " " << engine.hard_time_limit << " " << engine.soft_time_limit << std::endl;
 }
 
 
@@ -109,8 +123,9 @@ void UCI::parse_position() {
 
 
 void UCI::parse_go() {
-    int d = 0, perft_depth = -1;
-    long wtime = 0, btime = 0, winc = 0, binc = 0, movetime = 0, movestogo = 0;
+    PLY_TYPE d = 0, perft_depth = -1;
+    double wtime = 0, btime = 0, winc = 0, binc = 0, movetime = 0;
+    long movestogo = 0;
     bool infinite = false;
 
     for (int i = 1; i < tokens.size(); i += 2) {
@@ -120,21 +135,21 @@ void UCI::parse_go() {
 
         if (tokens.size() > i + 1) value = std::stoi(tokens[i + 1]);
 
-        if (type == "depth") d = value;
+        if (type == "depth") d = static_cast<PLY_TYPE>(value);
 
-        else if (type == "perft") perft_depth = value;
+        else if (type == "perft") perft_depth = static_cast<PLY_TYPE>(value);
 
         else if (type == "nodes") engine.max_nodes = value;
 
-        else if (type == "movetime") movetime = value;
+        else if (type == "movetime") movetime = static_cast<double>(value);
 
-        else if (type == "wtime") wtime = value;
-        else if (type == "btime") btime = value;
+        else if (type == "wtime") wtime = static_cast<double>(value);
+        else if (type == "btime") btime = static_cast<double>(value);
 
-        else if (type == "winc") winc = value;
-        else if (type == "binc") binc = value;
+        else if (type == "winc") winc = static_cast<double>(value);
+        else if (type == "binc") binc = static_cast<double>(value);
 
-        else if (type == "movestogo") movestogo = value;
+        else if (type == "movestogo") movestogo = static_cast<long>(value);
         else if (type == "infinite") infinite = true;
 
     }
@@ -145,18 +160,17 @@ void UCI::parse_go() {
         return;
     }
     if (infinite || (d && tokens.size() == 3)) {
-        engine.max_time = 86400000;
+        engine.hard_time_limit = 86400000;
+        engine.soft_time_limit = 86400000;
     }
     else {
-        int self_time = (position.side == 0) ? wtime : btime;
-        int inc = (position.side == 0) ? winc : binc;
+        double self_time = (position.side == 0) ? wtime : btime;
+        double inc = (position.side == 0) ? winc : binc;
 
         time_handler(self_time, inc, movetime, movestogo);
     }
 
     if (d) engine.max_depth = d;
-
-    std::cout << engine.max_time << std::endl;
 
     engine.stopped = true;
     if (!search_threads.empty()) {

@@ -4397,3 +4397,25 @@ Rank Name                          Elo     +/-   Games    Wins  Losses   Draws  
 
 409 of 4000 games finished.
 ```
+
+
+### 1.4.7
+Idea of a min-max time split advised to me by Gedas and Archi
+
+```
+4 + 0.04
+Score of Altair147 vs Altair146: 115 - 51 - 105  [0.618] 271
+...      Altair147 playing White: 80 - 14 - 42  [0.743] 136
+...      Altair147 playing Black: 35 - 37 - 63  [0.493] 135
+...      White vs Black: 117 - 49 - 105  [0.625] 271
+Elo difference: 83.6 +/- 32.8, LOS: 100.0 %, DrawRatio: 38.7 %
+SPRT: llr 2.96 (100.5%), lbound -2.94, ubound 2.94 - H1 was accepted
+
+10 + 0.01
+Score of Altair147 vs Altair146: 174 - 110 - 221  [0.563] 505
+...      Altair147 playing White: 122 - 31 - 100  [0.680] 253
+...      Altair147 playing Black: 52 - 79 - 121  [0.446] 252
+...      White vs Black: 201 - 83 - 221  [0.617] 505
+Elo difference: 44.3 +/- 22.8, LOS: 100.0 %, DrawRatio: 43.8 %
+SPRT: llr 2.95 (100.3%), lbound -2.94, ubound 2.94 - H1 was accepted
+```
