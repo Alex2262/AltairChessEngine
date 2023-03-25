@@ -4389,4 +4389,11 @@ Score of Altair146 vs Altair145: 1345 - 1222 - 1567  [0.515] 4134
 ...      White vs Black: 1673 - 894 - 1567  [0.594] 4134
 Elo difference: 10.3 +/- 8.3, LOS: 99.2 %, DrawRatio: 37.9 %
 SPRT: llr 2.95 (100.1%), lbound -2.94, ubound 2.94 - H1 was accepted
+
+Rank Name                          Elo     +/-   Games    Wins  Losses   Draws   Points   Score    Draw   White   Black 
+   0 Altair1.4.6                    51      30     405     188     129      88    232.0   57.3%   21.7%   55.2%   59.4% 
+   1 zevra_popcnt                  -35      42     202      66      86      50     91.0   45.0%   24.8%   43.6%   46.5% 
+   2 wyldchess1.51_popcnt          -68      44     203      63     102      38     82.0   40.4%   18.7%   37.7%   43.1% 
+
+409 of 4000 games finished.
 ```

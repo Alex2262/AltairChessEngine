@@ -13,7 +13,10 @@
 
 void UCI::initialize_uci() {
     position.set_fen(START_FEN);
-    engine.transposition_table.resize(MAX_TT_SIZE);
+    //engine.transposition_table.resize(MAX_TT_SIZE);
+
+    int mb = 2048;
+    engine.transposition_table.resize(mb * (1000000 / 24));
 
     initialize_lmr_reductions();
 
