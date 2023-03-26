@@ -4502,3 +4502,43 @@ Elo difference: 30.8 +/- 18.3, LOS: 99.9 %, DrawRatio: 39.5 %
 SPRT: llr 2.97 (100.8%), lbound -2.94, ubound 2.94 - H1 was accepted
 ```
 
+
+### 1.5.0
+Pawn Support and Threat Bonuses
+
+```
+info multipv 1 depth 1 seldepth 1 score cp 51 time 1 nodes 25 nps 25000 pv e2e3 
+info multipv 1 depth 2 seldepth 2 score cp 18 time 1 nodes 88 nps 88000 pv e2e3 e7e6 
+info multipv 1 depth 3 seldepth 3 score cp 30 time 1 nodes 201 nps 201000 pv e2e3 e7e6 b1c3 
+info multipv 1 depth 4 seldepth 4 score cp 23 time 3 nodes 721 nps 240333 pv e2e3 e7e6 b1c3 b8c6 
+info multipv 1 depth 5 seldepth 7 score cp 30 time 5 nodes 1638 nps 327600 pv e2e3 e7e6 b1c3 b8c6 g1f3 
+info multipv 1 depth 6 seldepth 7 score cp 24 time 8 nodes 3118 nps 389750 pv e2e3 e7e6 b1c3 b8c6 g1f3 g8f6 
+info multipv 1 depth 7 seldepth 8 score cp 33 time 14 nodes 9149 nps 653500 pv b1c3 b8c6 d2d4 d7d5 g1f3 g8f6 e2e3 
+info multipv 1 depth 8 seldepth 10 score cp 24 time 28 nodes 27754 nps 991214 pv b1c3 d7d5 g1f3 b8c6 d2d4 g8f6 
+info multipv 1 depth 9 seldepth 12 score cp 41 time 40 nodes 45328 nps 1133200 pv b1c3 g8f6 g1f3 b8c6 e2e3 e7e5 f1d3 d7d5 e1g1 
+info multipv 1 depth 10 seldepth 13 score cp 28 time 59 nodes 72420 nps 1227457 pv b1c3 g8f6 g1f3 b8c6 d2d4 d7d5 c1f4 c8f5 c3b5 a8c8 
+info multipv 1 depth 11 seldepth 14 score cp 46 time 126 nodes 167237 nps 1327277 pv e2e4 d7d5 e4d5 g8f6 g1f3 c7c6 d2d4 c6d5 f1d3 b8c6 e1g1 
+info multipv 1 depth 12 seldepth 17 score cp 35 time 167 nodes 225348 nps 1349389 pv e2e4 d7d5 e4d5 g8f6 g1f3 e7e6 d5e6 c8e6 b1c3 f8d6 f3d4 e6g4 
+info multipv 1 depth 13 seldepth 17 score cp 43 time 251 nodes 345492 nps 1376462 pv e2e4 d7d5 e4d5 g8f6 g1f3 e7e6 d5e6 c8e6 b1c3 f8d6 f3d4 e8g8 d4e6 
+info multipv 1 depth 14 seldepth 18 score cp 41 time 446 nodes 623301 nps 1397535 pv e2e4 e7e6 b1c3 d7d5 d2d4 d5e4 c3e4 f8e7 c2c3 g8f6 f1d3 f6e4 d3e4 e8g8 
+info multipv 1 depth 15 seldepth 20 score cp 23 time 1401 nodes 1952528 nps 1393667 pv d2d4 d7d5 e2e3 c7c5 g1f3 e7e6 f1e2 
+info multipv 1 depth 16 seldepth 20 score cp 28 time 1729 nodes 2415954 nps 1397312 pv d2d4 d7d5 g1f3 g8f6 e2e3 e7e6 c2c4 c7c6 b1c3 f8b4 c4d5 e6d5 f1d3 e8g8 e1g1 c8g4 
+info multipv 1 depth 17 seldepth 22 score cp 37 time 2623 nodes 3676366 nps 1401588 pv g1f3 g8f6 d2d4 e7e6 c2c4 f8b4 c1d2 c7c5 d2b4 c5b4 e2e3 e8g8 f1d3 d7d5 c4d5 f6d5 b1d2 b8c6 
+info multipv 1 depth 18 seldepth 22 score cp 37 time 3031 nodes 4266094 nps 1407487 pv g1f3 g8f6 d2d4 e7e6 c2c4 f8b4 
+info multipv 1 depth 19 seldepth 23 score cp 35 time 4234 nodes 5958512 nps 1407300 pv g1f3 d7d5 d2d4 g8f6 c2c4 d5c4 e2e3 c8e6 b1a3 b8c6 f1c4 e6d5 e1g1 e7e6 c4d5 d8d5 c1d2 
+info multipv 1 depth 20 seldepth 24 score cp 35 time 5399 nodes 7585788 nps 1405035 pv g1f3 d7d5 d2d4 
+info multipv 1 depth 21 seldepth 25 score cp 35 time 6747 nodes 9463208 nps 1402580 pv g1f3 d7d5 d2d4 g8f6 c2c4 
+info multipv 1 depth 22 seldepth 31 score cp 33 time 17597 nodes 24420675 nps 1387774 pv g1f3 e7e6 e2e4 d7d5 e4d5 e6d5 d2d4 g8f6 f1d3 f8d6 
+info multipv 1 depth 23 seldepth 31 score cp 26 time 22501 nodes 31171979 nps 1385359 pv g1f3 g8f6 c2c4 e7e6 d2d4 d7d5 b1c3 f8b4 c4d5 e6d5 e2e3 e8g8 f1d3 c7c5 e1g1 c5c4 d3c2 b8c6 a2a3 
+info multipv 1 depth 24 seldepth 31 score cp 30 time 26559 nodes 36807759 nps 1385886 pv g1f3 g8f6 e2e3 e7e6 d2d4 c7c5 f1d3 d7d5 e1g1 c5d4 e3d4 f8d6 b1c3 a7a6 c3e2 b8c6 c2c3 e8g8 c1f4 h7h6 h2h3 
+info multipv 1 depth 25 seldepth 32 score cp 29 time 38871 nodes 54076166 nps 1391169 pv g1f3 g8f6 e2e3 e7e6 d2d4 d7d5 c2c4 f8e7 c4d5 e6d5 b1c3 e8g8 f1d3 c7c5 d4c5 b8c6 e1g1 e7c5 a2a3 h7h6 b2b4 c5d6 b4b5 
+bestmove g1f3
+
+Score of Altair150 vs Altair149: 258 - 189 - 350  [0.543] 797
+...      Altair150 playing White: 172 - 52 - 175  [0.650] 399
+...      Altair150 playing Black: 86 - 137 - 175  [0.436] 398
+...      White vs Black: 309 - 138 - 350  [0.607] 797
+Elo difference: 30.2 +/- 18.1, LOS: 99.9 %, DrawRatio: 43.9 %
+SPRT: llr 2.98 (101.1%), lbound -2.94, ubound 2.94 - H1 was accepted
+```
+

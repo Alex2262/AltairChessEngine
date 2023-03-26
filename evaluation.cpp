@@ -76,6 +76,23 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
         scores.mid += PAWN_PST_MID[i];
         scores.end += PAWN_PST_END[i];
 
+        // Pawn Protection and Threats
+        if (position.board[pos - 9] < BLACK_PAWN) {
+            scores.mid += PAWN_SUPPORT_MID[position.board[pos - 9]];
+            scores.end += PAWN_SUPPORT_END[position.board[pos - 9]];
+        } else if (position.board[pos - 9] < EMPTY) {
+            scores.mid += PAWN_THREAT_MID[position.board[pos - 9] - BLACK_PAWN];
+            scores.end += PAWN_THREAT_END[position.board[pos - 9] - BLACK_PAWN];
+        }
+
+        if (position.board[pos - 11] < BLACK_PAWN) {
+            scores.mid += PAWN_SUPPORT_MID[position.board[pos - 11]];
+            scores.end += PAWN_SUPPORT_END[position.board[pos - 11]];
+        } else if (position.board[pos - 11] < EMPTY) {
+            scores.mid += PAWN_THREAT_MID[position.board[pos - 11] - BLACK_PAWN];
+            scores.end += PAWN_THREAT_END[position.board[pos - 11] - BLACK_PAWN];
+        }
+
         // Doubled pawns. The pawn we are checking is higher in row compared to
         // the least advanced pawn in our column.
         if (row > position.pawn_rank[0][col]) {
@@ -153,6 +170,23 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
         scores.mid += PAWN_PST_MID[i ^ 56];
         scores.end += PAWN_PST_END[i ^ 56];
+
+        // Pawn Protection and Threats
+        if (position.board[pos + 9] < BLACK_PAWN) {
+            scores.mid += PAWN_THREAT_MID[position.board[pos + 9]];
+            scores.end += PAWN_THREAT_END[position.board[pos + 9]];
+        } else if (position.board[pos + 9] < EMPTY) {
+            scores.mid += PAWN_SUPPORT_MID[position.board[pos + 9] - BLACK_PAWN];
+            scores.end += PAWN_SUPPORT_END[position.board[pos + 9] - BLACK_PAWN];
+        }
+
+        if (position.board[pos + 11] < BLACK_PAWN) {
+            scores.mid += PAWN_THREAT_MID[position.board[pos + 11]];
+            scores.end += PAWN_THREAT_END[position.board[pos + 11]];
+        } else if (position.board[pos + 11] < EMPTY) {
+            scores.mid += PAWN_SUPPORT_MID[position.board[pos + 11] - BLACK_PAWN];
+            scores.end += PAWN_SUPPORT_END[position.board[pos + 11] - BLACK_PAWN];
+        }
 
         // Doubled pawns. The pawn we are checking is higher in row compared to
         // the least advanced pawn in our column.
@@ -297,12 +331,12 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
     }
 
     // Knights are good protectors for the king
-    double distance_to_our_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(!is_white)]]);
+    SCORE_TYPE distance_to_our_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(!is_white)]]);
     scores.mid += static_cast<SQUARE_TYPE>(OWN_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_our_king);
     scores.end += static_cast<SQUARE_TYPE>(OWN_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_our_king);
 
     // Knights are also very good at attacking the opponents king
-    double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
+    SCORE_TYPE distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
     scores.mid += static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_opp_king);
     scores.end += static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_opp_king);
 
@@ -496,7 +530,7 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
         }
     }
 
-    double distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
+    SCORE_TYPE distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
     scores.mid += static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_ROOK] * distance_to_opp_king);
     scores.end += static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_ROOK] * distance_to_opp_king);
 
