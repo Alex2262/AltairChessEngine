@@ -4542,3 +4542,53 @@ Elo difference: 30.2 +/- 18.1, LOS: 99.9 %, DrawRatio: 43.9 %
 SPRT: llr 2.98 (101.1%), lbound -2.94, ubound 2.94 - H1 was accepted
 ```
 
+
+### 1.5.1
+LMR Bug Fix
+
+```
+info multipv 1 depth 1 seldepth 1 score cp 51 time 1 nodes 25 nps 25000 pv e2e3 
+info multipv 1 depth 2 seldepth 2 score cp 18 time 1 nodes 88 nps 88000 pv e2e3 e7e6 
+info multipv 1 depth 3 seldepth 3 score cp 30 time 1 nodes 201 nps 201000 pv e2e3 e7e6 b1c3 
+info multipv 1 depth 4 seldepth 4 score cp 23 time 1 nodes 721 nps 721000 pv e2e3 e7e6 b1c3 b8c6 
+info multipv 1 depth 5 seldepth 7 score cp 30 time 3 nodes 1638 nps 546000 pv e2e3 e7e6 b1c3 b8c6 g1f3 
+info multipv 1 depth 6 seldepth 7 score cp 24 time 6 nodes 3116 nps 519333 pv e2e3 e7e6 b1c3 b8c6 g1f3 g8f6 
+info multipv 1 depth 7 seldepth 8 score cp 33 time 16 nodes 9145 nps 571562 pv b1c3 b8c6 d2d4 d7d5 g1f3 g8f6 e2e3 
+info multipv 1 depth 8 seldepth 10 score cp 24 time 43 nodes 27738 nps 645069 pv b1c3 d7d5 g1f3 b8c6 d2d4 g8f6 
+info multipv 1 depth 9 seldepth 12 score cp 41 time 61 nodes 45303 nps 742672 pv b1c3 g8f6 g1f3 b8c6 e2e3 e7e5 f1d3 d7d5 e1g1 
+info multipv 1 depth 10 seldepth 13 score cp 28 time 83 nodes 72380 nps 872048 pv b1c3 g8f6 g1f3 b8c6 d2d4 d7d5 c1f4 c8f5 c3b5 a8c8 
+info multipv 1 depth 11 seldepth 14 score cp 45 time 147 nodes 162026 nps 1102217 pv e2e4 d7d5 e4d5 g8f6 g1f3 c7c6 d2d4 c6d5 f1d3 b8c6 e1g1 
+info multipv 1 depth 12 seldepth 17 score cp 39 time 185 nodes 217406 nps 1175167 pv e2e4 d7d5 e4d5 g8f6 g1f3 e7e6 d2d4 e6d5 f1d3 f8d6 d1e2 d8e7 e2e7 e8e7 
+info multipv 1 depth 13 seldepth 17 score cp 41 time 333 nodes 421833 nps 1266765 pv e2e4 e7e6 g1f3 c7c5 b1c3 b8c6 f1e2 f8d6 e1g1 g8f6 d2d4 c5d4 f3d4 
+info multipv 1 depth 14 seldepth 18 score cp 38 time 476 nodes 629762 nps 1323029 pv e2e4 c7c5 b1c3 e7e6 g1f3 
+info multipv 1 depth 15 seldepth 19 score cp 44 time 659 nodes 892548 nps 1354397 pv e2e4 c7c5 g1f3 b8c6 f1b5 g8f6 b1c3 c6d4 e4e5 d4b5 c3b5 f6e4 e1g1 a7a6 b5c3 
+info multipv 1 depth 16 seldepth 20 score cp 31 time 1090 nodes 1505525 nps 1381215 pv e2e4 c7c5 g1f3 b8c6 b1c3 g8f6 f1c4 d7d6 e1g1 c6d4 f3d4 c5d4 c3d5 f6e4 d2d3 e4c5 
+info multipv 1 depth 17 seldepth 22 score cp 42 time 1540 nodes 2143868 nps 1392122 pv e2e4 c7c5 g1f3 b8c6 b1c3 g8f6 f1b5 c6d4 b5a4 d8c7 d2d3 a7a6 a4b3 d7d6 c3d5 f6d5 f3d4 
+info multipv 1 depth 18 seldepth 22 score cp 42 time 1892 nodes 2646472 nps 1398769 pv e2e4 c7c5 g1f3 b8c6 b1c3 g8f6 f1b5 c6d4 b5a4 d8c7 d2d3 a7a6 
+info multipv 1 depth 19 seldepth 26 score cp 28 time 3955 nodes 5538910 nps 1400482 pv d2d4 g8f6 g1f3 d7d5 
+info multipv 1 depth 20 seldepth 26 score cp 36 time 5099 nodes 7078303 nps 1388174 pv d2d4 g8f6 g1f3 d7d5 c2c4 d5c4 e2e3 c8e6 b1c3 c7c5 e3e4 c5d4 f3d4 b7b5 d4e6 d8d1 e1d1 
+info multipv 1 depth 21 seldepth 26 score cp 31 time 6889 nodes 9569692 nps 1389126 pv d2d4 g8f6 g1f3 d7d5 c2c4 e7e6 e2e3 c7c5 c4d5 e6d5 b1c3 f8e7 f1d3 e8g8 e1g1 b8c6 d4c5 e7c5 a2a3 d5d4 c3e4 
+info multipv 1 depth 22 seldepth 26 score cp 31 time 8177 nodes 11382734 nps 1392042 pv d2d4 g8f6 g1f3 e7e6 c2c4 d7d5 c4d5 e6d5 e2e3 c7c5 b1c3 
+info multipv 1 depth 23 seldepth 26 score cp 31 time 9569 nodes 13339936 nps 1394078 pv d2d4 g8f6 
+info multipv 1 depth 24 seldepth 30 score cp 31 time 12339 nodes 17253169 nps 1398263 pv d2d4 g8f6 
+info multipv 1 depth 25 seldepth 32 score cp 33 time 24148 nodes 33723078 nps 1396516 pv e2e4 e7e6 d2d4 d7d5 e4e5 c7c5 c2c3 c5d4 c3d4 c8d7 g1f3 b8c6 b1c3 a8c8 f1d3 d8b6 d3c2 c6b4 e1g1 g8e7 
+info multipv 1 depth 26 seldepth 32 score cp 33 time 28183 nodes 39293968 nps 1394243 pv e2e4 e7e6 d2d4 d7d5 e4e5 c7c5 c2c3 c5d4 c3d4 
+info multipv 1 depth 27 seldepth 32 score cp 33 time 34278 nodes 47736243 nps 1392620 pv e2e4 e7e6 d2d4 
+bestmove e2e4
+
+Score of Altair151 vs Altair150: 1971 - 1894 - 2415  [0.506] 6280
+...      Altair151 playing White: 1265 - 647 - 1228  [0.598] 3140
+...      Altair151 playing Black: 706 - 1247 - 1187  [0.414] 3140
+...      White vs Black: 2512 - 1353 - 2415  [0.592] 6280
+Elo difference: 4.3 +/- 6.7, LOS: 89.2 %, DrawRatio: 38.5 %
+```
+
+### 1.5.2
+
+```
+Score of Altair152 vs Altair151: 208 - 163 - 209  [0.539] 580
+...      Altair152 playing White: 131 - 48 - 112  [0.643] 291
+...      Altair152 playing Black: 77 - 115 - 97  [0.434] 289
+...      White vs Black: 246 - 125 - 209  [0.604] 580
+Elo difference: 27.0 +/- 22.6, LOS: 99.0 %, DrawRatio: 36.0 %
+```

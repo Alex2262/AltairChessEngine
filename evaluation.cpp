@@ -918,8 +918,8 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
             // score 1st and 2nd killer move
             if (engine.killer_moves[0][engine.search_ply] == move) score += 12000;
             else if (engine.killer_moves[1][engine.search_ply] == move) score += 11000;
-            else score += engine.history_moves[0]
-                     [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]];
+            else score += engine.history_moves
+                     [selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
             if (move_type == MOVE_TYPE_PROMOTION) score += 18000 +
                                                            5 * MVV_LVA_VALUES[get_promotion_piece(move)];
@@ -941,8 +941,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
             // score 1st and 2nd killer move
             if (engine.killer_moves[0][engine.search_ply] == move) score += 12000;
             else if (engine.killer_moves[1][engine.search_ply] == move) score += 11000;
-            else score += engine.history_moves[1]
-                    [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]];
+            else score += engine.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
             if (move_type == MOVE_TYPE_PROMOTION) score += 18000 +
                                                            5 * MVV_LVA_VALUES[get_promotion_piece(move) - BLACK_PAWN];

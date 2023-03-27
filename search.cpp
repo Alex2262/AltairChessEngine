@@ -463,8 +463,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         sort_next_move(position.moves[engine.search_ply], position.move_scores[engine.search_ply], move_index);
         MOVE_TYPE move = position.moves[engine.search_ply][move_index];
 
-        SCORE_TYPE move_history_score = engine.history_moves[position.side]
-                [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]];
+        SCORE_TYPE move_history_score = engine.history_moves
+                [get_selected(move)][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
         bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
 
@@ -540,7 +540,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
             return_eval = -negamax(engine, position, -alpha - 1, -alpha, new_depth, true);
 
-            full_depth_zero_window = return_eval > alpha && new_depth != depth;
+            full_depth_zero_window = return_eval > alpha && new_depth != depth - 1;
         }
 
         else {
@@ -589,8 +589,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 // History Heuristic for move ordering
                 SCORE_TYPE bonus = depth * (depth + 1) - 1;
                 if (quiet) {
-                    update_history_entry(engine.history_moves[position.side]
-                        [MAILBOX_TO_STANDARD[get_origin_square(move)]][MAILBOX_TO_STANDARD[get_target_square(move)]],
+                    update_history_entry(engine.history_moves
+                        [get_selected(move)][MAILBOX_TO_STANDARD[get_target_square(move)]],
                         bonus);
                 } else {
                     update_history_entry(engine.capture_history[get_selected(move)]
@@ -602,8 +602,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 for (int failed_move_index = 0; failed_move_index < move_index; failed_move_index++) {
                     MOVE_TYPE temp_move = position.moves[engine.search_ply][failed_move_index];
                     if (!get_is_capture(temp_move)) {
-                        update_history_entry(engine.history_moves[position.side]
-                                             [MAILBOX_TO_STANDARD[get_origin_square(temp_move)]]
+                        update_history_entry(engine.history_moves
+                                             [get_selected(temp_move)]
                                              [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
                                              -bonus);
                     } else {
