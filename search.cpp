@@ -587,7 +587,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 tt_hash_flag = HASH_FLAG_EXACT;
 
                 // History Heuristic for move ordering
-                SCORE_TYPE bonus = depth * (depth + 1) - 1;
+                SCORE_TYPE bonus = depth * (depth + 1 + null_search) - 1;
                 if (quiet) {
                     update_history_entry(engine.history_moves
                         [get_selected(move)][MAILBOX_TO_STANDARD[get_target_square(move)]],

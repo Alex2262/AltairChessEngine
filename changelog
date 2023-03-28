@@ -4606,3 +4606,16 @@ Score of Altair153 vs Altair152: 321 - 286 - 393  [0.517] 1000
 Elo difference: 12.2 +/- 16.8, LOS: 92.2 %, DrawRatio: 39.3 %
 SPRT: llr 0.66 (22.4%), lbound -2.94, ubound 2.94
 ```
+
+
+### 1.5.4
+Slightly more history bonus at the root of null move searches.
+
+```
+Score of Altair154 vs Altair153: 405 - 366 - 569  [0.515] 1340
+...      Altair154 playing White: 272 - 128 - 270  [0.607] 670
+...      Altair154 playing Black: 133 - 238 - 299  [0.422] 670
+...      White vs Black: 510 - 261 - 569  [0.593] 1340
+Elo difference: 10.1 +/- 14.1, LOS: 92.0 %, DrawRatio: 42.5 %
+SPRT: llr 0.735 (25.0%), lbound -2.94, ubound 2.94
+```
