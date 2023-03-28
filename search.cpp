@@ -394,6 +394,12 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         if (past_eval != NO_EVALUATION && static_eval > past_eval) improving = true;
     }
 
+    // Internal Iterative Reduction. Rebel's idea
+    if (tt_move == NO_MOVE) {
+        if (depth >= 4) depth--;
+        if (depth >= 8) depth--;
+    }
+
     // Reverse Futility Pruning
     // If the last move was very bad, such that the static evaluation - a margin is still greater
     // than the opponent's best score, then return the static evaluation.
@@ -406,8 +412,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // If the evaluation is really low, and we cannot improve alpha even with qsearch, then return.
     // If the evaluation is improving then increase the margin because we are less certain that the
     // position is terrible.
-    int razoring_margins[3] = {0, 480, 1320};
-    if (!pv_node && depth <= 2 && static_eval + razoring_margins[depth] + improving * 120 < alpha) {
+    int razoring_margins[3] = {0, 320, 800};
+    if (!in_check && !pv_node && depth <= 2 && static_eval + razoring_margins[depth] + improving * 120 < alpha) {
         SCORE_TYPE return_eval = qsearch(engine, position, alpha, beta, engine.max_q_depth);
         if (return_eval < alpha) return return_eval;
     }
@@ -434,12 +440,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
         if (return_eval >= beta) return beta;
 
-    }
-
-    // Internal Iterative Reduction. Rebel's idea
-    if (tt_move == NO_MOVE) {
-        if (depth >= 4) depth--;
-        if (depth >= 8) depth--;
     }
 
     int legal_moves = 0;

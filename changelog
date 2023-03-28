@@ -4584,6 +4584,7 @@ Elo difference: 4.3 +/- 6.7, LOS: 89.2 %, DrawRatio: 38.5 %
 ```
 
 ### 1.5.2
+Different History table scheme based on piece | to instead of color | from | to
 
 ```
 Score of Altair152 vs Altair151: 208 - 163 - 209  [0.539] 580
@@ -4591,4 +4592,17 @@ Score of Altair152 vs Altair151: 208 - 163 - 209  [0.539] 580
 ...      Altair152 playing Black: 77 - 115 - 97  [0.434] 289
 ...      White vs Black: 246 - 125 - 209  [0.604] 580
 Elo difference: 27.0 +/- 22.6, LOS: 99.0 %, DrawRatio: 36.0 %
+```
+
+
+### 1.5.3
+No checks in Razoring, and lower margins.
+
+```
+Score of Altair153 vs Altair152: 321 - 286 - 393  [0.517] 1000
+...      Altair153 playing White: 208 - 100 - 193  [0.608] 501
+...      Altair153 playing Black: 113 - 186 - 200  [0.427] 499
+...      White vs Black: 394 - 213 - 393  [0.591] 1000
+Elo difference: 12.2 +/- 16.8, LOS: 92.2 %, DrawRatio: 39.3 %
+SPRT: llr 0.66 (22.4%), lbound -2.94, ubound 2.94
 ```
