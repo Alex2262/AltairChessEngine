@@ -474,7 +474,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             if (depth <= 3 && legal_moves > depth * 8) break;
 
             // Quiet Late Move Pruning
-            if (quiet && depth <= 5 && legal_moves > depth * 6) break;
+            if (quiet && legal_moves > static_cast<int>((4 + 1.4 * depth * depth) * (1 - 0.25 * !improving))) break;
 
             // History Pruning
             if (depth <= 8 && move_history_score < (depth + improving) * -12000) continue;

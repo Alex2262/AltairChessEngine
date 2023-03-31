@@ -4619,3 +4619,17 @@ Score of Altair154 vs Altair153: 405 - 366 - 569  [0.515] 1340
 Elo difference: 10.1 +/- 14.1, LOS: 92.0 %, DrawRatio: 42.5 %
 SPRT: llr 0.735 (25.0%), lbound -2.94, ubound 2.94
 ```
+
+
+### 1.5.5
+Different quiet LMP scheme. No more depth constraint, however there is a new formula and it is also
+affected by the improving metric.
+
+```
+Score of Altair155 vs Altair154: 1771 - 1695 - 2394  [0.506] 5860
+...      Altair155 playing White: 1156 - 569 - 1205  [0.600] 2930
+...      Altair155 playing Black: 615 - 1126 - 1189  [0.413] 2930
+...      White vs Black: 2282 - 1184 - 2394  [0.594] 5860
+Elo difference: 4.5 +/- 6.8, LOS: 90.2 %, DrawRatio: 40.9 %
+SPRT: llr 0.823 (28.0%), lbound -2.94, ubound 2.94
+```
