@@ -4633,3 +4633,26 @@ Score of Altair155 vs Altair154: 1771 - 1695 - 2394  [0.506] 5860
 Elo difference: 4.5 +/- 6.8, LOS: 90.2 %, DrawRatio: 40.9 %
 SPRT: llr 0.823 (28.0%), lbound -2.94, ubound 2.94
 ```
+
+
+### 1.5.6
+My idea for threats and supporting eval to be extended to all pieces
+
+
+```
+20+0.2
+Score of Altair156 vs Altair155: 357 - 253 - 482  [0.548] 1092
+...      Altair156 playing White: 263 - 65 - 218  [0.681] 546
+...      Altair156 playing Black: 94 - 188 - 264  [0.414] 546
+...      White vs Black: 451 - 159 - 482  [0.634] 1092
+Elo difference: 33.2 +/- 15.4, LOS: 100.0 %, DrawRatio: 44.1 %
+SPRT: llr 2.95 (100.2%), lbound -2.94, ubound 2.94 - H1 was accepted
+
+5+0.05
+Score of Altair156 vs Altair155: 165 - 145 - 220  [0.519] 530
+...      Altair156 playing White: 128 - 40 - 98  [0.665] 266
+...      Altair156 playing Black: 37 - 105 - 122  [0.371] 264
+...      White vs Black: 233 - 77 - 220  [0.647] 530
+Elo difference: 13.1 +/- 22.6, LOS: 87.2 %, DrawRatio: 41.5 %
+```
+

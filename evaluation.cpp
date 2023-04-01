@@ -78,19 +78,19 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
         // Pawn Protection and Threats
         if (position.board[pos - 9] < BLACK_PAWN) {
-            scores.mid += PAWN_SUPPORT_MID[position.board[pos - 9]];
-            scores.end += PAWN_SUPPORT_END[position.board[pos - 9]];
+            scores.mid += PIECE_SUPPORT_MID[WHITE_PAWN][position.board[pos - 9]];
+            scores.end += PIECE_SUPPORT_END[WHITE_PAWN][position.board[pos - 9]];
         } else if (position.board[pos - 9] < EMPTY) {
-            scores.mid += PAWN_THREAT_MID[position.board[pos - 9] - BLACK_PAWN];
-            scores.end += PAWN_THREAT_END[position.board[pos - 9] - BLACK_PAWN];
+            scores.mid += PIECE_THREAT_MID[WHITE_PAWN][position.board[pos - 9] - BLACK_PAWN];
+            scores.end += PIECE_THREAT_END[WHITE_PAWN][position.board[pos - 9] - BLACK_PAWN];
         }
 
         if (position.board[pos - 11] < BLACK_PAWN) {
-            scores.mid += PAWN_SUPPORT_MID[position.board[pos - 11]];
-            scores.end += PAWN_SUPPORT_END[position.board[pos - 11]];
+            scores.mid += PIECE_SUPPORT_MID[WHITE_PAWN][position.board[pos - 11]];
+            scores.end += PIECE_SUPPORT_END[WHITE_PAWN][position.board[pos - 11]];
         } else if (position.board[pos - 11] < EMPTY) {
-            scores.mid += PAWN_THREAT_MID[position.board[pos - 11] - BLACK_PAWN];
-            scores.end += PAWN_THREAT_END[position.board[pos - 11] - BLACK_PAWN];
+            scores.mid += PIECE_THREAT_MID[WHITE_PAWN][position.board[pos - 11] - BLACK_PAWN];
+            scores.end += PIECE_THREAT_END[WHITE_PAWN][position.board[pos - 11] - BLACK_PAWN];
         }
 
         // Doubled pawns. The pawn we are checking is higher in row compared to
@@ -173,19 +173,19 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
         // Pawn Protection and Threats
         if (position.board[pos + 9] < BLACK_PAWN) {
-            scores.mid += PAWN_THREAT_MID[position.board[pos + 9]];
-            scores.end += PAWN_THREAT_END[position.board[pos + 9]];
+            scores.mid += PIECE_THREAT_MID[WHITE_PAWN][position.board[pos + 9]];
+            scores.end += PIECE_THREAT_END[WHITE_PAWN][position.board[pos + 9]];
         } else if (position.board[pos + 9] < EMPTY) {
-            scores.mid += PAWN_SUPPORT_MID[position.board[pos + 9] - BLACK_PAWN];
-            scores.end += PAWN_SUPPORT_END[position.board[pos + 9] - BLACK_PAWN];
+            scores.mid += PIECE_SUPPORT_MID[WHITE_PAWN][position.board[pos + 9] - BLACK_PAWN];
+            scores.end += PIECE_SUPPORT_END[WHITE_PAWN][position.board[pos + 9] - BLACK_PAWN];
         }
 
         if (position.board[pos + 11] < BLACK_PAWN) {
-            scores.mid += PAWN_THREAT_MID[position.board[pos + 11]];
-            scores.end += PAWN_THREAT_END[position.board[pos + 11]];
+            scores.mid += PIECE_THREAT_MID[WHITE_PAWN][position.board[pos + 11]];
+            scores.end += PIECE_THREAT_END[WHITE_PAWN][position.board[pos + 11]];
         } else if (position.board[pos + 11] < EMPTY) {
-            scores.mid += PAWN_SUPPORT_MID[position.board[pos + 11] - BLACK_PAWN];
-            scores.end += PAWN_SUPPORT_END[position.board[pos + 11] - BLACK_PAWN];
+            scores.mid += PIECE_SUPPORT_MID[WHITE_PAWN][position.board[pos + 11] - BLACK_PAWN];
+            scores.end += PIECE_SUPPORT_END[WHITE_PAWN][position.board[pos + 11] - BLACK_PAWN];
         }
 
         // Doubled pawns. The pawn we are checking is higher in row compared to
@@ -279,7 +279,8 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
             // If we hit a piece of ours, we still add 1 to mobility because
             // that means we are protecting a piece of ours.
             if (occupied < BLACK_PAWN) {
-                mobility += 1;
+                scores.mid += PIECE_SUPPORT_MID[WHITE_KNIGHT][occupied];
+                scores.end += PIECE_SUPPORT_END[WHITE_KNIGHT][occupied];
                 continue;
             }
 
@@ -289,11 +290,12 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
             // Attacking pieces means more pressure which is good
             if (occupied < EMPTY) {
-                mobility += PIECE_ATTACK_MOBILITY[occupied - BLACK_PAWN] - PIECE_ATTACK_MOBILITY_PENALTY[WHITE_KNIGHT];
+                scores.mid += PIECE_THREAT_MID[WHITE_KNIGHT][occupied - BLACK_PAWN];
+                scores.end += PIECE_THREAT_END[WHITE_KNIGHT][occupied - BLACK_PAWN];
                 continue;
             }
 
-            mobility += 2;
+            mobility += 3;
         }
     }
     else {
@@ -310,7 +312,8 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
             // If we hit a piece of ours, we still add 1 to mobility because
             // that means we are protecting a piece of ours.
             if (WHITE_KING < occupied && occupied < EMPTY) {
-                mobility += 1;
+                scores.mid += PIECE_SUPPORT_MID[WHITE_KNIGHT][occupied - BLACK_PAWN];
+                scores.end += PIECE_SUPPORT_END[WHITE_KNIGHT][occupied - BLACK_PAWN];
                 continue;
             }
 
@@ -320,11 +323,12 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
             // Attacking pieces means more pressure which is good
             if (occupied < BLACK_PAWN) {
-                mobility += PIECE_ATTACK_MOBILITY[occupied] - PIECE_ATTACK_MOBILITY_PENALTY[WHITE_KNIGHT];
+                scores.mid += PIECE_THREAT_MID[WHITE_KNIGHT][occupied];
+                scores.end += PIECE_THREAT_END[WHITE_KNIGHT][occupied];
                 continue;
             }
 
-            mobility += 2;
+            mobility += 3;
 
 
         }
@@ -369,7 +373,8 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
                 if (occupied < BLACK_PAWN) {
-                    mobility += 1;
+                    scores.mid += PIECE_SUPPORT_MID[WHITE_BISHOP][occupied];
+                    scores.end += PIECE_SUPPORT_END[WHITE_BISHOP][occupied];
                     break;
                 }
 
@@ -379,12 +384,12 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
                 // Attacking pieces means more pressure which is good
                 if (occupied < EMPTY) {
-                    mobility += PIECE_ATTACK_MOBILITY[occupied - BLACK_PAWN] -
-                                PIECE_ATTACK_MOBILITY_PENALTY[WHITE_BISHOP];
+                    scores.mid += PIECE_THREAT_MID[WHITE_BISHOP][occupied - BLACK_PAWN];
+                    scores.end += PIECE_THREAT_END[WHITE_BISHOP][occupied - BLACK_PAWN];
                     break;
                 }
 
-                mobility += 2;
+                mobility += 3;
             }
         }
     }
@@ -406,7 +411,8 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
                 if (WHITE_KING < occupied && occupied < EMPTY) {
-                    mobility += 1;
+                    scores.mid += PIECE_SUPPORT_MID[WHITE_BISHOP][occupied - BLACK_PAWN];
+                    scores.end += PIECE_SUPPORT_END[WHITE_BISHOP][occupied - BLACK_PAWN];
                     break;
                 }
 
@@ -416,11 +422,12 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
                 // Attacking pieces means more pressure which is good
                 if (occupied < BLACK_PAWN) {
-                    mobility += PIECE_ATTACK_MOBILITY[occupied] - PIECE_ATTACK_MOBILITY_PENALTY[WHITE_BISHOP];
+                    scores.mid += PIECE_THREAT_MID[WHITE_BISHOP][occupied];
+                    scores.end += PIECE_THREAT_END[WHITE_BISHOP][occupied];
                     break;
                 }
 
-                mobility += 2;
+                mobility += 3;
             }
         }
     }
@@ -469,15 +476,16 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
                 if (occupied < BLACK_PAWN) {
-                    mobility += 1;
+                    scores.mid += PIECE_SUPPORT_MID[WHITE_ROOK][occupied];
+                    scores.end += PIECE_SUPPORT_END[WHITE_ROOK][occupied];
                     break;
                 }
 
                 // If we hit an enemy piece, get a score of 2.
                 // An empty square may be even better, so you get a score 3.
                 if (occupied < EMPTY) {
-                    mobility += PIECE_ATTACK_MOBILITY[occupied - BLACK_PAWN] -
-                                PIECE_ATTACK_MOBILITY_PENALTY[WHITE_ROOK];
+                    scores.mid += PIECE_THREAT_MID[WHITE_ROOK][occupied - BLACK_PAWN];
+                    scores.end += PIECE_THREAT_END[WHITE_ROOK][occupied - BLACK_PAWN];
                     break;
                 }
 
@@ -514,14 +522,16 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
                 if (WHITE_KING < occupied && occupied < EMPTY) {
-                    mobility += 1;
+                    scores.mid += PIECE_SUPPORT_MID[WHITE_ROOK][occupied - BLACK_PAWN];
+                    scores.end += PIECE_SUPPORT_END[WHITE_ROOK][occupied - BLACK_PAWN];
                     break;
                 }
 
                 // If we hit an enemy piece, get a score of 2.
                 // An empty square may be even better, so you get a score 3.
                 if (occupied < BLACK_PAWN) {
-                    mobility += PIECE_ATTACK_MOBILITY[occupied] - PIECE_ATTACK_MOBILITY_PENALTY[WHITE_ROOK];
+                    scores.mid += PIECE_THREAT_MID[WHITE_ROOK][occupied];
+                    scores.end += PIECE_THREAT_END[WHITE_ROOK][occupied];
                     break;
                 }
 
@@ -574,15 +584,16 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
                 if (occupied < BLACK_PAWN) {
-                    mobility += 1;
+                    scores.mid += PIECE_SUPPORT_MID[WHITE_QUEEN][occupied];
+                    scores.end += PIECE_SUPPORT_END[WHITE_QUEEN][occupied];
                     break;
                 }
 
                 // If we hit an enemy piece, get a score of 2.
                 // An empty square may be even better, so you get a score 3.
                 if (occupied < EMPTY) {
-                    mobility += PIECE_ATTACK_MOBILITY[occupied - BLACK_PAWN] -
-                                PIECE_ATTACK_MOBILITY_PENALTY[WHITE_QUEEN];
+                    scores.mid += PIECE_THREAT_MID[WHITE_QUEEN][occupied - BLACK_PAWN];
+                    scores.end += PIECE_THREAT_END[WHITE_QUEEN][occupied - BLACK_PAWN];
                     break;
                 }
 
@@ -618,14 +629,16 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
                 if (WHITE_KING < occupied && occupied < EMPTY) {
-                    mobility += 1;
+                    scores.mid += PIECE_SUPPORT_MID[WHITE_QUEEN][occupied - BLACK_PAWN];
+                    scores.end += PIECE_SUPPORT_END[WHITE_QUEEN][occupied - BLACK_PAWN];
                     break;
                 }
 
                 // If we hit an enemy piece, get a score of 2.
                 // An empty square may be even better, so you get a score 3.
                 if (occupied < BLACK_PAWN) {
-                    mobility += PIECE_ATTACK_MOBILITY[occupied] - PIECE_ATTACK_MOBILITY_PENALTY[WHITE_QUEEN];
+                    scores.mid += PIECE_THREAT_MID[WHITE_QUEEN][occupied];
+                    scores.end += PIECE_THREAT_END[WHITE_QUEEN][occupied];
                     break;
                 }
 
