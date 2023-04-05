@@ -4656,3 +4656,17 @@ Score of Altair156 vs Altair155: 165 - 145 - 220  [0.519] 530
 Elo difference: 13.1 +/- 22.6, LOS: 87.2 %, DrawRatio: 41.5 %
 ```
 
+
+### 2.0.1
+Singular Extensions + Multi-cut pruning
+
+
+```
+Score of Altair201 vs Altair156: 664 - 606 - 900  [0.513] 2170
+...      Altair201 playing White: 465 - 182 - 439  [0.630] 1086
+...      Altair201 playing Black: 199 - 424 - 461  [0.396] 1084
+...      White vs Black: 889 - 381 - 900  [0.617] 2170
+Elo difference: 9.3 +/- 11.2, LOS: 94.8 %, DrawRatio: 41.5 %
+SPRT: llr 1.32 (44.8%), lbound -2.94, ubound 2.94
+```
+

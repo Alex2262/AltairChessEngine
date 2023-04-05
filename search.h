@@ -61,7 +61,7 @@ public:
     bool detect_repetition();
 
     short probe_tt_entry(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
-                                 SCORE_TYPE& return_score, MOVE_TYPE& tt_move);
+                         TT_Entry& return_entry);
     void record_tt_entry(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
                          SCORE_TYPE static_eval);
     short probe_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
