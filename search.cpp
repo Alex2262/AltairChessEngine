@@ -577,7 +577,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
             reduction -= is_counter_move * 0.25;
 
-            reduction -= move_history_score / 8000.0;
+            reduction -= move_history_score > 0 ? move_history_score / 7200.0 : move_history_score / 16000.0;
 
             // My idea that in a null move search you can be more aggressive with LMR
             reduction += null_search;

@@ -4670,3 +4670,15 @@ Elo difference: 9.3 +/- 11.2, LOS: 94.8 %, DrawRatio: 41.5 %
 SPRT: llr 1.32 (44.8%), lbound -2.94, ubound 2.94
 ```
 
+
+### 2.0.2
+Increasing reductions less if a move's history score is very bad. Decreasing reductions slightly more
+if a move's history score is good.
+
+```
+Score of Altair202 vs Altair201: 512 - 486 - 842  [0.507] 1840
+...      Altair202 playing White: 378 - 103 - 439  [0.649] 920
+...      Altair202 playing Black: 134 - 383 - 403  [0.365] 920
+...      White vs Black: 761 - 237 - 842  [0.642] 1840
+Elo difference: 4.9 +/- 11.7, LOS: 79.5 %, DrawRatio: 45.8 %
+```
