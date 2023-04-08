@@ -664,7 +664,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                     }
                 }
 
-                // Alpha - Beta cutoff. This is a 'cut node' and we have failed high
+                // Alpha - Beta cutoff. We have failed high here.
                 if (return_eval >= beta) {
                     // Killer Heuristic for move ordering
                     if (quiet) {
