@@ -198,10 +198,11 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         long current_time = std::chrono::duration_cast<std::chrono::milliseconds>
                 (std::chrono::time_point_cast<std::chrono::milliseconds>(time).time_since_epoch()).count();
 
-        if (current_time - engine.start_time >= engine.hard_time_limit ||
-            (engine.max_nodes && engine.node_count >= engine.max_nodes))
+        if (current_time - engine.start_time >= engine.hard_time_limit)
             engine.stopped = true;
     }
+
+    if (engine.max_nodes && engine.node_count >= engine.max_nodes) engine.stopped = true;
 
     SCORE_TYPE tt_value = 0;
     MOVE_TYPE tt_move = NO_MOVE;

@@ -4500,6 +4500,15 @@ Score of Altair149 vs Altair148: 290 - 216 - 331  [0.544] 837
 ...      White vs Black: 338 - 168 - 331  [0.602] 837
 Elo difference: 30.8 +/- 18.3, LOS: 99.9 %, DrawRatio: 39.5 %
 SPRT: llr 2.97 (100.8%), lbound -2.94, ubound 2.94 - H1 was accepted
+
+Rank Name                          Elo     +/-   Games    Wins  Losses   Draws   Points   Score    Draw   White   Black 
+   0 Altair1.4.9                     0      21     856     337     337     182    428.0   50.0%   21.3%   51.2%   48.8% 
+   1 glaurung-w64                  133      44     214     125      47      42    146.0   68.2%   19.6%   69.6%   66.8% 
+   2 4ku-2.0                        29      40     214      88      70      56    116.0   54.2%   26.2%   55.6%   52.8% 
+   3 zevra_popcnt                  -54      42     214      69     102      43     90.5   42.3%   20.1%   42.5%   42.1% 
+   4 wyldchess1.51_popcnt         -105      44     214      55     118      41     75.5   35.3%   19.2%   36.9%   33.6% 
+
+859 of 8000 games finished.
 ```
 
 
@@ -4540,6 +4549,15 @@ Score of Altair150 vs Altair149: 258 - 189 - 350  [0.543] 797
 ...      White vs Black: 309 - 138 - 350  [0.607] 797
 Elo difference: 30.2 +/- 18.1, LOS: 99.9 %, DrawRatio: 43.9 %
 SPRT: llr 2.98 (101.1%), lbound -2.94, ubound 2.94 - H1 was accepted
+
+Rank Name                          Elo     +/-   Games    Wins  Losses   Draws   Points   Score    Draw   White   Black 
+   0 Altair1.5.0                   -17      11    3266    1276    1435     555   1553.5   47.6%   17.0%   47.8%   47.3% 
+   1 glaurung-w64                  188      25     816     551     148     117    609.5   74.7%   14.3%   74.4%   75.0% 
+   2 4ku-2.0                        69      21     816     396     236     184    488.0   59.8%   22.5%   57.4%   62.3% 
+   3 wyldchess1.51_popcnt          -40      22     818     302     395     121    362.5   44.3%   14.8%   46.5%   42.2% 
+   4 zevra_popcnt                 -139      23     816     186     497     133    252.5   30.9%   16.3%   32.6%   29.3% 
+
+3266 of 20000 games finished.
 ```
 
 

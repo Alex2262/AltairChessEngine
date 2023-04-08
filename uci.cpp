@@ -210,17 +210,26 @@ void UCI::uci_loop() {
             std::cout << "id name Altair" << std::endl;
             std::cout << "id author Alexander_Tian" << std::endl;
 
-            std::cout << "option name Hash type spin default " << "64" << " min " << "1" << " max " << 1024
+            std::cout << "option name Hash type spin default " << "64" << " min " << 1 << " max " << 1024
+                      << std::endl;
+
+            std::cout << "option name nodes type spin default " << "0" << " min " << 0 << " max " << 2147483647
                       << std::endl;
 
             std::cout << "uciok" << std::endl;
         }
 
-        else if (tokens[0] == "setoption" && tokens[2] == "Hash" && tokens.size() >= 5) {
-            int mb = std::stoi(tokens[4]);
-            mb = std::min(1024, std::max(1, mb));
-            engine.transposition_table.resize(mb * (1000000 / 24));
-            std::cout << engine.transposition_table.size() << " number of hash entries" << std::endl;
+        else if (tokens[0] == "setoption" && tokens.size() >= 5) {
+            if (tokens[2] == "Hash") {
+                int mb = std::stoi(tokens[4]);
+                mb = std::min(1024, std::max(1, mb));
+                engine.transposition_table.resize(mb * (1000000 / 24));
+                std::cout << engine.transposition_table.size() << " number of hash entries" << std::endl;
+            } else if (tokens[2] == "nodes") {
+                uint64_t max_nodes = std::stoi(tokens[4]);
+                engine.max_nodes = max_nodes;
+                std::cout << "max nodes set to " << engine.max_nodes << std::endl;
+            }
         }
 
         else if (msg == "isready") {
