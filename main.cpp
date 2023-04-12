@@ -5,8 +5,9 @@
 #include "perft.h"
 #include "search.h"
 #include "uci.h"
+#include "bench.h"
 
-int main() {
+int main(int argc, char* argv[]) {
 
     /*Position main_position;
     Engine main_engine;
@@ -37,6 +38,16 @@ int main() {
     UCI main_uci;
 
     main_uci.initialize_uci();
+
+    bool bench_flag = false;
+    for (int i = 0; i < argc; i++) {
+        if (strcmp(argv[i], "bench") == 0) {
+            bench_flag = true;
+        }
+    }
+
+    if (bench_flag) run_bench(main_uci.engine, main_uci.position, 12);
+
     main_uci.uci_loop();
 
 

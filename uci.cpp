@@ -10,6 +10,7 @@
 #include "search.h"
 #include "evaluation.h"
 #include "perft.h"
+#include "bench.h"
 
 void UCI::initialize_uci() {
     position.set_fen(START_FEN);
@@ -55,18 +56,18 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
     else if (self_time > 0) time_amt = self_time / (rate + 6);
     else time_amt = static_cast<double>(engine.hard_time_limit);
 
-    engine.hard_time_limit = static_cast<long>(time_amt * 2.3);
-    engine.soft_time_limit = static_cast<long>(time_amt * 0.7);
+    engine.hard_time_limit = static_cast<uint64_t>(time_amt * 2.3);
+    engine.soft_time_limit = static_cast<uint64_t>(time_amt * 0.7);
 
-    if (engine.hard_time_limit > static_cast<long>(self_time * 0.7)) {
+    if (engine.hard_time_limit > static_cast<uint64_t>(self_time * 0.7)) {
         for (int multiplier = 18; multiplier >= 10; multiplier -= 1) {
-            engine.hard_time_limit = static_cast<long>(time_amt * (multiplier / 10.0));
-            if (engine.hard_time_limit <= static_cast<long>(self_time * 0.7)) break;
+            engine.hard_time_limit = static_cast<uint64_t>(time_amt * (multiplier / 10.0));
+            if (engine.hard_time_limit <= static_cast<uint64_t>(self_time * 0.7)) break;
         }
     }
 
-    if (engine.hard_time_limit > static_cast<long>(movetime) && movetime != 0.0) {
-        engine.hard_time_limit = static_cast<long>(time_amt);
+    if (engine.hard_time_limit > static_cast<uint64_t>(movetime) && movetime != 0.0) {
+        engine.hard_time_limit = static_cast<uint64_t>(time_amt);
     }
 
     std::cout << time_amt << " " << engine.hard_time_limit << " " << engine.soft_time_limit << std::endl;
@@ -157,8 +158,8 @@ void UCI::parse_go() {
         return;
     }
     if (infinite || (d && tokens.size() == 3)) {
-        engine.hard_time_limit = 86400000;
-        engine.soft_time_limit = 86400000;
+        engine.hard_time_limit = TIME_INF;
+        engine.soft_time_limit = TIME_INF;
     }
     else {
         double self_time = (position.side == 0) ? wtime : btime;
@@ -247,6 +248,10 @@ void UCI::uci_loop() {
 
         else if (tokens[0] == "go") {
             parse_go();
+        }
+
+        else if (tokens[0] == "bench") {
+            run_bench(engine, position, 12);
         }
     }
 }

@@ -16,6 +16,7 @@
 #define USE_HASH_MOVE       1
 #define RETURN_HASH_SCORE   2
 
+#define TIME_INF            86400000
 #define SCORE_INF           1000000
 #define NO_EVALUATION       500000
 #define MATE_SCORE          100000
@@ -65,7 +66,6 @@
 #define C8      23
 #define G1      97
 #define G8      27
-
 
 typedef uint16_t PIECE_TYPE;
 typedef int16_t SQUARE_TYPE;

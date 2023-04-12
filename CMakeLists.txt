@@ -24,4 +24,4 @@ add_executable(AltairChess
         search.cpp
         search.h
         useful.cpp
-        useful.h uci.cpp uci.h zobrist.h)
+        useful.h uci.cpp uci.h zobrist.h bench.cpp bench.h)
