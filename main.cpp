@@ -1,9 +1,5 @@
 
-#include <iostream>
-#include <chrono>
-#include "position.h"
-#include "perft.h"
-#include "search.h"
+#include <cstring>
 #include "uci.h"
 #include "bench.h"
 
