@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <cstring>
 #include "bench.h"
 
 
