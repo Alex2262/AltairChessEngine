@@ -210,10 +210,13 @@ void UCI::uci_loop() {
             std::cout << "id name Altair" << std::endl;
             std::cout << "id author Alexander_Tian" << std::endl;
 
-            std::cout << "option name Hash type spin default " << "64" << " min " << 1 << " max " << 1024
+            std::cout << "option name Hash type spin default " << 64 << " min " << 1 << " max " << 1024
                       << std::endl;
 
-            std::cout << "option name nodes type spin default " << "0" << " min " << 0 << " max " << 2147483647
+            std::cout << "option name nodes type spin default " << 0 << " min " << 0 << " max " << 2147483647
+                      << std::endl;
+
+            std::cout << "option name Threads type spin default " << 1 << " min " << 1 << " max " << 1
                       << std::endl;
 
             std::cout << "uciok" << std::endl;
