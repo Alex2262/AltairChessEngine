@@ -4700,3 +4700,43 @@ Score of Altair202 vs Altair201: 512 - 486 - 842  [0.507] 1840
 ...      White vs Black: 761 - 237 - 842  [0.642] 1840
 Elo difference: 4.9 +/- 11.7, LOS: 79.5 %, DrawRatio: 45.8 %
 ```
+
+### 2.0.3
+RFP changes
+
+```
+info multipv 1 depth 1 seldepth 1 score cp 72 time 1 nodes 26 nps 26000 pv e2e3 
+info multipv 1 depth 2 seldepth 2 score cp 27 time 1 nodes 122 nps 122000 pv e2e3 e7e6 
+info multipv 1 depth 3 seldepth 3 score cp 52 time 1 nodes 228 nps 228000 pv e2e3 e7e6 b1c3 
+info multipv 1 depth 4 seldepth 4 score cp 26 time 7 nodes 460 nps 65714 pv e2e3 e7e6 b1c3 b8c6 
+info multipv 1 depth 5 seldepth 5 score cp 34 time 9 nodes 821 nps 91222 pv e2e3 e7e6 b1c3 b8c6 g1f3 
+info multipv 1 depth 6 seldepth 6 score cp 28 time 12 nodes 1548 nps 129000 pv e2e3 e7e6 b1c3 b8c6 g1f3 g8f6 
+info multipv 1 depth 7 seldepth 9 score cp 27 time 40 nodes 8698 nps 217450 pv e2e4 d7d5 e4d5 g8f6 b1c3 f6d5 g1f3 
+info multipv 1 depth 8 seldepth 10 score cp 22 time 68 nodes 16882 nps 248264 pv e2e4 d7d5 e4d5 g8f6 b1c3 f6d5 d2d4 d5c3 
+info multipv 1 depth 9 seldepth 11 score cp 49 time 85 nodes 29130 nps 342705 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 
+info multipv 1 depth 10 seldepth 12 score cp 46 time 105 nodes 50463 nps 480600 pv e2e4 d7d5 e4d5 e7e6 d5e6 c8e6 d2d4 b8c6 c2c3 g8f6 
+info multipv 1 depth 11 seldepth 14 score cp 51 time 121 nodes 70415 nps 581942 pv e2e4 d7d5 e4d5 c7c6 g1f3 c6d5 d2d4 b8c6 f1e2 g8f6 e1g1 
+info multipv 1 depth 12 seldepth 15 score cp 47 time 148 nodes 106979 nps 722831 pv e2e4 d7d5 e4d5 c7c6 g1f3 c6d5 d2d4 g8f6 f1e2 b8c6 
+info multipv 1 depth 13 seldepth 17 score cp 29 time 241 nodes 230646 nps 957037 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 
+info multipv 1 depth 14 seldepth 17 score cp 45 time 295 nodes 305238 nps 1034705 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 d2d4 e5d4 f3d4 f8b4 d4c6 d7c6 d1d8 e8d8 e4e5 
+info multipv 1 depth 15 seldepth 19 score cp 37 time 412 nodes 466247 nps 1131667 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 d2d4 e5d4 f3d4 f8b4 d4c6 d7c6 d1d8 e8d8 c1g5 h8e8 
+info multipv 1 depth 16 seldepth 20 score cp 37 time 523 nodes 618445 nps 1182495 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 
+info multipv 1 depth 17 seldepth 21 score cp 22 time 878 nodes 1099028 nps 1251740 pv e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5c6 d7c6 e1g1 c8g4 d2d3 d8f6 b1c3 g4f3 d1f3 f6f3 g2f3 
+info multipv 1 depth 18 seldepth 23 score cp 33 time 1199 nodes 1536831 nps 1281760 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 c6d4 d1d4 g8e7 b1c3 e7c6 d4e3 
+info multipv 1 depth 19 seldepth 23 score cp 32 time 1553 nodes 2020915 nps 1301297 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 c6d4 d1d4 g8e7 b1c3 e7c6 d4e3 f8d6 f1c4 c6e5 c4e2 e8g8 f2f4 
+info multipv 1 depth 20 seldepth 25 score cp 31 time 2095 nodes 2773330 nps 1323785 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 c6d4 d1d4 g8e7 b1c3 e7c6 d4e3 f8d6 f1c4 c6e5 c4e2 e8g8 e1g1 c7c6 
+info multipv 1 depth 21 seldepth 27 score cp 29 time 5565 nodes 7449321 nps 1338602 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 c2c3 d4c3 b1c3 a7a6 f1d3 d7d6 e1g1 g8f6 c1f4 f8e7 e4e5 d6e5 f3e5 e8g8 e5c6 
+info multipv 1 depth 22 seldepth 27 score cp 29 time 6597 nodes 8830321 nps 1338535 pv e2e4 e7e5 
+info multipv 1 depth 23 seldepth 30 score cp 29 time 7906 nodes 10580385 nps 1338272 pv e2e4 e7e5 g1f3 b8c6 
+info multipv 1 depth 24 seldepth 30 score cp 46 time 9469 nodes 12663125 nps 1337324 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6 d4c6 b7c6 e4e5 d8e7 d1e2 f6d5 c2c4 d5b6 b1c3 d7d6 e5d6 e7e2 f1e2 f8d6 c3e4 c8f5 e4d6 c7d6 
+info multipv 1 depth 25 seldepth 30 score cp 46 time 11234 nodes 15015763 nps 1336635 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6 d4c6 
+info multipv 1 depth 25 seldepth 32 score cp 46 time 45000 nodes 60719117 nps 1349313 pv e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4 g8f6 d4c6 
+bestmove e2e4
+
+Score of Altair203 vs Altair202: 357 - 279 - 405  [0.537] 1041
+...      Altair203 playing White: 243 - 81 - 196  [0.656] 520
+...      Altair203 playing Black: 114 - 198 - 209  [0.419] 521
+...      White vs Black: 441 - 195 - 405  [0.618] 1041
+Elo difference: 26.1 +/- 16.5, LOS: 99.9 %, DrawRatio: 38.9 %
+SPRT: llr 2.98 (101.3%), lbound -2.94, ubound 2.94 - H1 was accepted
+```
