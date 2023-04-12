@@ -3,7 +3,6 @@
 //
 
 #include <iostream>
-#include <unistd.h>
 #include "uci.h"
 #include "useful.h"
 #include "move.h"
