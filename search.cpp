@@ -338,7 +338,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     position.set_state(engine.search_ply, engine.fifty_move, static_eval);
 
     // TT probing
-
     TT_Entry tt_entry{};
     short tt_return_type = position.state_stack[engine.search_ply].excluded_move != NO_MOVE ? NO_HASH_ENTRY :
                            engine.probe_tt_entry(position.hash_key, alpha, beta, depth, tt_entry);
