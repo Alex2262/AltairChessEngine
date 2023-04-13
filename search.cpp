@@ -195,11 +195,12 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Check time and max nodes
     if (engine.current_search_depth >= engine.min_depth && (engine.node_count & 2047) == 0 ) {
         auto time = std::chrono::high_resolution_clock::now();
-        long current_time = std::chrono::duration_cast<std::chrono::milliseconds>
+        uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>
                 (std::chrono::time_point_cast<std::chrono::milliseconds>(time).time_since_epoch()).count();
 
-        if (current_time - engine.start_time >= engine.hard_time_limit)
+        if (current_time - engine.start_time >= engine.hard_time_limit) {
             engine.stopped = true;
+        }
     }
 
     if (engine.max_nodes && engine.node_count >= engine.max_nodes) engine.stopped = true;
@@ -754,8 +755,8 @@ void iterative_search(Engine& engine, Position& position) {
 
         auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
                                                                                                         - start_time);
-        long elapsed_time = ms_int.count();
-        elapsed_time = std::max(elapsed_time, 1L);
+        uint64_t elapsed_time = ms_int.count();
+        elapsed_time = std::max(elapsed_time, 1ULL);
 
         if (running_depth >= engine.min_depth) {
             if (elapsed_time >= engine.soft_time_limit) engine.stopped = true;
