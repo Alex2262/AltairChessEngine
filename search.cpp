@@ -545,7 +545,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         engine.repetition_table[engine.game_ply] = position.hash_key;
         position.side ^= 1;
 
-        SCORE_TYPE return_eval;
+        SCORE_TYPE return_eval = -SCORE_INF;
 
         PLY_TYPE new_depth = depth - 1 + extension;
 
@@ -605,7 +605,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         if (full_depth_zero_window)
             return_eval = -negamax(engine, position, -alpha - 1, -alpha, new_depth, true);
 
-        if (pv_node && ((return_eval > alpha && return_eval < beta) || legal_moves == 0))
+        if (return_eval == -SCORE_INF || (pv_node && ((return_eval > alpha && return_eval < beta) || legal_moves == 0)))
             return_eval = -negamax(engine, position, -beta, -alpha, new_depth, true);
 
         position.side ^= 1;
