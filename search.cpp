@@ -756,7 +756,7 @@ void iterative_search(Engine& engine, Position& position) {
         auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
                                                                                                         - start_time);
         uint64_t elapsed_time = ms_int.count();
-        elapsed_time = std::max(elapsed_time, 1ULL);
+        elapsed_time = std::max<uint64_t>(elapsed_time, 1);
 
         if (running_depth >= engine.min_depth) {
             if (elapsed_time >= engine.soft_time_limit) engine.stopped = true;

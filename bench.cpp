@@ -33,8 +33,8 @@ void run_bench(Engine& engine, Position& position, PLY_TYPE depth) {
 
     auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
                                                                         - start_time);
-    long elapsed_time = ms_int.count();
-    elapsed_time = std::max(elapsed_time, 1L);
+    uint64_t elapsed_time = ms_int.count();
+    elapsed_time = std::max<uint64_t>(elapsed_time, 1);
 
     std::cout << "info time " << elapsed_time << std::endl;
     std::cout << total_nodes << " nodes " << int(total_nodes / (elapsed_time / 1000.0)) << " nps " << std::endl;
