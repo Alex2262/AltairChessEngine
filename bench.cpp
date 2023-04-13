@@ -23,6 +23,7 @@ void run_bench(Engine& engine, Position& position, PLY_TYPE depth) {
     uint64_t total_nodes = 0;
     for (std::string fen : fens) {
         std::cout << "running fen: " << fen << std::endl;
+        engine.new_game();
         position.set_fen(fen);
         iterative_search(engine, position);
 
