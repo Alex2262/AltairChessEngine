@@ -718,22 +718,48 @@ void iterative_search(Engine& engine, Position& position) {
     std::string best_pv;
     SCORE_TYPE best_score = 0;
 
+    PLY_TYPE aspiration_depth_count = 1;
+    int aspiration_retries = 0;
+
     while (running_depth <= engine.max_depth) {
         engine.current_search_depth = running_depth;
         SCORE_TYPE return_eval = negamax(engine, position, alpha, beta, running_depth, false);
 
         // Reset the window
         if (return_eval <= alpha || return_eval >= beta) {
-            alpha = -SCORE_INF;
-            beta = SCORE_INF;
+            std::cout << running_depth << " " << aspiration_retries << " " << aspiration_window << std::endl;
+            std::cout << "ab: " << alpha << " " << beta << std::endl;
             aspiration_window = STARTING_WINDOW;
+            if (aspiration_retries == 0) {
+                alpha -= STARTING_WINDOW;
+                beta += STARTING_WINDOW;
+                aspiration_depth_count--;
+            } else if (aspiration_retries == 1) {
+                alpha -= STARTING_WINDOW * 4;
+                beta += STARTING_WINDOW * 4;
+                aspiration_depth_count = std::max<PLY_TYPE>(running_depth - 5, 1);
+            } else if (aspiration_retries == 2){
+                alpha -= STARTING_WINDOW * 10;
+                beta += STARTING_WINDOW * 10;
+                aspiration_depth_count = std::max<PLY_TYPE>(running_depth - 12, 1);
+            } else {
+                alpha = -SCORE_INF;
+                beta = SCORE_INF;
+                aspiration_depth_count = 1;
+            }
+            aspiration_retries++;
             continue;
         }
 
+        aspiration_retries = 0;
+
         // Adjust the window
-        alpha = return_eval - aspiration_window;
-        beta = return_eval + aspiration_window;
-        aspiration_window -= 20 / static_cast<int>(running_depth + 3);
+        if (running_depth > 6) {
+            alpha = return_eval - aspiration_window;
+            beta = return_eval + aspiration_window;
+            aspiration_window -= 20 / static_cast<int>(aspiration_depth_count + 3);
+            aspiration_depth_count++;
+        }
 
         std::string pv_line;
         for (int c = 0; c < engine.pv_length[0]; c++) {
@@ -753,7 +779,7 @@ void iterative_search(Engine& engine, Position& position) {
         auto end_time = std::chrono::high_resolution_clock::now();
 
         auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
-                                                                                                        - start_time);
+                                                                            - start_time);
         uint64_t elapsed_time = ms_int.count();
         elapsed_time = std::max<uint64_t>(elapsed_time, 1);
 
@@ -763,7 +789,7 @@ void iterative_search(Engine& engine, Position& position) {
 
         if (abs(best_score) >= MATE_BOUND) {
             SCORE_TYPE score = best_score >= MATE_BOUND ?
-                    (MATE_SCORE - best_score) / 2 + 1: (-MATE_SCORE - best_score) / 2;
+                               (MATE_SCORE - best_score) / 2 + 1: (-MATE_SCORE - best_score) / 2;
 
             std::cout << "info multipv 1 depth " << running_depth << " seldepth " << engine.selective_depth
                       << " score mate " << score << " time " << elapsed_time
