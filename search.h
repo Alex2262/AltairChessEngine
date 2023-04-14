@@ -49,7 +49,7 @@ public:
     // TT_Entry transposition_table[MAX_TT_SIZE]{};
     std::vector<TT_Entry> transposition_table;
 
-    HASH_TYPE repetition_table[TOTAL_MAX_DEPTH+250] = {0};
+    HASH_TYPE repetition_table[TOTAL_MAX_DEPTH+600] = {0};
 
     bool stopped = true;
     bool terminated = true;
