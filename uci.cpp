@@ -97,9 +97,9 @@ void UCI::parse_position() {
 
     else return;
 
-    if (tokens.size() <= next_idx || tokens[next_idx] != "moves") return;
+    if (static_cast<int>(tokens.size()) <= next_idx || tokens[next_idx] != "moves") return;
 
-    for (int i = next_idx + 1; i < tokens.size(); i++) {
+    for (int i = next_idx + 1; i < static_cast<int>(tokens.size()); i++) {
         // std::cout << tokens[i] << std::endl;
         MOVE_TYPE move = get_move_from_uci(position, tokens[i]);
         last_move = move;
@@ -125,12 +125,12 @@ void UCI::parse_go() {
     long movestogo = 0;
     bool infinite = false;
 
-    for (int i = 1; i < tokens.size(); i += 2) {
+    for (int i = 1; i < static_cast<int>(tokens.size()); i += 2) {
         std::string type = tokens[i];
 
         uint64_t value = 0;
 
-        if (tokens.size() > i + 1) value = std::stoi(tokens[i + 1]);
+        if (static_cast<int>(tokens.size()) > i + 1) value = std::stoi(tokens[i + 1]);
 
         if (type == "depth") d = static_cast<PLY_TYPE>(value);
 

@@ -1008,7 +1008,7 @@ void get_capture_scores(const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_T
 
 
 void sort_next_move(std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores, int current_count) {
-    for (int next_count = current_count; next_count < moves.size(); next_count++) {
+    for (int next_count = current_count; next_count < static_cast<int>(moves.size()); next_count++) {
         if (move_scores[current_count] < move_scores[next_count]) {
             MOVE_TYPE current_move = moves[current_count];
             moves[current_count] = moves[next_count];

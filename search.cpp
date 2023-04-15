@@ -237,7 +237,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     SCORE_TYPE best_score = static_eval;
     MOVE_TYPE best_move = NO_MOVE;
 
-    for (int move_index = 0; move_index < position.moves[engine.search_ply].size(); move_index++) {
+    for (int move_index = 0; move_index < static_cast<int>(position.moves[engine.search_ply].size()); move_index++) {
 
         sort_next_move(position.moves[engine.search_ply], position.move_scores[engine.search_ply], move_index);
         MOVE_TYPE move = position.moves[engine.search_ply][move_index];
@@ -467,7 +467,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     MOVE_TYPE best_move = NO_MOVE;
 
     // Iterate through moves and recursively search with Negamax
-    for (int move_index = 0; move_index < position.moves[engine.search_ply].size(); move_index++) {
+    for (int move_index = 0; move_index < static_cast<int>(position.moves[engine.search_ply].size()); move_index++) {
 
         // Sort the next move. If an early move causes a cutoff then we have saved time
         // by only sorting one or a few moves rather than the whole list.

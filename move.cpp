@@ -52,7 +52,7 @@ MOVE_TYPE get_move_from_uci(const Position& position, std::string uci) {
 
     if (selected % BLACK_PAWN == WHITE_PAWN) {
         if ((21 <= target_square && target_square <= 28) ||
-             91 <= target_square && target_square <= 98) move_type = 3;
+            (91 <= target_square && target_square <= 98)) move_type = 3;
         else if (target_square == position.ep_square) move_type = 1;
     }
 
