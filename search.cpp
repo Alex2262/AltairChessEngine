@@ -725,8 +725,6 @@ void iterative_search(Engine& engine, Position& position) {
 
         // Reset the window
         if (return_eval <= alpha || return_eval >= beta) {
-            std::cout << running_depth << " " << aspiration_retries << " " << aspiration_window << std::endl;
-            std::cout << "ab: " << alpha << " " << beta << std::endl;
             aspiration_window = STARTING_WINDOW;
             if (aspiration_retries == 0) {
                 alpha -= STARTING_WINDOW;
