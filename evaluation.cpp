@@ -934,8 +934,14 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
             else score += engine.history_moves
                      [selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
-            if (move_type == MOVE_TYPE_PROMOTION) score += 18000 +
-                                                           5 * MVV_LVA_VALUES[get_promotion_piece(move)];
+            if (move_type == MOVE_TYPE_PROMOTION) {
+                PIECE_TYPE promotion_piece = get_promotion_piece(move);
+                if (promotion_piece == WHITE_QUEEN) {
+                    score += 30000;
+                } else {
+                    score = score - 2000 + MVV_LVA_VALUES[promotion_piece];
+                }
+            }
             else if (move_type == MOVE_TYPE_EP) score += 20050;
             else if (move_type == MOVE_TYPE_CASTLE) score += 1200;
         }
@@ -956,8 +962,14 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
             else if (engine.killer_moves[1][engine.search_ply] == move) score += 11000;
             else score += engine.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
-            if (move_type == MOVE_TYPE_PROMOTION) score += 18000 +
-                                                           5 * MVV_LVA_VALUES[get_promotion_piece(move) - BLACK_PAWN];
+            if (move_type == MOVE_TYPE_PROMOTION) {
+                PIECE_TYPE promotion_piece = get_promotion_piece(move) - BLACK_PAWN;
+                if (promotion_piece == WHITE_QUEEN) {
+                    score += 30000;
+                } else {
+                    score = score - 2000 + MVV_LVA_VALUES[promotion_piece];
+                }
+            }
             else if (move_type == MOVE_TYPE_EP) score += 20050;
             else if (move_type == MOVE_TYPE_CASTLE) score += 1200;
         }

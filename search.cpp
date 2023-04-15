@@ -480,7 +480,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
 
         // Pruning
-        if (!pv_node && get_move_type(move) != MOVE_TYPE_PROMOTION && legal_moves > 0) {
+        if (!pv_node && legal_moves > 0) {
             // Late Move Pruning
             if (depth <= 3 && legal_moves > depth * 8) break;
 
