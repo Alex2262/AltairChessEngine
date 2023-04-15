@@ -507,8 +507,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // We have to prove that the tt_move is singular, meaning that it is the only move that can fail high
         // and the rest fail low. We do a verification search with a smaller window and reduced depth to verify this.
         // If it is singular, we can extend the move.
-
-
         if (!root &&
             depth > 9 &&
             move == tt_move &&
