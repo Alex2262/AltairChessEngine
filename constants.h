@@ -152,7 +152,7 @@ constexpr short BLACK_ATK_INCREMENTS[6][8] = {
 constexpr char PIECE_MATCHER[12] = {'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k'};
 constexpr int GAME_PHASE_SCORES[6] = {0, 1, 1, 2, 4, 0};
 
-constexpr int MVV_LVA_VALUES[6] = { 109, 429, 403, 602,1403,   0};
+constexpr int MVV_LVA_VALUES[6] = {  99, 399, 405, 606,1449,   0};
 
 constexpr SCORE_TYPE MAX_MINOR_PIECE_VALUE_MID = 405;
 constexpr SCORE_TYPE PIECE_VALUES_MID[6] = {  99, 399, 405, 606,1449,   0};
