@@ -4740,3 +4740,24 @@ Score of Altair203 vs Altair202: 357 - 279 - 405  [0.537] 1041
 Elo difference: 26.1 +/- 16.5, LOS: 99.9 %, DrawRatio: 38.9 %
 SPRT: llr 2.98 (101.3%), lbound -2.94, ubound 2.94 - H1 was accepted
 ```
+
+
+### 2.0.4
+Aspiration Window Improvements
+
+```
+ELO   | 18.29 +- 9.98 (95%)
+SPRT  | 5.0+0.06s Threads=1 Hash=16MB
+LLR   | 3.04 (-2.94, 2.94) [0.00, 6.15]
+GAMES | N: 2624 W: 808 L: 670 D: 1146
+```
+
+### 2.0.5
+Move ordering Improvements
+
+```
+ELO   | 6.04 +- 4.55 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.98 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 12200 W: 3435 L: 3223 D: 5542
+```
