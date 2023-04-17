@@ -232,7 +232,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     position.set_state(engine.search_ply, engine.fifty_move, static_eval);
 
     position.get_pseudo_legal_captures(engine.search_ply);
-    get_capture_scores(position.moves[engine.search_ply], position.move_scores[engine.search_ply], tt_move);
+    get_capture_scores(engine, position.moves[engine.search_ply], position.move_scores[engine.search_ply], tt_move);
 
     SCORE_TYPE best_score = static_eval;
     MOVE_TYPE best_move = NO_MOVE;
@@ -273,6 +273,12 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             if (return_eval > alpha) {
                 alpha = return_eval;
                 tt_hash_flag = HASH_FLAG_EXACT;
+
+                // Captures History Heuristic for move ordering
+                SCORE_TYPE bonus = 2;
+                update_history_entry(engine.capture_history[get_selected(move)]
+                                    [get_occupied(move)][MAILBOX_TO_STANDARD[get_target_square(move)]],
+                                    bonus);
 
                 if (return_eval >= beta) {
                     engine.record_tt_entry_q(position.hash_key, best_score, HASH_FLAG_BETA, best_move, static_eval  );
@@ -651,7 +657,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 // Deduct bonus for moves that don't raise alpha
                 for (int failed_move_index = 0; failed_move_index < move_index; failed_move_index++) {
                     MOVE_TYPE temp_move = position.moves[engine.search_ply][failed_move_index];
-                    if (!get_is_capture(temp_move)) {
+                    if (!get_is_capture(temp_move) && get_move_type(move) != MOVE_TYPE_EP) {
                         update_history_entry(engine.history_moves
                                              [get_selected(temp_move)]
                                              [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
