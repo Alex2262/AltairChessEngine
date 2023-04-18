@@ -303,7 +303,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         if (engine.search_ply >= MAX_AB_DEPTH - 1) return evaluate(position);
 
         // Detect repetitions and fifty move rule
-        if (engine.fifty_move >= 100 || engine.detect_repetition()) return 0;
+        if (engine.fifty_move >= 100 || engine.detect_repetition()) return 3 - static_cast<int>(engine.node_count % 7);
 
         // Mate Distance Pruning from CPW
         SCORE_TYPE mating_value = MATE_SCORE - engine.search_ply;
