@@ -979,7 +979,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
 }
 
 
-SCORE_TYPE score_capture(MOVE_TYPE move, MOVE_TYPE tt_move) {
+SCORE_TYPE score_capture(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move) {
 
     if (move == tt_move) return 100000;
 
@@ -995,6 +995,8 @@ SCORE_TYPE score_capture(MOVE_TYPE move, MOVE_TYPE tt_move) {
         score += MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN];
     }
 
+    score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
+
     return score;
 }
 
@@ -1009,12 +1011,12 @@ void get_move_scores(const Engine& engine, const std::vector<MOVE_TYPE>& moves, 
 }
 
 
-void get_capture_scores(const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+void get_capture_scores(const Engine& engine, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
                         MOVE_TYPE tt_move) {
     move_scores.clear();
 
     for (MOVE_TYPE move : moves) {
-        move_scores.push_back(score_capture(move, tt_move));
+        move_scores.push_back(score_capture(engine, move, tt_move));
     }
 }
 
