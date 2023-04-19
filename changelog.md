@@ -4761,3 +4761,22 @@ SPRT  | 8.0+0.08s Threads=1 Hash=16MB
 LLR   | 2.98 (-2.94, 2.94) [0.00, 5.00]
 GAMES | N: 12200 W: 3435 L: 3223 D: 5542
 ```
+
+### 2.0.6
+Capture history for qsearch
+
+```
+ELO   | 8.87 +- 5.97 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.97 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 7248 W: 2113 L: 1928 D: 3207
+```
+
+### 2.0.7
+Slightly randomized draw scores as an incentive for better search tree exploration
+```
+ELO   | 2.03 +- 4.69 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | -0.01 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 11984 W: 3455 L: 3385 D: 5144
+```
