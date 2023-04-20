@@ -16,6 +16,21 @@ struct TT_Entry {
     short flag = 0;
 };
 
+
+struct Search_Results {
+    int num_searches = 1;
+    uint64_t node_count = 0;
+
+    uint64_t qsearch_fail_highs[FAIL_HIGH_STATS_COUNT]{};
+    uint64_t search_fail_highs[FAIL_HIGH_STATS_COUNT]{};
+    uint64_t search_fail_high_types[6]{};
+
+    uint64_t alpha_raised_count = 0;
+    uint64_t search_alpha_raises[ALPHA_RAISE_STATS_COUNT]{};
+
+    PLY_TYPE depth_reached = 0;
+};
+
 class Engine {
 
 public:
@@ -51,6 +66,9 @@ public:
 
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH+600] = {0};
 
+    bool show_stats = true;
+    Search_Results search_results{};
+
     bool stopped = true;
     bool terminated = true;
 
@@ -81,5 +99,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 void iterative_search(Engine& engine, Position& position);
 
 void initialize_lmr_reductions();
+
+void print_statistics(Search_Results& res);
 
 #endif //ANTARESCHESSENGINE_SEARCH_H

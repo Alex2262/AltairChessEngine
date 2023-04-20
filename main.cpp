@@ -43,12 +43,11 @@ int main(int argc, char* argv[]) {
     }
 
     if (bench_flag) {
-        run_bench(main_uci.engine, main_uci.position, 12);
+        run_bench(main_uci.engine, main_uci.position, BENCH_DEPTH);
         return 0;
     }
 
     main_uci.uci_loop();
-
 
     return 0;
 }

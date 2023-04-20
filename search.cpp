@@ -9,7 +9,6 @@
 #include <cmath>
 #include <algorithm>
 #include <cassert>
-#include <unordered_set>
 #include "search.h"
 #include "evaluation.h"
 #include "move.h"
@@ -51,6 +50,13 @@ void Engine::reset() {
     //std::memset(history_moves, 0, sizeof(history_moves));
     //std::memset(capture_history, 0, sizeof(capture_history));
     std::memset(counter_moves, 0, sizeof(counter_moves));
+
+    if (show_stats) {
+        search_results.alpha_raised_count = 0;
+        std::memset(search_results.qsearch_fail_highs, 0, sizeof(search_results.qsearch_fail_highs));
+        std::memset(search_results.search_fail_highs, 0, sizeof(search_results.search_fail_highs));
+        std::memset(search_results.search_fail_high_types, 0, sizeof(search_results.search_fail_high_types));
+    }
 }
 
 
@@ -237,6 +243,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     SCORE_TYPE best_score = static_eval;
     MOVE_TYPE best_move = NO_MOVE;
 
+    int legal_moves = 0;
     for (int move_index = 0; move_index < static_cast<int>(position.moves[engine.search_ply].size()); move_index++) {
 
         sort_next_move(position.moves[engine.search_ply], position.move_scores[engine.search_ply], move_index);
@@ -266,6 +273,8 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
         if (engine.stopped) return 0;
 
+        legal_moves++;
+
         if (return_eval > best_score) {
             best_score = return_eval;
             best_move = move;
@@ -281,6 +290,12 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                                     bonus);
 
                 if (return_eval >= beta) {
+                    if (engine.show_stats) {
+                        if (legal_moves <= FAIL_HIGH_STATS_COUNT) {
+                            engine.search_results.qsearch_fail_highs[legal_moves - 1]++;
+                        }
+                    }
+
                     engine.record_tt_entry_q(position.hash_key, best_score, HASH_FLAG_BETA, best_move, static_eval  );
                     return best_score;
                 }
@@ -670,8 +685,35 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                     }
                 }
 
+                if (engine.show_stats) {
+                    engine.search_results.alpha_raised_count++;
+                    if (legal_moves <= ALPHA_RAISE_STATS_COUNT) {
+                        engine.search_results.search_alpha_raises[legal_moves-1]++;
+                    }
+                }
+
                 // Alpha - Beta cutoff. We have failed high here.
                 if (return_eval >= beta) {
+                    if (engine.show_stats) {
+                        if (legal_moves <= FAIL_HIGH_STATS_COUNT) {
+                            engine.search_results.search_fail_highs[legal_moves-1]++;
+                        }
+                        uint16_t move_type = get_move_type(move);
+
+                        if (move == tt_move) engine.search_results.search_fail_high_types[0]++;
+                        else if (move == engine.killer_moves[0][engine.search_ply])
+                            engine.search_results.search_fail_high_types[1]++;
+                        else if (move == engine.killer_moves[1][engine.search_ply])
+                            engine.search_results.search_fail_high_types[2]++;
+                        else if (last_move != NO_MOVE &&
+                            engine.counter_moves[position.side][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
+                            [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move)
+                            engine.search_results.search_fail_high_types[3]++;
+                        else if (quiet) engine.search_results.search_fail_high_types[4]++;
+                        else engine.search_results.search_fail_high_types[5]++;
+
+                    }
+
                     // Killer Heuristic for move ordering
                     if (quiet) {
                         engine.killer_moves[1][engine.search_ply] = engine.killer_moves[0][engine.search_ply];
@@ -812,7 +854,79 @@ void iterative_search(Engine& engine, Position& position) {
         running_depth++;
     }
 
+    engine.search_results.depth_reached = running_depth;
+    engine.search_results.node_count = engine.node_count;
+
     std::cout << "bestmove " << split(best_pv, ' ')[0] << std::endl;
 
     engine.terminated = true;
+}
+
+
+void print_statistics(Search_Results& res) {
+
+
+    std::cout << "------------------- SEARCH STATISTICS -------------------\n\n\n";
+
+    std::cout << "Total Nodes Searched: " << res.node_count << "\n";
+    std::cout << "Average Nodes Searched: " << res.node_count / res.num_searches << "\n\n";
+
+    std::cout << "Average Branching Factor: " <<
+              pow(res.node_count / res.num_searches, 1.0/res.depth_reached) << "\n\n";
+
+    std::cout << "Average # of times alpha is raised per node: " <<
+              static_cast<double>(res.alpha_raised_count) / static_cast<double>(res.node_count)
+              << "\n\n";
+
+    uint64_t search_total = 0;
+    for (unsigned long long e : res.search_alpha_raises) {
+        search_total += e;
+    }
+
+    for (int i = 0; i < ALPHA_RAISE_STATS_COUNT; i++) {
+        uint64_t e = res.search_alpha_raises[i];
+        std::cout << "search alpha raises at index " << i << ": " << double(e) / double(search_total) * 100 << "%" << std::endl;
+    }
+
+    std::cout << "\n";
+
+    uint64_t qsearch_total = 0;
+    search_total = 0;
+    for (int i = 0; i < FAIL_HIGH_STATS_COUNT; i++) {
+        uint64_t qe = res.qsearch_fail_highs[i];
+        uint64_t e = res.search_fail_highs[i];
+        qsearch_total += qe;
+        search_total += e;
+    }
+    for (int i = 0; i < FAIL_HIGH_STATS_COUNT; i++) {
+        uint64_t e = res.qsearch_fail_highs[i];
+        std::cout << "q-search fail high at index " << i << ": " << double(e) / double(qsearch_total) * 100 << "%" << std::endl;
+    }
+
+    std::cout << "\n";
+
+    for (int i = 0; i < FAIL_HIGH_STATS_COUNT; i++) {
+        uint64_t e = res.search_fail_highs[i];
+        std::cout << "search fail high at index " << i << ": " << double(e) / double(search_total) * 100 << "%" << std::endl;
+    }
+
+    std::cout << "\n";
+
+    uint64_t total_fail_highs = 0;
+    for (uint64_t e : res.search_fail_high_types) total_fail_highs += e;
+
+    std::cout << "TT move fail highs: " << res.search_fail_high_types[0] << " percentage: " <<
+              double(res.search_fail_high_types[0]) / double(total_fail_highs) * 100 << "%\n";
+    std::cout << "Killer move 1 fail highs: " << res.search_fail_high_types[1] << " percentage: " <<
+              double(res.search_fail_high_types[1]) / double(total_fail_highs) * 100 << "%\n";
+    std::cout << "Killer move 2 fail highs: " << res.search_fail_high_types[2] << " percentage: " <<
+              double(res.search_fail_high_types[2]) / double(total_fail_highs) * 100 << "%\n";
+    std::cout << "Counter move fail highs: " << res.search_fail_high_types[3] << " percentage: " <<
+              double(res.search_fail_high_types[3]) / double(total_fail_highs) * 100 << "%\n";
+    std::cout << "Quiet move fail highs: " << res.search_fail_high_types[4] << " percentage: " <<
+              double(res.search_fail_high_types[4]) / double(total_fail_highs) * 100 << "%\n";
+    std::cout << "Noisy move fail highs: " << res.search_fail_high_types[5] << " percentage: " <<
+              double(res.search_fail_high_types[5]) / double(total_fail_highs) * 100 << "%\n";
+
+    std::cout << "\n\n---------------------------------------------------------" << std::endl;
 }

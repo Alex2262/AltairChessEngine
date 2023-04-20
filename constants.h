@@ -4,6 +4,11 @@
 
 #include <cstdint>
 
+#define FAIL_HIGH_STATS_COUNT       100
+#define ALPHA_RAISE_STATS_COUNT     100
+
+#define BENCH_DEPTH                 14
+
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - "
 #define KIWIPETE_FEN "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - "
 

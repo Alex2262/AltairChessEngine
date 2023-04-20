@@ -219,6 +219,9 @@ void UCI::uci_loop() {
             std::cout << "option name Threads type spin default " << 1 << " min " << 1 << " max " << 1
                       << std::endl;
 
+            std::cout << "option name Statistic type check default " << false
+                      << std::endl;
+
             std::cout << "uciok" << std::endl;
         }
 
@@ -232,6 +235,8 @@ void UCI::uci_loop() {
                 uint64_t max_nodes = std::stoi(tokens[4]);
                 engine.max_nodes = max_nodes;
                 std::cout << "max nodes set to " << engine.max_nodes << std::endl;
+            } else if (tokens[2] == "Statistics") {
+                engine.show_stats = tokens[4] == "true";
             }
         }
 
@@ -253,7 +258,16 @@ void UCI::uci_loop() {
         }
 
         else if (tokens[0] == "bench") {
-            run_bench(engine, position, 12);
+            run_bench(engine, position, BENCH_DEPTH);
+        }
+
+        else if (tokens[0] == "stats") {
+            if (!engine.show_stats) {
+                std::cout << "Statistics UCI option has not been enabled" << std::endl;
+                continue;
+            }
+
+            print_statistics(engine.search_results);
         }
     }
 }
