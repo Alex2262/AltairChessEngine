@@ -49,6 +49,5 @@ int main(int argc, char* argv[]) {
 
     main_uci.uci_loop();
 
-
     return 0;
 }
