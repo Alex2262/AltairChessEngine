@@ -429,6 +429,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     }
 
     if (!pv_node && !in_check && position.state_stack[engine.search_ply].excluded_move == NO_MOVE) {
+
         // Reverse Futility Pruning
         // If the last move was very bad, such that the static evaluation - a margin is still greater
         // than the opponent's best score, then return the static evaluation.
@@ -438,7 +439,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         }
 
         // Razoring
-        // Ideas from Stockfish
         // If the evaluation is really low, and we cannot improve alpha even with qsearch, then return.
         // If the evaluation is improving then increase the margin because we are less certain that the
         // position is terrible.
