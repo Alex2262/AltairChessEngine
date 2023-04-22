@@ -185,6 +185,10 @@ SCORE_TYPE Engine::probe_tt_evaluation(HASH_TYPE hash_key) {
     return NO_EVALUATION;
 }
 
+void Engine::tt_prefetch(HASH_TYPE hash_key) {
+    __builtin_prefetch(&transposition_table[hash_key % transposition_table.size()]);
+}
+
 
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
     score -= (score * abs(bonus)) / 324;
@@ -193,6 +197,8 @@ void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
 
 
 SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth) {
+
+    engine.tt_prefetch(position.hash_key);
 
     // position.print_board();
     engine.node_count++;
@@ -311,6 +317,8 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
 
 SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null) {
+
+    engine.tt_prefetch(position.hash_key);
 
     // Initialize PV length
     engine.pv_length[engine.search_ply] = engine.search_ply;
