@@ -19,7 +19,7 @@ static double LMR_REDUCTIONS[TOTAL_MAX_DEPTH][64];
 void initialize_lmr_reductions() {
     for (PLY_TYPE depth = 0; depth < TOTAL_MAX_DEPTH; depth++) {
         for (int moves = 0; moves < 64; moves++) {
-            LMR_REDUCTIONS[depth][moves] = std::max(0.0, std::log(depth) * std::log(moves) / 1.8 + 1.4);
+            LMR_REDUCTIONS[depth][moves] = std::max(0.0, std::log(depth) * std::log(moves) / 1.8 + 1.6);
         }
     }
 }
@@ -487,6 +487,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     SCORE_TYPE best_score = -SCORE_INF;
     MOVE_TYPE best_move = NO_MOVE;
 
+    int alpha_raised_count = 0;
+
     // Iterate through moves and recursively search with Negamax
     for (int move_index = 0; move_index < static_cast<int>(position.moves[engine.search_ply].size()); move_index++) {
 
@@ -590,7 +592,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
             reduction = LMR_REDUCTIONS[depth][legal_moves];
 
-            reduction -= pv_node;
+            reduction -= pv_node * 1.4;
 
             reduction -= improving * 0.9;
 
@@ -599,6 +601,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             reduction -= is_counter_move * 0.25;
 
             reduction -= move_history_score > 0 ? move_history_score / 7200.0 : move_history_score / 16000.0;
+
+            reduction += static_cast<double>(alpha_raised_count) / 2.0;
 
             // My idea that in a null move search you can be more aggressive with LMR
             reduction += null_search;
@@ -652,6 +656,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             engine.pv_length[engine.search_ply] = engine.pv_length[engine.search_ply + 1];
 
             if (return_eval > alpha) {
+                alpha_raised_count++;
                 alpha = return_eval;
 
                 // We have found a better move that increased achieved us an exact score
