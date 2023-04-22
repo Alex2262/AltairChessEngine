@@ -66,7 +66,7 @@ public:
 
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH+600] = {0};
 
-    bool show_stats = true;
+    bool show_stats = false;
     Search_Results search_results{};
 
     bool stopped = true;
