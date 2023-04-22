@@ -487,6 +487,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     SCORE_TYPE best_score = -SCORE_INF;
     MOVE_TYPE best_move = NO_MOVE;
 
+    int alpha_raised_count = 0;
+
     // Iterate through moves and recursively search with Negamax
     for (int move_index = 0; move_index < static_cast<int>(position.moves[engine.search_ply].size()); move_index++) {
 
@@ -600,6 +602,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
             reduction -= move_history_score > 0 ? move_history_score / 7200.0 : move_history_score / 16000.0;
 
+            reduction += static_cast<double>(alpha_raised_count) / 2.0;
+
             // My idea that in a null move search you can be more aggressive with LMR
             reduction += null_search;
 
@@ -652,6 +656,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             engine.pv_length[engine.search_ply] = engine.pv_length[engine.search_ply + 1];
 
             if (return_eval > alpha) {
+                alpha_raised_count++;
                 alpha = return_eval;
 
                 // We have found a better move that increased achieved us an exact score
