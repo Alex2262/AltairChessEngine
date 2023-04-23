@@ -353,7 +353,13 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     }
 
-    bool in_check = position.is_attacked(position.king_positions[position.side]);
+    bool in_check;
+    if (position.state_stack[engine.search_ply].in_check != -1) {
+        in_check = static_cast<bool>(position.state_stack[engine.search_ply].in_check);
+    } else {
+        in_check = position.is_attacked(position.king_positions[position.side]);
+    }
+
     if (in_check) depth++;  // Check extension
 
     // Start quiescence search at the start of regular negamax search to counter the horizon effect.
@@ -579,9 +585,12 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         engine.repetition_table[engine.game_ply] = position.hash_key;
         position.side ^= 1;
 
+        bool move_gives_check = position.is_attacked(position.king_positions[position.side]);
+        position.state_stack[engine.search_ply].in_check = static_cast<int>(move_gives_check);
+
         SCORE_TYPE return_eval = -SCORE_INF;
 
-        PLY_TYPE new_depth = depth - 1 + extension;
+        auto new_depth = static_cast<PLY_TYPE>(static_cast<int>(depth) - 1 + extension);
 
         double reduction;
 
@@ -612,6 +621,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             reduction -= is_killer_move * 0.75;
 
             reduction -= is_counter_move * 0.25;
+
+            reduction -= move_gives_check * 0.6;
 
             reduction -= move_history_score > 0 ? move_history_score / 7200.0 : move_history_score / 16000.0;
 
