@@ -12,6 +12,7 @@
 
 
 struct State_Struct {
+    int in_check = -1;
     uint64_t current_hash_key;
     MOVE_TYPE move = NO_MOVE;
     MOVE_TYPE excluded_move = NO_MOVE;
