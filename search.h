@@ -88,7 +88,8 @@ public:
                            SCORE_TYPE static_eval);
     SCORE_TYPE probe_tt_evaluation(HASH_TYPE hash_key);
 
-    void tt_prefetch(HASH_TYPE hash_key);
+    void tt_prefetch_read(HASH_TYPE hash_key);
+    void tt_prefetch_write(HASH_TYPE hash_key);
 
 
 };
