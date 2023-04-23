@@ -4779,4 +4779,34 @@ ELO   | 2.03 +- 4.69 (95%)
 SPRT  | 8.0+0.08s Threads=1 Hash=16MB
 LLR   | -0.01 (-2.94, 2.94) [0.00, 5.00]
 GAMES | N: 11984 W: 3455 L: 3385 D: 5144
+
+Score of Altair2.0.7 vs Altair2.0.0: 141 - 74 - 235 [0.574]
+...      Altair2.0.7 playing White: 72 - 38 - 115  [0.576] 225
+...      Altair2.0.7 playing Black: 69 - 36 - 120  [0.573] 225
+...      White vs Black: 108 - 107 - 235  [0.501] 450
+Elo difference: 52.1 +/- 22.2, LOS: 100.0 %, DrawRatio: 52.2 %
+454 of 50000 games finished.
+```
+
+### 2.0.8
+Number of times alpha has been raised in a node factors into the LMR reduction
+
+```
+ELO   | 1.97 +- 3.72 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | -0.08 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 19080 W: 5508 L: 5400 D: 8172
+```
+
+### 2.0.9
+TT-prefetch to improve speed and cache hits.
+
+### 2.1.0
+Fewer reductions for moves which give checks
+
+```
+ELO   | 2.81 +- 4.51 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 0.60 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 12960 W: 3750 L: 3645 D: 5565
 ```
