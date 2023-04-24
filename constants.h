@@ -4,6 +4,7 @@
 
 #include <cstdint>
 
+#define N_TUNING_PARAMETERS         16
 #define FAIL_HIGH_STATS_COUNT       100
 #define ALPHA_RAISE_STATS_COUNT     100
 

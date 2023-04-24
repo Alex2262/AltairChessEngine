@@ -15,7 +15,7 @@ void UCI::initialize_uci() {
     position.set_fen(START_FEN);
     engine.transposition_table.resize(MAX_TT_SIZE);
 
-    initialize_lmr_reductions();
+    initialize_lmr_reductions(engine);
 
     std::cout << engine.transposition_table.size() << " number of hash entries" << std::endl;
 }
@@ -222,6 +222,14 @@ void UCI::uci_loop() {
             std::cout << "option name Statistic type check default " << false
                       << std::endl;
 
+            for (auto & i : engine.tuning_parameters.tuning_parameter_array) {
+                std::cout << "option name " << i.name
+                          << " type spin default " << i.value
+                          << " min " << i.min
+                          << " max " << i.max
+                          << std::endl;
+
+            }
             std::cout << "uciok" << std::endl;
         }
 
@@ -237,6 +245,12 @@ void UCI::uci_loop() {
                 std::cout << "max nodes set to " << engine.max_nodes << std::endl;
             } else if (tokens[2] == "Statistics") {
                 engine.show_stats = tokens[4] == "true";
+            } else {
+                for (auto & i : engine.tuning_parameters.tuning_parameter_array) {
+                    if (tokens[2] == i.name) {
+                        i.value = std::stoi(tokens[4]);
+                    }
+                }
             }
         }
 
@@ -268,6 +282,10 @@ void UCI::uci_loop() {
             }
 
             print_statistics(engine.search_results);
+        }
+
+        else if (tokens[0] == "print_tune") {
+            print_tuning_config(engine.tuning_parameters);
         }
     }
 }
