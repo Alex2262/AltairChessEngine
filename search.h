@@ -53,7 +53,7 @@ struct Tuning_Parameters {
         T{"quiet_LMP_margin", 5, 12, 7, 1},
         T{"quiet_LMP_improving_margin", -1, 2, 1, 1},
         T{"history_pruning_depth", 4, 20, 8, 1},
-        T{"history_pruning_divisor", -4000, -20000, -12000, 500},
+        T{"history_pruning_divisor", 4000, 20000, 12000, 500},
         T{"NMP_depth", 0, 4, 2, 1},
         T{"NMP_base", 1, 5, 3, 1},
         T{"NMP_depth_divisor", 2, 6, 3, 1},

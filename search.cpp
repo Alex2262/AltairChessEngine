@@ -541,7 +541,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
             // History Pruning
             if (depth <= engine.tuning_parameters.history_pruning_depth &&
-                move_history_score <= (depth + improving) * engine.tuning_parameters.history_pruning_divisor) continue;
+                move_history_score <= (depth + improving) * -engine.tuning_parameters.history_pruning_divisor) continue;
         }
 
 
@@ -982,7 +982,7 @@ void print_tuning_config(Tuning_Parameters& tuning_parameters) {
                   << ",\n\t\t\"min_value\": " << i.min
                   << ",\n\t\t\"max_value\": " << i.max
                   << ",\n\t\t\"step\": " << i.step
-                  << "\n\t}"
+                  << "\n\t},"
                   << std::endl;
     }
     std::cout << "}" << std::endl;
