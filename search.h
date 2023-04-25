@@ -42,22 +42,22 @@ struct T {
 struct Tuning_Parameters {
 
     T tuning_parameter_array[N_TUNING_PARAMETERS] = {
-        T{"LMR_divisor", 150, 230, 180, 5},
-        T{"LMR_base", 100, 170, 140, 5},
-        T{"delta_margin", 100, 400, 220, 20},
-        T{"RFP_depth", 5, 11, 7, 1},
-        T{"RFP_margin", 50, 200, 150, 10},
-        T{"LMP_depth", 2, 4, 3, 1},
-        T{"LMP_margin", 6, 15, 8, 1},
-        T{"quiet_LMP_depth", 3, 10, 6, 1},
-        T{"quiet_LMP_margin", 5, 12, 7, 1},
-        T{"quiet_LMP_improving_margin", -1, 2, 1, 1},
-        T{"history_pruning_depth", 4, 20, 8, 1},
-        T{"history_pruning_divisor", 4000, 20000, 12000, 500},
-        T{"NMP_depth", 0, 4, 2, 1},
-        T{"NMP_base", 1, 5, 3, 1},
-        T{"NMP_depth_divisor", 2, 6, 3, 1},
-        T{"NMP_eval_divisor", 100, 350, 250, 10}
+            T{"LMR_divisor", 150, 230, 178},
+            T{"LMR_base", 100, 170, 136},
+            T{"delta_margin", 100, 400, 211},
+            T{"RFP_depth", 5, 11, 7},
+            T{"RFP_margin", 50, 200, 141},
+            T{"LMP_depth", 2, 4, 3},
+            T{"LMP_margin", 6, 15, 8},
+            T{"quiet_LMP_depth", 3, 10, 6},
+            T{"quiet_LMP_margin", 5, 12, 7},
+            T{"quiet_LMP_improving_margin", -1, 2, 1},
+            T{"history_pruning_depth", 4, 20, 8},
+            T{"history_pruning_divisor", 4000, 20000, 11822},
+            T{"NMP_depth", 0, 4, 2},
+            T{"NMP_base", 1, 5, 3},
+            T{"NMP_depth_divisor", 2, 6, 3},
+            T{"NMP_eval_divisor", 100, 350, 249}
     };
 
     int LMR_divisor = tuning_parameter_array[0].value;
@@ -125,6 +125,7 @@ public:
     bool stopped = true;
     bool terminated = true;
 
+    bool do_tuning = false;
     Tuning_Parameters tuning_parameters{};
 
     void clear_tt();

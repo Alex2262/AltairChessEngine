@@ -222,14 +222,17 @@ void UCI::uci_loop() {
             std::cout << "option name Statistic type check default " << false
                       << std::endl;
 
-            for (auto & i : engine.tuning_parameters.tuning_parameter_array) {
-                std::cout << "option name " << i.name
-                          << " type spin default " << i.value
-                          << " min " << i.min
-                          << " max " << i.max
-                          << std::endl;
+            if (engine.do_tuning) {
+                for (auto & i : engine.tuning_parameters.tuning_parameter_array) {
+                    std::cout << "option name " << i.name
+                              << " type spin default " << i.value
+                              << " min " << i.min
+                              << " max " << i.max
+                              << std::endl;
 
+                }
             }
+
             std::cout << "uciok" << std::endl;
         }
 
@@ -246,9 +249,11 @@ void UCI::uci_loop() {
             } else if (tokens[2] == "Statistics") {
                 engine.show_stats = tokens[4] == "true";
             } else {
-                for (auto & i : engine.tuning_parameters.tuning_parameter_array) {
-                    if (tokens[2] == i.name) {
-                        i.value = std::stoi(tokens[4]);
+                if (engine.do_tuning) {
+                    for (auto & i : engine.tuning_parameters.tuning_parameter_array) {
+                        if (tokens[2] == i.name) {
+                            i.value = std::stoi(tokens[4]);
+                        }
                     }
                 }
             }
@@ -284,7 +289,7 @@ void UCI::uci_loop() {
             print_statistics(engine.search_results);
         }
 
-        else if (tokens[0] == "print_tune") {
+        else if (tokens[0] == "print_tune_wf" && engine.do_tuning) {
             print_tuning_config(engine.tuning_parameters);
         }
     }
