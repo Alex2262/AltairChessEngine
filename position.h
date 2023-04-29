@@ -15,7 +15,6 @@ struct State_Struct {
     int in_check = -1;
     uint64_t current_hash_key;
     MOVE_TYPE move = NO_MOVE;
-    MOVE_TYPE excluded_move = NO_MOVE;
     SCORE_TYPE evaluation = NO_EVALUATION;
     SQUARE_TYPE current_ep_square;
     uint16_t current_castle_ability_bits;

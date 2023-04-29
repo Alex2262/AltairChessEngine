@@ -383,14 +383,13 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     // TT probing
     TT_Entry tt_entry{};
-    short tt_return_type = position.state_stack[engine.search_ply].excluded_move != NO_MOVE ? NO_HASH_ENTRY :
-                           engine.probe_tt_entry(position.hash_key, alpha, beta, depth, tt_entry);
+    short tt_return_type = engine.probe_tt_entry(position.hash_key, alpha, beta, depth, tt_entry);
 
     SCORE_TYPE tt_value = tt_entry.score;
     MOVE_TYPE tt_move = tt_entry.move;
 
     // We are allowed to return the hash score
-    if (tt_return_type == RETURN_HASH_SCORE ) {
+    if (tt_return_type == RETURN_HASH_SCORE && !root) {
         bool return_tt_value = true;
 
         // We have to check if there's a repetition before returning a score
@@ -414,11 +413,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         else return_tt_value = false;
 
         if (return_tt_value) {
-            if (!engine.search_ply) {
-                engine.pv_table[0][0] = tt_move;
-                engine.pv_length[0] = 1;
-            }
-
             return tt_value;
         }
     }
@@ -451,7 +445,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         if (depth >= 8) depth--;
     }
 
-    if (!pv_node && !in_check && position.state_stack[engine.search_ply].excluded_move == NO_MOVE) {
+    if (!pv_node && !in_check) {
 
         // Reverse Futility Pruning
         // If the last move was very bad, such that the static evaluation - a margin is still greater
@@ -554,42 +548,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             continue;
         }
 
-        PLY_TYPE extension = 0;
-
-        // Singular Extensions
-        // We have to prove that the tt_move is singular, meaning that it is the only move that can fail high
-        // and the rest fail low. We do a verification search with a smaller window and reduced depth to verify this.
-        // If it is singular, we can extend the move.
-        if (!root &&
-            depth > 9 &&
-            move == tt_move &&
-            tt_entry.depth > depth - 3 &&
-            tt_entry.flag != HASH_FLAG_ALPHA &&
-            position.state_stack[engine.search_ply].excluded_move == NO_MOVE) {
-
-            position.undo_move(move, engine.search_ply, engine.fifty_move);
-
-            int singular_beta = tt_entry.score - depth * 2;
-
-            position.state_stack[engine.search_ply + 1].excluded_move = move;
-            SCORE_TYPE return_eval = negamax(engine, position, singular_beta - 1, singular_beta, (depth - 1) / 2, false);
-            position.state_stack[engine.search_ply + 1].excluded_move = NO_MOVE;
-
-            if (return_eval < singular_beta) {
-                extension = 1;
-            }
-
-            // Multi-cut pruning.
-            // Other moves failed high on our singularity verification search, and since the TT move is better,
-            // it means multiple moves would fail high, meaning that we can prune this whole branch.
-            else if (singular_beta >= beta) {
-                return singular_beta;
-            }
-
-            position.make_move(move, engine.search_ply, engine.fifty_move);
-
-        }
-
         engine.search_ply++;
         engine.fifty_move++;
         engine.game_ply++;
@@ -600,8 +558,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         position.state_stack[engine.search_ply].in_check = static_cast<int>(move_gives_check);
 
         SCORE_TYPE return_eval = -SCORE_INF;
-
-        auto new_depth = static_cast<PLY_TYPE>(static_cast<int>(depth) - 1 + extension);
 
         double reduction;
 
@@ -645,7 +601,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             // Idea from Weiss, where you reduce more if the move is quiet and TT move is a capture
             reduction += get_is_capture(tt_move) * 0.5;
 
-            PLY_TYPE lmr_depth = static_cast<PLY_TYPE>(new_depth -
+            PLY_TYPE lmr_depth = static_cast<PLY_TYPE>(depth - 1 -
                     std::min(depth - 1, std::max(0, static_cast<int>(reduction))));
 
             return_eval = -negamax(engine, position, -alpha - 1, -alpha, lmr_depth, true);
@@ -661,10 +617,10 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // We assume that the first move should be the principle variation / best move, so the rest of the moves
         // should be searched with a zero window
         if (full_depth_zero_window)
-            return_eval = -negamax(engine, position, -alpha - 1, -alpha, new_depth, true);
+            return_eval = -negamax(engine, position, -alpha - 1, -alpha, depth - 1, true);
 
         if (return_eval == -SCORE_INF || (pv_node && ((return_eval > alpha && return_eval < beta) || legal_moves == 0)))
-            return_eval = -negamax(engine, position, -beta, -alpha, new_depth, true);
+            return_eval = -negamax(engine, position, -beta, -alpha, depth - 1, true);
 
         position.side ^= 1;
         engine.game_ply--;

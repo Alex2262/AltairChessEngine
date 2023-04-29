@@ -4810,3 +4810,19 @@ SPRT  | 8.0+0.08s Threads=1 Hash=16MB
 LLR   | 0.60 (-2.94, 2.94) [0.00, 5.00]
 GAMES | N: 12960 W: 3750 L: 3645 D: 5565
 ```
+
+### 2.1.1
+Tuning Search Parameter Values using Weather Factory over 390K games
+
+```
+ELO   | 10.24 +- 6.58 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.97 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 6144 W: 1856 L: 1675 D: 2613
+```
+
+### 2.1.2
+No returning TT values at root
+
+### 2.1.3
+Remove Singular Extensions
