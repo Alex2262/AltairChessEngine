@@ -533,6 +533,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 legal_moves >= depth * (engine.tuning_parameters.quiet_LMP_margin -
                                         !improving * engine.tuning_parameters.quiet_LMP_improving_margin)) break;
 
+            if (quiet && best_score > -MATE_BOUND && depth <= 5 && static_eval + depth * 150 + 60 <= alpha) break;
+
             // History Pruning
             if (depth <= engine.tuning_parameters.history_pruning_depth &&
                 move_history_score <= (depth + improving) * -engine.tuning_parameters.history_pruning_divisor) continue;
