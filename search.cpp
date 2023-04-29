@@ -16,10 +16,13 @@
 
 static double LMR_REDUCTIONS[TOTAL_MAX_DEPTH][64];
 
-void initialize_lmr_reductions() {
+void initialize_lmr_reductions(Engine& engine) {
     for (PLY_TYPE depth = 0; depth < TOTAL_MAX_DEPTH; depth++) {
         for (int moves = 0; moves < 64; moves++) {
-            LMR_REDUCTIONS[depth][moves] = std::max(0.0, std::log(depth) * std::log(moves) / 1.8 + 1.4);
+            LMR_REDUCTIONS[depth][moves] =
+                    std::max(0.0,
+                             std::log(depth) * std::log(moves) / double(engine.tuning_parameters.LMR_divisor / 100.0)
+                             + double(engine.tuning_parameters.LMR_base / 100.0));
         }
     }
 }
@@ -262,7 +265,8 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // Delta / Futility pruning
         // If the piece we capture plus a margin cannot even improve our score then
         // there is no point in searching it
-        if (static_eval + PIECE_VALUES_MID[get_occupied(move) % BLACK_PAWN] + 220 < alpha) continue;
+        if (static_eval + PIECE_VALUES_MID[get_occupied(move) % BLACK_PAWN] +
+            engine.tuning_parameters.delta_margin < alpha) continue;
 
         bool attempt = position.make_move(move, engine.search_ply, engine.fifty_move);
 
@@ -452,8 +456,9 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // Reverse Futility Pruning
         // If the last move was very bad, such that the static evaluation - a margin is still greater
         // than the opponent's best score, then return the static evaluation.
-        constexpr int RFP_margins[8] = {80, 164, 300, 445, 600, 760, 835, 1020};
-        if (depth <= 7 && static_eval - RFP_margins[depth - improving] >= beta) {
+
+        if (depth <= engine.tuning_parameters.RFP_depth && static_eval -
+            engine.tuning_parameters.RFP_margin * (depth - improving) >= beta) {
             return static_eval;
         }
 
@@ -470,10 +475,12 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // Null move pruning
         // We give the opponent an extra move and if they are not able to make their position
         // any better, then our position is too good, and we don't need to search any deeper.
-        if (depth >= 2 && do_null && static_eval >= beta) {
+        if (depth >= engine.tuning_parameters.NMP_depth && do_null && static_eval >= beta) {
 
             // Adaptive NMP
-            int reduction = 3 + depth / 3 + std::min(3, (static_eval - beta) / 256);
+            int reduction = engine.tuning_parameters.NMP_base +
+                            depth / engine.tuning_parameters.NMP_depth_divisor +
+                            std::min(3, (static_eval - beta) / engine.tuning_parameters.NMP_eval_divisor);
 
             position.make_null_move(engine.search_ply, engine.fifty_move);
 
@@ -524,13 +531,17 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // Pruning
         if (!pv_node && legal_moves > 0) {
             // Late Move Pruning
-            if (depth <= 3 && legal_moves > depth * 8) break;
+            if (depth <= engine.tuning_parameters.LMP_depth &&
+                legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;
 
             // Quiet Late Move Pruning
-            if (quiet && legal_moves > static_cast<int>((4 + 1.4 * depth * depth) * (1 - 0.25 * !improving))) break;
+            if (quiet && depth <= engine.tuning_parameters.quiet_LMP_depth &&
+                legal_moves >= depth * (engine.tuning_parameters.quiet_LMP_margin -
+                                        !improving * engine.tuning_parameters.quiet_LMP_improving_margin)) break;
 
             // History Pruning
-            if (depth <= 8 && move_history_score < (depth + improving) * -12000) continue;
+            if (depth <= engine.tuning_parameters.history_pruning_depth &&
+                move_history_score <= (depth + improving) * -engine.tuning_parameters.history_pruning_divisor) continue;
         }
 
 
@@ -960,4 +971,19 @@ void print_statistics(Search_Results& res) {
               double(res.search_fail_high_types[5]) / double(total_fail_highs) * 100 << "%\n";
 
     std::cout << "\n\n---------------------------------------------------------" << std::endl;
+}
+
+
+void print_tuning_config(Tuning_Parameters& tuning_parameters) {
+    std::cout << "{";
+    for (auto & i : tuning_parameters.tuning_parameter_array) {
+        std::cout << "\n\t\"" << i.name << "\": {"
+                  << "\n\t\t\"value\": " << i.value
+                  << ",\n\t\t\"min_value\": " << i.min
+                  << ",\n\t\t\"max_value\": " << i.max
+                  << ",\n\t\t\"step\": " << i.step
+                  << "\n\t},"
+                  << std::endl;
+    }
+    std::cout << "}" << std::endl;
 }

@@ -31,6 +31,59 @@ struct Search_Results {
     PLY_TYPE depth_reached = 0;
 };
 
+struct T {
+    std::string name;
+    int min;
+    int max;
+    int value;
+    int step;
+};
+
+struct Tuning_Parameters {
+
+    T tuning_parameter_array[N_TUNING_PARAMETERS] = {
+            T{"LMR_divisor", 150, 230, 185, 20},
+            T{"LMR_base", 100, 170, 155, 20},
+            T{"delta_margin", 100, 400, 175, 40},
+            T{"RFP_depth", 5, 11, 9, 2},
+            T{"RFP_margin", 50, 200, 126, 30},
+            T{"LMP_depth", 2, 4, 3, 1},
+            T{"LMP_margin", 6, 15, 10, 1},
+            T{"quiet_LMP_depth", 3, 10, 7, 1},
+            T{"quiet_LMP_margin", 5, 12, 5, 1},
+            T{"quiet_LMP_improving_margin", -1, 2, 2, 1},
+            T{"history_pruning_depth", 4, 20, 12, 2},
+            T{"history_pruning_divisor", 4000, 20000, 12062, 1000},
+            T{"NMP_depth", 0, 4, 2, 1},
+            T{"NMP_base", 1, 5, 3, 1},
+            T{"NMP_depth_divisor", 2, 6, 4, 1},
+            T{"NMP_eval_divisor", 100, 350, 297, 40}
+    };
+
+    int LMR_divisor = tuning_parameter_array[0].value;
+    int LMR_base = tuning_parameter_array[1].value;
+
+    int delta_margin = tuning_parameter_array[2].value;
+
+    int RFP_depth = tuning_parameter_array[3].value;
+    int RFP_margin = tuning_parameter_array[4].value;
+
+    int LMP_depth = tuning_parameter_array[5].value;
+    int LMP_margin = tuning_parameter_array[6].value;
+
+    int quiet_LMP_depth = tuning_parameter_array[7].value;
+    int quiet_LMP_margin = tuning_parameter_array[8].value;
+    int quiet_LMP_improving_margin = tuning_parameter_array[9].value;
+
+    int history_pruning_depth = tuning_parameter_array[10].value;
+    int history_pruning_divisor = tuning_parameter_array[11].value;
+
+    int NMP_depth = tuning_parameter_array[12].value;
+    int NMP_base = tuning_parameter_array[13].value;
+    int NMP_depth_divisor = tuning_parameter_array[14].value;
+    int NMP_eval_divisor = tuning_parameter_array[15].value;
+};
+
 class Engine {
 
 public:
@@ -72,6 +125,9 @@ public:
     bool stopped = true;
     bool terminated = true;
 
+    bool do_tuning = false;
+    Tuning_Parameters tuning_parameters{};
+
     void clear_tt();
 
     void reset();
@@ -101,8 +157,10 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
 void iterative_search(Engine& engine, Position& position);
 
-void initialize_lmr_reductions();
+void initialize_lmr_reductions(Engine& engine);
 
 void print_statistics(Search_Results& res);
+
+void print_tuning_config(Tuning_Parameters& tuning_parameters);
 
 #endif //ANTARESCHESSENGINE_SEARCH_H
