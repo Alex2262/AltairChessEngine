@@ -42,22 +42,22 @@ struct T {
 struct Tuning_Parameters {
 
     T tuning_parameter_array[N_TUNING_PARAMETERS] = {
-            T{"LMR_divisor", 150, 230, 182, 20},
-            T{"LMR_base", 100, 170, 137, 20},
-            T{"delta_margin", 100, 400, 230, 40},
-            T{"RFP_depth", 5, 11, 8, 2},
-            T{"RFP_margin", 50, 200, 147, 30},
+            T{"LMR_divisor", 150, 230, 185, 20},
+            T{"LMR_base", 100, 170, 155, 20},
+            T{"delta_margin", 100, 400, 175, 40},
+            T{"RFP_depth", 5, 11, 9, 2},
+            T{"RFP_margin", 50, 200, 126, 30},
             T{"LMP_depth", 2, 4, 3, 1},
-            T{"LMP_margin", 6, 15, 9, 1},
+            T{"LMP_margin", 6, 15, 10, 1},
             T{"quiet_LMP_depth", 3, 10, 7, 1},
-            T{"quiet_LMP_margin", 5, 12, 7, 1},
-            T{"quiet_LMP_improving_margin", -1, 2, 1, 1},
-            T{"history_pruning_depth", 4, 20, 10, 2},
-            T{"history_pruning_divisor", 4000, 20000, 12448, 1000},
+            T{"quiet_LMP_margin", 5, 12, 5, 1},
+            T{"quiet_LMP_improving_margin", -1, 2, 2, 1},
+            T{"history_pruning_depth", 4, 20, 12, 2},
+            T{"history_pruning_divisor", 4000, 20000, 12062, 1000},
             T{"NMP_depth", 0, 4, 2, 1},
             T{"NMP_base", 1, 5, 3, 1},
-            T{"NMP_depth_divisor", 2, 6, 3, 1},
-            T{"NMP_eval_divisor", 100, 350, 259, 40}
+            T{"NMP_depth_divisor", 2, 6, 4, 1},
+            T{"NMP_eval_divisor", 100, 350, 297, 40}
     };
 
     int LMR_divisor = tuning_parameter_array[0].value;
