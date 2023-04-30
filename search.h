@@ -156,7 +156,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,  bool do_null);
 
 void print_thinking(Engine& engine, Position& position, NodeType node, SCORE_TYPE best_score);
-SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE previous_score);
+SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE previous_score, SCORE_TYPE starting_window);
 void iterative_search(Engine& engine, Position& position);
 
 void initialize_lmr_reductions(Engine& engine);

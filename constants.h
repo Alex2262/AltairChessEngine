@@ -37,7 +37,7 @@
 #define HASH_FLAG_ALPHA     1
 #define HASH_FLAG_BETA      2
 
-#define STARTING_WINDOW     14
+#define STARTING_WINDOW     26
 
 #define WHITE_PAWN          0
 #define WHITE_KNIGHT        1
