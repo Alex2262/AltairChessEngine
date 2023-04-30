@@ -37,7 +37,7 @@
 #define HASH_FLAG_ALPHA     1
 #define HASH_FLAG_BETA      2
 
-#define STARTING_WINDOW     45
+#define STARTING_WINDOW     14
 
 #define WHITE_PAWN          0
 #define WHITE_KNIGHT        1
@@ -72,6 +72,12 @@
 #define C8      23
 #define G1      97
 #define G8      27
+
+enum NodeType {
+    Exact_Node,
+    Lower_Node,
+    Upper_Node
+};
 
 typedef uint16_t PIECE_TYPE;
 typedef int16_t SQUARE_TYPE;
