@@ -789,7 +789,7 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
 
     PLY_TYPE depth = engine.current_search_depth;
 
-    if (depth >= 6) {
+    if (depth >= MINIMUM_ASP_DEPTH) {
         alpha = std::max(previous_score - delta, -SCORE_INF);
         beta  = std::min(previous_score + delta,  SCORE_INF);
     }

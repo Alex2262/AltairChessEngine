@@ -38,6 +38,7 @@
 #define HASH_FLAG_BETA      2
 
 #define STARTING_WINDOW     26
+#define MINIMUM_ASP_DEPTH   6
 
 #define WHITE_PAWN          0
 #define WHITE_KNIGHT        1
