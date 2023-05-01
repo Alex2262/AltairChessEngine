@@ -862,9 +862,17 @@ void iterative_search(Engine& engine, Position& position) {
     while (running_depth <= engine.max_depth) {
         engine.current_search_depth = running_depth;
 
-        previous_score = aspiration_window(engine, position, previous_score, scaled_window);
+        SCORE_TYPE current_score = aspiration_window(engine, position, previous_score, scaled_window);
 
         if (!engine.stopped) best_move = engine.pv_table[0][0];
+
+        int score_difference = abs(current_score - previous_score);
+        if (!engine.stopped && score_difference >= 80 && running_depth >= MINIMUM_ASP_DEPTH) {
+            engine.soft_time_limit += engine.soft_time_limit * std::min<uint64_t>(7, (score_difference / 80)) / 10;
+            engine.soft_time_limit = std::min(engine.soft_time_limit, engine.hard_time_limit);
+
+            //std::cout << "Soft time limit expanded to: " << engine.soft_time_limit << " ms" << std::endl;
+        }
 
         auto end_time = std::chrono::high_resolution_clock::now();
         auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
@@ -885,6 +893,7 @@ void iterative_search(Engine& engine, Position& position) {
             scaled_window = std::max(scaled_window, 12);
         }
 
+        previous_score = current_score;
         running_depth++;
     }
 
