@@ -452,7 +452,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // than the opponent's best score, then return the static evaluation.
 
         if (depth <= engine.tuning_parameters.RFP_depth && static_eval -
-                                                           engine.tuning_parameters.RFP_margin * (depth - improving) >= beta) {
+            engine.tuning_parameters.RFP_margin * (depth - improving) >= beta) {
             return static_eval;
         }
 
@@ -489,9 +489,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             position.undo_null_move(engine.search_ply, engine.fifty_move);
 
             if (return_eval >= beta) return beta;
-
         }
-
     }
 
     int legal_moves = 0;
@@ -539,7 +537,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             if (depth <= engine.tuning_parameters.history_pruning_depth &&
                 move_history_score <= (depth + improving) * -engine.tuning_parameters.history_pruning_divisor) continue;
         }
-
 
         // Make the move
         bool attempt = position.make_move(move, engine.search_ply, engine.fifty_move);
@@ -696,7 +693,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                         if (legal_moves <= FAIL_HIGH_STATS_COUNT) {
                             engine.search_results.search_fail_highs[legal_moves-1]++;
                         }
-                        uint16_t move_type = get_move_type(move);
 
                         if (move == tt_move) engine.search_results.search_fail_high_types[0]++;
                         else if (move == engine.killer_moves[0][engine.search_ply])
