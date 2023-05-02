@@ -856,6 +856,7 @@ void iterative_search(Engine& engine, Position& position) {
     PLY_TYPE running_depth = 1;
 
     MOVE_TYPE best_move = NO_MOVE;
+    MOVE_TYPE last_move = NO_MOVE;
 
     SCORE_TYPE scaled_window = STARTING_WINDOW;
 
@@ -867,11 +868,18 @@ void iterative_search(Engine& engine, Position& position) {
         if (!engine.stopped) best_move = engine.pv_table[0][0];
 
         int score_difference = abs(current_score - previous_score);
-        if (!engine.stopped && score_difference >= 80 && running_depth >= MINIMUM_ASP_DEPTH) {
-            engine.soft_time_limit += engine.soft_time_limit * std::min<uint64_t>(7, (score_difference / 80)) / 10;
+        int score_divisor = best_move == last_move ? 120 : 80;
+        if (!engine.stopped && score_difference >= score_divisor && running_depth >= MINIMUM_ASP_DEPTH) {
+            engine.soft_time_limit += engine.soft_time_limit *
+                    std::min<uint64_t>(6, (score_difference / score_divisor)) / 10;
             engine.soft_time_limit = std::min(engine.soft_time_limit, engine.hard_time_limit);
 
-            //std::cout << "Soft time limit expanded to: " << engine.soft_time_limit << " ms" << std::endl;
+            engine.hard_time_limit += engine.hard_time_limit *
+                    std::min<uint64_t>(6, (score_difference / score_divisor)) / 10;
+            engine.hard_time_limit = std::min(engine.hard_time_limit, engine.final_time_limit);
+
+            std::cout << "Soft time limit expanded to: " << engine.soft_time_limit << " ms" << std::endl;
+            std::cout << "Hard time limit expanded to: " << engine.hard_time_limit << " ms" << std::endl;
         }
 
         auto end_time = std::chrono::high_resolution_clock::now();
@@ -894,6 +902,7 @@ void iterative_search(Engine& engine, Position& position) {
         }
 
         previous_score = current_score;
+        last_move = best_move;
         running_depth++;
     }
 

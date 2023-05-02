@@ -99,6 +99,7 @@ public:
     PLY_TYPE game_ply = 0;
     PLY_TYPE fifty_move = 0;
 
+    uint64_t final_time_limit = 60000;
     uint64_t hard_time_limit = 60000;
     uint64_t soft_time_limit = 60000;
     uint64_t start_time = 0;

@@ -55,21 +55,28 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
     else if (self_time > 0) time_amt = self_time / (rate + 6);
     else time_amt = static_cast<double>(engine.hard_time_limit);
 
-    engine.hard_time_limit = static_cast<uint64_t>(time_amt * 2.3);
-    engine.soft_time_limit = static_cast<uint64_t>(time_amt * 0.7);
+    engine.final_time_limit = static_cast<uint64_t>(time_amt * 4);
+    engine.hard_time_limit = static_cast<uint64_t>(time_amt * 2.4);
+    engine.soft_time_limit = static_cast<uint64_t>(time_amt * 0.65);
 
-    if (engine.hard_time_limit > static_cast<uint64_t>(self_time * 0.7)) {
-        for (int multiplier = 18; multiplier >= 10; multiplier -= 1) {
-            engine.hard_time_limit = static_cast<uint64_t>(time_amt * (multiplier / 10.0));
-            if (engine.hard_time_limit <= static_cast<uint64_t>(self_time * 0.7)) break;
+    if (engine.final_time_limit > static_cast<uint64_t>(self_time * 0.7)) {
+        for (int multiplier = 36; multiplier >= 10; multiplier -= 1) {
+            engine.final_time_limit = static_cast<uint64_t>(time_amt * (multiplier / 10.0));
+            if (engine.final_time_limit <= static_cast<uint64_t>(self_time * 0.7)) break;
         }
     }
 
-    if (engine.hard_time_limit > static_cast<uint64_t>(movetime) && movetime != 0.0) {
+    if (engine.hard_time_limit >= engine.final_time_limit) {
+        engine.hard_time_limit = (3 * engine.soft_time_limit + 7 * engine.final_time_limit) / 10;
+    }
+
+    if (engine.final_time_limit >= static_cast<uint64_t>(movetime) && movetime != 0.0) {
+        engine.final_time_limit = static_cast<uint64_t>(time_amt);
         engine.hard_time_limit = static_cast<uint64_t>(time_amt);
     }
 
-    std::cout << time_amt << " " << engine.hard_time_limit << " " << engine.soft_time_limit << std::endl;
+    std::cout << time_amt << " " << engine.final_time_limit << " " <<
+                 engine.hard_time_limit << " " << engine.soft_time_limit << std::endl;
 }
 
 
