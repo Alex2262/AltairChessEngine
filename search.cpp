@@ -870,13 +870,13 @@ void iterative_search(Engine& engine, Position& position) {
         int score_difference = abs(current_score - previous_score);
         int score_divisor = best_move == last_move ? 60 : 40;
         if (!engine.stopped && score_difference >= score_divisor && running_depth >= MINIMUM_ASP_DEPTH &&
-                (abs(previous_score) <= 350 || abs(current_score) <= 350)) {
+                (abs(previous_score) <= 300 || abs(current_score) <= 300)) {
             engine.soft_time_limit += engine.soft_time_limit *
-                    std::min<uint64_t>(22, (score_difference / score_divisor)) / 25;
+                    std::min<uint64_t>(20, (score_difference / score_divisor)) / 30;
             engine.soft_time_limit = std::min(engine.soft_time_limit, engine.hard_time_limit);
 
             engine.hard_time_limit += engine.hard_time_limit *
-                    std::min<uint64_t>(20, (score_difference / score_divisor)) / 22;
+                    std::min<uint64_t>(20, (score_difference / score_divisor)) / 26;
             engine.hard_time_limit = std::min(engine.hard_time_limit, engine.final_time_limit);
 
             std::cout << "Soft time limit expanded to: " << engine.soft_time_limit << " ms" << std::endl;
