@@ -15,6 +15,9 @@
 #include "move.h"
 #include "useful.h"
 
+
+std::mutex report_mutex{};
+
 static double LMR_REDUCTIONS[TOTAL_MAX_DEPTH][64];
 
 void initialize_lmr_reductions(Engine& engine) {
@@ -212,9 +215,10 @@ void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
 }
 
 
-SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id) {
+SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id) {
 
     Thread_State& thread_state = engine.thread_states[thread_id];
+    Position& position = thread_state.position;
 
     engine.tt_prefetch_read(position.hash_key);
 
@@ -289,7 +293,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         thread_state.search_ply++;
         position.side ^= 1;
 
-        SCORE_TYPE return_eval = -qsearch(engine, position, -beta, -alpha, depth - 1, thread_id);
+        SCORE_TYPE return_eval = -qsearch(engine, -beta, -alpha, depth - 1, thread_id);
 
         position.side ^= 1;
         thread_state.search_ply--;
@@ -336,9 +340,11 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 }
 
 
-SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, int thread_id) {
+SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, int thread_id) {
 
     Thread_State& thread_state = engine.thread_states[thread_id];
+    Position& position = thread_state.position;
+
     engine.tt_prefetch_read(position.hash_key);
 
     if (thread_id == 0) {
@@ -383,7 +389,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     // Start quiescence search at the start of regular negamax search to counter the horizon effect.
     if (depth <= 0) {
-        return qsearch(engine, position, alpha, beta, engine.max_q_depth, thread_id);
+        return qsearch(engine, alpha, beta, engine.max_q_depth, thread_id);
     }
 
     // Increase node count
@@ -477,7 +483,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // position is terrible.
         constexpr int razoring_margins[3] = {0, 320, 800};
         if (depth <= 2 && static_eval + razoring_margins[depth] + improving * 120 < alpha) {
-            SCORE_TYPE return_eval = qsearch(engine, position, alpha, beta, engine.max_q_depth, thread_id);
+            SCORE_TYPE return_eval = qsearch(engine, alpha, beta, engine.max_q_depth, thread_id);
             if (return_eval < alpha) return return_eval;
         }
 
@@ -497,7 +503,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             thread_state.game_ply++;
 
             // zero window search with reduced depth
-            SCORE_TYPE return_eval = -negamax(engine, position, -beta, -beta + 1, depth - reduction, false, thread_id);
+            SCORE_TYPE return_eval = -negamax(engine, -beta, -beta + 1, depth - reduction, false, thread_id);
 
             thread_state.game_ply--;
             thread_state.search_ply--;
@@ -618,7 +624,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             PLY_TYPE lmr_depth = static_cast<PLY_TYPE>(depth - 1 -
                                                        std::min(depth - 1, std::max(0, static_cast<int>(reduction))));
 
-            return_eval = -negamax(engine, position, -alpha - 1, -alpha, lmr_depth, true, thread_id);
+            return_eval = -negamax(engine, -alpha - 1, -alpha, lmr_depth, true, thread_id);
 
             full_depth_zero_window = return_eval > alpha && lmr_depth != depth - 1;
         }
@@ -631,10 +637,10 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // We assume that the first move should be the principle variation / best move, so the rest of the moves
         // should be searched with a zero window
         if (full_depth_zero_window)
-            return_eval = -negamax(engine, position, -alpha - 1, -alpha, depth - 1, true, thread_id);
+            return_eval = -negamax(engine, -alpha - 1, -alpha, depth - 1, true, thread_id);
 
         if (return_eval == -SCORE_INF || (pv_node && ((return_eval > alpha && return_eval < beta) || legal_moves == 0)))
-            return_eval = -negamax(engine, position, -beta, -alpha, depth - 1, true, thread_id);
+            return_eval = -negamax(engine, -beta, -alpha, depth - 1, true, thread_id);
 
         position.side ^= 1;
         thread_state.game_ply--;
@@ -754,9 +760,10 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 }
 
 
-void print_thinking(Engine& engine, Position& position, NodeType node, SCORE_TYPE best_score, int thread_id) {
+void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int thread_id) {
 
     Thread_State& thread_state = engine.thread_states[thread_id];
+    Position& position = thread_state.position;
 
     PLY_TYPE depth = thread_state.current_search_depth;
 
@@ -801,9 +808,10 @@ void print_thinking(Engine& engine, Position& position, NodeType node, SCORE_TYP
 }
 
 
-SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE previous_score, SCORE_TYPE starting_window, int thread_id) {
+SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, SCORE_TYPE starting_window, int thread_id) {
 
     Thread_State& thread_state = engine.thread_states[thread_id];
+    Position& position = thread_state.position;
 
     SCORE_TYPE alpha = -SCORE_INF;
     SCORE_TYPE beta = SCORE_INF;
@@ -821,7 +829,7 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
         if (alpha <= -5000) alpha = -SCORE_INF;
         if (beta  >=  5000) beta  =  SCORE_INF;
 
-        return_eval = negamax(engine, position, alpha, beta, depth, false, thread_id);
+        return_eval = negamax(engine, alpha, beta, depth, false, thread_id);
 
         if (thread_state.stopped) break;
 
@@ -833,7 +841,7 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
             beta  = (alpha + 3 * beta) / 4;
             depth = thread_state.current_search_depth;
 
-            if (depth >= 12 && thread_id == 0) print_thinking(engine, position, Lower_Node, return_eval, thread_id);
+            //if (depth >= 12 && thread_id == 0) print_thinking(engine, position, Lower_Node, return_eval, thread_id);
         }
 
             // The aspiration window search has failed high.
@@ -844,14 +852,16 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
             depth = std::max(engine.min_depth,
                              static_cast<PLY_TYPE>(static_cast<int>(depth) - (return_eval < MATE_BOUND)));
 
-            if (depth >= 12 && thread_id == 0) print_thinking(engine, position, Upper_Node, return_eval, thread_id);
+            //if (depth >= 12 && thread_id == 0) print_thinking(engine, position, Upper_Node, return_eval, thread_id);
         }
 
             // We have achieved an exact node where the score was between alpha and beta.
             // We are certain of our score and can now safely return.
         else {
             std::cout << "thread " << thread_id << std::endl;
-            print_thinking(engine, position, Exact_Node, return_eval, thread_id);
+
+            std::lock_guard<std::mutex> lock(report_mutex);
+            print_thinking(engine, Exact_Node, return_eval, thread_id);
             break;
         }
 
@@ -863,9 +873,10 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
 }
 
 
-void iterative_search(Engine& engine, Position& position, int thread_id) {
+void iterative_search(Engine& engine, int thread_id) {
 
     Thread_State& thread_state = engine.thread_states[thread_id];
+    Position& position = thread_state.position;
 
     thread_state.stopped = false;
     thread_state.terminated = false;
@@ -887,10 +898,10 @@ void iterative_search(Engine& engine, Position& position, int thread_id) {
     while (running_depth <= engine.max_depth) {
         thread_state.current_search_depth = running_depth;
 
-        std::cout << "Running depth " << running_depth << " thread " << thread_id << std::endl;
-        position.print_board();
+        //std::cout << "Running depth " << running_depth << " thread " << thread_id << std::endl;
+        //position.print_board();
 
-        previous_score = aspiration_window(engine, position, previous_score, scaled_window, thread_id);
+        previous_score = aspiration_window(engine, previous_score, scaled_window, thread_id);
 
         if (!thread_state.stopped) best_move = engine.pv_table[0][0];
 
@@ -927,33 +938,34 @@ void iterative_search(Engine& engine, Position& position, int thread_id) {
 }
 
 
-void lazy_smp_search(Engine& engine, Position& position) {
+void lazy_smp_search(Engine& engine) {
 
     std::vector<std::thread> search_threads;
-    std::vector<Position> new_positions;
+    //std::vector<Position> new_positions;
 
     for (int thread_id = 1; thread_id < engine.num_threads; thread_id++) {
         std::cout << "Creating Helper Thread #" << thread_id << std::endl;
         Thread_State new_thread_state = engine.thread_states[0];
         engine.thread_states.push_back(new_thread_state);
 
-        const Position& new_position = position;
-        new_positions.push_back(new_position);
-        search_threads.emplace_back(iterative_search, std::ref(engine), std::ref(new_positions[thread_id - 1]), thread_id);
+        //engine.thread_states[thread_id].position.print_board();
+
+        //new_positions.push_back(new_position);
+        search_threads.emplace_back(iterative_search, std::ref(engine), thread_id);
 
         std::cout << "working" << std::endl;
     }
 
-    iterative_search(engine, position, 0);
+    //engine.thread_states[0].position.print_board();
+    iterative_search(engine, 0);
 
     for (int thread_id = 1; thread_id < engine.num_threads; thread_id++) {
         engine.thread_states[thread_id].stopped = true;
     }
 
-    for (int thread_id = engine.num_threads; thread_id >= 1; thread_id--) {
-        while (!engine.thread_states[thread_id].terminated);  // to prevent some stupid exceptions
-        engine.thread_states.pop_back();
+    for (int thread_id = engine.num_threads - 1; thread_id >= 1; thread_id--) {
         search_threads[thread_id - 1].join();
+        engine.thread_states.pop_back();
         search_threads.pop_back();
     }
 

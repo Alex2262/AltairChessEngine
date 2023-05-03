@@ -7,7 +7,10 @@
 #include "bench.h"
 
 
-void run_bench(Engine& engine, Position& position, PLY_TYPE depth) {
+void run_bench(Engine& engine, PLY_TYPE depth) {
+
+    Position& position = engine.thread_states[0].position;
+
     PLY_TYPE old_depth = engine.max_depth;
     uint64_t old_soft = engine.soft_time_limit;
     uint64_t old_hard = engine.hard_time_limit;
@@ -28,7 +31,7 @@ void run_bench(Engine& engine, Position& position, PLY_TYPE depth) {
         std::cout << "running position #" << fen_count + 1 << " fen: " << fen << std::endl;
         engine.new_game();
         position.set_fen(fen);
-        lazy_smp_search(engine, position);
+        lazy_smp_search(engine);
         total_nodes += engine.node_count;
 
         if (engine.show_stats) {

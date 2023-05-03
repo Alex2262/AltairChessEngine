@@ -12,12 +12,14 @@
 #include "bench.h"
 
 void UCI::initialize_uci() {
-    position.set_fen(START_FEN);
     engine.transposition_table.resize(MAX_TT_SIZE);
 
     initialize_lmr_reductions(engine);
 
     engine.thread_states.emplace_back();
+
+    Position& position = engine.thread_states[0].position;
+    position.set_fen(START_FEN);
 
     std::cout << sizeof(engine) << " " << sizeof(engine.thread_states[0]) << std::endl;
 
@@ -28,6 +30,8 @@ void UCI::initialize_uci() {
 void  UCI::time_handler(double self_time, double inc, double movetime, long movestogo) {
     double rate = 20;
     double time_amt;
+
+    Position& position = engine.thread_states[0].position;
 
     if (position.is_attacked(position.king_positions[position.side])) rate -= 3;
     if (get_is_capture(last_move)) rate -= 1.5;
@@ -80,6 +84,8 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
 void UCI::parse_position() {
     if (tokens.size() < 2) return;
 
+    Position& position = engine.thread_states[0].position;
+
     int next_idx;
     engine.thread_states[0].game_ply = 0;
 
@@ -124,6 +130,9 @@ void UCI::parse_position() {
 
 
 void UCI::parse_go() {
+
+    Position& position = engine.thread_states[0].position;
+
     PLY_TYPE d = 0, perft_depth = -1;
     double wtime = 0, btime = 0, winc = 0, binc = 0, movetime = 0;
     long movestogo = 0;
@@ -181,13 +190,15 @@ void UCI::parse_go() {
         if (engine.thread_states[0].terminated) search_threads.erase(search_threads.end() - 1);
     }
 
-    search_threads.emplace_back(lazy_smp_search, std::ref(engine), std::ref(position));
+    search_threads.emplace_back(lazy_smp_search, std::ref(engine));
 
     //iterative_search(engine, position);
 }
 
 
 void UCI::uci_loop() {
+
+    Position& position = engine.thread_states[0].position;
 
     while (true) {
         msg = "";
@@ -291,7 +302,7 @@ void UCI::uci_loop() {
         }
 
         else if (tokens[0] == "bench") {
-            run_bench(engine, position, BENCH_DEPTH);
+            run_bench(engine, BENCH_DEPTH);
         }
 
         else if (tokens[0] == "stats") {

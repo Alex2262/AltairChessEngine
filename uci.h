@@ -18,7 +18,6 @@ public:
     std::vector<std::string> tokens;
 
     Engine engine;
-    Position position;
     MOVE_TYPE last_move = NO_MOVE;
 
     std::vector<std::thread> search_threads;
