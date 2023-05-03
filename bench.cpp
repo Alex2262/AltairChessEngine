@@ -28,7 +28,7 @@ void run_bench(Engine& engine, Position& position, PLY_TYPE depth) {
         std::cout << "running position #" << fen_count + 1 << " fen: " << fen << std::endl;
         engine.new_game();
         position.set_fen(fen);
-        iterative_search(engine, position);
+        lazy_smp_search(engine, position);
         total_nodes += engine.node_count;
 
         if (engine.show_stats) {

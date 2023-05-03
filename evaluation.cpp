@@ -906,7 +906,7 @@ SCORE_TYPE evaluate(Position& position) {
 }
 
 
-SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move) {
+SCORE_TYPE score_move(const Thread_State& thread_state, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move) {
 
     if (move == tt_move) return 100000;
 
@@ -921,17 +921,17 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
         if (get_is_capture(move)) {
             score += 20000;
             score += 2 * (MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected]);
-            score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
+            score += thread_state.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
         else {
             if (last_move != NO_MOVE &&
-                engine.counter_moves[0][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
+                    thread_state.counter_moves[0][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
                                     [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move) score += 8000;
 
             // score 1st and 2nd killer move
-            if (engine.killer_moves[0][engine.search_ply] == move) score += 12000;
-            else if (engine.killer_moves[1][engine.search_ply] == move) score += 11000;
-            else score += engine.history_moves
+            if (thread_state.killer_moves[0][thread_state.search_ply] == move) score += 12000;
+            else if (thread_state.killer_moves[1][thread_state.search_ply] == move) score += 11000;
+            else score += thread_state.history_moves
                      [selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
             if (move_type == MOVE_TYPE_PROMOTION) {
@@ -950,17 +950,17 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
         if (get_is_capture(move)) {
             score += 20000;
             score += 2 * (MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN]);
-            score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
+            score += thread_state.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
         else {
             if (last_move != NO_MOVE &&
-                engine.counter_moves[1][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
+                    thread_state.counter_moves[1][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
                                     [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move) score += 8000;
 
             // score 1st and 2nd killer move
-            if (engine.killer_moves[0][engine.search_ply] == move) score += 12000;
-            else if (engine.killer_moves[1][engine.search_ply] == move) score += 11000;
-            else score += engine.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
+            if (thread_state.killer_moves[0][thread_state.search_ply] == move) score += 12000;
+            else if (thread_state.killer_moves[1][thread_state.search_ply] == move) score += 11000;
+            else score += thread_state.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
             if (move_type == MOVE_TYPE_PROMOTION) {
                 PIECE_TYPE promotion_piece = get_promotion_piece(move) - BLACK_PAWN;
@@ -979,7 +979,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
 }
 
 
-SCORE_TYPE score_capture(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move) {
+SCORE_TYPE score_capture(const Thread_State& thread_state, MOVE_TYPE move, MOVE_TYPE tt_move) {
 
     if (move == tt_move) return 100000;
 
@@ -995,28 +995,28 @@ SCORE_TYPE score_capture(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move
         score += MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN];
     }
 
-    score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
+    score += thread_state.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
     return score;
 }
 
 
-void get_move_scores(const Engine& engine, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+void get_move_scores(const Thread_State& thread_state, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
                      MOVE_TYPE tt_move, MOVE_TYPE last_move) {
     move_scores.clear();
 
     for (MOVE_TYPE move : moves) {
-        move_scores.push_back(score_move(engine, move, tt_move, last_move));
+        move_scores.push_back(score_move(thread_state, move, tt_move, last_move));
     }
 }
 
 
-void get_capture_scores(const Engine& engine, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+void get_capture_scores(const Thread_State& thread_state, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
                         MOVE_TYPE tt_move) {
     move_scores.clear();
 
     for (MOVE_TYPE move : moves) {
-        move_scores.push_back(score_capture(engine, move, tt_move));
+        move_scores.push_back(score_capture(thread_state, move, tt_move));
     }
 }
 

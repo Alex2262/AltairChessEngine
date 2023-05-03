@@ -34,12 +34,12 @@ double evaluate_drawishness(const int white_piece_amounts[6], const int black_pi
                             SCORE_TYPE white_material, SCORE_TYPE black_material, bool opp_colored_bishops);
 SCORE_TYPE evaluate(Position& position);
 
-SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move);
-SCORE_TYPE score_capture(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move);
+SCORE_TYPE score_move(const Thread_State& thread_state, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move);
+SCORE_TYPE score_capture(const Thread_State& thread_state, MOVE_TYPE move, MOVE_TYPE tt_move);
 
-void get_move_scores(const Engine& engine, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+void get_move_scores(const Thread_State& thread_state, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
                      MOVE_TYPE tt_move, MOVE_TYPE last_move);
-void get_capture_scores(const Engine& engine, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+void get_capture_scores(const Thread_State& thread_state, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
                         MOVE_TYPE tt_move);
 void sort_next_move(std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores, int current_count);
 
