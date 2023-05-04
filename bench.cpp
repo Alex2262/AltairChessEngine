@@ -23,7 +23,7 @@ void run_bench(Engine& engine, Position& position, PLY_TYPE depth) {
     uint64_t total_nodes = 0;
     Search_Results bench_res{};
 
-    for (int fen_count = 0; fen_count < fens.size(); fen_count++) {
+    for (int fen_count = 0; fen_count < static_cast<int>(fens.size()); fen_count++) {
         std::string fen = fens[fen_count];
         std::cout << "running position #" << fen_count + 1 << " fen: " << fen << std::endl;
         engine.new_game();
