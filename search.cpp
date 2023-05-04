@@ -251,7 +251,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     position.set_state(engine.search_ply, engine.fifty_move, static_eval);
 
     position.get_pseudo_legal_captures(engine.search_ply);
-    get_capture_scores(engine, position.moves[engine.search_ply], position.move_scores[engine.search_ply], tt_move);
+    get_capture_scores(engine, position, position.moves[engine.search_ply], position.move_scores[engine.search_ply], tt_move);
 
     SCORE_TYPE best_score = static_eval;
     MOVE_TYPE best_move = NO_MOVE;
@@ -498,7 +498,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Retrieving the pseudo legal moves in the current position as a list of integers
     // Score the moves
     position.get_pseudo_legal_moves(engine.search_ply);
-    get_move_scores(engine, position.moves[engine.search_ply], position.move_scores[engine.search_ply],
+    get_move_scores(engine, position, position.moves[engine.search_ply], position.move_scores[engine.search_ply],
                     tt_move, last_move);
 
     // Best score for fail soft, and best move for tt
