@@ -896,7 +896,7 @@ void iterative_search(Engine& engine, int thread_id) {
 
         previous_score = aspiration_window(engine, previous_score, scaled_window, thread_id);
 
-        if (!engine.stopped) best_move = engine.pv_table[0][0];
+        if (thread_id == 0 && !engine.stopped) best_move = engine.pv_table[0][0];
 
         auto end_time = std::chrono::high_resolution_clock::now();
         auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
@@ -923,9 +923,10 @@ void iterative_search(Engine& engine, int thread_id) {
     engine.search_results.depth_reached = running_depth;
     engine.search_results.node_count = engine.node_count;
 
-    std::string best_move_str = get_uci_from_move(best_move);
-
-    if (thread_id == 0) std::cout << "bestmove " << best_move_str << std::endl;
+    if (thread_id == 0) {
+        std::string best_move_str = get_uci_from_move(best_move);
+        std::cout << "bestmove " << best_move_str << std::endl;
+    }
 
     thread_state.terminated = true;
 }
@@ -1042,4 +1043,4 @@ void print_tuning_config(Tuning_Parameters& tuning_parameters) {
 }
 
 
-// setoption name Threads value 3
+// setoption name Threads value 4
