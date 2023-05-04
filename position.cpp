@@ -404,11 +404,6 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
     hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[origin_square]];
 
     if (!side) {
-        if(0 > selected_index || selected_index >= white_pieces.size()) {
-            std::cout << "NO: " << selected << std::endl;
-            print_board();
-        }
-        assert(0 <= selected_index < white_pieces.size());
         white_pieces[selected_index] = target_square;
 
         if (get_is_capture(move)) {
@@ -418,11 +413,6 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             update_piece_list_index(occupied_index, black_pieces.size(), BLACK_COLOR);
         }
     } else {
-        if(0 > selected_index || selected_index >= black_pieces.size()) {
-            std::cout << "NO: " << selected << std::endl;
-            print_board();
-        }
-        assert(0 <= selected_index < black_pieces.size());
         black_pieces[selected_index] = target_square;
 
         if (get_is_capture(move)) {

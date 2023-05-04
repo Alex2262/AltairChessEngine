@@ -16,8 +16,6 @@
 #include "useful.h"
 
 
-std::mutex report_mutex{};
-
 static double LMR_REDUCTIONS[TOTAL_MAX_DEPTH][64];
 
 void initialize_lmr_reductions(Engine& engine) {
@@ -48,7 +46,7 @@ void Engine::reset() {
     node_count = 0;
 
     for (Thread_State& thread_state : thread_states) {
-        thread_state.current_search_depth = 0;
+        thread_state.current_search_depth = 1;
         thread_state.search_ply = 0;
 
         std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
@@ -723,7 +721,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                         else if (move == thread_state.killer_moves[1][thread_state.search_ply])
                             engine.search_results.search_fail_high_types[2]++;
                         else if (last_move != NO_MOVE &&
-                                thread_state.counter_moves[position.side][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
+                                 thread_state.counter_moves[position.side][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
                                  [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move)
                             engine.search_results.search_fail_high_types[3]++;
                         else if (quiet) engine.search_results.search_fail_high_types[4]++;
@@ -841,7 +839,7 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, SCORE_TY
             beta  = (alpha + 3 * beta) / 4;
             depth = thread_state.current_search_depth;
 
-            //if (depth >= 12 && thread_id == 0) print_thinking(engine, position, Lower_Node, return_eval, thread_id);
+            if (depth >= 12 && thread_id == 0) print_thinking(engine, Lower_Node, return_eval, thread_id);
         }
 
             // The aspiration window search has failed high.
@@ -852,16 +850,14 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, SCORE_TY
             depth = std::max(engine.min_depth,
                              static_cast<PLY_TYPE>(static_cast<int>(depth) - (return_eval < MATE_BOUND)));
 
-            //if (depth >= 12 && thread_id == 0) print_thinking(engine, position, Upper_Node, return_eval, thread_id);
+            if (depth >= 12 && thread_id == 0) print_thinking(engine, Upper_Node, return_eval, thread_id);
         }
 
             // We have achieved an exact node where the score was between alpha and beta.
             // We are certain of our score and can now safely return.
         else {
-            std::cout << "thread " << thread_id << std::endl;
 
-            std::lock_guard<std::mutex> lock(report_mutex);
-            print_thinking(engine, Exact_Node, return_eval, thread_id);
+            if (thread_id == 0) print_thinking(engine, Exact_Node, return_eval, thread_id);
             break;
         }
 
@@ -882,7 +878,6 @@ void iterative_search(Engine& engine, int thread_id) {
     thread_state.terminated = false;
 
     position.clear_movelist();
-    engine.reset();
 
     auto start_time = std::chrono::high_resolution_clock::now();
     engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
@@ -897,9 +892,6 @@ void iterative_search(Engine& engine, int thread_id) {
 
     while (running_depth <= engine.max_depth) {
         thread_state.current_search_depth = running_depth;
-
-        //std::cout << "Running depth " << running_depth << " thread " << thread_id << std::endl;
-        //position.print_board();
 
         previous_score = aspiration_window(engine, previous_score, scaled_window, thread_id);
 
@@ -940,20 +932,17 @@ void iterative_search(Engine& engine, int thread_id) {
 
 void lazy_smp_search(Engine& engine) {
 
+    engine.reset();
+
     std::vector<std::thread> search_threads;
     //std::vector<Position> new_positions;
 
+    engine.thread_states.reserve(engine.num_threads);
+
     for (int thread_id = 1; thread_id < engine.num_threads; thread_id++) {
         std::cout << "Creating Helper Thread #" << thread_id << std::endl;
-        Thread_State new_thread_state = engine.thread_states[0];
-        engine.thread_states.push_back(new_thread_state);
-
-        //engine.thread_states[thread_id].position.print_board();
-
-        //new_positions.push_back(new_position);
+        engine.thread_states.push_back(engine.thread_states[0]);
         search_threads.emplace_back(iterative_search, std::ref(engine), thread_id);
-
-        std::cout << "working" << std::endl;
     }
 
     //engine.thread_states[0].position.print_board();
