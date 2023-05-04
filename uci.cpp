@@ -10,7 +10,6 @@
 #include "evaluation.h"
 #include "perft.h"
 #include "bench.h"
-#include "see.h"
 
 void UCI::initialize_uci() {
     position.set_fen(START_FEN);
@@ -292,11 +291,6 @@ void UCI::uci_loop() {
 
         else if (tokens[0] == "print_tune_wf" && engine.do_tuning) {
             print_tuning_config(engine.tuning_parameters);
-        }
-
-        else if (tokens[0] == "see") {
-            std::cout << get_static_exchange_evaluation(position, get_move_from_uci(position, tokens[1]), SEE_MOVE_ORDERING_THRESHOLD);
-            position.print_board();
         }
     }
 }
