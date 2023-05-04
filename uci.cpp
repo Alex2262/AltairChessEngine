@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <algorithm>
 #include "uci.h"
 #include "useful.h"
 #include "move.h"
