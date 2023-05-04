@@ -4,6 +4,7 @@
 
 #include "evaluation.h"
 #include "move.h"
+#include "see.h"
 
 
 void evaluate_king_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE file, bool is_white) {
@@ -906,7 +907,7 @@ SCORE_TYPE evaluate(Position& position) {
 }
 
 
-SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move) {
+SCORE_TYPE score_move(const Engine& engine, Position& position, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move) {
 
     if (move == tt_move) return 100000;
 
@@ -919,7 +920,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
 
     if (selected < BLACK_PAWN) {
         if (get_is_capture(move)) {
-            score += 20000;
+            score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
             score += 2 * (MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected]);
             score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
@@ -948,7 +949,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
     }
     else {
         if (get_is_capture(move)) {
-            score += 20000;
+            score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
             score += 2 * (MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN]);
             score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
@@ -979,7 +980,7 @@ SCORE_TYPE score_move(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move, M
 }
 
 
-SCORE_TYPE score_capture(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move) {
+SCORE_TYPE score_capture(const Engine& engine, Position& position, MOVE_TYPE move, MOVE_TYPE tt_move) {
 
     if (move == tt_move) return 100000;
 
@@ -987,6 +988,8 @@ SCORE_TYPE score_capture(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move
 
     PIECE_TYPE selected = get_selected(move);
     PIECE_TYPE occupied = get_occupied(move);
+
+    score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
 
     if (selected < BLACK_PAWN) {
         score += MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected];
@@ -1001,22 +1004,22 @@ SCORE_TYPE score_capture(const Engine& engine, MOVE_TYPE move, MOVE_TYPE tt_move
 }
 
 
-void get_move_scores(const Engine& engine, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+void get_move_scores(const Engine& engine, Position& position, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
                      MOVE_TYPE tt_move, MOVE_TYPE last_move) {
     move_scores.clear();
 
     for (MOVE_TYPE move : moves) {
-        move_scores.push_back(score_move(engine, move, tt_move, last_move));
+        move_scores.push_back(score_move(engine, position, move, tt_move, last_move));
     }
 }
 
 
-void get_capture_scores(const Engine& engine, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+void get_capture_scores(const Engine& engine, Position& position, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
                         MOVE_TYPE tt_move) {
     move_scores.clear();
 
     for (MOVE_TYPE move : moves) {
-        move_scores.push_back(score_capture(engine, move, tt_move));
+        move_scores.push_back(score_capture(engine, position, move, tt_move));
     }
 }
 
