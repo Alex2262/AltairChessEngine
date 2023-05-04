@@ -82,8 +82,9 @@ void Engine::new_game() {
         thread_state.game_ply = 0;
         thread_state.fifty_move = 0;
 
-        thread_state.stopped = true;
     }
+
+    stopped = true;
 
     std::memset(pv_length, 0, sizeof(pv_length));
     std::memset(pv_table, 0, sizeof(pv_table));
@@ -225,17 +226,17 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // engine.selective_depth = std::max(engine.search_ply, engine.selective_depth);
 
     // Check time and max nodes
-    if (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth && (engine.node_count & 1023) == 0) {
+    if (thread_state.current_search_depth >= engine.min_depth && (engine.node_count & 2047) == 0) {
         auto time = std::chrono::high_resolution_clock::now();
         uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>
                 (std::chrono::time_point_cast<std::chrono::milliseconds>(time).time_since_epoch()).count();
 
         if (current_time - engine.start_time >= engine.hard_time_limit) {
-            thread_state.stopped = true;
+            engine.stopped = true;
         }
     }
 
-    if (engine.max_nodes && engine.node_count >= engine.max_nodes) thread_state.stopped = true;
+    if (engine.max_nodes && engine.node_count >= engine.max_nodes) engine.stopped = true;
 
     SCORE_TYPE tt_value = 0;
     MOVE_TYPE tt_move = NO_MOVE;
@@ -298,7 +299,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
 
-        if (thread_state.stopped) return 0;
+        if (engine.stopped) return 0;
 
         legal_moves++;
 
@@ -646,7 +647,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
 
-        if (thread_state.stopped) return 0;
+        if (engine.stopped) return 0;
 
         // Update legal move count
         legal_moves++;
@@ -829,7 +830,7 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, SCORE_TY
 
         return_eval = negamax(engine, alpha, beta, depth, false, thread_id);
 
-        if (thread_state.stopped) break;
+        if (engine.stopped) break;
 
         // The aspiration window search has failed low.
         // The position is probably worse than we expect, so both alpha and beta should be relaxed.
@@ -874,7 +875,7 @@ void iterative_search(Engine& engine, int thread_id) {
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
 
-    thread_state.stopped = false;
+    engine.stopped = false;
     thread_state.terminated = false;
 
     position.clear_movelist();
@@ -895,7 +896,7 @@ void iterative_search(Engine& engine, int thread_id) {
 
         previous_score = aspiration_window(engine, previous_score, scaled_window, thread_id);
 
-        if (!thread_state.stopped) best_move = engine.pv_table[0][0];
+        if (!engine.stopped) best_move = engine.pv_table[0][0];
 
         auto end_time = std::chrono::high_resolution_clock::now();
         auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
@@ -903,11 +904,11 @@ void iterative_search(Engine& engine, int thread_id) {
         uint64_t elapsed_time = ms_int.count();
         elapsed_time = std::max<uint64_t>(elapsed_time, 1);
 
-        if (running_depth >= engine.min_depth) {
-            if (elapsed_time >= engine.soft_time_limit) thread_state.stopped = true;
+        if (running_depth >= engine.min_depth && thread_id == 0) {
+            if (elapsed_time >= engine.soft_time_limit) engine.stopped = true;
         }
 
-        if (thread_state.stopped || running_depth == engine.max_depth) {
+        if (engine.stopped || running_depth == engine.max_depth) {
             break;
         }
 
@@ -947,10 +948,6 @@ void lazy_smp_search(Engine& engine) {
 
     //engine.thread_states[0].position.print_board();
     iterative_search(engine, 0);
-
-    for (int thread_id = 1; thread_id < engine.num_threads; thread_id++) {
-        engine.thread_states[thread_id].stopped = true;
-    }
 
     for (int thread_id = engine.num_threads - 1; thread_id >= 1; thread_id--) {
         search_threads[thread_id - 1].join();

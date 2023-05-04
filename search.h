@@ -105,7 +105,6 @@ public:
 
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH+600] = {0};
 
-    bool stopped = true;
     bool terminated = true;
 
     bool detect_repetition();
@@ -120,6 +119,8 @@ public:
 
     int num_threads = 1;
     std::vector<Thread_State> thread_states;
+
+    bool stopped = true;
 
     PLY_TYPE selective_depth = 0;
 

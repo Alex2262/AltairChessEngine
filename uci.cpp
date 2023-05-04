@@ -183,7 +183,7 @@ void UCI::parse_go() {
 
     if (d) engine.max_depth = d;
 
-    engine.thread_states[0].stopped = true;
+    engine.stopped = true;
     if (!search_threads.empty()) {
         search_threads[0].join();
 
@@ -213,7 +213,7 @@ void UCI::uci_loop() {
         }
 
         if (msg == "stop") {
-            engine.thread_states[0].stopped = true;
+            engine.stopped = true;
             if (!search_threads.empty()) {
                 search_threads[0].join();
 
