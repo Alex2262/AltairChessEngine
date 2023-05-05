@@ -13,6 +13,7 @@
 #include "evaluation.h"
 #include "move.h"
 #include "useful.h"
+#include "see.h"
 
 static double LMR_REDUCTIONS[TOTAL_MAX_DEPTH][64];
 
@@ -232,8 +233,8 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         return tt_value;
     }
 
-        // When the tt_value is above a bound (USE_HASH_MOVE), the function tells us to use the
-        // tt_entry move for move ordering
+    // When the tt_value is above a bound (USE_HASH_MOVE), the function tells us to use the
+    // tt_entry move for move ordering
     else if (tt_value > USE_HASH_MOVE) tt_move = tt_value - USE_HASH_MOVE;
 
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
@@ -262,11 +263,18 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         sort_next_move(position.moves[engine.search_ply], position.move_scores[engine.search_ply], move_index);
         MOVE_TYPE move = position.moves[engine.search_ply][move_index];
 
+        // SEE pruning
+        if (static_eval + 65 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
+            continue;
+        }
+
         // Delta / Futility pruning
         // If the piece we capture plus a margin cannot even improve our score then
         // there is no point in searching it
         if (static_eval + PIECE_VALUES_MID[get_occupied(move) % BLACK_PAWN] +
-            engine.tuning_parameters.delta_margin < alpha) continue;
+            engine.tuning_parameters.delta_margin < alpha) {
+            continue;
+        }
 
         bool attempt = position.make_move(move, engine.search_ply, engine.fifty_move);
 
