@@ -185,11 +185,10 @@ void UCI::parse_go() {
 
 void UCI::uci_loop() {
 
-    while (true) {
-        msg = "";
+    msg = "";
+    while (getline(std::cin, msg)) {
         tokens.clear();
 
-        getline(std::cin, msg);
         tokens = split(msg, ' ');
 
         if (msg == "quit") {
