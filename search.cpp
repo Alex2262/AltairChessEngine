@@ -539,12 +539,19 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             if (quiet && depth <= engine.tuning_parameters.quiet_LMP_depth &&
                 legal_moves >= depth * (engine.tuning_parameters.quiet_LMP_margin -
                                         !improving * engine.tuning_parameters.quiet_LMP_improving_margin)) break;
-
             if (quiet && best_score > -MATE_BOUND && depth <= 5 && static_eval + depth * 150 + 60 <= alpha) break;
 
             // History Pruning
             if (depth <= engine.tuning_parameters.history_pruning_depth &&
                 move_history_score <= (depth + improving) * -engine.tuning_parameters.history_pruning_divisor) continue;
+
+            // SEE Pruning
+            if (depth <= (3 + 3 * !quiet) && legal_moves >= 3 &&
+                 -MATE_BOUND < alpha && alpha < MATE_BOUND &&
+                 move_history_score <= 5000 &&
+                 !get_static_exchange_evaluation(position, move, (quiet ? -50 : -90) * depth))
+                continue;
+
         }
 
         // Make the move

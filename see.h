@@ -11,7 +11,8 @@
 
 constexpr SCORE_TYPE SEE_MOVE_ORDERING_THRESHOLD = -108;
 
-constexpr SCORE_TYPE SEE_values[6] = {100, 350, 360, 560, 1300, 10000};
+constexpr SCORE_TYPE SEE_values[13] = {100, 350, 360, 560, 1300, 10000,
+                                      100, 350, 360, 560, 1300, 10000, 0};
 
 SQUARE_TYPE get_cheapest_attacker(Position& position, SQUARE_TYPE pos);
 SCORE_TYPE get_static_exchange_evaluation(Position& position, MOVE_TYPE move, SCORE_TYPE threshold);
