@@ -546,7 +546,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 move_history_score <= (depth + improving) * -engine.tuning_parameters.history_pruning_divisor) continue;
 
             // SEE Pruning
-            if (depth <= (3 + 3 * !quiet) && legal_moves >= 3 &&
+            if (depth <= (4 + 4 * !quiet) && legal_moves >= (3 + 2 * quiet) &&
                  -MATE_BOUND < alpha && alpha < MATE_BOUND &&
                  move_history_score <= 5000 &&
                  !get_static_exchange_evaluation(position, move, (quiet ? -50 : -90) * depth))
