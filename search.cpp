@@ -263,17 +263,17 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         sort_next_move(position.moves[engine.search_ply], position.move_scores[engine.search_ply], move_index);
         MOVE_TYPE move = position.moves[engine.search_ply][move_index];
 
-        // SEE pruning
-        if (static_eval + 64 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
-            best_score = std::max(best_score, static_eval + 64);
-            continue;
-        }
-
         // Delta / Futility pruning
         // If the piece we capture plus a margin cannot even improve our score then
         // there is no point in searching it
         if (static_eval + PIECE_VALUES_MID[get_occupied(move) % BLACK_PAWN] +
             engine.tuning_parameters.delta_margin < alpha) {
+            continue;
+        }
+
+        // SEE pruning
+        if (static_eval + 60 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
+            best_score = std::max(best_score, static_eval + 60);
             continue;
         }
 
