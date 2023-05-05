@@ -264,7 +264,8 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         MOVE_TYPE move = position.moves[engine.search_ply][move_index];
 
         // SEE pruning
-        if (static_eval + 65 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
+        if (static_eval + 64 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
+            best_score = std::max(best_score, static_eval + 64);
             continue;
         }
 
