@@ -118,19 +118,17 @@ SQUARE_TYPE get_cheapest_attacker(Position& position, SQUARE_TYPE pos) {
 SCORE_TYPE get_static_exchange_evaluation(Position& position, MOVE_TYPE move, SCORE_TYPE threshold) {
     uint16_t move_type = get_move_type(move);
     if (move_type == MOVE_TYPE_PROMOTION) return true;
+    if (move_type == MOVE_TYPE_EP) return true;
 
     SQUARE_TYPE target_square = get_target_square(move);
 
     PIECE_TYPE selected = get_selected(move);
     PIECE_TYPE occupied = get_occupied(move);
 
-    PIECE_TYPE selected_type = selected - BLACK_PAWN * position.side;
-    PIECE_TYPE occupied_type = occupied - BLACK_PAWN * !position.side;
-
-    SCORE_TYPE exchange_value = SEE_values[occupied_type] - threshold;
+    SCORE_TYPE exchange_value = SEE_values[occupied] - threshold;
     if (exchange_value < 0) return false; // If taking the opponent's piece without any risk is still negative
 
-    exchange_value -= SEE_values[selected_type];
+    exchange_value -= SEE_values[selected];
     if (exchange_value >= 0) return true; // If we risk our piece being fully lost and the exchange value is still >= 0
 
     std::vector<std::pair<SQUARE_TYPE, PIECE_TYPE>> removed_pieces;
@@ -148,7 +146,7 @@ SCORE_TYPE get_static_exchange_evaluation(Position& position, MOVE_TYPE move, SC
 
         PIECE_TYPE cheapest_attacker = position.board[cheapest_attacker_square];
 
-        exchange_value = -exchange_value - 1 - SEE_values[cheapest_attacker - BLACK_PAWN * position.side];
+        exchange_value = -exchange_value - 1 - SEE_values[cheapest_attacker];
         if (exchange_value >= 0) {
             break;
         }
