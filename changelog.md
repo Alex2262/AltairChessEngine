@@ -4898,3 +4898,7 @@ Score of Altair220 vs Altair219: 445 - 409 - 616  [0.512] 1470
 Elo difference: 8.5 +/- 13.5, LOS: 89.1 %, DrawRatio: 41.9 %
 SPRT: llr 0.735 (25.0%), lbound -2.94, ubound 2.94
 ```
+
+### 2.2.1
+Very slightly lowering soft and hard time limit bounds
+Around equal or better in self play over 1000 games
