@@ -291,5 +291,9 @@ void UCI::uci_loop() {
         else if (tokens[0] == "print_tune_wf" && engine.do_tuning) {
             print_tuning_config(engine.tuning_parameters);
         }
+
+        else if (tokens[0] == "evaluate") {
+            std::cout << evaluate(position) << std::endl;
+        }
     }
 }
