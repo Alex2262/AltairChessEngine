@@ -4886,3 +4886,15 @@ SPRT  | 8.0+0.08s Threads=1 Hash=16MB
 LLR   | 2.96 (-2.94, 2.94) [0.00, 5.00]
 GAMES | N: 2864 W: 902 L: 741 D: 1221
 ```
+
+### 2.2.0
+King Danger Ring Evaluation
+
+```
+Score of Altair220 vs Altair219: 445 - 409 - 616  [0.512] 1470
+...      Altair220 playing White: 312 - 117 - 307  [0.632] 736
+...      Altair220 playing Black: 133 - 292 - 309  [0.392] 734
+...      White vs Black: 604 - 250 - 616  [0.620] 1470
+Elo difference: 8.5 +/- 13.5, LOS: 89.1 %, DrawRatio: 41.9 %
+SPRT: llr 0.735 (25.0%), lbound -2.94, ubound 2.94
+```
