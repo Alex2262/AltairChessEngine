@@ -4826,3 +4826,63 @@ No returning TT values at root
 
 ### 2.1.3
 Remove Singular Extensions
+
+### 2.1.4
+Add Futility Pruning
+
+```
+ELO   | 8.62 +- 5.90 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.97 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 7616 W: 2272 L: 2083 D: 3261
+```
+
+### 2.1.5
+Using a new Aspiration Windows framework
+
+```
+ELO   | 18.63 +- 11.39 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 3.00 (-2.94, 2.94) [0.00, 8.00]
+GAMES | N: 2072 W: 655 L: 544 D: 873
+```
+
+### 2.1.6
+My idea to scale initial aspiration windows based on depth
+
+```
+ELO   | 7.01 +- 5.11 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.98 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 10160 W: 3013 L: 2808 D: 4339
+```
+
+### 2.1.7
+Static Exchange Evaluation Move ordering
+
+```
+ELO   | 9.36 +- 6.22 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.98 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 6944 W: 2110 L: 1923 D: 2911
+```
+
+### 2.1.8
+Static Exchange Evaluation pruning in qsearch
+
+```
+ELO   | 13.79 +- 7.92 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.99 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 4360 W: 1371 L: 1198 D: 1791
+```
+
+### 2.1.9
+Static Exchange Evaluation pruning in negamax
+
+```
+ELO   | 19.55 +- 9.65 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.96 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 2864 W: 902 L: 741 D: 1221
+```
