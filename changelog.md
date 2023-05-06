@@ -4902,3 +4902,16 @@ SPRT: llr 0.735 (25.0%), lbound -2.94, ubound 2.94
 ### 2.2.1
 Very slightly lowering soft and hard time limit bounds
 Around equal or better in self play over 1000 games
+
+
+### 2.2.2
+Switching Blockers from a one dimensional array to 2 dimensions based on piece | rank
+
+```
+Score of Altair222 vs Altair221: 527 - 434 - 649  [0.529] 1610
+...      Altair222 playing White: 361 - 114 - 331  [0.653] 806
+...      Altair222 playing Black: 166 - 320 - 318  [0.404] 804
+...      White vs Black: 681 - 280 - 649  [0.625] 1610
+Elo difference: 20.1 +/- 13.1, LOS: 99.9 %, DrawRatio: 40.3 %
+SPRT: llr 2.6 (88.3%), lbound -2.94, ubound 2.94
+```
