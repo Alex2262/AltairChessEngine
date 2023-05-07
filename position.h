@@ -37,7 +37,7 @@ public:
 
     bool is_attacked(SQUARE_TYPE pos);
 
-    void set_state(PLY_TYPE search_ply, PLY_TYPE fifty_move, SCORE_TYPE evaluation);
+    void set_state(PLY_TYPE search_ply, PLY_TYPE fifty_move);
 
     bool make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_move);
     void undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_move);

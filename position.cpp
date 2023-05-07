@@ -299,12 +299,11 @@ bool Position::is_attacked(SQUARE_TYPE pos) {
 }
 
 
-void Position::set_state(PLY_TYPE search_ply, PLY_TYPE fifty_move, SCORE_TYPE evaluation) {
+void Position::set_state(PLY_TYPE search_ply, PLY_TYPE fifty_move) {
     state_stack[search_ply].current_ep_square = ep_square;
     state_stack[search_ply].current_fifty_move = fifty_move;
     state_stack[search_ply].current_hash_key = hash_key;
     state_stack[search_ply].current_castle_ability_bits = castle_ability_bits;
-    state_stack[search_ply].evaluation = evaluation;
 }
 
 

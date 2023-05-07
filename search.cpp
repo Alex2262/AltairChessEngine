@@ -249,7 +249,8 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     alpha = (static_eval > alpha) ? static_eval : alpha;
 
     // Set values for State
-    position.set_state(engine.search_ply, engine.fifty_move, static_eval);
+    position.set_state(engine.search_ply, engine.fifty_move);
+    position.state_stack[engine.search_ply].evaluation = static_eval;
 
     position.get_pseudo_legal_captures(engine.search_ply);
     get_capture_scores(engine, position, position.moves[engine.search_ply], position.move_scores[engine.search_ply], tt_move);
@@ -383,12 +384,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Increase node count
     engine.node_count++;
 
-    // Get evaluation
-    SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
-
     // Set values for State
-    position.set_state(engine.search_ply, engine.fifty_move, static_eval);
+    position.set_state(engine.search_ply, engine.fifty_move);
 
     // TT probing
     TT_Entry tt_entry{};
@@ -435,6 +432,11 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     bool null_search = !do_null && !root;
 
     // if (!pv_node) std::cout << alpha << " " << beta << std::endl;
+
+    // Get evaluation
+    SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
+    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
+    position.state_stack[engine.search_ply].evaluation = static_eval;
 
     // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
     // from a full-move or two plies ago. When this is true, we can be more aggressive with
