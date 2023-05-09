@@ -800,10 +800,10 @@ void print_thinking(Engine& engine, Position& position, NodeType node, SCORE_TYP
 }
 
 
-SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE previous_score, SCORE_TYPE starting_window) {
+SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE previous_score, PLY_TYPE& asp_depth) {
     SCORE_TYPE alpha = -SCORE_INF;
     SCORE_TYPE beta = SCORE_INF;
-    SCORE_TYPE delta = starting_window;
+    SCORE_TYPE delta = std::max(6 + static_cast<int>(85 / (asp_depth - 2)), 10);
 
     PLY_TYPE depth = engine.current_search_depth;
 
@@ -872,15 +872,14 @@ void iterative_search(Engine& engine, Position& position) {
 
     SCORE_TYPE previous_score = 0;
     PLY_TYPE running_depth = 1;
+    PLY_TYPE asp_depth = 6;
 
     MOVE_TYPE best_move = NO_MOVE;
-
-    SCORE_TYPE scaled_window = STARTING_WINDOW;
 
     while (running_depth <= engine.max_depth) {
         engine.current_search_depth = running_depth;
 
-        previous_score = aspiration_window(engine, position, previous_score, scaled_window);
+        previous_score = aspiration_window(engine, position, previous_score, asp_depth);
 
         if (!engine.stopped) best_move = engine.pv_table[0][0];
 
@@ -899,8 +898,7 @@ void iterative_search(Engine& engine, Position& position) {
         }
 
         if (running_depth >= 6) {
-            scaled_window -= 28 / (running_depth + 3);
-            scaled_window = std::max(scaled_window, 12);
+            asp_depth++;
         }
 
         running_depth++;
