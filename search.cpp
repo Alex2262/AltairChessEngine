@@ -238,7 +238,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     else if (tt_value > USE_HASH_MOVE) tt_move = tt_value - USE_HASH_MOVE;
 
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
+    if (static_eval == NO_EVALUATION) static_eval = 4 - static_cast<int>(engine.node_count & 8) + evaluate(position);
     // SCORE_TYPE static_eval = evaluate(position);
 
     if (depth == 0 || static_eval >= beta) return static_eval;
@@ -267,7 +267,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // Delta / Futility pruning
         // If the piece we capture plus a margin cannot even improve our score then
         // there is no point in searching it
-        if (static_eval + PIECE_VALUES_MID[get_occupied(move) % BLACK_PAWN] +
+        if (static_eval + PIECE_VALUES[get_occupied(move)] +
             engine.tuning_parameters.delta_margin < alpha) {
             continue;
         }
@@ -348,10 +348,10 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Early search exits
     if (!root) {
 
-        if (engine.search_ply >= MAX_AB_DEPTH - 1) return evaluate(position);
+        if (engine.search_ply >= MAX_AB_DEPTH - 1) return 4 - static_cast<int>(engine.node_count & 8) + evaluate(position);
 
         // Detect repetitions and fifty move rule
-        if (engine.fifty_move >= 100 || engine.detect_repetition()) return 3 - static_cast<int>(engine.node_count & 8);
+        if (engine.fifty_move >= 100 || engine.detect_repetition()) return 4 - static_cast<int>(engine.node_count & 8);
 
         // Mate Distance Pruning from CPW
         SCORE_TYPE mating_value = MATE_SCORE - engine.search_ply;
@@ -435,7 +435,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     // Get evaluation
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
+    if (static_eval == NO_EVALUATION) static_eval = 4 - static_cast<int>(engine.node_count & 8) + evaluate(position);
     position.state_stack[engine.search_ply].evaluation = static_eval;
 
     // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
