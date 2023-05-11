@@ -835,9 +835,9 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
             if (depth >= 12) print_thinking(engine, position, Lower_Node, return_eval);
         }
 
-            // The aspiration window search has failed high.
-            // The position is probably better than we expect, so we can be more aggressive with aspiration windows
-            // and only relax the beta bound while also reducing depth.
+        // The aspiration window search has failed high.
+        // The position is probably better than we expect, so we can be more aggressive with aspiration windows
+        // and only relax the beta bound while also reducing depth.
         else if (return_eval >= beta) {
             beta  = std::min(beta + delta, SCORE_INF);
             depth = std::max(engine.min_depth,
@@ -849,8 +849,8 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
             if (depth >= 12) print_thinking(engine, position, Upper_Node, return_eval);
         }
 
-            // We have achieved an exact node where the score was between alpha and beta.
-            // We are certain of our score and can now safely return.
+        // We have achieved an exact node where the score was between alpha and beta.
+        // We are certain of our score and can now safely return.
         else {
             print_thinking(engine, position, Exact_Node, return_eval);
             break;
