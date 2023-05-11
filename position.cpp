@@ -304,7 +304,7 @@ void Position::set_state(PLY_TYPE search_ply, PLY_TYPE fifty_move) {
     state_stack[search_ply].current_fifty_move = fifty_move;
     state_stack[search_ply].current_hash_key = hash_key;
     state_stack[search_ply].current_castle_ability_bits = castle_ability_bits;
-    state_stack[search_ply].non_pawn_material = -1;
+    state_stack[search_ply].non_pawn_material = NON_PAWN_MATERIAL_EXCEPTION;
 }
 
 
