@@ -58,7 +58,7 @@ struct Tuning_Parameters {
             T{"NMP_base", 1, 5, 3, 2},
             T{"NMP_depth_divisor", 2, 6, 5, 2},
             T{"NMP_eval_divisor", 100, 350, 348, 100},
-            T{"randomizer", 0, 20, 0, 5}
+            T{"randomizer", 0, 20, 4, 5}
     };
 
     int LMR_divisor = tuning_parameter_array[0].value;
