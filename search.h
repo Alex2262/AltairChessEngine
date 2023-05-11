@@ -13,7 +13,8 @@ struct TT_Entry {
     SCORE_TYPE evaluation = NO_EVALUATION;
     MOVE_TYPE move = NO_MOVE;
     PLY_TYPE depth = 0;
-    short flag = 0;
+    uint8_t flag = 0;
+    uint8_t non_pawn_material = NON_PAWN_MATERIAL_EXCEPTION;
 };
 
 
@@ -136,12 +137,12 @@ public:
 
     short probe_tt_entry(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
                          TT_Entry& return_entry);
-    void record_tt_entry(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
-                         SCORE_TYPE static_eval);
+    void record_tt_entry(HASH_TYPE hash_key, SCORE_TYPE score, uint8_t tt_flag, MOVE_TYPE move, PLY_TYPE depth,
+                         SCORE_TYPE static_eval, uint8_t non_pawn_material);
     short probe_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
-                           SCORE_TYPE& return_score, MOVE_TYPE& tt_move);
-    void record_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move,
-                           SCORE_TYPE static_eval);
+                           TT_Entry& tt_entry);
+    void record_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE score, uint8_t tt_flag, MOVE_TYPE move,
+                           SCORE_TYPE static_eval, uint8_t non_pawn_material);
     SCORE_TYPE probe_tt_evaluation(HASH_TYPE hash_key);
 
     void tt_prefetch_read(HASH_TYPE hash_key);
