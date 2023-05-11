@@ -131,6 +131,21 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 scores.mid += BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_MID;
                 scores.end += BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_END;
             }
+
+            // Outposts
+            auto outpost_pos = static_cast<SQUARE_TYPE>(pos - 10);
+            if (position.board[outpost_pos - 11] == BLACK_PAWN || position.board[outpost_pos - 9] == BLACK_PAWN) {
+                scores.mid += OUTPOST_PENALTY_MID;
+                scores.end += OUTPOST_PENALTY_END;
+
+                if (position.board[outpost_pos] == BLACK_KNIGHT) {
+                    scores.mid += OUTPOST_KNIGHT_PENALTY_MID;
+                    scores.end += OUTPOST_KNIGHT_PENALTY_END;
+                } else if (position.board[outpost_pos] == BLACK_BISHOP) {
+                    scores.mid += OUTPOST_BISHOP_PENALTY_MID;
+                    scores.end += OUTPOST_BISHOP_PENALTY_END;
+                }
+            }
         }
 
         // Passed Pawn Bonus
@@ -225,6 +240,21 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             if (position.pawn_rank[0][col] == 9) {
                 scores.mid += BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_MID;
                 scores.end += BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_END;
+            }
+
+            // Outposts
+            auto outpost_pos = static_cast<SQUARE_TYPE>(pos + 10);
+            if (position.board[outpost_pos + 11] == WHITE_PAWN || position.board[outpost_pos + 9] == WHITE_PAWN) {
+                scores.mid += OUTPOST_PENALTY_MID;
+                scores.end += OUTPOST_PENALTY_END;
+
+                if (position.board[outpost_pos] == WHITE_KNIGHT) {
+                    scores.mid += OUTPOST_KNIGHT_PENALTY_MID;
+                    scores.end += OUTPOST_KNIGHT_PENALTY_END;
+                } else if (position.board[outpost_pos] == WHITE_BISHOP) {
+                    scores.mid += OUTPOST_BISHOP_PENALTY_MID;
+                    scores.end += OUTPOST_BISHOP_PENALTY_END;
+                }
             }
         }
 
