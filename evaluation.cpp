@@ -94,8 +94,8 @@ SCORE_TYPE score_move(const Engine& engine, Position& position, MOVE_TYPE move, 
             else if (move_type == MOVE_TYPE_CASTLE) score += 1200;
         }
 
-        score += MO_PST[selected - BLACK_PAWN][MAILBOX_TO_STANDARD[get_target_square(move)]] -
-                 MO_PST[selected - BLACK_PAWN][MAILBOX_TO_STANDARD[get_origin_square(move)]];
+        score += MO_PST[selected - BLACK_PAWN][MAILBOX_TO_STANDARD[get_target_square(move)] ^ 56] -
+                 MO_PST[selected - BLACK_PAWN][MAILBOX_TO_STANDARD[get_origin_square(move)] ^ 56];
     }
 
     return score;
