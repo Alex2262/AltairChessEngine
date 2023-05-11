@@ -887,7 +887,9 @@ double evaluate_drawishness(const int white_piece_amounts[6], const int black_pi
 }
 
 
-SCORE_TYPE evaluate(Position& position) {
+SCORE_TYPE evaluate(Position& position, PLY_TYPE search_ply) {
+
+    position.state_stack[search_ply].non_pawn_material = 0;
 
     Score_Struct white_material{};
     Score_Struct white_scores{};
@@ -938,15 +940,29 @@ SCORE_TYPE evaluate(Position& position) {
         // std::cout << piece << std::endl;
 
         // std::cout << white_scores.mid << " " << white_scores.end << std::endl;
-        if (piece == WHITE_PAWN) evaluate_pawn(position, white_scores, pos, true);
-        else if (piece == WHITE_KNIGHT) evaluate_knight(position, white_scores, pos, true);
+        if (piece == WHITE_PAWN) {
+            evaluate_pawn(position, white_scores, pos, true);
+        }
+        else if (piece == WHITE_KNIGHT) {
+            evaluate_knight(position, white_scores, pos, true);
+            position.state_stack[search_ply].non_pawn_material++;
+        }
         else if (piece == WHITE_BISHOP) {
             bishop_colors[0] = SQUARE_COLOR[standard_pos];
             evaluate_bishop(position, white_scores, pos, true);
+            position.state_stack[search_ply].non_pawn_material++;
         }
-        else if (piece == WHITE_ROOK) evaluate_rook(position, white_scores, pos, true);
-        else if (piece == WHITE_QUEEN) evaluate_queen(position, white_scores, pos, true);
-        else if (piece == WHITE_KING) evaluate_king(position, white_scores, pos, true);
+        else if (piece == WHITE_ROOK) {
+            evaluate_rook(position, white_scores, pos, true);
+            position.state_stack[search_ply].non_pawn_material++;
+        }
+        else if (piece == WHITE_QUEEN) {
+            evaluate_queen(position, white_scores, pos, true);
+            position.state_stack[search_ply].non_pawn_material++;
+        }
+        else if (piece == WHITE_KING) {
+            evaluate_king(position, white_scores, pos, true);
+        }
 
         // std::cout << white_scores.mid << " " << white_scores.end << std::endl;
     }
@@ -963,15 +979,29 @@ SCORE_TYPE evaluate(Position& position) {
         // std::cout << piece << std::endl;
 
         // std::cout << black_scores.mid << " " << black_scores.end << std::endl;
-        if (piece == BLACK_PAWN) evaluate_pawn(position, black_scores, pos, false);
-        else if (piece == BLACK_KNIGHT) evaluate_knight(position, black_scores, pos, false);
+        if (piece == BLACK_PAWN) {
+            evaluate_pawn(position, black_scores, pos, false);
+        }
+        else if (piece == BLACK_KNIGHT) {
+            evaluate_knight(position, black_scores, pos, false);
+            position.state_stack[search_ply].non_pawn_material++;
+        }
         else if (piece == BLACK_BISHOP) {
             bishop_colors[1] = SQUARE_COLOR[standard_pos];
             evaluate_bishop(position, black_scores, pos, false);
+            position.state_stack[search_ply].non_pawn_material++;
         }
-        else if (piece == BLACK_ROOK) evaluate_rook(position, black_scores, pos, false);
-        else if (piece == BLACK_QUEEN) evaluate_queen(position, black_scores, pos, false);
-        else if (piece == BLACK_KING) evaluate_king(position, black_scores, pos, false);
+        else if (piece == BLACK_ROOK) {
+            evaluate_rook(position, black_scores, pos, false);
+            position.state_stack[search_ply].non_pawn_material++;
+        }
+        else if (piece == BLACK_QUEEN) {
+            evaluate_queen(position, black_scores, pos, false);
+            position.state_stack[search_ply].non_pawn_material++;
+        }
+        else if (piece == BLACK_KING) {
+            evaluate_king(position, black_scores, pos, false);
+        }
 
         // std::cout << black_scores.mid << " " << black_scores.end << std::endl;
     }

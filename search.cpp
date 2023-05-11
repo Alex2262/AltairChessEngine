@@ -238,7 +238,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     else if (tt_value > USE_HASH_MOVE) tt_move = tt_value - USE_HASH_MOVE;
 
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
+    if (static_eval == NO_EVALUATION) static_eval = evaluate(position, engine.search_ply);
     // SCORE_TYPE static_eval = evaluate(position);
 
     if (depth == 0 || static_eval >= beta) return static_eval;
@@ -348,7 +348,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Early search exits
     if (!root) {
 
-        if (engine.search_ply >= MAX_AB_DEPTH - 1) return evaluate(position);
+        if (engine.search_ply >= MAX_AB_DEPTH - 1) return evaluate(position, engine.search_ply);
 
         // Detect repetitions and fifty move rule
         if (engine.fifty_move >= 100 || engine.detect_repetition()) return 3 - static_cast<int>(engine.node_count & 8);
@@ -435,7 +435,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     // Get evaluation
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
+    if (static_eval == NO_EVALUATION) static_eval = evaluate(position, engine.search_ply);
     position.state_stack[engine.search_ply].evaluation = static_eval;
 
     // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
@@ -480,7 +480,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // Null move pruning
         // We give the opponent an extra move and if they are not able to make their position
         // any better, then our position is too good, and we don't need to search any deeper.
-        if (depth >= engine.tuning_parameters.NMP_depth && do_null && static_eval >= beta) {
+        if (depth >= engine.tuning_parameters.NMP_depth && do_null && static_eval >= beta &&
+            position.state_stack[engine.search_ply].non_pawn_material >= (depth >= 6)) {
 
             // Adaptive NMP
             int reduction = engine.tuning_parameters.NMP_base +
