@@ -204,6 +204,12 @@ void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
 }
 
 
+SCORE_TYPE randomized_evaluate(Engine& engine, Position& position) {
+    return engine.tuning_parameters.randomizer -
+    static_cast<int>(engine.node_count % (engine.tuning_parameters.randomizer * 2 + 1)) + evaluate(position);
+}
+
+
 SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth) {
 
     engine.tt_prefetch_read(position.hash_key);
@@ -238,8 +244,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     else if (tt_value > USE_HASH_MOVE) tt_move = tt_value - USE_HASH_MOVE;
 
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = 4 - static_cast<int>(engine.node_count & 8) + evaluate(position);
-    // SCORE_TYPE static_eval = evaluate(position);
+    if (static_eval == NO_EVALUATION) static_eval = randomized_evaluate(engine, position);
 
     if (depth == 0 || static_eval >= beta) return static_eval;
 
@@ -348,7 +353,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Early search exits
     if (!root) {
 
-        if (engine.search_ply >= MAX_AB_DEPTH - 1) return 4 - static_cast<int>(engine.node_count & 8) + evaluate(position);
+        if (engine.search_ply >= MAX_AB_DEPTH - 1) return randomized_evaluate(engine, position);
 
         // Detect repetitions and fifty move rule
         if (engine.fifty_move >= 100 || engine.detect_repetition()) return 4 - static_cast<int>(engine.node_count & 8);
@@ -435,7 +440,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     // Get evaluation
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = 4 - static_cast<int>(engine.node_count & 8) + evaluate(position);
+    if (static_eval == NO_EVALUATION) static_eval = randomized_evaluate(engine, position);
     position.state_stack[engine.search_ply].evaluation = static_eval;
 
     // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
