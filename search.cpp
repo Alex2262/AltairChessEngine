@@ -829,6 +829,9 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
             beta  = (alpha + 3 * beta) / 4;
             depth = engine.current_search_depth;
 
+            asp_depth--;
+            asp_depth = std::max<PLY_TYPE>(6, asp_depth);
+
             if (depth >= 12) print_thinking(engine, position, Lower_Node, return_eval);
         }
 
@@ -839,6 +842,9 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
             beta  = std::min(beta + delta, SCORE_INF);
             depth = std::max(engine.min_depth,
                              static_cast<PLY_TYPE>(static_cast<int>(depth) - (return_eval < MATE_BOUND)));
+
+            asp_depth--;
+            asp_depth = std::max<PLY_TYPE>(6, asp_depth);
 
             if (depth >= 12) print_thinking(engine, position, Upper_Node, return_eval);
         }
