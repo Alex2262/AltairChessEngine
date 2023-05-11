@@ -491,7 +491,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // any better, then our position is too good, and we don't need to search any deeper.
         if (depth >= engine.tuning_parameters.NMP_depth && do_null && static_eval >= beta &&
                 (non_pawn_material == NON_PAWN_MATERIAL_EXCEPTION ||
-                 non_pawn_material > (depth >= 6))) {
+                 non_pawn_material >= (depth >= 6))) {
 
             // Adaptive NMP
             int reduction = engine.tuning_parameters.NMP_base +
