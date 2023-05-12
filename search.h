@@ -42,8 +42,8 @@ struct T {
 struct Tuning_Parameters {
 
     T tuning_parameter_array[N_TUNING_PARAMETERS] = {
-            T{"LMR_divisor", 150, 230, 185, 20},
-            T{"LMR_base", 100, 170, 155, 20},
+            T{"LMR_divisor_quiet", 150, 230, 185, 20},
+            T{"LMR_base_quiet", 100, 170, 155, 20},
             T{"delta_margin", 100, 400, 175, 40},
             T{"RFP_depth", 5, 11, 9, 2},
             T{"RFP_margin", 50, 200, 126, 30},
@@ -57,11 +57,16 @@ struct Tuning_Parameters {
             T{"NMP_depth", 0, 4, 2, 1},
             T{"NMP_base", 1, 5, 3, 1},
             T{"NMP_depth_divisor", 2, 6, 4, 1},
-            T{"NMP_eval_divisor", 100, 350, 297, 40}
+            T{"NMP_eval_divisor", 100, 350, 297, 40},
+            T{"LMR_divisor_noisy", 280, 500, 350, 50},
+            T{"LMR_base_quiet", -20, 100, 30, 20}
     };
 
-    int LMR_divisor = tuning_parameter_array[0].value;
-    int LMR_base = tuning_parameter_array[1].value;
+    int LMR_divisor_quiet = tuning_parameter_array[0].value;
+    int LMR_base_quiet = tuning_parameter_array[1].value;
+
+    int LMR_divisor_noisy = tuning_parameter_array[16].value;
+    int LMR_base_noisy = tuning_parameter_array[17].value;
 
     int delta_margin = tuning_parameter_array[2].value;
 
