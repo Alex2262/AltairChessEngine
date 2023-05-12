@@ -15,15 +15,20 @@
 #include "useful.h"
 #include "see.h"
 
-static double LMR_REDUCTIONS[TOTAL_MAX_DEPTH][64];
+static double LMR_REDUCTIONS_QUIET[64][64];
+static double LMR_REDUCTIONS_NOISY[64][64];
 
 void initialize_lmr_reductions(Engine& engine) {
-    for (PLY_TYPE depth = 0; depth < TOTAL_MAX_DEPTH; depth++) {
+    for (PLY_TYPE depth = 0; depth < 64; depth++) {
         for (int moves = 0; moves < 64; moves++) {
-            LMR_REDUCTIONS[depth][moves] =
+            LMR_REDUCTIONS_QUIET[depth][moves] =
                     std::max(0.0,
-                             std::log(depth) * std::log(moves) / double(engine.tuning_parameters.LMR_divisor / 100.0)
-                             + double(engine.tuning_parameters.LMR_base / 100.0));
+                             std::log(depth) * std::log(moves) / double(engine.tuning_parameters.LMR_divisor_quiet / 100.0)
+                             + double(engine.tuning_parameters.LMR_base_quiet / 100.0));
+            LMR_REDUCTIONS_NOISY[depth][moves] =
+                    std::max(0.0,
+                             std::log(depth) * std::log(moves) / double(engine.tuning_parameters.LMR_divisor_noisy / 100.0)
+                             + double(engine.tuning_parameters.LMR_base_noisy / 100.0));
         }
     }
 }
@@ -530,6 +535,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // by only sorting one or a few moves rather than the whole list.
         sort_next_move(position.moves[engine.search_ply], position.move_scores[engine.search_ply], move_index);
         MOVE_TYPE move = position.moves[engine.search_ply][move_index];
+        SCORE_TYPE move_score = position.move_scores[engine.search_ply][move_index];
 
         SCORE_TYPE move_history_score = engine.history_moves
         [get_selected(move)][MAILBOX_TO_STANDARD[get_target_square(move)]];
@@ -591,17 +597,19 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
         bool full_depth_zero_window;
 
+        bool bad_capture = move_score < 10000;
+
         // Late Move Reductions
         // The idea that if moves are ordered well, then moves that are searched
         // later shouldn't be as good, and therefore we don't need to search them to a very high depth
         if (legal_moves >= 2
             && ((engine.search_ply && !pv_node) || legal_moves >= 4)
             && depth >= 3
-            && quiet
+            && (quiet || bad_capture)
             && !in_check
-                ){
+            ){
 
-            reduction = LMR_REDUCTIONS[depth][legal_moves];
+            reduction = quiet ? LMR_REDUCTIONS_QUIET[depth][legal_moves] : LMR_REDUCTIONS_NOISY[depth][legal_moves];
 
             reduction -= pv_node;
 
@@ -620,7 +628,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             // My idea that in a null move search you can be more aggressive with LMR
             reduction += null_search;
 
-            // Idea from Weiss, where you reduce more if the move is quiet and TT move is a capture
+            // Idea from Weiss, where you reduce more if the TT move is a capture
             reduction += get_is_capture(tt_move) * 0.3;
 
             PLY_TYPE lmr_depth = static_cast<PLY_TYPE>(depth - 1 -
