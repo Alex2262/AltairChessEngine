@@ -13,7 +13,6 @@
 
 struct State_Struct {
     int in_check = -1;
-    uint8_t non_pawn_material = NON_PAWN_MATERIAL_EXCEPTION;
     uint64_t current_hash_key;
     MOVE_TYPE move = NO_MOVE;
     SCORE_TYPE evaluation = NO_EVALUATION;

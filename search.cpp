@@ -104,7 +104,6 @@ short Engine::probe_tt_entry(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE be
         return_entry.move = tt_entry.move;
         return_entry.depth = tt_entry.depth;
         return_entry.flag = tt_entry.flag;
-        return_entry.non_pawn_material = tt_entry.non_pawn_material;
 
         return_entry.score = tt_entry.score;
         if (return_entry.score < -MATE_BOUND) return_entry.score += search_ply;
@@ -123,8 +122,8 @@ short Engine::probe_tt_entry(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE be
     return NO_HASH_ENTRY;
 }
 
-void Engine::record_tt_entry(HASH_TYPE hash_key, SCORE_TYPE score, uint8_t tt_flag, MOVE_TYPE move, PLY_TYPE depth,
-                             SCORE_TYPE static_eval, uint8_t non_pawn_material) {
+void Engine::record_tt_entry(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
+                             SCORE_TYPE static_eval) {
 
     TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
 
@@ -138,26 +137,24 @@ void Engine::record_tt_entry(HASH_TYPE hash_key, SCORE_TYPE score, uint8_t tt_fl
         tt_entry.score = score;
         tt_entry.evaluation = static_eval;
         tt_entry.move = move;
-        tt_entry.non_pawn_material = non_pawn_material;
     }
 }
 
 
 short Engine::probe_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
-                               TT_Entry& return_entry) {
+                               SCORE_TYPE& return_score, MOVE_TYPE& tt_move) {
     TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
 
     if (tt_entry.key == hash_key) {
-        return_entry.move = tt_entry.move;
-        return_entry.score = tt_entry.score;
-        return_entry.non_pawn_material = tt_entry.non_pawn_material;
+        tt_move = tt_entry.move;
 
-        if (return_entry.score < -MATE_BOUND) return_entry.score += search_ply;
-        else if (return_entry.score > MATE_BOUND) return_entry.score -= search_ply;
+        return_score = tt_entry.score;
+        if (return_score < -MATE_BOUND) return_score += search_ply;
+        else if (return_score > MATE_BOUND) return_score -= search_ply;
 
         if (tt_entry.flag == HASH_FLAG_EXACT) return RETURN_HASH_SCORE;
-        if (tt_entry.flag == HASH_FLAG_ALPHA && return_entry.score <= alpha) return RETURN_HASH_SCORE;
-        if (tt_entry.flag == HASH_FLAG_BETA && return_entry.score >= beta) return RETURN_HASH_SCORE;
+        if (tt_entry.flag == HASH_FLAG_ALPHA && return_score <= alpha) return RETURN_HASH_SCORE;
+        if (tt_entry.flag == HASH_FLAG_BETA && return_score >= beta) return RETURN_HASH_SCORE;
 
 
         return USE_HASH_MOVE;
@@ -167,8 +164,8 @@ short Engine::probe_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE 
 }
 
 
-void Engine::record_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE score, uint8_t tt_flag, MOVE_TYPE move,
-                               SCORE_TYPE static_eval, uint8_t non_pawn_material) {
+void Engine::record_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move,
+                               SCORE_TYPE static_eval) {
     TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
 
     if (score < -MATE_BOUND) score -= search_ply;
@@ -181,7 +178,6 @@ void Engine::record_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE score, uint8_t tt_
         tt_entry.score = score;
         tt_entry.evaluation = static_eval;
         tt_entry.move = move;
-        tt_entry.non_pawn_material = non_pawn_material;
     }
 }
 
@@ -229,11 +225,9 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     if (engine.max_nodes && engine.node_count >= engine.max_nodes) engine.stopped = true;
 
-    TT_Entry tt_entry{};
-    short tt_return_type = engine.probe_tt_entry_q(position.hash_key, alpha, beta, tt_entry);
-    SCORE_TYPE tt_value = tt_entry.score;
-    MOVE_TYPE tt_move = tt_entry.move;
-    uint8_t non_pawn_material = tt_entry.non_pawn_material;
+    SCORE_TYPE tt_value = 0;
+    MOVE_TYPE tt_move = NO_MOVE;
+    short tt_return_type = engine.probe_tt_entry_q(position.hash_key, alpha, beta, tt_value, tt_move);
 
     if (tt_return_type == RETURN_HASH_SCORE) {
         return tt_value;
@@ -244,7 +238,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     else if (tt_value > USE_HASH_MOVE) tt_move = tt_value - USE_HASH_MOVE;
 
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = evaluate(position, engine.search_ply);
+    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
     // SCORE_TYPE static_eval = evaluate(position);
 
     if (depth == 0 || static_eval >= beta) return static_eval;
@@ -326,7 +320,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                         }
                     }
 
-                    engine.record_tt_entry_q(position.hash_key, best_score, HASH_FLAG_BETA, best_move, static_eval, non_pawn_material);
+                    engine.record_tt_entry_q(position.hash_key, best_score, HASH_FLAG_BETA, best_move, static_eval  );
                     return best_score;
                 }
             }
@@ -335,7 +329,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     }
 
     engine.tt_prefetch_write(position.hash_key);
-    engine.record_tt_entry_q(position.hash_key, best_score, tt_hash_flag, best_move, static_eval, non_pawn_material);
+    engine.record_tt_entry_q(position.hash_key, best_score, tt_hash_flag, best_move, static_eval);
 
     return best_score;
 }
@@ -354,7 +348,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Early search exits
     if (!root) {
 
-        if (engine.search_ply >= MAX_AB_DEPTH - 1) return evaluate(position, engine.search_ply);
+        if (engine.search_ply >= MAX_AB_DEPTH - 1) return evaluate(position);
 
         // Detect repetitions and fifty move rule
         if (engine.fifty_move >= 100 || engine.detect_repetition()) return 3 - static_cast<int>(engine.node_count & 8);
@@ -399,7 +393,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     SCORE_TYPE tt_value = tt_entry.score;
     MOVE_TYPE tt_move = tt_entry.move;
-    uint8_t non_pawn_material = tt_entry.non_pawn_material;
 
     // We are allowed to return the hash score
     if (tt_return_type == RETURN_HASH_SCORE && !root) {
@@ -442,10 +435,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     // Get evaluation
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = evaluate(position, engine.search_ply);
+    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
     position.state_stack[engine.search_ply].evaluation = static_eval;
-    if (non_pawn_material == NON_PAWN_MATERIAL_EXCEPTION)
-        non_pawn_material = position.state_stack[engine.search_ply].non_pawn_material;
 
     // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
     // from a full-move or two plies ago. When this is true, we can be more aggressive with
@@ -489,9 +480,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // Null move pruning
         // We give the opponent an extra move and if they are not able to make their position
         // any better, then our position is too good, and we don't need to search any deeper.
-        if (depth >= engine.tuning_parameters.NMP_depth && do_null && static_eval >= beta &&
-                (non_pawn_material == NON_PAWN_MATERIAL_EXCEPTION ||
-                 non_pawn_material >= (depth >= 8))) {
+        if (depth >= engine.tuning_parameters.NMP_depth && do_null && static_eval >= beta) {
 
             // Adaptive NMP
             int reduction = engine.tuning_parameters.NMP_base +
@@ -760,7 +749,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     else if (legal_moves == 0) return -MATE_SCORE + engine.search_ply;
 
 
-    engine.record_tt_entry(position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval, non_pawn_material);
+    engine.record_tt_entry(position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval);
 
     return best_score;
 }

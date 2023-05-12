@@ -33,7 +33,7 @@ void evaluate_king(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
 double evaluate_drawishness(const int white_piece_amounts[6], const int black_piece_amounts[6],
                             SCORE_TYPE white_material, SCORE_TYPE black_material, bool opp_colored_bishops);
-SCORE_TYPE evaluate(Position& position, PLY_TYPE);
+SCORE_TYPE evaluate(Position& position);
 
 SCORE_TYPE score_move(const Engine& engine, Position& position, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move);
 SCORE_TYPE score_capture(const Engine& engine, Position& position, MOVE_TYPE move, MOVE_TYPE tt_move);
