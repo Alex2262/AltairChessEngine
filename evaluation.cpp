@@ -1020,7 +1020,8 @@ SCORE_TYPE evaluate(Position& position) {
 }
 
 
-SCORE_TYPE score_move(const Engine& engine, Position& position, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move) {
+SCORE_TYPE score_move(const Engine& engine, Position& position, MOVE_TYPE move, MOVE_TYPE tt_move,
+                      MOVE_TYPE last_move_one, MOVE_TYPE last_move_two) {
 
     if (move == tt_move) return 100000;
 
@@ -1038,16 +1039,26 @@ SCORE_TYPE score_move(const Engine& engine, Position& position, MOVE_TYPE move, 
             score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
         else {
-            if (last_move != NO_MOVE &&
-                engine.counter_moves[0][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
-                                    [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move) score += 8000;
-
             // score 1st and 2nd killer move
             if (engine.killer_moves[0][engine.search_ply] == move) score += 12000;
             else if (engine.killer_moves[1][engine.search_ply] == move) score += 11000;
-            else score += engine.history_moves
-                     [selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
+            else {
+                score += engine.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
+                if (last_move_one != NO_MOVE) {
+                    score += engine.continuation_history[get_selected(last_move_one)]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
+                                                        [selected]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
+                }
+
+                if (last_move_two != NO_MOVE) {
+                    score += engine.continuation_history[get_selected(last_move_two)]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
+                                                        [selected]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
+                }
+            }
             if (move_type == MOVE_TYPE_PROMOTION) {
                 PIECE_TYPE promotion_piece = get_promotion_piece(move);
                 if (promotion_piece == WHITE_QUEEN) {
@@ -1067,14 +1078,26 @@ SCORE_TYPE score_move(const Engine& engine, Position& position, MOVE_TYPE move, 
             score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
         else {
-            if (last_move != NO_MOVE &&
-                engine.counter_moves[1][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
-                                    [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move) score += 8000;
-
             // score 1st and 2nd killer move
             if (engine.killer_moves[0][engine.search_ply] == move) score += 12000;
             else if (engine.killer_moves[1][engine.search_ply] == move) score += 11000;
-            else score += engine.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
+            else {
+                score += engine.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
+
+                if (last_move_one != NO_MOVE) {
+                    score += engine.continuation_history[get_selected(last_move_one)]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
+                                                        [selected]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
+                }
+
+                if (last_move_two != NO_MOVE) {
+                    score += engine.continuation_history[get_selected(last_move_two)]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
+                                                        [selected]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
+                }
+            }
 
             if (move_type == MOVE_TYPE_PROMOTION) {
                 PIECE_TYPE promotion_piece = get_promotion_piece(move) - BLACK_PAWN;
@@ -1118,11 +1141,11 @@ SCORE_TYPE score_capture(const Engine& engine, Position& position, MOVE_TYPE mov
 
 
 void get_move_scores(const Engine& engine, Position& position, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
-                     MOVE_TYPE tt_move, MOVE_TYPE last_move) {
+                     MOVE_TYPE tt_move, MOVE_TYPE last_move_one, MOVE_TYPE last_move_two) {
     move_scores.clear();
 
     for (MOVE_TYPE move : moves) {
-        move_scores.push_back(score_move(engine, position, move, tt_move, last_move));
+        move_scores.push_back(score_move(engine, position, move, tt_move, last_move_one, last_move_two));
     }
 }
 

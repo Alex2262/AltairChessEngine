@@ -53,7 +53,7 @@ void Engine::reset() {
     std::memset(killer_moves, 0, sizeof(killer_moves));
     //std::memset(history_moves, 0, sizeof(history_moves));
     //std::memset(capture_history, 0, sizeof(capture_history));
-    std::memset(counter_moves, 0, sizeof(counter_moves));
+    std::memset(continuation_history, 0, sizeof(continuation_history));
 
     if (show_stats) {
         search_results.alpha_raised_count = 0;
@@ -74,7 +74,7 @@ void Engine::new_game() {
     std::memset(killer_moves, 0, sizeof(killer_moves));
     std::memset(history_moves, 0, sizeof(history_moves));
     std::memset(capture_history, 0, sizeof(capture_history));
-    std::memset(counter_moves, 0, sizeof(counter_moves));
+    std::memset(continuation_history, 0, sizeof(continuation_history));
     clear_tt();
 
     game_ply = 0;
@@ -509,13 +509,14 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     }
 
     int legal_moves = 0;
-    MOVE_TYPE last_move = engine.search_ply ? position.state_stack[engine.search_ply - 1].move : NO_MOVE;
+    MOVE_TYPE last_move_one = engine.search_ply >= 1 ? position.state_stack[engine.search_ply - 1].move : NO_MOVE;
+    MOVE_TYPE last_move_two = engine.search_ply >= 2 ? position.state_stack[engine.search_ply - 2].move : NO_MOVE;
 
     // Retrieving the pseudo legal moves in the current position as a list of integers
     // Score the moves
     position.get_pseudo_legal_moves(engine.search_ply);
     get_move_scores(engine, position, position.moves[engine.search_ply], position.move_scores[engine.search_ply],
-                    tt_move, last_move);
+                    tt_move, last_move_one, last_move_two);
 
     // Best score for fail soft, and best move for tt
     SCORE_TYPE best_score = -SCORE_INF;
@@ -585,9 +586,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
         bool is_killer_move = move == engine.killer_moves[0][engine.search_ply - 1] ||
                               move == engine.killer_moves[1][engine.search_ply - 1];
-        bool is_counter_move = last_move != NO_MOVE &&
-                               engine.counter_moves[position.side][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
-                               [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move;
 
         bool full_depth_zero_window;
 
@@ -608,8 +606,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             reduction -= improving * 0.9;
 
             reduction -= is_killer_move * 0.75;
-
-            reduction -= is_counter_move * 0.25;
 
             reduction -= move_gives_check * 0.6;
 
@@ -677,6 +673,25 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
                 // History Heuristic for move ordering
                 SCORE_TYPE bonus = depth * (depth + 1 + null_search) - 1;
+
+                if (last_move_one != NO_MOVE) {
+                    update_history_entry(engine.continuation_history
+                                         [get_selected(last_move_one)]
+                                         [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
+                                         [get_selected(move)]
+                                         [MAILBOX_TO_STANDARD[get_target_square(move)]],
+                                         bonus);
+                }
+
+                if (last_move_two != NO_MOVE) {
+                    update_history_entry(engine.continuation_history
+                                         [get_selected(last_move_two)]
+                                         [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
+                                         [get_selected(move)]
+                                         [MAILBOX_TO_STANDARD[get_target_square(move)]],
+                                         bonus);
+                }
+
                 if (quiet) {
                     update_history_entry(engine.history_moves
                                          [get_selected(move)][MAILBOX_TO_STANDARD[get_target_square(move)]],
@@ -701,6 +716,24 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                                              [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
                                              -bonus);
                     }
+
+                    if (last_move_one != NO_MOVE) {
+                        update_history_entry(engine.continuation_history
+                                             [get_selected(last_move_one)]
+                                             [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
+                                             [get_selected(temp_move)]
+                                             [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
+                                             -bonus);
+                    }
+
+                    if (last_move_two != NO_MOVE) {
+                        update_history_entry(engine.continuation_history
+                                             [get_selected(last_move_two)]
+                                             [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
+                                             [get_selected(temp_move)]
+                                             [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
+                                             -bonus);
+                    }
                 }
 
                 if (engine.show_stats) {
@@ -713,32 +746,18 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 // Alpha - Beta cutoff. We have failed high here.
                 if (return_eval >= beta) {
                     if (engine.show_stats) {
-                        if (legal_moves <= FAIL_HIGH_STATS_COUNT) {
-                            engine.search_results.search_fail_highs[legal_moves-1]++;
-                        }
-
+                        if (legal_moves <= FAIL_HIGH_STATS_COUNT) engine.search_results.search_fail_highs[legal_moves-1]++;
                         if (move == tt_move) engine.search_results.search_fail_high_types[0]++;
-                        else if (move == engine.killer_moves[0][engine.search_ply])
-                            engine.search_results.search_fail_high_types[1]++;
-                        else if (move == engine.killer_moves[1][engine.search_ply])
-                            engine.search_results.search_fail_high_types[2]++;
-                        else if (last_move != NO_MOVE &&
-                                 engine.counter_moves[position.side][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
-                                 [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move)
-                            engine.search_results.search_fail_high_types[3]++;
+                        else if (move == engine.killer_moves[0][engine.search_ply]) engine.search_results.search_fail_high_types[1]++;
+                        else if (move == engine.killer_moves[1][engine.search_ply]) engine.search_results.search_fail_high_types[2]++;
                         else if (quiet) engine.search_results.search_fail_high_types[4]++;
                         else engine.search_results.search_fail_high_types[5]++;
-
                     }
 
                     // Killer Heuristic for move ordering
                     if (quiet) {
                         engine.killer_moves[1][engine.search_ply] = engine.killer_moves[0][engine.search_ply];
                         engine.killer_moves[0][engine.search_ply] = move;
-
-                        if (last_move != NO_MOVE)
-                            engine.counter_moves[position.side][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
-                            [MAILBOX_TO_STANDARD[get_target_square(last_move)]] = move;
                     }
 
                     tt_hash_flag = HASH_FLAG_BETA;

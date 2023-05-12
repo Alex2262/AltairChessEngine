@@ -112,7 +112,7 @@ public:
     MOVE_TYPE killer_moves[2][64]{};  // killer moves (2) | max_depth (64)
     SCORE_TYPE history_moves[12][64]{}; // piece | target_square
     SCORE_TYPE capture_history[12][12][64]{};
-    MOVE_TYPE counter_moves[2][64][64]{}; // side | from | to
+    SCORE_TYPE continuation_history[12][64][12][64]{};
 
     // TT_Entry transposition_table[MAX_TT_SIZE]{};
     std::vector<TT_Entry> transposition_table;
