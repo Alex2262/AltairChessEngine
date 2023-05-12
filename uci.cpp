@@ -293,7 +293,7 @@ void UCI::uci_loop() {
         }
 
         else if (tokens[0] == "evaluate") {
-            std::cout << evaluate(position, engine.search_ply) << std::endl;
+            std::cout << evaluate(position) << std::endl;
         }
     }
 }
