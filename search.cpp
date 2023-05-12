@@ -504,7 +504,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     }
 
     if (pv_node && depth >= 4 && tt_move == NO_MOVE) {
-        negamax(engine, position, alpha, beta, static_cast<PLY_TYPE>(depth - 3), true);
+        negamax(engine, position, alpha, beta, static_cast<PLY_TYPE>(depth - 3), true);  // TODO: test no null moves here
         tt_move = engine.transposition_table[position.hash_key % engine.transposition_table.size()].move;
     }
 
