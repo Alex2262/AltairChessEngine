@@ -610,13 +610,13 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
             reduction -= move_history_score > 0 ? move_history_score / 7200.0 : move_history_score / 16000.0;
 
-            reduction += static_cast<double>(alpha_raised_count) / 2.0;
+            reduction += static_cast<double>(alpha_raised_count) * (0.3 + 0.5 * get_is_capture(tt_move));
 
             // My idea that in a null move search you can be more aggressive with LMR
             reduction += null_search;
 
             // Idea from Weiss, where you reduce more if the move is quiet and TT move is a capture
-            reduction += get_is_capture(tt_move) * 0.5;
+            reduction += get_is_capture(tt_move) * 0.3;
 
             PLY_TYPE lmr_depth = static_cast<PLY_TYPE>(depth - 1 -
                                                        std::min(depth - 1, std::max(0, static_cast<int>(reduction))));
