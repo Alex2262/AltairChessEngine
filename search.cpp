@@ -682,28 +682,29 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 // History Heuristic for move ordering
                 SCORE_TYPE bonus = depth * (depth + 1 + null_search) - 1;
 
-                if (last_move_one != NO_MOVE) {
-                    update_history_entry(engine.continuation_history
-                                         [get_selected(last_move_one)]
-                                         [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
-                                         [get_selected(move)]
-                                         [MAILBOX_TO_STANDARD[get_target_square(move)]],
-                                         bonus);
-                }
-
-                if (last_move_two != NO_MOVE) {
-                    update_history_entry(engine.continuation_history
-                                         [get_selected(last_move_two)]
-                                         [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
-                                         [get_selected(move)]
-                                         [MAILBOX_TO_STANDARD[get_target_square(move)]],
-                                         bonus);
-                }
-
                 if (quiet) {
                     update_history_entry(engine.history_moves
                                          [get_selected(move)][MAILBOX_TO_STANDARD[get_target_square(move)]],
                                          bonus);
+
+                    if (last_move_one != NO_MOVE) {
+                        update_history_entry(engine.continuation_history
+                                             [get_selected(last_move_one)]
+                                             [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
+                                             [get_selected(move)]
+                                             [MAILBOX_TO_STANDARD[get_target_square(move)]],
+                                             bonus);
+                    }
+
+                    if (last_move_two != NO_MOVE) {
+                        update_history_entry(engine.continuation_history
+                                             [get_selected(last_move_two)]
+                                             [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
+                                             [get_selected(move)]
+                                             [MAILBOX_TO_STANDARD[get_target_square(move)]],
+                                             bonus);
+                    }
+
                 } else {
                     update_history_entry(engine.capture_history[get_selected(move)]
                                          [get_occupied(move)][MAILBOX_TO_STANDARD[get_target_square(move)]],
@@ -718,27 +719,28 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                                              [get_selected(temp_move)]
                                              [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
                                              -bonus);
+
+                        if (last_move_one != NO_MOVE) {
+                            update_history_entry(engine.continuation_history
+                                                 [get_selected(last_move_one)]
+                                                 [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
+                                                 [get_selected(temp_move)]
+                                                 [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
+                                                 -bonus);
+                        }
+
+                        if (last_move_two != NO_MOVE) {
+                            update_history_entry(engine.continuation_history
+                                                 [get_selected(last_move_two)]
+                                                 [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
+                                                 [get_selected(temp_move)]
+                                                 [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
+                                                 -bonus);
+                        }
+
                     } else {
                         update_history_entry(engine.capture_history[get_selected(temp_move)]
                                              [get_occupied(temp_move)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
-                                             -bonus);
-                    }
-
-                    if (last_move_one != NO_MOVE) {
-                        update_history_entry(engine.continuation_history
-                                             [get_selected(last_move_one)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
-                                             [get_selected(temp_move)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
-                                             -bonus);
-                    }
-
-                    if (last_move_two != NO_MOVE) {
-                        update_history_entry(engine.continuation_history
-                                             [get_selected(last_move_two)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
-                                             [get_selected(temp_move)]
                                              [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
                                              -bonus);
                     }
