@@ -13,18 +13,12 @@
 #include "bench.h"
 
 void UCI::initialize_uci() {
-    engine.transposition_table.resize(MAX_TT_SIZE);
-
-    initialize_lmr_reductions(engine);
-
-    engine.thread_states.emplace_back();
-
-    Position& position = engine.thread_states[0].position;
     position.set_fen(START_FEN);
+    engine->transposition_table.resize(MAX_TT_SIZE);
 
-    std::cout << sizeof(engine) << " " << sizeof(engine.thread_states[0]) << std::endl;
+    initialize_lmr_reductions(*engine);
 
-    std::cout << engine.transposition_table.size() << " number of hash entries" << std::endl;
+    std::cout << engine->transposition_table.size() << " number of hash entries" << std::endl;
 }
 
 
@@ -62,36 +56,34 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
         if (time_amt > self_time * 0.9) time_amt = self_time * 0.95;
     }
     else if (self_time > 0) time_amt = self_time / (rate + 6);
-    else time_amt = static_cast<double>(engine.hard_time_limit);
+    else time_amt = static_cast<double>(engine->hard_time_limit);
 
-    engine.hard_time_limit = static_cast<uint64_t>(time_amt * 2.3);
-    engine.soft_time_limit = static_cast<uint64_t>(time_amt * 0.7);
+    engine->hard_time_limit = static_cast<uint64_t>(time_amt * 2.22);
+    engine->soft_time_limit = static_cast<uint64_t>(time_amt * 0.66);
 
-    if (engine.hard_time_limit > static_cast<uint64_t>(self_time * 0.7)) {
+    if (engine->hard_time_limit > static_cast<uint64_t>(self_time * 0.7)) {
         for (int multiplier = 18; multiplier >= 10; multiplier -= 1) {
-            engine.hard_time_limit = static_cast<uint64_t>(time_amt * (multiplier / 10.0));
-            if (engine.hard_time_limit <= static_cast<uint64_t>(self_time * 0.7)) break;
+            engine->hard_time_limit = static_cast<uint64_t>(time_amt * (multiplier / 10.0));
+            if (engine->hard_time_limit <= static_cast<uint64_t>(self_time * 0.7)) break;
         }
     }
 
-    if (engine.hard_time_limit > static_cast<uint64_t>(movetime) && movetime != 0.0) {
-        engine.hard_time_limit = static_cast<uint64_t>(time_amt);
+    if (engine->hard_time_limit > static_cast<uint64_t>(movetime) && movetime != 0.0) {
+        engine->hard_time_limit = static_cast<uint64_t>(time_amt);
     }
 
-    std::cout << time_amt << " " << engine.hard_time_limit << " " << engine.soft_time_limit << std::endl;
+    std::cout << time_amt << " " << engine->hard_time_limit << " " << engine->soft_time_limit << std::endl;
 }
 
 
 void UCI::parse_position() {
     if (tokens.size() < 2) return;
 
-    Position& position = engine.thread_states[0].position;
-
     int next_idx;
-    engine.thread_states[0].game_ply = 0;
+    engine->game_ply = 0;
 
     if (tokens[1] == "startpos") {
-        engine.thread_states[0].fifty_move = position.set_fen(START_FEN);
+        engine->fifty_move = position.set_fen(START_FEN);
         next_idx = 2;
     }
 
@@ -102,7 +94,7 @@ void UCI::parse_position() {
             fen += " ";
         }
 
-        engine.thread_states[0].fifty_move = position.set_fen(fen);
+        engine->fifty_move = position.set_fen(fen);
         next_idx = 8;
     }
 
@@ -115,7 +107,7 @@ void UCI::parse_position() {
         MOVE_TYPE move = get_move_from_uci(position, tokens[i]);
         last_move = move;
         // std::cout << move << " " << get_uci_from_move(move) << std::endl;
-        position.make_move(move, 0, engine.thread_states[0].fifty_move);
+        position.make_move(move, 0, engine->fifty_move);
 
         engine.thread_states[0].game_ply++;
         engine.thread_states[0].fifty_move++;
@@ -131,9 +123,6 @@ void UCI::parse_position() {
 
 
 void UCI::parse_go() {
-
-    Position& position = engine.thread_states[0].position;
-
     PLY_TYPE d = 0, perft_depth = -1;
     double wtime = 0, btime = 0, winc = 0, binc = 0, movetime = 0;
     long movestogo = 0;
@@ -150,7 +139,7 @@ void UCI::parse_go() {
 
         else if (type == "perft") perft_depth = static_cast<PLY_TYPE>(value);
 
-        else if (type == "nodes") engine.max_nodes = value;
+        else if (type == "nodes") engine->max_nodes = value;
 
         else if (type == "movetime") movetime = static_cast<double>(value);
 
@@ -171,8 +160,8 @@ void UCI::parse_go() {
         return;
     }
     if (infinite || (d && tokens.size() == 3)) {
-        engine.hard_time_limit = TIME_INF;
-        engine.soft_time_limit = TIME_INF;
+        engine->hard_time_limit = TIME_INF;
+        engine->soft_time_limit = TIME_INF;
     }
     else {
         double self_time = (position.side == 0) ? wtime : btime;
@@ -181,17 +170,17 @@ void UCI::parse_go() {
         time_handler(self_time, inc, movetime, movestogo);
     }
 
-    if (d) engine.max_depth = d;
+    if (d) engine->max_depth = d;
 
-    engine.stopped = true;
+    engine->stopped = true;
     if (!search_threads.empty()) {
         search_threads[0].join();
 
-        while (!engine.thread_states[0].terminated);  // to prevent some stupid exceptions
-        if (engine.thread_states[0].terminated) search_threads.erase(search_threads.end() - 1);
+        while (!engine->terminated);  // to prevent some stupid exceptions
+        if (engine->terminated) search_threads.erase(search_threads.end() - 1);
     }
 
-    search_threads.emplace_back(lazy_smp_search, std::ref(engine));
+    search_threads.emplace_back(iterative_search, std::ref(*engine), std::ref(position));
 
     //iterative_search(engine, position);
 }
@@ -199,13 +188,10 @@ void UCI::parse_go() {
 
 void UCI::uci_loop() {
 
-    Position& position = engine.thread_states[0].position;
-
-    while (true) {
-        msg = "";
+    msg = "";
+    while (getline(std::cin, msg)) {
         tokens.clear();
 
-        getline(std::cin, msg);
         tokens = split(msg, ' ');
 
         if (msg == "quit") {
@@ -213,12 +199,12 @@ void UCI::uci_loop() {
         }
 
         if (msg == "stop") {
-            engine.stopped = true;
+            engine->stopped = true;
             if (!search_threads.empty()) {
                 search_threads[0].join();
 
-                while (!engine.thread_states[0].terminated);  // to prevent some stupid exceptions
-                if (engine.thread_states[0].terminated) search_threads.erase(search_threads.end() - 1);
+                while (!engine->terminated);  // to prevent some stupid exceptions
+                if (engine->terminated) search_threads.erase(search_threads.end() - 1);
             }
         }
 
@@ -232,14 +218,14 @@ void UCI::uci_loop() {
             std::cout << "option name nodes type spin default " << 0 << " min " << 0 << " max " << 2147483647
                       << std::endl;
 
-            std::cout << "option name Threads type spin default " << 1 << " min " << 1 << " max " << 128
+            std::cout << "option name Threads type spin default " << 1 << " min " << 1 << " max " << 1
                       << std::endl;
 
             std::cout << "option name Statistic type check default " << false
                       << std::endl;
 
-            if (engine.do_tuning) {
-                for (auto & i : engine.tuning_parameters.tuning_parameter_array) {
+            if (engine->do_tuning) {
+                for (auto & i : engine->tuning_parameters.tuning_parameter_array) {
                     std::cout << "option name " << i.name
                               << " type spin default " << i.value
                               << " min " << i.min
@@ -256,27 +242,17 @@ void UCI::uci_loop() {
             if (tokens[2] == "Hash") {
                 int mb = std::stoi(tokens[4]);
                 mb = std::min(1024, std::max(1, mb));
-                engine.transposition_table.resize(mb * (1000000 / 24));
-                std::cout << engine.transposition_table.size() << " number of hash entries" << std::endl;
-            }
-
-            else if (tokens[2] == "Threads") {
-                engine.num_threads = std::clamp(std::stoi(tokens[4]), 1, 8);
-            }
-
-            else if (tokens[2] == "nodes") {
+                engine->transposition_table.resize(mb * (1000000 / 24));
+                std::cout << engine->transposition_table.size() << " number of hash entries" << std::endl;
+            } else if (tokens[2] == "nodes") {
                 uint64_t max_nodes = std::stoi(tokens[4]);
-                engine.max_nodes = max_nodes;
-                std::cout << "max nodes set to " << engine.max_nodes << std::endl;
-            }
-
-            else if (tokens[2] == "Statistics") {
-                engine.show_stats = tokens[4] == "true";
-            }
-
-            else {
-                if (engine.do_tuning) {
-                    for (auto & i : engine.tuning_parameters.tuning_parameter_array) {
+                engine->max_nodes = max_nodes;
+                std::cout << "max nodes set to " << engine->max_nodes << std::endl;
+            } else if (tokens[2] == "Statistics") {
+                engine->show_stats = tokens[4] == "true";
+            } else {
+                if (engine->do_tuning) {
+                    for (auto & i : engine->tuning_parameters.tuning_parameter_array) {
                         if (tokens[2] == i.name) {
                             i.value = std::stoi(tokens[4]);
                         }
@@ -291,7 +267,7 @@ void UCI::uci_loop() {
 
         else if (msg == "ucinewgame") {
             position.set_fen(START_FEN);
-            engine.new_game();
+            engine->new_game();
         }
 
         else if (tokens[0] == "position") {
@@ -303,20 +279,24 @@ void UCI::uci_loop() {
         }
 
         else if (tokens[0] == "bench") {
-            run_bench(engine, BENCH_DEPTH);
+            run_bench(*engine, position, BENCH_DEPTH);
         }
 
         else if (tokens[0] == "stats") {
-            if (!engine.show_stats) {
+            if (!engine->show_stats) {
                 std::cout << "Statistics UCI option has not been enabled" << std::endl;
                 continue;
             }
 
-            print_statistics(engine.search_results);
+            print_statistics(engine->search_results);
         }
 
-        else if (tokens[0] == "print_tune_wf" && engine.do_tuning) {
-            print_tuning_config(engine.tuning_parameters);
+        else if (tokens[0] == "print_tune_wf" && engine->do_tuning) {
+            print_tuning_config(engine->tuning_parameters);
+        }
+
+        else if (tokens[0] == "evaluate") {
+            std::cout << evaluate(position) << std::endl;
         }
     }
 }

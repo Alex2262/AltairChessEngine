@@ -5,6 +5,7 @@
 #ifndef ANTARESCHESSENGINE_EVALUATION_H
 #define ANTARESCHESSENGINE_EVALUATION_H
 
+#include <iostream>
 #include "constants.h"
 #include "position.h"
 #include "search.h"
@@ -34,13 +35,39 @@ double evaluate_drawishness(const int white_piece_amounts[6], const int black_pi
                             SCORE_TYPE white_material, SCORE_TYPE black_material, bool opp_colored_bishops);
 SCORE_TYPE evaluate(Position& position);
 
-SCORE_TYPE score_move(const Thread_State& thread_state, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move);
-SCORE_TYPE score_capture(const Thread_State& thread_state, MOVE_TYPE move, MOVE_TYPE tt_move);
+SCORE_TYPE score_move(const Thread_State& thread_state, Position& position, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move_one, MOVE_TYPE last_move_two);
+SCORE_TYPE score_capture(const Thread_State& thread_state, Position& position, MOVE_TYPE move, MOVE_TYPE tt_move);
 
-void get_move_scores(const Thread_State& thread_state, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
-                     MOVE_TYPE tt_move, MOVE_TYPE last_move);
-void get_capture_scores(const Thread_State& thread_state, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+void get_move_scores(const Thread_State& thread_state, Position& position, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+                     MOVE_TYPE tt_move, MOVE_TYPE last_move_one, MOVE_TYPE last_move_two);
+void get_capture_scores(const Thread_State& thread_state, Position& position, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
                         MOVE_TYPE tt_move);
 void sort_next_move(std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores, int current_count);
+
+template<int n>
+struct KingRing {
+    constexpr KingRing() : masks() {
+        for (int rings = 1; rings <= n; rings++) {
+            for (int i = 0; i < 8; i++) {
+                for (int j = 0; j < 8; j++) {
+                    masks[rings-1][i * 8 + j] = 0ULL;
+                    for (int y = i - rings; y <= i + rings; y++){
+                        for (int x = j - rings; x <= j + rings; x++) {
+                            if (y < 0 || y >= 8 || x < 0 || x >= 8) continue;
+                            if (y == i - rings || y == i + rings || x == j - rings || x == j + rings) {
+                                masks[rings-1][i * 8 + j] |= 1ULL << (y * 8 + x);
+                            }
+                        }
+                    }
+                    //std::cout << i * 8 + j << " " << masks[rings-1][i * 8 + j] << std::endl;
+                }
+            }
+        }
+    }
+
+    uint64_t masks[n][64]{};
+};
+
+constexpr KingRing king_ring_zone = KingRing<2>();
 
 #endif //ANTARESCHESSENGINE_EVALUATION_H

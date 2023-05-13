@@ -4,6 +4,7 @@
 
 #include "evaluation.h"
 #include "move.h"
+#include "see.h"
 
 
 void evaluate_king_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE file, bool is_white) {
@@ -130,6 +131,21 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 scores.mid += BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_MID;
                 scores.end += BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_END;
             }
+
+            // Outposts
+            auto outpost_pos = static_cast<SQUARE_TYPE>(pos - 10);
+            if (position.board[outpost_pos - 11] == BLACK_PAWN || position.board[outpost_pos - 9] == BLACK_PAWN) {
+                scores.mid += OUTPOST_PENALTY_MID;
+                scores.end += OUTPOST_PENALTY_END;
+
+                if (position.board[outpost_pos] == BLACK_KNIGHT) {
+                    scores.mid += OUTPOST_KNIGHT_PENALTY_MID;
+                    scores.end += OUTPOST_KNIGHT_PENALTY_END;
+                } else if (position.board[outpost_pos] == BLACK_BISHOP) {
+                    scores.mid += OUTPOST_BISHOP_PENALTY_MID;
+                    scores.end += OUTPOST_BISHOP_PENALTY_END;
+                }
+            }
         }
 
         // Passed Pawn Bonus
@@ -146,14 +162,14 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
             // Blocker right in front of pawn
             if (WHITE_KING < position.board[pos - 10] && position.board[pos - 10] < EMPTY) {
-                scores.mid += BLOCKER_VALUES_MID[position.board[pos - 10] - 6];
-                scores.end += BLOCKER_VALUES_END[position.board[pos - 10] - 6];
+                scores.mid += BLOCKER_VALUES_MID[position.board[pos - 10] - 6][row - 1];
+                scores.end += BLOCKER_VALUES_END[position.board[pos - 10] - 6][row - 1];
             }
 
             // Blocker two squares in front of pawn
             if (row < 7 && WHITE_KING < position.board[pos - 20] && position.board[pos - 20] < EMPTY) {
-                scores.mid += BLOCKER_TWO_SQUARE_VALUES_MID[position.board[pos - 20] - 6];
-                scores.end += BLOCKER_TWO_SQUARE_VALUES_END[position.board[pos - 20] - 6];
+                scores.mid += BLOCKER_TWO_SQUARE_VALUES_MID[position.board[pos - 20] - 6][row - 1];
+                scores.end += BLOCKER_TWO_SQUARE_VALUES_END[position.board[pos - 20] - 6][row - 1];
             }
 
 
@@ -225,6 +241,21 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 scores.mid += BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_MID;
                 scores.end += BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_END;
             }
+
+            // Outposts
+            auto outpost_pos = static_cast<SQUARE_TYPE>(pos + 10);
+            if (position.board[outpost_pos + 11] == WHITE_PAWN || position.board[outpost_pos + 9] == WHITE_PAWN) {
+                scores.mid += OUTPOST_PENALTY_MID;
+                scores.end += OUTPOST_PENALTY_END;
+
+                if (position.board[outpost_pos] == WHITE_KNIGHT) {
+                    scores.mid += OUTPOST_KNIGHT_PENALTY_MID;
+                    scores.end += OUTPOST_KNIGHT_PENALTY_END;
+                } else if (position.board[outpost_pos] == WHITE_BISHOP) {
+                    scores.mid += OUTPOST_BISHOP_PENALTY_MID;
+                    scores.end += OUTPOST_BISHOP_PENALTY_END;
+                }
+            }
         }
 
         // Passed Pawn Bonus
@@ -241,14 +272,14 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
             // Blocker right in front of pawn
             if (position.board[pos + 10] < BLACK_PAWN) {
-                scores.mid += BLOCKER_VALUES_MID[position.board[pos + 10]];
-                scores.end += BLOCKER_VALUES_END[position.board[pos + 10]];
+                scores.mid += BLOCKER_VALUES_MID[position.board[pos + 10]][8 - row];
+                scores.end += BLOCKER_VALUES_END[position.board[pos + 10]][8 - row];
             }
 
             // Blocker two squares in front of pawn
             if (row > 2 && position.board[pos + 20] < BLACK_PAWN) {
-                scores.mid += BLOCKER_TWO_SQUARE_VALUES_MID[position.board[pos + 20]];
-                scores.end += BLOCKER_TWO_SQUARE_VALUES_END[position.board[pos + 20]];
+                scores.mid += BLOCKER_TWO_SQUARE_VALUES_MID[position.board[pos + 20]][8 - row];
+                scores.end += BLOCKER_TWO_SQUARE_VALUES_END[position.board[pos + 20]][8 - row];
             }
         }
 
@@ -264,6 +295,7 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white) {
     SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
     SCORE_TYPE mobility = 0;
+    int king_ring_attacks[2]{};
 
     if (is_white) {
         scores.mid += KNIGHT_PST_MID[i];
@@ -276,6 +308,17 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
             if (occupied == PADDING) continue;
 
+            king_ring_attacks[0] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                         king_ring_zone.masks[0][MAILBOX_TO_STANDARD[position.king_positions[BLACK_COLOR]]]);
+            king_ring_attacks[1] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                         king_ring_zone.masks[1][MAILBOX_TO_STANDARD[position.king_positions[BLACK_COLOR]]]);
+
+            // If there is an enemy pawn controlling this square then we deduct 2.
+            if (position.board[new_pos - 11] == BLACK_PAWN || position.board[new_pos - 9] == BLACK_PAWN)
+                mobility -= 2;
+
+            mobility += 3;
+
             // If we hit a piece of ours, we still add 1 to mobility because
             // that means we are protecting a piece of ours.
             if (occupied < BLACK_PAWN) {
@@ -284,18 +327,12 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
                 continue;
             }
 
-            // If there is an enemy pawn controlling this square then we deduct 2.
-            if (position.board[new_pos - 11] == BLACK_PAWN || position.board[new_pos - 9] == BLACK_PAWN)
-                mobility -= 2;
-
             // Attacking pieces means more pressure which is good
             if (occupied < EMPTY) {
                 scores.mid += PIECE_THREAT_MID[WHITE_KNIGHT][occupied - BLACK_PAWN];
                 scores.end += PIECE_THREAT_END[WHITE_KNIGHT][occupied - BLACK_PAWN];
                 continue;
             }
-
-            mobility += 3;
         }
     }
     else {
@@ -309,6 +346,17 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
             if (occupied == PADDING) continue;
 
+            king_ring_attacks[0] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                         king_ring_zone.masks[0][MAILBOX_TO_STANDARD[position.king_positions[WHITE_COLOR]]]);
+            king_ring_attacks[1] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                         king_ring_zone.masks[1][MAILBOX_TO_STANDARD[position.king_positions[WHITE_COLOR]]]);
+
+            // If there is an enemy pawn controlling this square then we deduct 2.
+            if (position.board[new_pos + 11] == WHITE_PAWN || position.board[new_pos + 9] == WHITE_PAWN)
+                mobility -= 2;
+
+            mobility += 3;
+
             // If we hit a piece of ours, we still add 1 to mobility because
             // that means we are protecting a piece of ours.
             if (WHITE_KING < occupied && occupied < EMPTY) {
@@ -317,35 +365,33 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
                 continue;
             }
 
-            // If there is an enemy pawn controlling this square then we deduct 2.
-            if (position.board[new_pos + 11] == WHITE_PAWN || position.board[new_pos + 9] == WHITE_PAWN)
-                mobility -= 2;
-
             // Attacking pieces means more pressure which is good
             if (occupied < BLACK_PAWN) {
                 scores.mid += PIECE_THREAT_MID[WHITE_KNIGHT][occupied];
                 scores.end += PIECE_THREAT_END[WHITE_KNIGHT][occupied];
                 continue;
             }
-
-            mobility += 3;
-
-
         }
     }
 
     // Knights are good protectors for the king
     SCORE_TYPE distance_to_our_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(!is_white)]]);
-    scores.mid += static_cast<SQUARE_TYPE>(OWN_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_our_king);
-    scores.end += static_cast<SQUARE_TYPE>(OWN_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_our_king);
+    scores.mid += static_cast<SCORE_TYPE>(OWN_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_our_king);
+    scores.end += static_cast<SCORE_TYPE>(OWN_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_our_king);
 
     // Knights are also very good at attacking the opponents king
     SCORE_TYPE distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
-    scores.mid += static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_opp_king);
-    scores.end += static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_opp_king);
+    scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_opp_king);
+    scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_opp_king);
 
-    scores.mid += mobility * MOBILITY_COEFFICIENTS_MID[WHITE_KNIGHT];
-    scores.end += mobility * MOBILITY_COEFFICIENTS_END[WHITE_KNIGHT];
+    scores.mid += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_MID[WHITE_KNIGHT]);
+    scores.end += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_END[WHITE_KNIGHT]);
+
+    scores.mid += king_ring_attacks[0] * KING_RING_ATTACKS_MID[0][WHITE_KNIGHT];
+    scores.end += king_ring_attacks[0] * KING_RING_ATTACKS_END[0][WHITE_KNIGHT];
+
+    scores.mid += king_ring_attacks[1] * KING_RING_ATTACKS_MID[1][WHITE_KNIGHT];
+    scores.end += king_ring_attacks[1] * KING_RING_ATTACKS_END[1][WHITE_KNIGHT];
 
     // std::cout << "KNIGHT MOBILITY: " << mobility << std::endl;
 }
@@ -354,6 +400,7 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
 void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white) {
     SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
     SCORE_TYPE mobility = 0;
+    int king_ring_attacks[2]{};
 
     if (is_white) {
         scores.mid += BISHOP_PST_MID[i];
@@ -370,6 +417,17 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
                 if (occupied == PADDING) break;
 
+                king_ring_attacks[0] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                             king_ring_zone.masks[0][MAILBOX_TO_STANDARD[position.king_positions[BLACK_COLOR]]]);
+                king_ring_attacks[1] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                             king_ring_zone.masks[1][MAILBOX_TO_STANDARD[position.king_positions[BLACK_COLOR]]]);
+
+                // If there is an enemy pawn controlling this square then we deduct 2.
+                if (position.board[new_pos - 11] == BLACK_PAWN || position.board[new_pos - 9] == BLACK_PAWN)
+                    mobility -= 2;
+
+                mobility += 3;
+
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
                 if (occupied < BLACK_PAWN) {
@@ -378,18 +436,12 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
                     break;
                 }
 
-                // If there is an enemy pawn controlling this square then we deduct 2.
-                if (position.board[new_pos - 11] == BLACK_PAWN || position.board[new_pos - 9] == BLACK_PAWN)
-                    mobility -= 2;
-
                 // Attacking pieces means more pressure which is good
                 if (occupied < EMPTY) {
                     scores.mid += PIECE_THREAT_MID[WHITE_BISHOP][occupied - BLACK_PAWN];
                     scores.end += PIECE_THREAT_END[WHITE_BISHOP][occupied - BLACK_PAWN];
                     break;
                 }
-
-                mobility += 3;
             }
         }
     }
@@ -408,6 +460,17 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
                 if (occupied == PADDING) break;
 
+                king_ring_attacks[0] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                             king_ring_zone.masks[0][MAILBOX_TO_STANDARD[position.king_positions[WHITE_COLOR]]]);
+                king_ring_attacks[1] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                             king_ring_zone.masks[1][MAILBOX_TO_STANDARD[position.king_positions[WHITE_COLOR]]]);
+
+                // If there is an enemy pawn controlling this square then we deduct 2.
+                if (position.board[new_pos + 11] == WHITE_PAWN || position.board[new_pos + 9] == WHITE_PAWN)
+                    mobility -= 2;
+
+                mobility += 3;
+
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
                 if (WHITE_KING < occupied && occupied < EMPTY) {
@@ -416,28 +479,29 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
                     break;
                 }
 
-                // If there is an enemy pawn controlling this square then we deduct 2.
-                if (position.board[new_pos + 11] == WHITE_PAWN || position.board[new_pos + 9] == WHITE_PAWN)
-                    mobility -= 2;
-
                 // Attacking pieces means more pressure which is good
                 if (occupied < BLACK_PAWN) {
                     scores.mid += PIECE_THREAT_MID[WHITE_BISHOP][occupied];
                     scores.end += PIECE_THREAT_END[WHITE_BISHOP][occupied];
                     break;
                 }
-
-                mobility += 3;
             }
         }
     }
 
     SCORE_TYPE distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
-    scores.mid += static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_BISHOP] * distance_to_opp_king);
-    scores.end += static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_BISHOP] * distance_to_opp_king);
+    scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_BISHOP] * distance_to_opp_king);
+    scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_BISHOP] * distance_to_opp_king);
 
-    scores.mid += mobility * MOBILITY_COEFFICIENTS_MID[WHITE_BISHOP];
-    scores.end += mobility * MOBILITY_COEFFICIENTS_END[WHITE_BISHOP];
+    scores.mid += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_MID[WHITE_BISHOP]);
+    scores.end += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_END[WHITE_BISHOP]);
+
+    scores.mid += king_ring_attacks[0] * KING_RING_ATTACKS_MID[0][WHITE_BISHOP];
+    scores.end += king_ring_attacks[0] * KING_RING_ATTACKS_END[0][WHITE_BISHOP];
+
+    scores.mid += king_ring_attacks[1] * KING_RING_ATTACKS_MID[1][WHITE_BISHOP];
+    scores.end += king_ring_attacks[1] * KING_RING_ATTACKS_END[1][WHITE_BISHOP];
+
     // std::cout << "BISHOP MOBILITY: " << mobility << std::endl;
 }
 
@@ -446,6 +510,7 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
     SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
     SQUARE_TYPE col = i % 8 + 1;
     SCORE_TYPE mobility = 0;
+    int king_ring_attacks[2]{};
 
     if (is_white) {
         scores.mid += ROOK_PST_MID[i];
@@ -473,6 +538,17 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
                 if (occupied == PADDING) break;
 
+                king_ring_attacks[0] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                             king_ring_zone.masks[0][MAILBOX_TO_STANDARD[position.king_positions[BLACK_COLOR]]]);
+                king_ring_attacks[1] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                             king_ring_zone.masks[1][MAILBOX_TO_STANDARD[position.king_positions[BLACK_COLOR]]]);
+
+                // If there is an enemy pawn controlling this square then we deduct 2.
+                if (position.board[new_pos - 11] == BLACK_PAWN || position.board[new_pos - 9] == BLACK_PAWN)
+                    mobility -= 2;
+
+                mobility += 3;
+
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
                 if (occupied < BLACK_PAWN) {
@@ -488,8 +564,6 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                     scores.end += PIECE_THREAT_END[WHITE_ROOK][occupied - BLACK_PAWN];
                     break;
                 }
-
-                mobility += 3;
             }
         }
     }
@@ -519,6 +593,17 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
                 if (occupied == PADDING) break;
 
+                king_ring_attacks[0] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                             king_ring_zone.masks[0][MAILBOX_TO_STANDARD[position.king_positions[WHITE_COLOR]]]);
+                king_ring_attacks[1] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                             king_ring_zone.masks[1][MAILBOX_TO_STANDARD[position.king_positions[WHITE_COLOR]]]);
+
+                // If there is an enemy pawn controlling this square then we deduct 2.
+                if (position.board[new_pos + 11] == WHITE_PAWN || position.board[new_pos + 9] == WHITE_PAWN)
+                    mobility -= 2;
+
+                mobility += 3;
+
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
                 if (WHITE_KING < occupied && occupied < EMPTY) {
@@ -534,18 +619,22 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                     scores.end += PIECE_THREAT_END[WHITE_ROOK][occupied];
                     break;
                 }
-
-                mobility += 3;
             }
         }
     }
 
     SCORE_TYPE distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
-    scores.mid += static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_ROOK] * distance_to_opp_king);
-    scores.end += static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_ROOK] * distance_to_opp_king);
+    scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_ROOK] * distance_to_opp_king);
+    scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_ROOK] * distance_to_opp_king);
 
-    scores.mid += mobility * MOBILITY_COEFFICIENTS_MID[WHITE_ROOK];  // Already gets open + semi-open file bonuses
-    scores.end += mobility * MOBILITY_COEFFICIENTS_END[WHITE_ROOK];  // Active rooks in the endgame are very important
+    scores.mid += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_MID[WHITE_ROOK]);  // Already gets open + semi-open file bonuses
+    scores.end += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_END[WHITE_ROOK]);  // Active rooks in the endgame are very important
+
+    scores.mid += king_ring_attacks[0] * KING_RING_ATTACKS_MID[0][WHITE_ROOK];
+    scores.end += king_ring_attacks[0] * KING_RING_ATTACKS_END[0][WHITE_ROOK];
+
+    scores.mid += king_ring_attacks[1] * KING_RING_ATTACKS_MID[1][WHITE_ROOK];
+    scores.end += king_ring_attacks[1] * KING_RING_ATTACKS_END[1][WHITE_ROOK];
 
     // std::cout << "ROOK MOBILITY: " << mobility << std::endl;
 }
@@ -555,6 +644,7 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
     SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
     SQUARE_TYPE col = i % 8 + 1;
     SCORE_TYPE mobility = 0;
+    int king_ring_attacks[2]{};
 
     if (is_white) {
         scores.mid += QUEEN_PST_MID[i];
@@ -581,6 +671,17 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
 
                 if (occupied == PADDING) break;
 
+                king_ring_attacks[0] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                             king_ring_zone.masks[0][MAILBOX_TO_STANDARD[position.king_positions[BLACK_COLOR]]]);
+                king_ring_attacks[1] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                             king_ring_zone.masks[1][MAILBOX_TO_STANDARD[position.king_positions[BLACK_COLOR]]]);
+
+                // If there is an enemy pawn controlling this square then we deduct 2.
+                if (position.board[new_pos - 11] == BLACK_PAWN || position.board[new_pos - 9] == BLACK_PAWN)
+                    mobility -= 2;
+
+                mobility += 3;
+
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
                 if (occupied < BLACK_PAWN) {
@@ -596,8 +697,6 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
                     scores.end += PIECE_THREAT_END[WHITE_QUEEN][occupied - BLACK_PAWN];
                     break;
                 }
-
-                mobility += 3;
             }
         }
     }
@@ -626,6 +725,17 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
 
                 if (occupied == PADDING) break;
 
+                king_ring_attacks[0] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                             king_ring_zone.masks[0][MAILBOX_TO_STANDARD[position.king_positions[WHITE_COLOR]]]);
+                king_ring_attacks[1] += bool((1ULL << MAILBOX_TO_STANDARD[new_pos]) &
+                                             king_ring_zone.masks[1][MAILBOX_TO_STANDARD[position.king_positions[WHITE_COLOR]]]);
+
+                // If there is an enemy pawn controlling this square then we deduct 2.
+                if (position.board[new_pos + 11] == WHITE_PAWN || position.board[new_pos + 9] == WHITE_PAWN)
+                    mobility -= 2;
+
+                mobility += 3;
+
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
                 if (WHITE_KING < occupied && occupied < EMPTY) {
@@ -641,18 +751,22 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
                     scores.end += PIECE_THREAT_END[WHITE_QUEEN][occupied];
                     break;
                 }
-
-                mobility += 3;
             }
         }
     }
 
     SCORE_TYPE distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
-    scores.mid += static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_QUEEN] * distance_to_opp_king);
-    scores.end += static_cast<SQUARE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_QUEEN] * distance_to_opp_king);
+    scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_QUEEN] * distance_to_opp_king);
+    scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_QUEEN] * distance_to_opp_king);
 
-    scores.mid += mobility * MOBILITY_COEFFICIENTS_MID[WHITE_QUEEN];  // Already gets open + semi-open file bonuses
-    scores.end += mobility * MOBILITY_COEFFICIENTS_END[WHITE_QUEEN];  // Active queen in the endgame is pretty important
+    scores.mid += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_MID[WHITE_QUEEN]);  // Already gets open + semi-open file bonuses
+    scores.end += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_END[WHITE_QUEEN]);  // Active queen in the endgame is pretty important
+
+    scores.mid += king_ring_attacks[0] * KING_RING_ATTACKS_MID[0][WHITE_QUEEN];
+    scores.end += king_ring_attacks[0] * KING_RING_ATTACKS_END[0][WHITE_QUEEN];
+
+    scores.mid += king_ring_attacks[1] * KING_RING_ATTACKS_MID[1][WHITE_QUEEN];
+    scores.end += king_ring_attacks[1] * KING_RING_ATTACKS_END[1][WHITE_QUEEN];
 
     // std::cout << "QUEEN MOBILITY: " << mobility << std::endl;
 }
@@ -906,7 +1020,8 @@ SCORE_TYPE evaluate(Position& position) {
 }
 
 
-SCORE_TYPE score_move(const Thread_State& thread_state, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move) {
+SCORE_TYPE score_move(const Thread_State& thread_state, Position& position, MOVE_TYPE move, MOVE_TYPE tt_move,
+                      MOVE_TYPE last_move_one, MOVE_TYPE last_move_two) {
 
     if (move == tt_move) return 100000;
 
@@ -919,21 +1034,31 @@ SCORE_TYPE score_move(const Thread_State& thread_state, MOVE_TYPE move, MOVE_TYP
 
     if (selected < BLACK_PAWN) {
         if (get_is_capture(move)) {
-            score += 20000;
+            score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
             score += 2 * (MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected]);
             score += thread_state.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
         else {
-            if (last_move != NO_MOVE &&
-                    thread_state.counter_moves[0][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
-                                    [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move) score += 8000;
-
             // score 1st and 2nd killer move
             if (thread_state.killer_moves[0][thread_state.search_ply] == move) score += 12000;
             else if (thread_state.killer_moves[1][thread_state.search_ply] == move) score += 11000;
-            else score += thread_state.history_moves
-                     [selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
+            else {
+                score += thread_state.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
+                if (last_move_one != NO_MOVE) {
+                    score += thread_state.continuation_history[get_selected(last_move_one)]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
+                                                        [selected]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
+                }
+
+                if (last_move_two != NO_MOVE) {
+                    score += thread_state.continuation_history[get_selected(last_move_two)]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
+                                                        [selected]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
+                }
+            }
             if (move_type == MOVE_TYPE_PROMOTION) {
                 PIECE_TYPE promotion_piece = get_promotion_piece(move);
                 if (promotion_piece == WHITE_QUEEN) {
@@ -948,19 +1073,31 @@ SCORE_TYPE score_move(const Thread_State& thread_state, MOVE_TYPE move, MOVE_TYP
     }
     else {
         if (get_is_capture(move)) {
-            score += 20000;
+            score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
             score += 2 * (MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN]);
             score += thread_state.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
         else {
-            if (last_move != NO_MOVE &&
-                    thread_state.counter_moves[1][MAILBOX_TO_STANDARD[get_origin_square(last_move)]]
-                                    [MAILBOX_TO_STANDARD[get_target_square(last_move)]] == move) score += 8000;
-
             // score 1st and 2nd killer move
             if (thread_state.killer_moves[0][thread_state.search_ply] == move) score += 12000;
             else if (thread_state.killer_moves[1][thread_state.search_ply] == move) score += 11000;
-            else score += thread_state.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
+            else {
+                score += thread_state.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
+
+                if (last_move_one != NO_MOVE) {
+                    score += thread_state.continuation_history[get_selected(last_move_one)]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
+                                                        [selected]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
+                }
+
+                if (last_move_two != NO_MOVE) {
+                    score += thread_state.continuation_history[get_selected(last_move_two)]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
+                                                        [selected]
+                                                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
+                }
+            }
 
             if (move_type == MOVE_TYPE_PROMOTION) {
                 PIECE_TYPE promotion_piece = get_promotion_piece(move) - BLACK_PAWN;
@@ -979,7 +1116,7 @@ SCORE_TYPE score_move(const Thread_State& thread_state, MOVE_TYPE move, MOVE_TYP
 }
 
 
-SCORE_TYPE score_capture(const Thread_State& thread_state, MOVE_TYPE move, MOVE_TYPE tt_move) {
+SCORE_TYPE score_capture(const Thread_State& thread_state, Position& position,  MOVE_TYPE move, MOVE_TYPE tt_move) {
 
     if (move == tt_move) return 100000;
 
@@ -987,6 +1124,8 @@ SCORE_TYPE score_capture(const Thread_State& thread_state, MOVE_TYPE move, MOVE_
 
     PIECE_TYPE selected = get_selected(move);
     PIECE_TYPE occupied = get_occupied(move);
+
+    score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
 
     if (selected < BLACK_PAWN) {
         score += MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected];
@@ -1001,22 +1140,22 @@ SCORE_TYPE score_capture(const Thread_State& thread_state, MOVE_TYPE move, MOVE_
 }
 
 
-void get_move_scores(const Thread_State& thread_state, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
-                     MOVE_TYPE tt_move, MOVE_TYPE last_move) {
+void get_move_scores(const Thread_State& thread_state, Position& position, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+                     MOVE_TYPE tt_move, MOVE_TYPE last_move_one, MOVE_TYPE last_move_two) {
     move_scores.clear();
 
     for (MOVE_TYPE move : moves) {
-        move_scores.push_back(score_move(thread_state, move, tt_move, last_move));
+        move_scores.push_back(score_move(thread_state, position, move, tt_move, last_move_one, last_move_two));
     }
 }
 
 
-void get_capture_scores(const Thread_State& thread_state, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+void get_capture_scores(const Thread_State& thread_state, Position& position, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
                         MOVE_TYPE tt_move) {
     move_scores.clear();
 
     for (MOVE_TYPE move : moves) {
-        move_scores.push_back(score_capture(thread_state, move, tt_move));
+        move_scores.push_back(score_capture(thread_state, position, move, tt_move));
     }
 }
 

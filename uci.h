@@ -17,7 +17,7 @@ public:
     std::string msg;
     std::vector<std::string> tokens;
 
-    Engine engine;
+    std::unique_ptr<Engine> engine = std::make_unique<Engine>();
     MOVE_TYPE last_move = NO_MOVE;
 
     std::vector<std::thread> search_threads;

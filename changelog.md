@@ -4826,3 +4826,146 @@ No returning TT values at root
 
 ### 2.1.3
 Remove Singular Extensions
+
+### 2.1.4
+Add Futility Pruning
+
+```
+ELO   | 8.62 +- 5.90 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.97 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 7616 W: 2272 L: 2083 D: 3261
+```
+
+### 2.1.5
+Using a new Aspiration Windows framework
+
+```
+ELO   | 18.63 +- 11.39 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 3.00 (-2.94, 2.94) [0.00, 8.00]
+GAMES | N: 2072 W: 655 L: 544 D: 873
+```
+
+### 2.1.6
+My idea to scale initial aspiration windows based on depth
+
+```
+ELO   | 7.01 +- 5.11 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.98 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 10160 W: 3013 L: 2808 D: 4339
+```
+
+### 2.1.7
+Static Exchange Evaluation Move ordering
+
+```
+ELO   | 9.36 +- 6.22 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.98 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 6944 W: 2110 L: 1923 D: 2911
+```
+
+### 2.1.8
+Static Exchange Evaluation pruning in qsearch
+
+```
+ELO   | 13.79 +- 7.92 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.99 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 4360 W: 1371 L: 1198 D: 1791
+```
+
+### 2.1.9
+Static Exchange Evaluation pruning in negamax
+
+```
+ELO   | 19.55 +- 9.65 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.96 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 2864 W: 902 L: 741 D: 1221
+```
+
+### 2.2.0
+King Danger Ring Evaluation
+
+```
+Score of Altair220 vs Altair219: 445 - 409 - 616  [0.512] 1470
+...      Altair220 playing White: 312 - 117 - 307  [0.632] 736
+...      Altair220 playing Black: 133 - 292 - 309  [0.392] 734
+...      White vs Black: 604 - 250 - 616  [0.620] 1470
+Elo difference: 8.5 +/- 13.5, LOS: 89.1 %, DrawRatio: 41.9 %
+SPRT: llr 0.735 (25.0%), lbound -2.94, ubound 2.94
+```
+
+### 2.2.1
+Very slightly lowering soft and hard time limit bounds
+Around equal or better in self play over 1000 games
+
+
+### 2.2.2
+Switching Blockers from a one dimensional array to 2 dimensions based on piece | rank
+
+```
+Score of Altair222 vs Altair221: 527 - 434 - 649  [0.529] 1610
+...      Altair222 playing White: 361 - 114 - 331  [0.653] 806
+...      Altair222 playing Black: 166 - 320 - 318  [0.404] 804
+...      White vs Black: 681 - 280 - 649  [0.625] 1610
+Elo difference: 20.1 +/- 13.1, LOS: 99.9 %, DrawRatio: 40.3 %
+SPRT: llr 2.6 (88.3%), lbound -2.94, ubound 2.94
+```
+
+### 2.2.3
+Mobility Changes
+
+```
+ELO   | 6.11 +- 4.65 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 12400 W: 3709 L: 3491 D: 5200
+```
+
+
+### 2.2.4
+Scaling the initial Aspiration Window based on number of retries
+
+```
+ELO   | 1.30 +- 2.02 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | -2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 65800 W: 19252 L: 19006 D: 27542
+```
+
+
+### 2.2.5
+Outpost Eval
+
+```
+ELO   | 1.58 +- 2.98 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | -0.87 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 30336 W: 8923 L: 8785 D: 12628
+```
+
+
+### 2.2.6
+Late Move Reductions on Bad Captures
+
+```
+ELO   | 6.47 +- 4.83 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.98 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 11496 W: 3438 L: 3224 D: 4834
+```
+
+
+### 2.2.7
+Continuation History for Move Ordering
+
+```
+ELO   | 10.74 +- 6.80 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.97 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 5824 W: 1782 L: 1602 D: 2440
+```
