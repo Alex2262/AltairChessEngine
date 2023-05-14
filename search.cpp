@@ -538,6 +538,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     if (pv_node && depth >= 4 && tt_move == NO_MOVE) {
         negamax(engine, alpha, beta, static_cast<PLY_TYPE>(depth - 3), true, thread_id);  // TODO: test no null moves here
         tt_move = engine.transposition_table[position.hash_key % engine.transposition_table.size()].move;
+        if (!position.get_is_pseudo_legal(tt_move)) tt_move = NO_MOVE;
     }
 
     int legal_moves = 0;
