@@ -176,9 +176,10 @@ void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus);
 SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id);
 SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,  bool do_null, int thread_id);
 
-void print_thinking(Engine& engine, Position& position, NodeType node, SCORE_TYPE best_score);
-SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE previous_score, PLY_TYPE& asp_depth);
-void iterative_search(Engine& engine, Position& position);
+void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int thread_id);
+SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, int thread_id);
+void iterative_search(Engine& engine, int thread_id);
+void lazy_smp_search(Engine& engine);
 
 void initialize_lmr_reductions(Engine& engine);
 

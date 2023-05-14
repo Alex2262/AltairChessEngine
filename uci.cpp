@@ -13,10 +13,16 @@
 #include "bench.h"
 
 void UCI::initialize_uci() {
-    position.set_fen(START_FEN);
     engine->transposition_table.resize(MAX_TT_SIZE);
 
     initialize_lmr_reductions(*engine);
+
+    engine->thread_states.emplace_back();
+
+    Position& position = engine->thread_states[0].position;
+    position.set_fen(START_FEN);
+
+    std::cout << sizeof(engine) << " " << sizeof(engine->thread_states[0]) << std::endl;
 
     std::cout << engine->transposition_table.size() << " number of hash entries" << std::endl;
 }
@@ -26,7 +32,7 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
     double rate = 20;
     double time_amt;
 
-    Position& position = engine.thread_states[0].position;
+    Position& position = engine->thread_states[0].position;
 
     if (position.is_attacked(position.king_positions[position.side])) rate -= 3;
     if (get_is_capture(last_move)) rate -= 1.5;
@@ -79,11 +85,13 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
 void UCI::parse_position() {
     if (tokens.size() < 2) return;
 
+    Position& position = engine->thread_states[0].position;
+
     int next_idx;
-    engine->game_ply = 0;
+    engine->thread_states[0].game_ply = 0;
 
     if (tokens[1] == "startpos") {
-        engine->fifty_move = position.set_fen(START_FEN);
+        engine->thread_states[0].fifty_move = position.set_fen(START_FEN);
         next_idx = 2;
     }
 
@@ -94,7 +102,7 @@ void UCI::parse_position() {
             fen += " ";
         }
 
-        engine->fifty_move = position.set_fen(fen);
+        engine->thread_states[0].fifty_move = position.set_fen(fen);
         next_idx = 8;
     }
 
@@ -107,11 +115,11 @@ void UCI::parse_position() {
         MOVE_TYPE move = get_move_from_uci(position, tokens[i]);
         last_move = move;
         // std::cout << move << " " << get_uci_from_move(move) << std::endl;
-        position.make_move(move, 0, engine->fifty_move);
+        position.make_move(move, 0, engine->thread_states[0].fifty_move);
 
-        engine.thread_states[0].game_ply++;
-        engine.thread_states[0].fifty_move++;
-        engine.thread_states[0].repetition_table[engine.thread_states[0].game_ply] = position.hash_key;
+        engine->thread_states[0].game_ply++;
+        engine->thread_states[0].fifty_move++;
+        engine->thread_states[0].repetition_table[engine->thread_states[0].game_ply] = position.hash_key;
 
         position.side ^= 1;
     }
@@ -123,6 +131,9 @@ void UCI::parse_position() {
 
 
 void UCI::parse_go() {
+
+    Position& position = engine->thread_states[0].position;
+
     PLY_TYPE d = 0, perft_depth = -1;
     double wtime = 0, btime = 0, winc = 0, binc = 0, movetime = 0;
     long movestogo = 0;
@@ -176,17 +187,19 @@ void UCI::parse_go() {
     if (!search_threads.empty()) {
         search_threads[0].join();
 
-        while (!engine->terminated);  // to prevent some stupid exceptions
-        if (engine->terminated) search_threads.erase(search_threads.end() - 1);
+        while (!engine->thread_states[0].terminated);  // to prevent some stupid exceptions
+        if (engine->thread_states[0].terminated) search_threads.erase(search_threads.end() - 1);
     }
 
-    search_threads.emplace_back(iterative_search, std::ref(*engine), std::ref(position));
+    search_threads.emplace_back(lazy_smp_search, std::ref(*engine));
 
     //iterative_search(engine, position);
 }
 
 
 void UCI::uci_loop() {
+
+    Position& position = engine->thread_states[0].position;
 
     msg = "";
     while (getline(std::cin, msg)) {
@@ -203,8 +216,8 @@ void UCI::uci_loop() {
             if (!search_threads.empty()) {
                 search_threads[0].join();
 
-                while (!engine->terminated);  // to prevent some stupid exceptions
-                if (engine->terminated) search_threads.erase(search_threads.end() - 1);
+                while (!engine->thread_states[0].terminated);  // to prevent some stupid exceptions
+                if (engine->thread_states[0].terminated) search_threads.erase(search_threads.end() - 1);
             }
         }
 
@@ -244,13 +257,23 @@ void UCI::uci_loop() {
                 mb = std::min(1024, std::max(1, mb));
                 engine->transposition_table.resize(mb * (1000000 / 24));
                 std::cout << engine->transposition_table.size() << " number of hash entries" << std::endl;
-            } else if (tokens[2] == "nodes") {
+            }
+
+            else if (tokens[2] == "Threads") {
+                engine->num_threads = std::clamp(std::stoi(tokens[4]), 1, 8);
+            }
+
+            else if (tokens[2] == "nodes") {
                 uint64_t max_nodes = std::stoi(tokens[4]);
                 engine->max_nodes = max_nodes;
                 std::cout << "max nodes set to " << engine->max_nodes << std::endl;
-            } else if (tokens[2] == "Statistics") {
+            }
+
+            else if (tokens[2] == "Statistics") {
                 engine->show_stats = tokens[4] == "true";
-            } else {
+            }
+
+            else {
                 if (engine->do_tuning) {
                     for (auto & i : engine->tuning_parameters.tuning_parameter_array) {
                         if (tokens[2] == i.name) {
@@ -279,7 +302,7 @@ void UCI::uci_loop() {
         }
 
         else if (tokens[0] == "bench") {
-            run_bench(*engine, position, BENCH_DEPTH);
+            run_bench(*engine, BENCH_DEPTH);
         }
 
         else if (tokens[0] == "stats") {

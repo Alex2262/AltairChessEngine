@@ -3,6 +3,7 @@
 // Created by Alex Tian on 9/22/2022.
 //
 
+#include <thread>
 #include <chrono>
 #include <iostream>
 #include <cstring>
@@ -54,9 +55,9 @@ void Engine::reset() {
         thread_state.search_ply = 0;
 
         std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
-        //std::memset(history_moves, 0, sizeof(history_moves));
-        //std::memset(capture_history, 0, sizeof(capture_history));
-        std::memset(thread_state.counter_moves, 0, sizeof(thread_state.counter_moves));
+        std::memset(thread_state.history_moves, 0, sizeof(thread_state.history_moves));
+        std::memset(thread_state.capture_history, 0, sizeof(thread_state.capture_history));
+        std::memset(thread_state.continuation_history, 0, sizeof(thread_state.continuation_history));
     }
 
     selective_depth = 0;
@@ -268,7 +269,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     position.state_stack[thread_state.search_ply].evaluation = static_eval;
 
     position.get_pseudo_legal_captures(thread_state.search_ply);
-    get_capture_scores(engine, position, position.moves[thread_state.search_ply], position.move_scores[thread_state.search_ply], tt_move);
+    get_capture_scores(thread_state, position, position.moves[thread_state.search_ply], position.move_scores[thread_state.search_ply], tt_move);
 
     SCORE_TYPE best_score = static_eval;
     MOVE_TYPE best_move = NO_MOVE;
@@ -525,7 +526,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     if (pv_node && depth >= 4 && tt_move == NO_MOVE) {
-        negamax(engine, position, alpha, beta, static_cast<PLY_TYPE>(depth - 3), true);  // TODO: test no null moves here
+        negamax(engine, alpha, beta, static_cast<PLY_TYPE>(depth - 3), true, thread_id);  // TODO: test no null moves here
         tt_move = engine.transposition_table[position.hash_key % engine.transposition_table.size()].move;
     }
 
@@ -536,7 +537,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Retrieving the pseudo legal moves in the current position as a list of integers
     // Score the moves
     position.get_pseudo_legal_moves(thread_state.search_ply);
-    get_move_scores(engine, position, position.moves[thread_state.search_ply], position.move_scores[thread_state.search_ply],
+    get_move_scores(thread_state, position, position.moves[thread_state.search_ply], position.move_scores[thread_state.search_ply],
                     tt_move, last_move_one, last_move_two);
 
     // Best score for fail soft, and best move for tt
@@ -798,10 +799,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     engine.tt_prefetch_write(position.hash_key);
 
     if (legal_moves == 0 && !in_check) return 0;
-    else if (legal_moves == 0) return -MATE_SCORE + engine.search_ply;
+    else if (legal_moves == 0) return -MATE_SCORE + thread_state.search_ply;
 
 
-    engine.record_tt_entry(position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval);
+    engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval);
 
     return best_score;
 }
@@ -855,7 +856,11 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
 }
 
 
-SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE previous_score, PLY_TYPE& asp_depth) {
+SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, int thread_id) {
+
+    Thread_State& thread_state = engine.thread_states[thread_id];
+    Position& position = thread_state.position;
+
     SCORE_TYPE alpha = -SCORE_INF;
     SCORE_TYPE beta = SCORE_INF;
     SCORE_TYPE delta = std::max(6 + static_cast<int>(85 / (asp_depth - 2)), 10);
@@ -887,7 +892,7 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
             asp_depth--;
             asp_depth = std::max<PLY_TYPE>(6, asp_depth);
 
-            if (depth >= 12) print_thinking(engine, position, Lower_Node, return_eval);
+            if (depth >= 12 && thread_id == 0) print_thinking(engine, Lower_Node, return_eval, thread_id);
         }
 
         // The aspiration window search has failed high.
@@ -901,7 +906,7 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
             asp_depth--;
             asp_depth = std::max<PLY_TYPE>(6, asp_depth);
 
-            if (depth >= 12) print_thinking(engine, position, Upper_Node, return_eval);
+            if (depth >= 12 && thread_id == 0) print_thinking(engine, Upper_Node, return_eval, thread_id);
         }
 
         // We have achieved an exact node where the score was between alpha and beta.
@@ -943,7 +948,7 @@ void iterative_search(Engine& engine, int thread_id) {
     while (running_depth <= engine.max_depth) {
         thread_state.current_search_depth = running_depth;
 
-        previous_score = aspiration_window(engine, position, previous_score, asp_depth);
+        previous_score = aspiration_window(engine, previous_score, asp_depth, thread_id);
 
         if (thread_id == 0 && !engine.stopped) best_move = engine.pv_table[0][0];
 
