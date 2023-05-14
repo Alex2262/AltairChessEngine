@@ -23,6 +23,15 @@ inline SCORE_TYPE get_distance(SQUARE_TYPE square_1, SQUARE_TYPE square_2) {
     return abs(row_1 - row_2) + abs(col_1 - col_2);
 }
 
+
+inline SCORE_TYPE get_chebyshev_distance(SQUARE_TYPE square_1, SQUARE_TYPE square_2) {
+    SQUARE_TYPE row_1 = 8 - square_1 / 8, col_1 = square_1 % 8;
+    SQUARE_TYPE row_2 = 8 - square_2 / 8, col_2 = square_2 % 8;
+
+    return std::max(abs(row_1 - row_2), abs(col_1 - col_2));
+}
+
+
 void evaluate_king_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE file, bool is_white);
 void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white);
 void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white);
