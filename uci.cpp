@@ -199,8 +199,6 @@ void UCI::parse_go() {
 
 void UCI::uci_loop() {
 
-    Position& position = engine->thread_states[0].position;
-
     msg = "";
     while (getline(std::cin, msg)) {
         tokens.clear();
@@ -289,6 +287,7 @@ void UCI::uci_loop() {
         }
 
         else if (msg == "ucinewgame") {
+            Position& position = engine->thread_states[0].position;
             position.set_fen(START_FEN);
             engine->new_game();
         }
@@ -319,6 +318,7 @@ void UCI::uci_loop() {
         }
 
         else if (tokens[0] == "evaluate") {
+            Position& position = engine->thread_states[0].position;
             std::cout << evaluate(position) << std::endl;
         }
     }

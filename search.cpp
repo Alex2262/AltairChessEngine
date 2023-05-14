@@ -859,7 +859,6 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
 SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, int thread_id) {
 
     Thread_State& thread_state = engine.thread_states[thread_id];
-    Position& position = thread_state.position;
 
     SCORE_TYPE alpha = -SCORE_INF;
     SCORE_TYPE beta = SCORE_INF;
@@ -1005,6 +1004,7 @@ void lazy_smp_search(Engine& engine) {
 
     for (int thread_id = engine.num_threads - 1; thread_id >= 1; thread_id--) {
         search_threads[thread_id - 1].join();
+        std::cout << "Helper Thread #" << thread_id << " closed." << std::endl;
         engine.thread_states.pop_back();
         search_threads.pop_back();
     }
