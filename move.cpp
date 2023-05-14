@@ -2,6 +2,7 @@
 #include <iostream>
 #include "move.h"
 
+
 std::string get_uci_from_move(MOVE_TYPE move) {
 
     std::string uci_move;
@@ -27,6 +28,7 @@ std::string get_uci_from_move(MOVE_TYPE move) {
 
     return uci_move;
 }
+
 
 MOVE_TYPE get_move_from_uci(const Position& position, std::string uci) {
 

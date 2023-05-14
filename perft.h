@@ -14,7 +14,6 @@ struct Perft_Result_Type {
     int promotion_amount;
     int castle_amount;
     int check_amount;
-
 };
 
 void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY_TYPE ply);

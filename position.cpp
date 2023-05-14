@@ -34,8 +34,6 @@ void Position::compute_hash_key() {
     hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
     if (side) hash_key ^= ZobristHashKeys.side_hash_key;
-
-    // std::cout << hash_key << std::endl;
 }
 
 
@@ -81,11 +79,11 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
 
             if (std::isupper(c)) {
                 white_pieces.push_back(pos);
-                piece_list_index[pos] = white_pieces.size() - 1;
+                piece_list_index[pos] = static_cast<SQUARE_TYPE>(white_pieces.size() - 1);
             }
             else {
                 black_pieces.push_back(pos);
-                piece_list_index[pos] = black_pieces.size() - 1;
+                piece_list_index[pos] = static_cast<SQUARE_TYPE>(black_pieces.size() - 1);
             }
 
             if (c == 'K') king_positions[0] = pos;
@@ -111,7 +109,7 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
     }
 
     if (fen_tokens[3].size() > 1) {
-        SQUARE_TYPE square = (8 - (fen_tokens[3][1] - '0')) * 8 + fen_tokens[3][0] - 'a';
+        auto square = static_cast<SQUARE_TYPE>((8 - (fen_tokens[3][1] - '0')) * 8 + fen_tokens[3][0] - 'a');
         ep_square = STANDARD_TO_MAILBOX[square];
     }
     else {
@@ -156,40 +154,10 @@ void Position::print_board() {
               << king_positions[1] << " white pieces: " << white_pieces.size()
               << " black pieces: " << black_pieces.size()
               << std::endl << std::endl;
-
-    /*
-    for (SQUARE_TYPE pos : white_pieces) {
-        SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
-        std::cout << i << " " << board[pos] << std::endl;
-    }
-
-    std::cout << "BLACK\n";
-    for (SQUARE_TYPE pos : black_pieces) {
-        SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
-        std::cout << i << " " << board[pos] << std::endl;
-    }
-    std::cout << "ARR\n";
-
-    new_board = "";
-    for (SQUARE_TYPE pos : STANDARD_TO_MAILBOX) {
-        if (MAILBOX_TO_STANDARD[pos] % 8 == 0) {
-            new_board += '\n';
-        }
-
-        int idx = piece_list_index[pos];
-
-        new_board += std::to_string(idx);
-        new_board += ' ';
-    }
-
-    std::cout << new_board << std::endl << std::endl;
-
-    */
-
 }
 
 
-void Position::print_piece_index_board() {
+[[maybe_unused]] void Position::print_piece_index_board() {
     std::string new_board;
 
     for (SQUARE_TYPE pos : STANDARD_TO_MAILBOX) {
@@ -212,7 +180,7 @@ bool Position::is_attacked(SQUARE_TYPE pos) {
 
         // Search with the increments of a knight to see if any opponent knights are attacking you
         for (int increment : BLACK_ATK_INCREMENTS[WHITE_KNIGHT]) {
-            SQUARE_TYPE new_pos = pos + increment;
+            auto new_pos = static_cast<SQUARE_TYPE>(pos + increment);
             PIECE_TYPE occupied = board[new_pos];
 
             if (occupied == BLACK_KNIGHT) return true;

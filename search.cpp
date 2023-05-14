@@ -11,9 +11,11 @@
 #include <cassert>
 #include "search.h"
 #include "evaluation.h"
+#include "evaluation_constants.h"
 #include "move.h"
 #include "useful.h"
 #include "see.h"
+
 
 static double LMR_REDUCTIONS_QUIET[64][64];
 static double LMR_REDUCTIONS_NOISY[64][64];
@@ -793,6 +795,7 @@ void print_thinking(Engine& engine, Position& position, NodeType node, SCORE_TYP
 
     PLY_TYPE depth = engine.current_search_depth;
 
+    // Calculate the elapsed time and NPS
     auto end_time = std::chrono::high_resolution_clock::now();
     auto end_int = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(end_time).time_since_epoch()).count();
@@ -803,6 +806,7 @@ void print_thinking(Engine& engine, Position& position, NodeType node, SCORE_TYP
     auto nps = static_cast<uint64_t>(static_cast<double>(engine.node_count) /
                                      (static_cast<double>(elapsed_time) / 1000.0));
 
+    // Format the scores for printing to UCI
     SCORE_TYPE format_score = best_score;
     std::string result_type = "cp ";
     if (abs(best_score) >= MATE_BOUND) {
@@ -813,19 +817,29 @@ void print_thinking(Engine& engine, Position& position, NodeType node, SCORE_TYP
 
     result_type += std::to_string(format_score);
 
+    // Identify the type of node / bound if necessary
     if (node == Lower_Node) result_type += " lowerbound";
     else if (node == Upper_Node) result_type += " upperbound";
 
-
-    SQUARE_TYPE original_side = position.side;
+    // PV information
     std::string pv_line;
-    for (int c = 0; c < engine.pv_length[0]; c++) {
+
+    // If the depth is low, or we are printing a PV line from a failed aspiration search,
+    // then only store a limited number of moves in the PV line
+    int max_pv_length = engine.pv_length[0];
+    if (depth <= 12 || node == Lower_Node || node == Upper_Node)
+        max_pv_length = std::min(max_pv_length, 1 + max_pv_length / 3);
+
+    // Get the PV line
+    SQUARE_TYPE original_side = position.side;
+    for (int c = 0; c < max_pv_length; c++) {
         pv_line += get_uci_from_move(engine.pv_table[0][c]);
         pv_line += " ";
         position.side ^= 1;
     }
     position.side = original_side;
 
+    // Print the UCI search information
     std::cout << "info multipv 1 depth " << depth << " seldepth " << engine.selective_depth
               << " score " << result_type << " time " << elapsed_time
               << " nodes " << engine.node_count << " nps " << nps
@@ -835,6 +849,7 @@ void print_thinking(Engine& engine, Position& position, NodeType node, SCORE_TYP
 
 
 SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE previous_score, PLY_TYPE& asp_depth) {
+
     SCORE_TYPE alpha = -SCORE_INF;
     SCORE_TYPE beta = SCORE_INF;
     SCORE_TYPE delta = std::max(6 + static_cast<int>(85 / (asp_depth - 2)), 10);
@@ -848,8 +863,10 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
 
     SCORE_TYPE return_eval = 0;
     while (true) {
-        if (alpha <= -5000) alpha = -SCORE_INF;
-        if (beta  >=  5000) beta  =  SCORE_INF;
+
+        // Completely expand the bounds once they have exceeded a certain score
+        if (alpha <= -1000) alpha = -SCORE_INF;
+        if (beta  >=  1000) beta  =  SCORE_INF;
 
         return_eval = negamax(engine, position, alpha, beta, depth, false);
 
@@ -866,7 +883,7 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
             asp_depth--;
             asp_depth = std::max<PLY_TYPE>(6, asp_depth);
 
-            if (depth >= 12) print_thinking(engine, position, Lower_Node, return_eval);
+            if (depth >= 18) print_thinking(engine, position, Lower_Node, return_eval);
         }
 
         // The aspiration window search has failed high.
@@ -880,7 +897,7 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
             asp_depth--;
             asp_depth = std::max<PLY_TYPE>(6, asp_depth);
 
-            if (depth >= 12) print_thinking(engine, position, Upper_Node, return_eval);
+            if (depth >= 18) print_thinking(engine, position, Upper_Node, return_eval);
         }
 
         // We have achieved an exact node where the score was between alpha and beta.
@@ -900,16 +917,19 @@ SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE prev
 
 void iterative_search(Engine& engine, Position& position) {
 
+    // Reset certain information
     engine.stopped = false;
     engine.terminated = false;
 
     position.clear_movelist();
     engine.reset();
 
+    // Initialize the start time
     auto start_time = std::chrono::high_resolution_clock::now();
     engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
 
+    // Initialize variables
     SCORE_TYPE previous_score = 0;
     PLY_TYPE running_depth = 1;
     PLY_TYPE asp_depth = 6;
@@ -919,28 +939,35 @@ void iterative_search(Engine& engine, Position& position) {
     while (running_depth <= engine.max_depth) {
         engine.current_search_depth = running_depth;
 
+        // Run a search with aspiration window bounds
         previous_score = aspiration_window(engine, position, previous_score, asp_depth);
 
+        // Store the best move when the engine has finished a search (it hasn't stopped in the middle of a search)
         if (!engine.stopped) best_move = engine.pv_table[0][0];
 
+        // Calculate the elapsed time
         auto end_time = std::chrono::high_resolution_clock::now();
         auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
                                                                             - start_time);
         uint64_t elapsed_time = ms_int.count();
         elapsed_time = std::max<uint64_t>(elapsed_time, 1);
 
+        // Stop the engine when we have exceeded the soft time limit
         if (running_depth >= engine.min_depth) {
             if (elapsed_time >= engine.soft_time_limit) engine.stopped = true;
         }
 
+        // End the search when the engine has stopped running
         if (engine.stopped || running_depth == engine.max_depth) {
             break;
         }
 
+        // Increase the aspiration depth for aspiration bounds scaling
         if (running_depth >= 6) {
             asp_depth++;
         }
 
+        // Increase search depth
         running_depth++;
     }
 

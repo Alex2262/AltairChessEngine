@@ -3,6 +3,7 @@
 //
 
 #include "evaluation.h"
+#include "evaluation_constants.h"
 #include "move.h"
 #include "see.h"
 
@@ -393,12 +394,12 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
     }
 
     // Knights are good protectors for the king
-    SCORE_TYPE distance_to_our_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(!is_white)]]);
+    SCORE_TYPE distance_to_our_king = get_manhattan_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(!is_white)]]);
     scores.mid += static_cast<SCORE_TYPE>(OWN_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_our_king);
     scores.end += static_cast<SCORE_TYPE>(OWN_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_our_king);
 
     // Knights are also very good at attacking the opponents king
-    SCORE_TYPE distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
+    SCORE_TYPE distance_to_opp_king = get_manhattan_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
     scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_opp_king);
     scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_opp_king);
 
@@ -507,7 +508,7 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
         }
     }
 
-    SCORE_TYPE distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
+    SCORE_TYPE distance_to_opp_king = get_manhattan_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
     scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_BISHOP] * distance_to_opp_king);
     scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_BISHOP] * distance_to_opp_king);
 
@@ -641,7 +642,7 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
         }
     }
 
-    SCORE_TYPE distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
+    SCORE_TYPE distance_to_opp_king = get_manhattan_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
     scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_ROOK] * distance_to_opp_king);
     scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_ROOK] * distance_to_opp_king);
 
@@ -773,7 +774,7 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
         }
     }
 
-    SCORE_TYPE distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
+    SCORE_TYPE distance_to_opp_king = get_manhattan_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
     scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_QUEEN] * distance_to_opp_king);
     scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_QUEEN] * distance_to_opp_king);
 

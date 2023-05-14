@@ -6,29 +6,41 @@
 #include <chrono>
 #include "bench.h"
 
-
+// A function for a 'bench' metric that calculates nps and nodes over
+// a set of 50 pre-defined fens. Used to insure equality between machines, which is used
+// during testing on an instance.
 void run_bench(Engine& engine, Position& position, PLY_TYPE depth) {
+
+    // Save these variables to reset them after the bench has been run.
     PLY_TYPE old_depth = engine.max_depth;
     uint64_t old_soft = engine.soft_time_limit;
     uint64_t old_hard = engine.hard_time_limit;
 
+    // Set variables
     engine.max_depth = depth;
     engine.soft_time_limit = TIME_INF;
     engine.hard_time_limit = TIME_INF;
 
+    // Calculate the starting time
     auto start_time = std::chrono::high_resolution_clock::now();
     engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
 
+    // Used for calculating statistics
     uint64_t total_nodes = 0;
     Search_Results bench_res{};
 
+    // Loop through the 50 fens
     for (int fen_count = 0; fen_count < static_cast<int>(fens.size()); fen_count++) {
+
         std::string fen = fens[fen_count];
         std::cout << "running position #" << fen_count + 1 << " fen: " << fen << std::endl;
+
         engine.new_game();
         position.set_fen(fen);
+
         iterative_search(engine, position);
+
         total_nodes += engine.node_count;
 
         if (engine.show_stats) {
@@ -49,6 +61,7 @@ void run_bench(Engine& engine, Position& position, PLY_TYPE depth) {
         }
     }
 
+    // Print certain statistics if instructed
     if (engine.show_stats) {
         bench_res.num_searches = fens.size();
         bench_res.node_count = total_nodes;
@@ -57,8 +70,8 @@ void run_bench(Engine& engine, Position& position, PLY_TYPE depth) {
         print_statistics(bench_res);
     }
 
+    // Calculate elapsed time and NPS
     auto end_time = std::chrono::high_resolution_clock::now();
-
     auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
                                                                         - start_time);
     uint64_t elapsed_time = ms_int.count();
@@ -69,6 +82,7 @@ void run_bench(Engine& engine, Position& position, PLY_TYPE depth) {
               << int(static_cast<double>(total_nodes) / (static_cast<double>(elapsed_time) / 1000.0))
               << " nps " << std::endl;
 
+    // Reset variables
     engine.max_depth = old_depth;
     engine.soft_time_limit = old_soft;
     engine.hard_time_limit = old_hard;
