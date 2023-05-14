@@ -67,6 +67,7 @@ void evaluate_king_pawn(const Position& position, Score_Struct& scores, SQUARE_T
 }
 
 
+
 void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white) {
 
     SQUARE_TYPE i = MAILBOX_TO_STANDARD[pos];
@@ -116,7 +117,7 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             }
         }
 
-        // Backwards pawn
+            // Backwards pawn
         else if (row < position.pawn_rank[0][col - 1] && row < position.pawn_rank[0][col + 1]) {
             // In the middle game it's worse to have a very backwards pawn
             // since then, the 'forwards' pawns won't be protected
@@ -172,7 +173,14 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 scores.end += BLOCKER_TWO_SQUARE_VALUES_END[position.board[pos - 20] - 6][row - 1];
             }
 
+            SQUARE_TYPE promotion_square = i % 8;
+            int our_distance = get_chebyshev_distance(i, promotion_square);
+            int king_distance = get_chebyshev_distance(MAILBOX_TO_STANDARD[position.king_positions[BLACK_COLOR]], promotion_square);
 
+            if (std::min(our_distance, 5) < king_distance - (position.side == BLACK_COLOR)) {
+                scores.mid += SQUARE_OF_THE_PAWN_MID;
+                scores.end += SQUARE_OF_THE_PAWN_END;
+            }
         }
 
         // Pawn Phalanx
@@ -226,7 +234,7 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
             }
         }
 
-        // Backwards pawn
+            // Backwards pawn
         else if (row > position.pawn_rank[1][col - 1] && row > position.pawn_rank[1][col + 1]) {
             // In the middle game it's worse to have a very backwards pawn
             // since then, the 'forwards' pawns won't be protected
@@ -281,6 +289,15 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 scores.mid += BLOCKER_TWO_SQUARE_VALUES_MID[position.board[pos + 20]][8 - row];
                 scores.end += BLOCKER_TWO_SQUARE_VALUES_END[position.board[pos + 20]][8 - row];
             }
+
+            SQUARE_TYPE promotion_square = (i % 8) ^ 56;
+            int our_distance = get_chebyshev_distance(i, promotion_square);
+            int king_distance = get_chebyshev_distance(MAILBOX_TO_STANDARD[position.king_positions[WHITE_COLOR]], promotion_square);
+
+            if (std::min(our_distance, 5) < king_distance - (position.side == WHITE_COLOR)) {
+                scores.mid += SQUARE_OF_THE_PAWN_MID;
+                scores.end += SQUARE_OF_THE_PAWN_END;
+            }
         }
 
         // Pawn Phalanx
@@ -290,6 +307,7 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
         }
     }
 }
+
 
 
 void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white) {
