@@ -231,7 +231,7 @@ void UCI::uci_loop() {
             std::cout << "option name nodes type spin default " << 0 << " min " << 0 << " max " << 2147483647
                       << std::endl;
 
-            std::cout << "option name Threads type spin default " << 1 << " min " << 1 << " max " << 1
+            std::cout << "option name Threads type spin default " << 1 << " min " << 1 << " max " << 8
                       << std::endl;
 
             std::cout << "option name Statistic type check default " << false
