@@ -915,52 +915,13 @@ void iterative_search(Engine& engine, Position& position) {
     PLY_TYPE asp_depth = 6;
 
     MOVE_TYPE best_move = NO_MOVE;
-    int best_move_changes = 0;
-    int last_since_change = 0;
-
-    uint64_t original_soft_time_limit = engine.soft_time_limit;
-    uint64_t original_hard_time_limit = engine.hard_time_limit;
-
-    bool time_decreased = false;
 
     while (running_depth <= engine.max_depth) {
         engine.current_search_depth = running_depth;
 
         previous_score = aspiration_window(engine, position, previous_score, asp_depth);
 
-        if (!engine.stopped) {
-            last_since_change++;
-
-            if (running_depth >= 4 && engine.pv_table[0][0] != best_move) {
-                best_move_changes++;
-                last_since_change = 0;
-            }
-
-            best_move = engine.pv_table[0][0];
-        }
-
-        bool recapture = position.last_move != NO_MOVE &&
-                         get_is_capture(position.last_move) &&
-                         get_target_square(best_move) == get_target_square(position.last_move);
-
-        // Decrease the time limits if the move is obvious and has not changed much.
-        if (last_since_change >= 6 && best_move_changes <= 1) {
-            time_decreased = true;
-
-            int divisor = 64 * best_move_changes + (recapture ? 256 : 320);
-            engine.soft_time_limit -= engine.soft_time_limit * running_depth / divisor;
-            engine.hard_time_limit -= engine.hard_time_limit * running_depth / divisor;
-
-            // std::cout << "Time limits reduced" << std::endl;
-            // std::cout << engine.soft_time_limit << " " << engine.hard_time_limit << std::endl;
-        } else if (time_decreased) {
-            engine.soft_time_limit = (2 * original_soft_time_limit + engine.soft_time_limit) / 4;
-            engine.hard_time_limit = (2 * original_hard_time_limit + engine.hard_time_limit) / 4;
-
-            if (engine.soft_time_limit == original_soft_time_limit) time_decreased = false;
-
-            // std::cout << "Time limits reset" << std::endl;
-        }
+        if (!engine.stopped) best_move = engine.pv_table[0][0];
 
         auto end_time = std::chrono::high_resolution_clock::now();
         auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time

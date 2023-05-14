@@ -43,8 +43,6 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
 
     std::vector<std::string> fen_tokens = split(fen_string, ' ');
 
-    last_move = NO_MOVE;
-
     // Setting the padding around the 8x8 board inscribed within the 10x12 board
     SQUARE_TYPE pos = 0;
 

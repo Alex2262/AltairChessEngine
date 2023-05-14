@@ -19,6 +19,7 @@ public:
 
     std::unique_ptr<Engine> engine = std::make_unique<Engine>();
     Position position;
+    MOVE_TYPE last_move = NO_MOVE;
 
     std::vector<std::thread> search_threads;
 
