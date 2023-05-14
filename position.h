@@ -47,6 +47,8 @@ public:
     void get_pseudo_legal_moves(PLY_TYPE ply);
     void get_pseudo_legal_captures(PLY_TYPE ply);
 
+    bool get_is_pseudo_legal(MOVE_TYPE move);
+
     PIECE_TYPE board[120]{};
     SQUARE_TYPE piece_list_index[120] = {NO_PIECE_INDEX};
 

@@ -259,6 +259,7 @@ void UCI::uci_loop() {
 
             else if (tokens[2] == "Threads") {
                 engine->num_threads = std::clamp(std::stoi(tokens[4]), 1, 8);
+                engine->thread_states.resize(engine->num_threads);
             }
 
             else if (tokens[2] == "nodes") {

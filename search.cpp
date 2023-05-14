@@ -245,6 +245,11 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     MOVE_TYPE tt_move = NO_MOVE;
     short tt_return_type = engine.probe_tt_entry_q(thread_id, position.hash_key, alpha, beta, tt_value, tt_move);
 
+    if (!position.get_is_pseudo_legal(tt_move)) {
+        tt_return_type = NO_HASH_ENTRY;
+        tt_move = NO_MOVE;
+    }
+
     if (tt_return_type == RETURN_HASH_SCORE) {
         return tt_value;
     }
@@ -415,6 +420,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     SCORE_TYPE tt_value = tt_entry.score;
     MOVE_TYPE tt_move = tt_entry.move;
+
+    if (!position.get_is_pseudo_legal(tt_move)) {
+        tt_return_type = NO_HASH_ENTRY;
+        tt_move = NO_MOVE;
+    }
 
     // We are allowed to return the hash score
     if (tt_return_type == RETURN_HASH_SCORE && !root) {
@@ -991,22 +1001,19 @@ void lazy_smp_search(Engine& engine) {
     std::vector<std::thread> search_threads;
     //std::vector<Position> new_positions;
 
-    engine.thread_states.reserve(engine.num_threads);
-
     for (int thread_id = 1; thread_id < engine.num_threads; thread_id++) {
         std::cout << "Creating Helper Thread #" << thread_id << std::endl;
-        engine.thread_states.push_back(engine.thread_states[0]);
+        engine.thread_states[thread_id] = engine.thread_states[0];
         search_threads.emplace_back(iterative_search, std::ref(engine), thread_id);
     }
 
     //engine.thread_states[0].position.print_board();
     iterative_search(engine, 0);
+    std::cout << "Search ended" << std::endl;
 
     for (int thread_id = engine.num_threads - 1; thread_id >= 1; thread_id--) {
         search_threads[thread_id - 1].join();
         std::cout << "Helper Thread #" << thread_id << " closed." << std::endl;
-        engine.thread_states.pop_back();
-        search_threads.pop_back();
     }
 
 }

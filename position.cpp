@@ -806,3 +806,10 @@ void Position::get_pseudo_legal_captures(PLY_TYPE ply) {
 }
 
 
+bool Position::get_is_pseudo_legal(MOVE_TYPE move) {
+    if (get_selected(move) != board[get_origin_square(move)]) return false;
+    if (get_occupied(move) != board[get_target_square(move)]) return false;
+
+    return true;
+}
+
