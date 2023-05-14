@@ -26,7 +26,7 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
     double time_amt;
 
     if (position.is_attacked(position.king_positions[position.side])) rate -= 3;
-    if (get_is_capture(last_move)) rate -= 1.5;
+    if (get_is_capture(position.last_move)) rate -= 1.5;
 
     if (movetime > 0) time_amt = movetime * 0.9;
     else if (inc > 0 && movestogo > 0) {
@@ -102,7 +102,7 @@ void UCI::parse_position() {
     for (int i = next_idx + 1; i < static_cast<int>(tokens.size()); i++) {
         // std::cout << tokens[i] << std::endl;
         MOVE_TYPE move = get_move_from_uci(position, tokens[i]);
-        last_move = move;
+        position.last_move = move;
         // std::cout << move << " " << get_uci_from_move(move) << std::endl;
         position.make_move(move, 0, engine->fifty_move);
 
