@@ -47,6 +47,8 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
     white_pieces.clear();
     black_pieces.clear();
 
+    non_pawn_material_count = 0;
+
     clear_movelist();
 
     for (SQUARE_TYPE& i : piece_list_index) {
@@ -76,6 +78,9 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
         else if (std::isalpha(c)) {
 
             board[pos] = piece_to_num(c);
+
+            if (board[pos] != WHITE_PAWN && board[pos] != BLACK_PAWN &&
+                board[pos] != WHITE_KING && board[pos] != BLACK_KING) non_pawn_material_count++;
 
             if (std::isupper(c)) {
                 white_pieces.push_back(pos);
@@ -378,6 +383,7 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][MAILBOX_TO_STANDARD[target_square]];
             black_pieces.erase(black_pieces.begin() + occupied_index);
             update_piece_list_index(occupied_index, black_pieces.size(), BLACK_COLOR);
+            if (occupied != BLACK_PAWN) non_pawn_material_count--;
         }
     } else {
         black_pieces[selected_index] = target_square;
@@ -387,6 +393,7 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][MAILBOX_TO_STANDARD[target_square]];
             white_pieces.erase(white_pieces.begin() + occupied_index);
             update_piece_list_index(occupied_index, white_pieces.size(), WHITE_COLOR);
+            if (occupied != WHITE_PAWN) non_pawn_material_count--;
         }
     }
 
@@ -510,6 +517,7 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
         if (get_is_capture(move)) {
             black_pieces.push_back(target_square);
             piece_list_index[target_square] = black_pieces.size() - 1;
+            if (occupied != BLACK_PAWN) non_pawn_material_count++;
         }
     } else {
         black_pieces[piece_list_index[origin_square]] = origin_square;
@@ -517,6 +525,7 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
         if (get_is_capture(move)) {
             white_pieces.push_back(target_square);
             piece_list_index[target_square] = white_pieces.size() - 1;
+            if (occupied != WHITE_PAWN) non_pawn_material_count++;
         }
     }
 

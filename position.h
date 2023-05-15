@@ -67,6 +67,8 @@ public:
     SQUARE_TYPE side = 0;
     HASH_TYPE hash_key = 0;
 
+    int non_pawn_material_count = 0;
+
     inline void update_piece_list_index(SQUARE_TYPE left_range, SQUARE_TYPE right_range, SQUARE_TYPE side_to_use) {
         if (!side_to_use) {
             for (int i = left_range; i < right_range; i++) {
