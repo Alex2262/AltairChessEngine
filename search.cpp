@@ -17,12 +17,12 @@
 #include "see.h"
 
 
-static double LMR_REDUCTIONS_QUIET[64][64];
-static double LMR_REDUCTIONS_NOISY[64][64];
+static double LMR_REDUCTIONS_QUIET[MAX_AB_DEPTH + 1][64];
+static double LMR_REDUCTIONS_NOISY[MAX_AB_DEPTH + 1][64];
 
 void initialize_lmr_reductions(Engine& engine) {
-    for (PLY_TYPE depth = 0; depth < 64; depth++) {
-        for (int moves = 0; moves < 64; moves++) {
+    for (PLY_TYPE depth = 0; depth <= MAX_AB_DEPTH; depth++) {
+        for (int moves = 0; moves <= MAX_AB_DEPTH; moves++) {
             LMR_REDUCTIONS_QUIET[depth][moves] =
                     std::max(0.0,
                              std::log(depth) * std::log(moves) / double(engine.tuning_parameters.LMR_divisor_quiet / 100.0)
@@ -609,7 +609,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             && !in_check
             ){
 
-            reduction = quiet ? LMR_REDUCTIONS_QUIET[depth][legal_moves] : LMR_REDUCTIONS_NOISY[depth][legal_moves];
+            reduction = quiet ? LMR_REDUCTIONS_QUIET[depth][std::min(legal_moves, 63)] :
+                                LMR_REDUCTIONS_NOISY[depth][std::min(legal_moves, 63)];
 
             reduction -= pv_node;
 
