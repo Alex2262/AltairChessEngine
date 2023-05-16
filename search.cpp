@@ -513,7 +513,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 return beta;
             }
             else {
-                if (depth >= 8 && return_eval <= -MATE_BOUND) {
+                if (depth >= 8 && return_eval <= -MATE_BOUND && position.non_pawn_material_count >= (1 + depth / 8)) {
                     extensions++;
                 }
             }
