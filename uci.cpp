@@ -53,11 +53,11 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
     else if (self_time > 0) time_amt = self_time / (rate + 6);
     else time_amt = static_cast<double>(engine->hard_time_limit);
 
-    engine->hard_time_limit = static_cast<uint64_t>(time_amt * 2.22);
-    engine->soft_time_limit = static_cast<uint64_t>(time_amt * 0.66);
+    engine->hard_time_limit = static_cast<uint64_t>(time_amt * 1.3);
+    engine->soft_time_limit = static_cast<uint64_t>(time_amt * 0.4);
 
     if (engine->hard_time_limit > static_cast<uint64_t>(self_time * 0.7)) {
-        for (int multiplier = 18; multiplier >= 10; multiplier -= 1) {
+        for (int multiplier = 12; multiplier >= 8; multiplier -= 1) {
             engine->hard_time_limit = static_cast<uint64_t>(time_amt * (multiplier / 10.0));
             if (engine->hard_time_limit <= static_cast<uint64_t>(self_time * 0.7)) break;
         }
