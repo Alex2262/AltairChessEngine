@@ -512,9 +512,11 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 return beta;
             }
             else {
-                if (4 <= depth && depth <= 8) {
+                if (depth >= 10) {
+                    reduction++;
+                    //std::cout << depth << " " << reduction << std::endl;
                     return_eval = negamax(engine, position, MATE_BOUND - 1, MATE_BOUND, std::max(depth - reduction, 2), false);
-                    if (return_eval > MATE_BOUND) {
+                    if (return_eval >= MATE_BOUND) {
                         extensions++;
                     }
                 }
