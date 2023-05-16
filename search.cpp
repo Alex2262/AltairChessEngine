@@ -17,25 +17,6 @@
 #include "see.h"
 
 
-static double LMR_REDUCTIONS_QUIET[MAX_AB_DEPTH + 1][64];
-static double LMR_REDUCTIONS_NOISY[MAX_AB_DEPTH + 1][64];
-
-void initialize_lmr_reductions(Engine& engine) {
-    for (PLY_TYPE depth = 0; depth <= MAX_AB_DEPTH; depth++) {
-        for (int moves = 0; moves <= MAX_AB_DEPTH; moves++) {
-            LMR_REDUCTIONS_QUIET[depth][moves] =
-                    std::max(0.0,
-                             std::log(depth) * std::log(moves) / double(engine.tuning_parameters.LMR_divisor_quiet / 100.0)
-                             + double(engine.tuning_parameters.LMR_base_quiet / 100.0));
-            LMR_REDUCTIONS_NOISY[depth][moves] =
-                    std::max(0.0,
-                             std::log(depth) * std::log(moves) / double(engine.tuning_parameters.LMR_divisor_noisy / 100.0)
-                             + double(engine.tuning_parameters.LMR_base_noisy / 100.0));
-        }
-    }
-}
-
-
 void Engine::clear_tt() {
     for (TT_Entry& tt_entry : transposition_table) {
         tt_entry.key = 0;
@@ -205,12 +186,6 @@ void Engine::tt_prefetch_write(HASH_TYPE hash_key) {
 }
 
 
-void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
-    score -= (score * abs(bonus)) / 324;
-    score += bonus * 32;
-}
-
-
 SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth) {
 
     engine.tt_prefetch_read(position.hash_key);
@@ -260,7 +235,6 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     position.state_stack[engine.search_ply].evaluation = static_eval;
 
     position.get_pseudo_legal_captures(engine.search_ply);
-    get_capture_scores(engine, position, position.moves[engine.search_ply], position.move_scores[engine.search_ply], tt_move);
 
     SCORE_TYPE best_score = static_eval;
     MOVE_TYPE best_move = NO_MOVE;
@@ -268,22 +242,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     int legal_moves = 0;
     for (int move_index = 0; move_index < static_cast<int>(position.moves[engine.search_ply].size()); move_index++) {
 
-        sort_next_move(position.moves[engine.search_ply], position.move_scores[engine.search_ply], move_index);
         MOVE_TYPE move = position.moves[engine.search_ply][move_index];
-
-        // Delta / Futility pruning
-        // If the piece we capture plus a margin cannot even improve our score then
-        // there is no point in searching it
-        if (static_eval + PIECE_VALUES_MID[get_occupied(move) % BLACK_PAWN] +
-            engine.tuning_parameters.delta_margin < alpha) {
-            continue;
-        }
-
-        // SEE pruning
-        if (static_eval + 60 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
-            best_score = std::max(best_score, static_eval + 60);
-            continue;
-        }
 
         bool attempt = position.make_move(move, engine.search_ply, engine.fifty_move);
 
@@ -314,19 +273,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 alpha = return_eval;
                 tt_hash_flag = HASH_FLAG_EXACT;
 
-                // Captures History Heuristic for move ordering
-                SCORE_TYPE bonus = 2;
-                update_history_entry(engine.capture_history[get_selected(move)]
-                                     [get_occupied(move)][MAILBOX_TO_STANDARD[get_target_square(move)]],
-                                     bonus);
-
                 if (return_eval >= beta) {
-                    if (engine.show_stats) {
-                        if (legal_moves <= FAIL_HIGH_STATS_COUNT) {
-                            engine.search_results.qsearch_fail_highs[legal_moves - 1]++;
-                        }
-                    }
-
                     engine.record_tt_entry_q(position.hash_key, best_score, HASH_FLAG_BETA, best_move, static_eval  );
                     return best_score;
                 }
@@ -342,7 +289,7 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 }
 
 
-SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null) {
+SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth) {
 
     engine.tt_prefetch_read(position.hash_key);
 
@@ -359,29 +306,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
         // Detect repetitions and fifty move rule
         if (engine.fifty_move >= 100 || engine.detect_repetition()) return 3 - static_cast<int>(engine.node_count & 8);
-
-        // Mate Distance Pruning from CPW
-        SCORE_TYPE mating_value = MATE_SCORE - engine.search_ply;
-        if (mating_value < beta) {
-            beta = mating_value;
-            if (alpha >= mating_value) return mating_value;
-        }
-        mating_value = -MATE_SCORE + engine.search_ply;
-        if (mating_value > alpha) {
-            alpha = mating_value;
-            if (beta <= mating_value) return mating_value;
-        }
-
     }
-
-    bool in_check;
-    if (position.state_stack[engine.search_ply].in_check != -1) {
-        in_check = static_cast<bool>(position.state_stack[engine.search_ply].in_check);
-    } else {
-        in_check = position.is_attacked(position.king_positions[position.side]);
-    }
-
-    if (in_check) depth++;  // Check extension
 
     // Start quiescence search at the start of regular negamax search to counter the horizon effect.
     if (depth <= 0) {
@@ -433,143 +358,20 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // Variable to record the hash flag
     short tt_hash_flag = HASH_FLAG_ALPHA;
 
-    // Hack to determine pv_node, because when it is not a pv node we are being searched by
-    // a zero window with alpha == beta - 1
-    bool pv_node = alpha != beta - 1;
-    bool null_search = !do_null && !root;
-
-    // if (!pv_node) std::cout << alpha << " " << beta << std::endl;
-
-    // Get evaluation
-    SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
-    position.state_stack[engine.search_ply].evaluation = static_eval;
-
-    // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
-    // from a full-move or two plies ago. When this is true, we can be more aggressive with
-    // beta-reductions (eval is too high) as we will have more certainty that the position is better;
-    // however, we should be less aggressive with alpha-reductions (eval is too low) as we have less certainty
-    // that the position is awful.
-    bool improving = false;
-
-    if (!in_check && engine.search_ply >= 2) {
-        SCORE_TYPE past_eval = position.state_stack[engine.search_ply - 2].evaluation;
-        if (past_eval != NO_EVALUATION && static_eval > past_eval) improving = true;
-    }
-
-    // Internal Iterative Reduction. Rebel's idea
-    if (tt_move == NO_MOVE) {
-        if (depth >= 4) depth--;
-        if (depth >= 8) depth--;
-    }
-
-    if (!pv_node && !in_check) {
-
-        // Reverse Futility Pruning
-        // If the last move was very bad, such that the static evaluation - a margin is still greater
-        // than the opponent's best score, then return the static evaluation.
-
-        if (depth <= engine.tuning_parameters.RFP_depth && static_eval -
-            engine.tuning_parameters.RFP_margin * (depth - improving) >= beta) {
-            return static_eval;
-        }
-
-        // Razoring
-        // If the evaluation is really low, and we cannot improve alpha even with qsearch, then return.
-        // If the evaluation is improving then increase the margin because we are less certain that the
-        // position is terrible.
-        constexpr int razoring_margins[3] = {0, 320, 800};
-        if (depth <= 2 && static_eval + razoring_margins[depth] + improving * 120 < alpha) {
-            SCORE_TYPE return_eval = qsearch(engine, position, alpha, beta, engine.max_q_depth);
-            if (return_eval < alpha) return return_eval;
-        }
-
-        // Null move pruning
-        // We give the opponent an extra move and if they are not able to make their position
-        // any better, then our position is too good, and we don't need to search any deeper.
-        if (depth >= engine.tuning_parameters.NMP_depth && do_null && static_eval >= beta &&
-            position.non_pawn_material_count >= (depth >= 6)) {
-
-            // Adaptive NMP
-            int reduction = engine.tuning_parameters.NMP_base +
-                            depth / engine.tuning_parameters.NMP_depth_divisor +
-                            std::min(3, (static_eval - beta) / engine.tuning_parameters.NMP_eval_divisor);
-
-            position.make_null_move(engine.search_ply, engine.fifty_move);
-
-            engine.search_ply++;
-            engine.game_ply++;
-
-            // zero window search with reduced depth
-            SCORE_TYPE return_eval = -negamax(engine, position, -beta, -beta + 1, depth - reduction, false);
-
-            engine.game_ply--;
-            engine.search_ply--;
-            position.undo_null_move(engine.search_ply, engine.fifty_move);
-
-            if (return_eval >= beta) return beta;
-        }
-    }
-
-    if (pv_node && depth >= 4 && tt_move == NO_MOVE) {
-        negamax(engine, position, alpha, beta, static_cast<PLY_TYPE>(depth - 3), true);  // TODO: test no null moves here
-        tt_move = engine.transposition_table[position.hash_key % engine.transposition_table.size()].move;
-    }
-
     int legal_moves = 0;
-    MOVE_TYPE last_move_one = engine.search_ply >= 1 ? position.state_stack[engine.search_ply - 1].move : NO_MOVE;
-    MOVE_TYPE last_move_two = engine.search_ply >= 2 ? position.state_stack[engine.search_ply - 2].move : NO_MOVE;
 
     // Retrieving the pseudo legal moves in the current position as a list of integers
     // Score the moves
     position.get_pseudo_legal_moves(engine.search_ply);
-    get_move_scores(engine, position, position.moves[engine.search_ply], position.move_scores[engine.search_ply],
-                    tt_move, last_move_one, last_move_two);
 
     // Best score for fail soft, and best move for tt
     SCORE_TYPE best_score = -SCORE_INF;
     MOVE_TYPE best_move = NO_MOVE;
 
-    int alpha_raised_count = 0;
-
     // Iterate through moves and recursively search with Negamax
     for (int move_index = 0; move_index < static_cast<int>(position.moves[engine.search_ply].size()); move_index++) {
 
-        // Sort the next move. If an early move causes a cutoff then we have saved time
-        // by only sorting one or a few moves rather than the whole list.
-        sort_next_move(position.moves[engine.search_ply], position.move_scores[engine.search_ply], move_index);
         MOVE_TYPE move = position.moves[engine.search_ply][move_index];
-        SCORE_TYPE move_score = position.move_scores[engine.search_ply][move_index];
-
-        SCORE_TYPE move_history_score = engine.history_moves
-        [get_selected(move)][MAILBOX_TO_STANDARD[get_target_square(move)]];
-
-        bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
-
-        // Pruning
-        if (!pv_node && legal_moves > 0) {
-            // Late Move Pruning
-            if (depth <= engine.tuning_parameters.LMP_depth &&
-                legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;
-
-            // Quiet Late Move Pruning
-            if (quiet && depth <= engine.tuning_parameters.quiet_LMP_depth &&
-                legal_moves >= depth * (engine.tuning_parameters.quiet_LMP_margin -
-                                        !improving * engine.tuning_parameters.quiet_LMP_improving_margin)) break;
-            if (quiet && best_score > -MATE_BOUND && depth <= 5 && static_eval + depth * 150 + 60 <= alpha) break;
-
-            // History Pruning
-            if (depth <= engine.tuning_parameters.history_pruning_depth &&
-                move_history_score <= (depth + improving) * -engine.tuning_parameters.history_pruning_divisor) continue;
-
-            // SEE Pruning
-            if (depth <= (3 + 3 * !quiet) && legal_moves >= 3 &&
-                 -MATE_BOUND < alpha && alpha < MATE_BOUND &&
-                 move_history_score <= 5000 &&
-                 !get_static_exchange_evaluation(position, move, (quiet ? -50 : -90) * depth))
-                continue;
-
-        }
 
         // Make the move
         bool attempt = position.make_move(move, engine.search_ply, engine.fifty_move);
@@ -586,71 +388,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         engine.repetition_table[engine.game_ply] = position.hash_key;
         position.side ^= 1;
 
-        bool move_gives_check = position.is_attacked(position.king_positions[position.side]);
-        position.state_stack[engine.search_ply].in_check = static_cast<int>(move_gives_check);
-
-        SCORE_TYPE return_eval = -SCORE_INF;
-
-        double reduction;
-
-        bool is_killer_move = move == engine.killer_moves[0][engine.search_ply - 1] ||
-                              move == engine.killer_moves[1][engine.search_ply - 1];
-
-        bool full_depth_zero_window;
-
-        bool bad_capture = move_score < 10000;
-
-        // Late Move Reductions
-        // The idea that if moves are ordered well, then moves that are searched
-        // later shouldn't be as good, and therefore we don't need to search them to a very high depth
-        if (legal_moves >= 2
-            && ((engine.search_ply && !pv_node) || legal_moves >= 4)
-            && depth >= 3
-            && (quiet || bad_capture)
-            && !in_check
-            ){
-
-            reduction = quiet ? LMR_REDUCTIONS_QUIET[depth][std::min(legal_moves, 63)] :
-                                LMR_REDUCTIONS_NOISY[depth][std::min(legal_moves, 63)];
-
-            reduction -= pv_node;
-
-            reduction -= improving * 0.9;
-
-            reduction -= is_killer_move * 0.75;
-
-            reduction -= move_gives_check * 0.6;
-
-            reduction -= move_history_score > 0 ? move_history_score / 7200.0 : move_history_score / 16000.0;
-
-            reduction += static_cast<double>(alpha_raised_count) * (0.3 + 0.5 * get_is_capture(tt_move));
-
-            // My idea that in a null move search you can be more aggressive with LMR
-            reduction += null_search;
-
-            // Idea from Weiss, where you reduce more if the TT move is a capture
-            reduction += get_is_capture(tt_move) * 0.3;
-
-            PLY_TYPE lmr_depth = static_cast<PLY_TYPE>(depth - 1 -
-                                                       std::min(depth - 1, std::max(0, static_cast<int>(reduction))));
-
-            return_eval = -negamax(engine, position, -alpha - 1, -alpha, lmr_depth, true);
-
-            full_depth_zero_window = return_eval > alpha && lmr_depth != depth - 1;
-        }
-
-        else {
-            full_depth_zero_window = !pv_node || legal_moves >= 1;
-        }
-
-        // Principle Variation Search
-        // We assume that the first move should be the principle variation / best move, so the rest of the moves
-        // should be searched with a zero window
-        if (full_depth_zero_window)
-            return_eval = -negamax(engine, position, -alpha - 1, -alpha, depth - 1, true);
-
-        if (return_eval == -SCORE_INF || (pv_node && ((return_eval > alpha && return_eval < beta) || legal_moves == 0)))
-            return_eval = -negamax(engine, position, -beta, -alpha, depth - 1, true);
+        SCORE_TYPE return_eval = -negamax(engine, position, -beta, -alpha, depth - 1);
 
         position.side ^= 1;
         engine.game_ply--;
@@ -677,103 +415,13 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             engine.pv_length[engine.search_ply] = engine.pv_length[engine.search_ply + 1];
 
             if (return_eval > alpha) {
-                alpha_raised_count++;
                 alpha = return_eval;
 
                 // We have found a better move that increased achieved us an exact score
                 tt_hash_flag = HASH_FLAG_EXACT;
 
-                // History Heuristic for move ordering
-                SCORE_TYPE bonus = depth * (depth + 1 + null_search) - 1;
-
-                if (quiet) {
-                    update_history_entry(engine.history_moves
-                                         [get_selected(move)][MAILBOX_TO_STANDARD[get_target_square(move)]],
-                                         bonus);
-
-                    if (last_move_one != NO_MOVE) {
-                        update_history_entry(engine.continuation_history
-                                             [get_selected(last_move_one)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
-                                             [get_selected(move)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(move)]],
-                                             bonus);
-                    }
-
-                    if (last_move_two != NO_MOVE) {
-                        update_history_entry(engine.continuation_history
-                                             [get_selected(last_move_two)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
-                                             [get_selected(move)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(move)]],
-                                             bonus);
-                    }
-
-                } else {
-                    update_history_entry(engine.capture_history[get_selected(move)]
-                                         [get_occupied(move)][MAILBOX_TO_STANDARD[get_target_square(move)]],
-                                         bonus);
-                }
-
-                // Deduct bonus for moves that don't raise alpha
-                for (int failed_move_index = 0; failed_move_index < move_index; failed_move_index++) {
-                    MOVE_TYPE temp_move = position.moves[engine.search_ply][failed_move_index];
-                    if (!get_is_capture(temp_move) && get_move_type(move) != MOVE_TYPE_EP) {
-                        update_history_entry(engine.history_moves
-                                             [get_selected(temp_move)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
-                                             -bonus);
-
-                        if (last_move_one != NO_MOVE) {
-                            update_history_entry(engine.continuation_history
-                                                 [get_selected(last_move_one)]
-                                                 [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
-                                                 [get_selected(temp_move)]
-                                                 [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
-                                                 -bonus);
-                        }
-
-                        if (last_move_two != NO_MOVE) {
-                            update_history_entry(engine.continuation_history
-                                                 [get_selected(last_move_two)]
-                                                 [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
-                                                 [get_selected(temp_move)]
-                                                 [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
-                                                 -bonus);
-                        }
-
-                    } else {
-                        update_history_entry(engine.capture_history[get_selected(temp_move)]
-                                             [get_occupied(temp_move)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
-                                             -bonus);
-                    }
-                }
-
-                if (engine.show_stats) {
-                    engine.search_results.alpha_raised_count++;
-                    if (legal_moves <= ALPHA_RAISE_STATS_COUNT) {
-                        engine.search_results.search_alpha_raises[legal_moves-1]++;
-                    }
-                }
-
                 // Alpha - Beta cutoff. We have failed high here.
                 if (return_eval >= beta) {
-                    if (engine.show_stats) {
-                        if (legal_moves <= FAIL_HIGH_STATS_COUNT) engine.search_results.search_fail_highs[legal_moves-1]++;
-                        if (move == tt_move) engine.search_results.search_fail_high_types[0]++;
-                        else if (move == engine.killer_moves[0][engine.search_ply]) engine.search_results.search_fail_high_types[1]++;
-                        else if (move == engine.killer_moves[1][engine.search_ply]) engine.search_results.search_fail_high_types[2]++;
-                        else if (quiet) engine.search_results.search_fail_high_types[4]++;
-                        else engine.search_results.search_fail_high_types[5]++;
-                    }
-
-                    // Killer Heuristic for move ordering
-                    if (quiet) {
-                        engine.killer_moves[1][engine.search_ply] = engine.killer_moves[0][engine.search_ply];
-                        engine.killer_moves[0][engine.search_ply] = move;
-                    }
-
                     tt_hash_flag = HASH_FLAG_BETA;
                     break;
                 }
@@ -783,11 +431,18 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     engine.tt_prefetch_write(position.hash_key);
 
+    bool in_check;
+    if (position.state_stack[engine.search_ply].in_check != -1) {
+        in_check = static_cast<bool>(position.state_stack[engine.search_ply].in_check);
+    } else {
+        in_check = position.is_attacked(position.king_positions[position.side]);
+    }
+
     if (legal_moves == 0 && !in_check) return 0;
     else if (legal_moves == 0) return -MATE_SCORE + engine.search_ply;
 
 
-    engine.record_tt_entry(position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval);
+    engine.record_tt_entry(position.hash_key, best_score, tt_hash_flag, best_move, depth, NO_EVALUATION);
 
     return best_score;
 }
@@ -850,73 +505,6 @@ void print_thinking(Engine& engine, Position& position, NodeType node, SCORE_TYP
 }
 
 
-SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE previous_score, PLY_TYPE& asp_depth) {
-
-    SCORE_TYPE alpha = -SCORE_INF;
-    SCORE_TYPE beta = SCORE_INF;
-    SCORE_TYPE delta = std::max(6 + static_cast<int>(85 / (asp_depth - 2)), 10);
-
-    PLY_TYPE depth = engine.current_search_depth;
-
-    if (depth >= MINIMUM_ASP_DEPTH) {
-        alpha = std::max(previous_score - delta, -SCORE_INF);
-        beta  = std::min(previous_score + delta,  SCORE_INF);
-    }
-
-    SCORE_TYPE return_eval = 0;
-    while (true) {
-
-        // Completely expand the bounds once they have exceeded a certain score
-        if (alpha <= -1000) alpha = -SCORE_INF;
-        if (beta  >=  1000) beta  =  SCORE_INF;
-
-        return_eval = negamax(engine, position, alpha, beta, depth, false);
-
-        if (engine.stopped) break;
-
-        // The aspiration window search has failed low.
-        // The position is probably worse than we expect, so both alpha and beta should be relaxed.
-        // Alpha will be relaxed with delta while beta will be skewed towards alpha.
-        if (return_eval <= alpha) {
-            alpha = std::max(alpha - delta, -SCORE_INF);
-            beta  = (alpha + 3 * beta) / 4;
-            depth = engine.current_search_depth;
-
-            asp_depth--;
-            asp_depth = std::max<PLY_TYPE>(6, asp_depth);
-
-            if (depth >= 18) print_thinking(engine, position, Lower_Node, return_eval);
-        }
-
-        // The aspiration window search has failed high.
-        // The position is probably better than we expect, so we can be more aggressive with aspiration windows
-        // and only relax the beta bound while also reducing depth.
-        else if (return_eval >= beta) {
-            beta  = std::min(beta + delta, SCORE_INF);
-            depth = std::max(engine.min_depth,
-                             static_cast<PLY_TYPE>(static_cast<int>(depth) - (return_eval < MATE_BOUND)));
-
-            asp_depth--;
-            asp_depth = std::max<PLY_TYPE>(6, asp_depth);
-
-            if (depth >= 18) print_thinking(engine, position, Upper_Node, return_eval);
-        }
-
-        // We have achieved an exact node where the score was between alpha and beta.
-        // We are certain of our score and can now safely return.
-        else {
-            print_thinking(engine, position, Exact_Node, return_eval);
-            break;
-        }
-
-        // Increase delta in the case that we must re-search the aspiration windows multiple times.
-        delta += delta * 2 / 3;
-    }
-
-    return return_eval;
-}
-
-
 void iterative_search(Engine& engine, Position& position) {
 
     // Reset certain information
@@ -932,9 +520,7 @@ void iterative_search(Engine& engine, Position& position) {
             (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
 
     // Initialize variables
-    SCORE_TYPE previous_score = 0;
     PLY_TYPE running_depth = 1;
-    PLY_TYPE asp_depth = 6;
 
     MOVE_TYPE best_move = NO_MOVE;
 
@@ -942,10 +528,13 @@ void iterative_search(Engine& engine, Position& position) {
         engine.current_search_depth = running_depth;
 
         // Run a search with aspiration window bounds
-        previous_score = aspiration_window(engine, position, previous_score, asp_depth);
+        SCORE_TYPE score = negamax(engine, position, -SCORE_INF, SCORE_INF, running_depth);
 
         // Store the best move when the engine has finished a search (it hasn't stopped in the middle of a search)
-        if (!engine.stopped) best_move = engine.pv_table[0][0];
+        if (!engine.stopped) {
+            best_move = engine.pv_table[0][0];
+            print_thinking(engine, position, Exact_Node, score);
+        }
 
         // Calculate the elapsed time
         auto end_time = std::chrono::high_resolution_clock::now();
@@ -962,11 +551,6 @@ void iterative_search(Engine& engine, Position& position) {
         // End the search when the engine has stopped running
         if (engine.stopped || running_depth == engine.max_depth) {
             break;
-        }
-
-        // Increase the aspiration depth for aspiration bounds scaling
-        if (running_depth >= 6) {
-            asp_depth++;
         }
 
         // Increase search depth

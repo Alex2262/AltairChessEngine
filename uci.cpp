@@ -15,8 +15,6 @@ void UCI::initialize_uci() {
     position.set_fen(START_FEN);
     engine->transposition_table.resize(MAX_TT_SIZE);
 
-    initialize_lmr_reductions(*engine);
-
     std::cout << engine->transposition_table.size() << " number of hash entries" << std::endl;
 }
 
