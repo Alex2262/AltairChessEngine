@@ -505,25 +505,18 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             // zero window search with reduced depth
             SCORE_TYPE return_eval = -negamax(engine, position, -beta, -beta + 1, depth - reduction, false);
 
-            if (return_eval >= beta) {
-                engine.game_ply--;
-                engine.search_ply--;
-                position.undo_null_move(engine.search_ply, engine.fifty_move);
-                return beta;
-            }
-            else {
-                if (depth >= 10) {
-                    reduction++;
-                    return_eval = -negamax(engine, position, -MATE_BOUND - 1, -MATE_BOUND, depth / 4 + 1, false);
-                    if (return_eval <= -MATE_BOUND) {
-                        extensions++;
-                    }
-                }
-            }
-
             engine.game_ply--;
             engine.search_ply--;
             position.undo_null_move(engine.search_ply, engine.fifty_move);
+
+            if (return_eval >= beta) {
+                return beta;
+            }
+            else {
+                if (depth <= 10 && return_eval <= -MATE_BOUND) {
+                    extensions++;
+                }
+            }
         }
     }
 
