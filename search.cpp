@@ -513,7 +513,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
                 return beta;
             }
             else {
-                if (depth <= 10 && return_eval <= -MATE_BOUND) {
+                if (depth >= 8 && return_eval <= -MATE_BOUND) {
                     extensions++;
                 }
             }
