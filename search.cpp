@@ -452,6 +452,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // that the position is awful.
     bool improving = false;
 
+    PLY_TYPE extensions = 0;
+
     if (!in_check && engine.search_ply >= 2) {
         SCORE_TYPE past_eval = position.state_stack[engine.search_ply - 2].evaluation;
         if (past_eval != NO_EVALUATION && static_eval > past_eval) improving = true;
@@ -503,11 +505,24 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             // zero window search with reduced depth
             SCORE_TYPE return_eval = -negamax(engine, position, -beta, -beta + 1, depth - reduction, false);
 
+            if (return_eval >= beta) {
+                engine.game_ply--;
+                engine.search_ply--;
+                position.undo_null_move(engine.search_ply, engine.fifty_move);
+                return beta;
+            }
+            else {
+                if (4 <= depth && depth <= 8) {
+                    return_eval = negamax(engine, position, MATE_BOUND - 1, MATE_BOUND, std::max(depth - reduction, 2), false);
+                    if (return_eval > MATE_BOUND) {
+                        extensions++;
+                    }
+                }
+            }
+
             engine.game_ply--;
             engine.search_ply--;
             position.undo_null_move(engine.search_ply, engine.fifty_move);
-
-            if (return_eval >= beta) return beta;
         }
     }
 
@@ -580,6 +595,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             continue;
         }
 
+        PLY_TYPE new_depth = depth + extensions - 1;
+
         engine.search_ply++;
         engine.fifty_move++;
         engine.game_ply++;
@@ -631,12 +648,12 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             // Idea from Weiss, where you reduce more if the TT move is a capture
             reduction += get_is_capture(tt_move) * 0.3;
 
-            PLY_TYPE lmr_depth = static_cast<PLY_TYPE>(depth - 1 -
-                                                       std::min(depth - 1, std::max(0, static_cast<int>(reduction))));
+            PLY_TYPE lmr_depth = static_cast<PLY_TYPE>(new_depth -
+                                 std::min<PLY_TYPE>(new_depth, std::max<PLY_TYPE>(0, static_cast<PLY_TYPE>(reduction))));
 
             return_eval = -negamax(engine, position, -alpha - 1, -alpha, lmr_depth, true);
 
-            full_depth_zero_window = return_eval > alpha && lmr_depth != depth - 1;
+            full_depth_zero_window = return_eval > alpha && lmr_depth != new_depth;
         }
 
         else {
@@ -647,10 +664,10 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         // We assume that the first move should be the principle variation / best move, so the rest of the moves
         // should be searched with a zero window
         if (full_depth_zero_window)
-            return_eval = -negamax(engine, position, -alpha - 1, -alpha, depth - 1, true);
+            return_eval = -negamax(engine, position, -alpha - 1, -alpha, new_depth, true);
 
         if (return_eval == -SCORE_INF || (pv_node && ((return_eval > alpha && return_eval < beta) || legal_moves == 0)))
-            return_eval = -negamax(engine, position, -beta, -alpha, depth - 1, true);
+            return_eval = -negamax(engine, position, -beta, -alpha, new_depth, true);
 
         position.side ^= 1;
         engine.game_ply--;
