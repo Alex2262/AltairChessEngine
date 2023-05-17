@@ -240,10 +240,6 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
         return tt_value;
     }
 
-    // When the tt_value is above a bound (USE_HASH_MOVE), the function tells us to use the
-    // tt_entry move for move ordering
-    else if (tt_value > USE_HASH_MOVE) tt_move = tt_value - USE_HASH_MOVE;
-
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
     if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
     // SCORE_TYPE static_eval = evaluate(position);
