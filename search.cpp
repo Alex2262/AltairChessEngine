@@ -470,18 +470,12 @@ void print_thinking(Engine& engine, Position& position, NodeType node, SCORE_TYP
 
     result_type += std::to_string(format_score);
 
-    // Identify the type of node / bound if necessary
-    if (node == Lower_Node) result_type += " lowerbound";
-    else if (node == Upper_Node) result_type += " upperbound";
-
     // PV information
     std::string pv_line;
 
     // If the depth is low, or we are printing a PV line from a failed aspiration search,
     // then only store a limited number of moves in the PV line
     int max_pv_length = engine.pv_length[0];
-    if (depth <= 12 || node == Lower_Node || node == Upper_Node)
-        max_pv_length = std::min(max_pv_length, 1 + max_pv_length / 3);
 
     // Get the PV line
     SQUARE_TYPE original_side = position.side;
