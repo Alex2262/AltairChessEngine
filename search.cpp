@@ -585,6 +585,13 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             continue;
         }
 
+        bool passed_pawn = get_selected(move) == WHITE_PAWN + BLACK_PAWN * position.side &&
+                           MAILBOX_TO_STANDARD[get_target_square(move)] / 8 == 1 + 5 * position.side;
+        bool queen_promotion = get_move_type(move) == MOVE_TYPE_PROMOTION &&
+                               get_promotion_piece(move) == WHITE_QUEEN + BLACK_PAWN * position.side;
+
+        if (move_score >= 0 && (passed_pawn || queen_promotion)) extensions++;
+
         PLY_TYPE new_depth = depth + extensions - 1;
 
         engine.search_ply++;
