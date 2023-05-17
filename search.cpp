@@ -118,7 +118,7 @@ void Engine::record_tt_entry(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag
     if (score < -MATE_BOUND) score -= search_ply;
     else if (score > MATE_BOUND) score += search_ply;
 
-    if (tt_entry.key != hash_key || depth + 2 > tt_entry.depth || tt_flag == HASH_FLAG_EXACT) {
+    if (tt_entry.key != hash_key || depth + 4 > tt_entry.depth || tt_flag == HASH_FLAG_EXACT) {
         tt_entry.key = hash_key;
         tt_entry.depth = depth;
         tt_entry.flag = tt_flag;
@@ -214,10 +214,6 @@ SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     if (tt_return_type == RETURN_HASH_SCORE) {
         return tt_value;
     }
-
-    // When the tt_value is above a bound (USE_HASH_MOVE), the function tells us to use the
-    // tt_entry move for move ordering
-    else if (tt_value > USE_HASH_MOVE) tt_move = tt_value - USE_HASH_MOVE;
 
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
     if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
