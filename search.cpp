@@ -448,8 +448,6 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // that the position is awful.
     bool improving = false;
 
-    PLY_TYPE extensions = 0;
-
     if (!in_check && engine.search_ply >= 2) {
         SCORE_TYPE past_eval = position.state_stack[engine.search_ply - 2].evaluation;
         if (past_eval != NO_EVALUATION && static_eval > past_eval) improving = true;
@@ -510,7 +508,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             }
             else {
                 if (depth >= 8 && return_eval <= -MATE_BOUND && position.non_pawn_material_count >= (1 + depth / 8)) {
-                    extensions++;
+                    depth++;
                 }
             }
         }
@@ -584,6 +582,15 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             position.undo_move(move, engine.search_ply, engine.fifty_move);
             continue;
         }
+
+        PLY_TYPE extensions = 0;
+
+        bool passed_pawn = get_selected(move) == WHITE_PAWN + BLACK_PAWN * position.side &&
+                           MAILBOX_TO_STANDARD[get_target_square(move)] / 8 == 1 + 5 * position.side;
+        bool queen_promotion = get_move_type(move) == MOVE_TYPE_PROMOTION &&
+                               get_promotion_piece(move) == WHITE_QUEEN + BLACK_PAWN * position.side;
+
+        if (move_score >= 0 && (passed_pawn || queen_promotion)) extensions++;
 
         PLY_TYPE new_depth = depth + extensions - 1;
 
