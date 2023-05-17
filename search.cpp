@@ -523,6 +523,8 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     MOVE_TYPE last_move_one = engine.search_ply >= 1 ? position.state_stack[engine.search_ply - 1].move : NO_MOVE;
     MOVE_TYPE last_move_two = engine.search_ply >= 2 ? position.state_stack[engine.search_ply - 2].move : NO_MOVE;
 
+    bool recapture_found = false;
+
     // Retrieving the pseudo legal moves in the current position as a list of integers
     // Score the moves
     position.get_pseudo_legal_moves(engine.search_ply);
@@ -583,6 +585,13 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             continue;
         }
 
+        bool recapture = false;
+
+        if (last_move_one != NO_MOVE && get_target_square(last_move_one) == get_target_square(move)) {
+            recapture_found = true;
+            recapture = true;
+        }
+
         PLY_TYPE extensions = 0;
 
         bool passed_pawn = get_selected(move) == WHITE_PAWN + BLACK_PAWN * position.side &&
@@ -636,6 +645,10 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
             reduction -= move_gives_check * 0.6;
 
             reduction -= move_history_score > 0 ? move_history_score / 7200.0 : move_history_score / 16000.0;
+
+            reduction -= recapture * 0.5;
+
+            reduction += !recapture && recapture_found && quiet && !move_gives_check && move_history_score <= 0;
 
             reduction += static_cast<double>(alpha_raised_count) * (0.3 + 0.5 * get_is_capture(tt_move));
 
