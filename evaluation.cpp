@@ -1060,9 +1060,13 @@ SCORE_TYPE score_move(const Engine& engine, Position& position, MOVE_TYPE move, 
 
     if (selected < BLACK_PAWN) {
         if (get_is_capture(move)) {
-            score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
-            score += 2 * (MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected]);
             score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
+            score += 2 * (MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected]);
+
+            if (score >= -3000) {
+                if (score >= 3000) score += 20000;
+                else score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
+            }
         }
         else {
             // score 1st and 2nd killer move
@@ -1099,9 +1103,13 @@ SCORE_TYPE score_move(const Engine& engine, Position& position, MOVE_TYPE move, 
     }
     else {
         if (get_is_capture(move)) {
-            score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
             score += 2 * (MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN]);
             score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
+
+            if (score >= -3000) {
+                if (score >= 3000) score += 20000;
+                else score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
+            }
         }
         else {
             // score 1st and 2nd killer move
