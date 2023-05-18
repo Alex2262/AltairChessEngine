@@ -397,11 +397,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     bool pv_node = alpha != beta - 1;
     bool null_search = !do_null && !root;
     bool in_check;
-    if (position.state_stack[thread_state.search_ply].in_check != -1) {
-        in_check = static_cast<bool>(position.state_stack[thread_state.search_ply].in_check);
 
     if (position.state_stack[thread_state.search_ply].in_check != -1) {
-        in_check = static_cast<bool>(position.state_stack[engine.search_ply].in_check);
+        in_check = static_cast<bool>(position.state_stack[thread_state.search_ply].in_check);
     } else {
         in_check = position.is_attacked(position.king_positions[position.side]);
     }
@@ -468,7 +466,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Reverse Futility Pruning
         // If the last move was very bad, such that the static evaluation - a margin is still greater
         // than the opponent's best score, then return the static evaluation.
-
         if (depth <= engine.tuning_parameters.RFP_depth && static_eval -
             engine.tuning_parameters.RFP_margin * (depth - improving) >= beta) {
             return static_eval;

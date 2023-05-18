@@ -42,8 +42,6 @@ void run_bench(Engine& engine, PLY_TYPE depth) {
         engine.new_game();
         position.set_fen(fen);
 
-        iterative_search(engine);
-
         lazy_smp_search(engine);
         total_nodes += engine.node_count;
 
