@@ -57,8 +57,6 @@ void Engine::reset() {
         thread_state.search_ply = 0;
 
         std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
-        std::memset(thread_state.history_moves, 0, sizeof(thread_state.history_moves));
-        std::memset(thread_state.capture_history, 0, sizeof(thread_state.capture_history));
         std::memset(thread_state.continuation_history, 0, sizeof(thread_state.continuation_history));
     }
 
@@ -246,11 +244,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     SCORE_TYPE tt_value = 0;
     MOVE_TYPE tt_move = NO_MOVE;
     short tt_return_type = engine.probe_tt_entry_q(thread_id, position.hash_key, alpha, beta, tt_value, tt_move);
-
-    if (!position.get_is_pseudo_legal(tt_move)) {
-        tt_return_type = NO_HASH_ENTRY;
-        tt_move = NO_MOVE;
-    }
 
     if (tt_return_type == RETURN_HASH_SCORE) {
         return tt_value;

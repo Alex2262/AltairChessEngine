@@ -28,7 +28,7 @@ class ZobristKeysClass {
 
 public:
 
-    PRNG prng = PRNG(695848653836736222);
+    PRNG prng = PRNG(31415926); // 695848653836736222
 
     HASH_TYPE piece_hash_keys[12][64] {};
     HASH_TYPE ep_hash_keys[64] {};
