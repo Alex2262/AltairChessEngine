@@ -437,9 +437,13 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // if (!pv_node) std::cout << alpha << " " << beta << std::endl;
 
     // Get evaluation
-    SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
-    position.state_stack[engine.search_ply].evaluation = static_eval;
+    SCORE_TYPE static_eval = NO_EVALUATION;
+
+    if (!in_check) {
+        static_eval = engine.probe_tt_evaluation(position.hash_key);
+        if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
+        position.state_stack[engine.search_ply].evaluation = static_eval;
+    }
 
     // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
     // from a full-move or two plies ago. When this is true, we can be more aggressive with
