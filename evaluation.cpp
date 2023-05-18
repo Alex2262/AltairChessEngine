@@ -3,6 +3,7 @@
 //
 
 #include "evaluation.h"
+#include "evaluation_constants.h"
 #include "move.h"
 #include "see.h"
 
@@ -172,7 +173,14 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 scores.end += BLOCKER_TWO_SQUARE_VALUES_END[position.board[pos - 20] - 6][row - 1];
             }
 
+            SQUARE_TYPE promotion_square = i % 8;
+            int our_distance = get_chebyshev_distance(i, promotion_square);
+            int king_distance = get_chebyshev_distance(MAILBOX_TO_STANDARD[position.king_positions[BLACK_COLOR]], promotion_square);
 
+            if (std::min(our_distance, 5) < king_distance - (position.side == BLACK_COLOR)) {
+                scores.mid += SQUARE_OF_THE_PAWN_MID;
+                scores.end += SQUARE_OF_THE_PAWN_END;
+            }
         }
 
         // Pawn Phalanx
@@ -281,6 +289,15 @@ void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE p
                 scores.mid += BLOCKER_TWO_SQUARE_VALUES_MID[position.board[pos + 20]][8 - row];
                 scores.end += BLOCKER_TWO_SQUARE_VALUES_END[position.board[pos + 20]][8 - row];
             }
+
+            SQUARE_TYPE promotion_square = (i % 8) ^ 56;
+            int our_distance = get_chebyshev_distance(i, promotion_square);
+            int king_distance = get_chebyshev_distance(MAILBOX_TO_STANDARD[position.king_positions[WHITE_COLOR]], promotion_square);
+
+            if (std::min(our_distance, 5) < king_distance - (position.side == WHITE_COLOR)) {
+                scores.mid += SQUARE_OF_THE_PAWN_MID;
+                scores.end += SQUARE_OF_THE_PAWN_END;
+            }
         }
 
         // Pawn Phalanx
@@ -375,12 +392,12 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
     }
 
     // Knights are good protectors for the king
-    SCORE_TYPE distance_to_our_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(!is_white)]]);
+    SCORE_TYPE distance_to_our_king = get_manhattan_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(!is_white)]]);
     scores.mid += static_cast<SCORE_TYPE>(OWN_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_our_king);
     scores.end += static_cast<SCORE_TYPE>(OWN_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_our_king);
 
     // Knights are also very good at attacking the opponents king
-    SCORE_TYPE distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
+    SCORE_TYPE distance_to_opp_king = get_manhattan_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
     scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_opp_king);
     scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_opp_king);
 
@@ -489,7 +506,7 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
         }
     }
 
-    SCORE_TYPE distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
+    SCORE_TYPE distance_to_opp_king = get_manhattan_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
     scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_BISHOP] * distance_to_opp_king);
     scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_BISHOP] * distance_to_opp_king);
 
@@ -623,7 +640,7 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
         }
     }
 
-    SCORE_TYPE distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
+    SCORE_TYPE distance_to_opp_king = get_manhattan_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
     scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_ROOK] * distance_to_opp_king);
     scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_ROOK] * distance_to_opp_king);
 
@@ -755,7 +772,7 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
         }
     }
 
-    SCORE_TYPE distance_to_opp_king = get_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
+    SCORE_TYPE distance_to_opp_king = get_manhattan_distance(i, MAILBOX_TO_STANDARD[position.king_positions[(is_white)]]);
     scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_QUEEN] * distance_to_opp_king);
     scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_QUEEN] * distance_to_opp_king);
 
@@ -840,12 +857,19 @@ double evaluate_drawishness(const int white_piece_amounts[6], const int black_pi
     if (white_piece_amounts[WHITE_QUEEN] + black_piece_amounts[WHITE_QUEEN] > 0) return 1.0;
     if (white_piece_amounts[WHITE_ROOK] + black_piece_amounts[WHITE_ROOK] >= 3) return 1.0;
     if (white_piece_amounts[WHITE_PAWN] + black_piece_amounts[WHITE_PAWN] >= 1) {
-        if (white_piece_amounts[1] + white_piece_amounts[3] +
-            black_piece_amounts[1] + black_piece_amounts[3] >= 1) return 1.0;
+        if (white_piece_amounts[WHITE_PAWN] + black_piece_amounts[WHITE_PAWN] == 1) {
+            if (white_material <= PIECE_VALUES_MID[WHITE_PAWN] && black_material <= PIECE_VALUES_MID[WHITE_BISHOP])
+                return 0.1;
+            if (black_material <= PIECE_VALUES_MID[WHITE_PAWN] && white_material <= PIECE_VALUES_MID[WHITE_BISHOP])
+                return 0.1;
+        }
+
+        if (white_piece_amounts[WHITE_KNIGHT] + white_piece_amounts[WHITE_ROOK] +
+            black_piece_amounts[WHITE_KNIGHT] + black_piece_amounts[WHITE_ROOK] >= 1) return 1.0;
 
         if (white_piece_amounts[2] == 1 && black_piece_amounts[2] == 1 && opp_colored_bishops) {
             double pawn_difference = static_cast<double>(std::max(white_piece_amounts[0], black_piece_amounts[0])) /
-                    std::max(1, std::min(white_piece_amounts[0], black_piece_amounts[0]));
+                                     std::max(1, std::min(white_piece_amounts[0], black_piece_amounts[0]));
 
             return std::min(0.05 + pawn_difference *
                                    pawn_difference * 0.12, 1.0);
@@ -873,14 +897,14 @@ double evaluate_drawishness(const int white_piece_amounts[6], const int black_pi
         // this means they either have a rook, and the other player has a minor piece,
         // or this means one player has two minor pieces, and the other players has one minor piece.
 
-        return 0.2;
+        return 0.14;
     }
 
     if (white_material <= PIECE_VALUES_MID[WHITE_ROOK] + MAX_MINOR_PIECE_VALUE_MID &&
-        black_material == PIECE_VALUES_MID[WHITE_ROOK]) return 0.23;
+        black_material == PIECE_VALUES_MID[WHITE_ROOK]) return 0.27;
 
     if (black_material <= PIECE_VALUES_MID[WHITE_ROOK] + MAX_MINOR_PIECE_VALUE_MID &&
-        white_material == PIECE_VALUES_MID[WHITE_ROOK]) return 0.23;
+        white_material == PIECE_VALUES_MID[WHITE_ROOK]) return 0.27;
 
     return 1.0;
 
@@ -992,13 +1016,6 @@ SCORE_TYPE evaluate(Position& position) {
     black_scores.mid += black_material.mid;
     black_scores.end += black_material.end;
 
-    double drawishness = evaluate_drawishness(white_piece_amounts, black_piece_amounts,
-                                              white_material.mid, black_material.mid,
-                                              bishop_colors[0] != bishop_colors[1]);
-
-    white_scores.end *= drawishness;
-    black_scores.end *= drawishness;
-
     if (position.side == WHITE_COLOR) {
         white_scores.mid += TEMPO_BONUS_MID;
         white_scores.end += TEMPO_BONUS_END;
@@ -1013,6 +1030,13 @@ SCORE_TYPE evaluate(Position& position) {
 
     SCORE_TYPE black_score = (black_scores.mid * game_phase +
                               (24 - game_phase) * black_scores.end) / 24;
+
+    double drawishness = evaluate_drawishness(white_piece_amounts, black_piece_amounts,
+                                              white_material.mid, black_material.mid,
+                                              bishop_colors[0] != bishop_colors[1]);
+
+    white_score *= drawishness;
+    black_score *= drawishness;
 
     // std::cout << white_score << " " << black_score << std::endl;
 
@@ -1034,9 +1058,14 @@ SCORE_TYPE score_move(const Thread_State& thread_state, Position& position, MOVE
 
     if (selected < BLACK_PAWN) {
         if (get_is_capture(move)) {
-            score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
-            score += 2 * (MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected]);
             score += thread_state.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
+            score += 2 * (MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected]);
+
+            // Only Use SEE under certain conditions since it is expensive
+            if (score >= -3000) {
+                if (score >= 3000) score += 20000;
+                else score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
+            }
         }
         else {
             // score 1st and 2nd killer move
@@ -1073,9 +1102,14 @@ SCORE_TYPE score_move(const Thread_State& thread_state, Position& position, MOVE
     }
     else {
         if (get_is_capture(move)) {
-            score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
             score += 2 * (MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN]);
             score += thread_state.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
+
+            // Only Use SEE under certain conditions since it is expensive
+            if (score >= -3000) {
+                if (score >= 3000) score += 20000;
+                else score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
+            }
         }
         else {
             // score 1st and 2nd killer move

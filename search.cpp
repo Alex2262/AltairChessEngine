@@ -12,16 +12,18 @@
 #include <cassert>
 #include "search.h"
 #include "evaluation.h"
+#include "evaluation_constants.h"
 #include "move.h"
 #include "useful.h"
 #include "see.h"
 
-static double LMR_REDUCTIONS_QUIET[64][64];
-static double LMR_REDUCTIONS_NOISY[64][64];
+
+static double LMR_REDUCTIONS_QUIET[MAX_AB_DEPTH + 1][64];
+static double LMR_REDUCTIONS_NOISY[MAX_AB_DEPTH + 1][64];
 
 void initialize_lmr_reductions(Engine& engine) {
-    for (PLY_TYPE depth = 0; depth < 64; depth++) {
-        for (int moves = 0; moves < 64; moves++) {
+    for (PLY_TYPE depth = 0; depth <= MAX_AB_DEPTH; depth++) {
+        for (int moves = 0; moves <= MAX_AB_DEPTH; moves++) {
             LMR_REDUCTIONS_QUIET[depth][moves] =
                     std::max(0.0,
                              std::log(depth) * std::log(moves) / double(engine.tuning_parameters.LMR_divisor_quiet / 100.0)
@@ -254,10 +256,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         return tt_value;
     }
 
-    // When the tt_value is above a bound (USE_HASH_MOVE), the function tells us to use the
-    // tt_entry move for move ordering
-    else if (tt_value > USE_HASH_MOVE) tt_move = tt_value - USE_HASH_MOVE;
-
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
     if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
     // SCORE_TYPE static_eval = evaluate(position);
@@ -394,9 +392,16 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     }
 
+    // Hack to determine pv_node, because when it is not a pv node we are being searched by
+    // a zero window with alpha == beta - 1
+    bool pv_node = alpha != beta - 1;
+    bool null_search = !do_null && !root;
     bool in_check;
     if (position.state_stack[thread_state.search_ply].in_check != -1) {
         in_check = static_cast<bool>(position.state_stack[thread_state.search_ply].in_check);
+
+    if (position.state_stack[thread_state.search_ply].in_check != -1) {
+        in_check = static_cast<bool>(position.state_stack[engine.search_ply].in_check);
     } else {
         in_check = position.is_attacked(position.king_positions[position.side]);
     }
@@ -421,54 +426,24 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     SCORE_TYPE tt_value = tt_entry.score;
     MOVE_TYPE tt_move = tt_entry.move;
 
-    if (!position.get_is_pseudo_legal(tt_move)) {
-        tt_return_type = NO_HASH_ENTRY;
-        tt_move = NO_MOVE;
-    }
-
     // We are allowed to return the hash score
-    if (tt_return_type == RETURN_HASH_SCORE && !root) {
-        bool return_tt_value = true;
-
-        // We have to check if there's a repetition before returning a score
-        if (tt_move) {
-            position.make_move(tt_move, thread_state.search_ply, thread_state.fifty_move);
-
-            thread_state.search_ply++;
-            thread_state.fifty_move++;
-            thread_state.game_ply++;
-            thread_state.repetition_table[thread_state.game_ply] = position.hash_key;
-            position.side ^= 1;
-
-            if (thread_state.fifty_move >= 100 || thread_state.detect_repetition()) return_tt_value = false;
-
-            position.side ^= 1;
-            thread_state.game_ply--;
-            thread_state.search_ply--;
-
-            position.undo_move(tt_move, thread_state.search_ply, thread_state.fifty_move);
-        }
-        else return_tt_value = false;
-
-        if (return_tt_value) {
-            return tt_value;
-        }
+    if (tt_return_type == RETURN_HASH_SCORE && !pv_node) {
+        return tt_value;
     }
 
     // Variable to record the hash flag
     short tt_hash_flag = HASH_FLAG_ALPHA;
 
-    // Hack to determine pv_node, because when it is not a pv node we are being searched by
-    // a zero window with alpha == beta - 1
-    bool pv_node = alpha != beta - 1;
-    bool null_search = !do_null && !root;
-
     // if (!pv_node) std::cout << alpha << " " << beta << std::endl;
 
     // Get evaluation
-    SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
-    position.state_stack[thread_state.search_ply].evaluation = static_eval;
+    SCORE_TYPE static_eval = NO_EVALUATION;
+
+    if (!in_check) {
+        static_eval = engine.probe_tt_evaluation(position.hash_key);
+        if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
+        position.state_stack[thread_state.search_ply].evaluation = static_eval;
+    }
 
     // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
     // from a full-move or two plies ago. When this is true, we can be more aggressive with
@@ -477,7 +452,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // that the position is awful.
     bool improving = false;
 
-    if (!in_check && thread_state.search_ply >= 2) {
+    if (!in_check && static_eval != NO_EVALUATION && thread_state.search_ply >= 2) {
         SCORE_TYPE past_eval = position.state_stack[thread_state.search_ply - 2].evaluation;
         if (past_eval != NO_EVALUATION && static_eval > past_eval) improving = true;
     }
@@ -512,7 +487,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Null move pruning
         // We give the opponent an extra move and if they are not able to make their position
         // any better, then our position is too good, and we don't need to search any deeper.
-        if (depth >= engine.tuning_parameters.NMP_depth && do_null && static_eval >= beta) {
+        if (depth >= engine.tuning_parameters.NMP_depth && do_null && static_eval >= beta &&
+            position.non_pawn_material_count >= 1 + (depth >= 10)) {
 
             // Adaptive NMP
             int reduction = engine.tuning_parameters.NMP_base +
@@ -531,7 +507,14 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             thread_state.search_ply--;
             position.undo_null_move(thread_state.search_ply, thread_state.fifty_move);
 
-            if (return_eval >= beta) return beta;
+            if (return_eval >= beta) {
+                return beta;
+            }
+            else {
+                if (depth >= 8 && return_eval <= -MATE_BOUND && position.non_pawn_material_count >= (1 + depth / 8)) {
+                    depth++;
+                }
+            }
         }
     }
 
@@ -544,6 +527,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     int legal_moves = 0;
     MOVE_TYPE last_move_one = thread_state.search_ply >= 1 ? position.state_stack[thread_state.search_ply - 1].move : NO_MOVE;
     MOVE_TYPE last_move_two = thread_state.search_ply >= 2 ? position.state_stack[thread_state.search_ply - 2].move : NO_MOVE;
+
+    bool recapture_found = false;
 
     // Retrieving the pseudo legal moves in the current position as a list of integers
     // Score the moves
@@ -605,6 +590,24 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             continue;
         }
 
+        bool recapture = false;
+
+        if (last_move_one != NO_MOVE && get_target_square(last_move_one) == get_target_square(move)) {
+            recapture_found = true;
+            recapture = true;
+        }
+
+        PLY_TYPE extensions = 0;
+
+        bool passed_pawn = get_selected(move) == WHITE_PAWN + BLACK_PAWN * position.side &&
+                           MAILBOX_TO_STANDARD[get_target_square(move)] / 8 == 1 + 5 * position.side;
+        bool queen_promotion = get_move_type(move) == MOVE_TYPE_PROMOTION &&
+                               get_promotion_piece(move) == WHITE_QUEEN + BLACK_PAWN * position.side;
+
+        if (move_score >= 0 && (passed_pawn || queen_promotion)) extensions++;
+
+        PLY_TYPE new_depth = depth + extensions - 1;
+
         thread_state.search_ply++;
         thread_state.fifty_move++;
         thread_state.game_ply++;
@@ -635,7 +638,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             && !in_check
             ){
 
-            reduction = quiet ? LMR_REDUCTIONS_QUIET[depth][legal_moves] : LMR_REDUCTIONS_NOISY[depth][legal_moves];
+            reduction = quiet ? LMR_REDUCTIONS_QUIET[depth][std::min(legal_moves, 63)] :
+                                LMR_REDUCTIONS_NOISY[depth][std::min(legal_moves, 63)];
 
             reduction -= pv_node;
 
@@ -647,6 +651,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             reduction -= move_history_score > 0 ? move_history_score / 7200.0 : move_history_score / 16000.0;
 
+            reduction -= recapture * 0.5;
+
+            reduction += !recapture && recapture_found && quiet && !move_gives_check && move_history_score <= 0;
+
             reduction += static_cast<double>(alpha_raised_count) * (0.3 + 0.5 * get_is_capture(tt_move));
 
             // My idea that in a null move search you can be more aggressive with LMR
@@ -655,12 +663,12 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             // Idea from Weiss, where you reduce more if the TT move is a capture
             reduction += get_is_capture(tt_move) * 0.3;
 
-            PLY_TYPE lmr_depth = static_cast<PLY_TYPE>(depth - 1 -
-                                                       std::min(depth - 1, std::max(0, static_cast<int>(reduction))));
+            PLY_TYPE lmr_depth = static_cast<PLY_TYPE>(new_depth -
+                                 std::min<PLY_TYPE>(new_depth, std::max<PLY_TYPE>(0, static_cast<PLY_TYPE>(reduction))));
 
             return_eval = -negamax(engine, -alpha - 1, -alpha, lmr_depth, true, thread_id);
 
-            full_depth_zero_window = return_eval > alpha && lmr_depth != depth - 1;
+            full_depth_zero_window = return_eval > alpha && lmr_depth != new_depth;
         }
 
         else {
@@ -671,10 +679,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // We assume that the first move should be the principle variation / best move, so the rest of the moves
         // should be searched with a zero window
         if (full_depth_zero_window)
-            return_eval = -negamax(engine, -alpha - 1, -alpha, depth - 1, true, thread_id);
+            return_eval = -negamax(engine, -alpha - 1, -alpha, new_depth, true, thread_id);
 
         if (return_eval == -SCORE_INF || (pv_node && ((return_eval > alpha && return_eval < beta) || legal_moves == 0)))
-            return_eval = -negamax(engine, -beta, -alpha, depth - 1, true, thread_id);
+            return_eval = -negamax(engine, -beta, -alpha, new_depth, true, thread_id);
 
         position.side ^= 1;
         thread_state.game_ply--;
@@ -826,6 +834,7 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
 
     PLY_TYPE depth = thread_state.current_search_depth;
 
+    // Calculate the elapsed time and NPS
     auto end_time = std::chrono::high_resolution_clock::now();
     auto end_int = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(end_time).time_since_epoch()).count();
@@ -836,6 +845,7 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
     auto nps = static_cast<uint64_t>(static_cast<double>(engine.node_count) /
                                      (static_cast<double>(elapsed_time) / 1000.0));
 
+    // Format the scores for printing to UCI
     SCORE_TYPE format_score = best_score;
     std::string result_type = "cp ";
     if (abs(best_score) >= MATE_BOUND) {
@@ -846,19 +856,29 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
 
     result_type += std::to_string(format_score);
 
+    // Identify the type of node / bound if necessary
     if (node == Lower_Node) result_type += " lowerbound";
     else if (node == Upper_Node) result_type += " upperbound";
 
-
-    SQUARE_TYPE original_side = position.side;
+    // PV information
     std::string pv_line;
-    for (int c = 0; c < engine.pv_length[0]; c++) {
+
+    // If the depth is low, or we are printing a PV line from a failed aspiration search,
+    // then only store a limited number of moves in the PV line
+    int max_pv_length = engine.pv_length[0];
+    if (depth <= 12 || node == Lower_Node || node == Upper_Node)
+        max_pv_length = std::min(max_pv_length, 1 + max_pv_length / 3);
+
+    // Get the PV line
+    SQUARE_TYPE original_side = position.side;
+    for (int c = 0; c < max_pv_length; c++) {
         pv_line += get_uci_from_move(engine.pv_table[0][c]);
         pv_line += " ";
         position.side ^= 1;
     }
     position.side = original_side;
 
+    // Print the UCI search information
     std::cout << "info multipv 1 depth " << depth << " seldepth " << engine.selective_depth
               << " score " << result_type << " time " << elapsed_time
               << " nodes " << engine.node_count << " nps " << nps
@@ -884,8 +904,10 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
 
     SCORE_TYPE return_eval = 0;
     while (true) {
-        if (alpha <= -5000) alpha = -SCORE_INF;
-        if (beta  >=  5000) beta  =  SCORE_INF;
+
+        // Completely expand the bounds once they have exceeded a certain score
+        if (alpha <= -1000) alpha = -SCORE_INF;
+        if (beta  >=  1000) beta  =  SCORE_INF;
 
         return_eval = negamax(engine, alpha, beta, depth, false, thread_id);
 
@@ -902,7 +924,7 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
             asp_depth--;
             asp_depth = std::max<PLY_TYPE>(6, asp_depth);
 
-            if (depth >= 12 && thread_id == 0) print_thinking(engine, Lower_Node, return_eval, thread_id);
+            if (depth >= 18 && thread_id == 0) print_thinking(engine, Lower_Node, return_eval, thread_id);
         }
 
         // The aspiration window search has failed high.
@@ -916,7 +938,7 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
             asp_depth--;
             asp_depth = std::max<PLY_TYPE>(6, asp_depth);
 
-            if (depth >= 12 && thread_id == 0) print_thinking(engine, Upper_Node, return_eval, thread_id);
+            if (depth >= 18 && thread_id == 0) print_thinking(engine, Upper_Node, return_eval, thread_id);
         }
 
         // We have achieved an exact node where the score was between alpha and beta.
@@ -940,15 +962,18 @@ void iterative_search(Engine& engine, int thread_id) {
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
 
+    // Reset certain information
     engine.stopped = false;
     thread_state.terminated = false;
 
     position.clear_movelist();
 
+    // Initialize the start time
     auto start_time = std::chrono::high_resolution_clock::now();
     engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
 
+    // Initialize variables
     SCORE_TYPE previous_score = 0;
     PLY_TYPE running_depth = 1;
     PLY_TYPE asp_depth = 6;
@@ -958,28 +983,35 @@ void iterative_search(Engine& engine, int thread_id) {
     while (running_depth <= engine.max_depth) {
         thread_state.current_search_depth = running_depth;
 
+        // Run a search with aspiration window bounds
         previous_score = aspiration_window(engine, previous_score, asp_depth, thread_id);
 
+        // Store the best move when the engine has finished a search (it hasn't stopped in the middle of a search)
         if (thread_id == 0 && !engine.stopped) best_move = engine.pv_table[0][0];
 
+        // Calculate the elapsed time
         auto end_time = std::chrono::high_resolution_clock::now();
         auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
                                                                             - start_time);
         uint64_t elapsed_time = ms_int.count();
         elapsed_time = std::max<uint64_t>(elapsed_time, 1);
 
+        // Stop the engine when we have exceeded the soft time limit
         if (running_depth >= engine.min_depth && thread_id == 0) {
             if (elapsed_time >= engine.soft_time_limit) engine.stopped = true;
         }
 
+        // End the search when the engine has stopped running
         if (engine.stopped || running_depth == engine.max_depth) {
             break;
         }
 
+        // Increase the aspiration depth for aspiration bounds scaling
         if (running_depth >= 6) {
             asp_depth++;
         }
 
+        // Increase search depth
         running_depth++;
     }
 
