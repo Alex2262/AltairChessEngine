@@ -370,7 +370,12 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
 
     }
 
+    // Hack to determine pv_node, because when it is not a pv node we are being searched by
+    // a zero window with alpha == beta - 1
+    bool pv_node = alpha != beta - 1;
+    bool null_search = !do_null && !root;
     bool in_check;
+
     if (position.state_stack[engine.search_ply].in_check != -1) {
         in_check = static_cast<bool>(position.state_stack[engine.search_ply].in_check);
     } else {
@@ -398,41 +403,12 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     MOVE_TYPE tt_move = tt_entry.move;
 
     // We are allowed to return the hash score
-    if (tt_return_type == RETURN_HASH_SCORE && !root) {
-        bool return_tt_value = true;
-
-        // We have to check if there's a repetition before returning a score
-        if (tt_move) {
-            position.make_move(tt_move, engine.search_ply, engine.fifty_move);
-
-            engine.search_ply++;
-            engine.fifty_move++;
-            engine.game_ply++;
-            engine.repetition_table[engine.game_ply] = position.hash_key;
-            position.side ^= 1;
-
-            if (engine.fifty_move >= 100 || engine.detect_repetition()) return_tt_value = false;
-
-            position.side ^= 1;
-            engine.game_ply--;
-            engine.search_ply--;
-
-            position.undo_move(tt_move, engine.search_ply, engine.fifty_move);
-        }
-        else return_tt_value = false;
-
-        if (return_tt_value) {
-            return tt_value;
-        }
+    if (tt_return_type == RETURN_HASH_SCORE && !pv_node) {
+        return tt_value;
     }
 
     // Variable to record the hash flag
     short tt_hash_flag = HASH_FLAG_ALPHA;
-
-    // Hack to determine pv_node, because when it is not a pv node we are being searched by
-    // a zero window with alpha == beta - 1
-    bool pv_node = alpha != beta - 1;
-    bool null_search = !do_null && !root;
 
     // if (!pv_node) std::cout << alpha << " " << beta << std::endl;
 
