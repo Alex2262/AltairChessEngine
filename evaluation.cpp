@@ -1063,6 +1063,7 @@ SCORE_TYPE score_move(const Engine& engine, Position& position, MOVE_TYPE move, 
             score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
             score += 2 * (MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected]);
 
+            // Only Use SEE under certain conditions since it is expensive
             if (score >= -3000) {
                 if (score >= 3000) score += 20000;
                 else score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
@@ -1106,6 +1107,7 @@ SCORE_TYPE score_move(const Engine& engine, Position& position, MOVE_TYPE move, 
             score += 2 * (MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN]);
             score += engine.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
+            // Only Use SEE under certain conditions since it is expensive
             if (score >= -3000) {
                 if (score >= 3000) score += 20000;
                 else score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
