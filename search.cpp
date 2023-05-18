@@ -452,7 +452,7 @@ SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_T
     // that the position is awful.
     bool improving = false;
 
-    if (!in_check && engine.search_ply >= 2) {
+    if (!in_check && static_eval != NO_EVALUATION && engine.search_ply >= 2) {
         SCORE_TYPE past_eval = position.state_stack[engine.search_ply - 2].evaluation;
         if (past_eval != NO_EVALUATION && static_eval > past_eval) improving = true;
     }
