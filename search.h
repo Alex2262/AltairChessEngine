@@ -89,20 +89,49 @@ struct Tuning_Parameters {
     int NMP_eval_divisor = tuning_parameter_array[15].value;
 };
 
+
+class Thread_State {
+
+public:
+
+    Thread_State() = default;
+
+    Position position;
+
+    PLY_TYPE current_search_depth = 0;
+    PLY_TYPE search_ply = 0;
+    PLY_TYPE game_ply = 0;
+    PLY_TYPE fifty_move = 0;
+
+    MOVE_TYPE killer_moves[2][64]{};  // killer moves (2) | max_depth (64)
+    SCORE_TYPE history_moves[12][64]{}; // piece | target_square
+    SCORE_TYPE capture_history[12][12][64]{};
+    SCORE_TYPE continuation_history[12][64][12][64]{};
+
+    HASH_TYPE repetition_table[TOTAL_MAX_DEPTH+600] = {0};
+
+    bool terminated = true;
+
+    bool detect_repetition();
+};
+
+
 class Engine {
 
 public:
 
     Engine() = default;
 
+    int num_threads = 1;
+    std::vector<Thread_State> thread_states;
+
+    bool stopped = true;
+
+    PLY_TYPE selective_depth = 0;
+
     PLY_TYPE max_depth = 64;
     PLY_TYPE max_q_depth = 64;
     PLY_TYPE min_depth = 1;
-    PLY_TYPE current_search_depth = 0;
-    PLY_TYPE selective_depth = 0;
-    PLY_TYPE search_ply = 0;
-    PLY_TYPE game_ply = 0;
-    PLY_TYPE fifty_move = 0;
 
     uint64_t hard_time_limit = 60000;
     uint64_t soft_time_limit = 60000;
@@ -114,21 +143,11 @@ public:
     MOVE_TYPE pv_table[64][64]{};
     unsigned short pv_length[65] = {0};
 
-    MOVE_TYPE killer_moves[2][64]{};  // killer moves (2) | max_depth (64)
-    SCORE_TYPE history_moves[12][64]{}; // piece | target_square
-    SCORE_TYPE capture_history[12][12][64]{};
-    SCORE_TYPE continuation_history[12][64][12][64]{};
-
     // TT_Entry transposition_table[MAX_TT_SIZE]{};
     std::vector<TT_Entry> transposition_table;
 
-    HASH_TYPE repetition_table[TOTAL_MAX_DEPTH+600] = {0};
-
     bool show_stats = false;
     Search_Results search_results{};
-
-    bool stopped = true;
-    bool terminated = true;
 
     bool do_tuning = false;
     Tuning_Parameters tuning_parameters{};
@@ -137,32 +156,30 @@ public:
 
     void reset();
     void new_game();
-    bool detect_repetition();
 
-    short probe_tt_entry(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
+    short probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
                          TT_Entry& return_entry);
-    void record_tt_entry(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
+    void record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
                          SCORE_TYPE static_eval);
-    short probe_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
+    short probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
                            SCORE_TYPE& return_score, MOVE_TYPE& tt_move);
-    void record_tt_entry_q(HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move,
+    void record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move,
                            SCORE_TYPE static_eval);
     SCORE_TYPE probe_tt_evaluation(HASH_TYPE hash_key);
 
     void tt_prefetch_read(HASH_TYPE hash_key);
     void tt_prefetch_write(HASH_TYPE hash_key);
-
-
 };
 
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus);
 
-SCORE_TYPE qsearch(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth);
-SCORE_TYPE negamax(Engine& engine, Position& position, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,  bool do_null);
+SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id);
+SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,  bool do_null, int thread_id);
 
-void print_thinking(Engine& engine, Position& position, NodeType node, SCORE_TYPE best_score);
-SCORE_TYPE aspiration_window(Engine& engine, Position& position, SCORE_TYPE previous_score, PLY_TYPE& asp_depth);
-void iterative_search(Engine& engine, Position& position);
+void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int thread_id);
+SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, int thread_id);
+void iterative_search(Engine& engine, int thread_id);
+void lazy_smp_search(Engine& engine);
 
 void initialize_lmr_reductions(Engine& engine);
 

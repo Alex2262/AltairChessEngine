@@ -62,6 +62,6 @@ constexpr std::array fens { // fens stolen from polaris, which were from alexand
         "2r2b2/5p2/5k2/p1r1pP2/P2pB3/1P3P2/K1P3R1/7R w - - 23 93"
 };
 
-void run_bench(Engine& engine, Position& position, PLY_TYPE depth);
+void run_bench(Engine& engine, PLY_TYPE depth);
 
 #endif //ALTAIRCHESSENGINE_BENCH_H

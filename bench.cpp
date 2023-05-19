@@ -9,9 +9,12 @@
 // A function for a 'bench' metric that calculates nps and nodes over
 // a set of 50 pre-defined fens. Used to insure equality between machines, which is used
 // during testing on an instance.
-void run_bench(Engine& engine, Position& position, PLY_TYPE depth) {
+
+void run_bench(Engine& engine, PLY_TYPE depth) {
 
     // Save these variables to reset them after the bench has been run.
+    Position& position = engine.thread_states[0].position;
+
     PLY_TYPE old_depth = engine.max_depth;
     uint64_t old_soft = engine.soft_time_limit;
     uint64_t old_hard = engine.hard_time_limit;
@@ -39,8 +42,7 @@ void run_bench(Engine& engine, Position& position, PLY_TYPE depth) {
         engine.new_game();
         position.set_fen(fen);
 
-        iterative_search(engine, position);
-
+        lazy_smp_search(engine);
         total_nodes += engine.node_count;
 
         if (engine.show_stats) {
