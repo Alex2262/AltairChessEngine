@@ -229,7 +229,7 @@ void UCI::uci_loop() {
             std::cout << "option name nodes type spin default " << 0 << " min " << 0 << " max " << 2147483647
                       << std::endl;
 
-            std::cout << "option name Threads type spin default " << 1 << " min " << 1 << " max " << 8
+            std::cout << "option name Threads type spin default " << 1 << " min " << 1 << " max " << 1024
                       << std::endl;
 
             std::cout << "option name Statistic type check default " << false
@@ -258,7 +258,7 @@ void UCI::uci_loop() {
             }
 
             else if (tokens[2] == "Threads") {
-                engine->num_threads = std::clamp(std::stoi(tokens[4]), 1, 8);
+                engine->num_threads = std::clamp(std::stoi(tokens[4]), 1, 1024);
                 engine->thread_states.resize(engine->num_threads);
             }
 
