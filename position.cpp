@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <regex>
 #include "position.h"
 #include "useful.h"
 #include "move.h"
@@ -39,7 +40,15 @@ void Position::compute_hash_key() {
 
 PLY_TYPE Position::set_fen(const std::string& fen_string) {
 
-    std::vector<std::string> fen_tokens = split(fen_string, ' ');
+    std::string reduced_fen_string = std::regex_replace(fen_string, std::regex("^ +| +$|( ) +"), "$1");
+
+    std::vector<std::string> fen_tokens = split(reduced_fen_string, ' ');
+
+    if (fen_tokens.size() < 4) {
+        std::cout << "Fen String is invalid. " << fen_tokens.size()
+                  << " Field(s) received, a minimum of 4 is required." << std::endl;
+        return 0;
+    }
 
     // Setting the padding around the 8x8 board inscribed within the 10x12 board
     SQUARE_TYPE pos = 0;
