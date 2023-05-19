@@ -19,6 +19,7 @@ struct State_Struct {
     SQUARE_TYPE current_ep_square;
     uint16_t current_castle_ability_bits;
     PLY_TYPE current_fifty_move;
+    MOVE_TYPE excluded_move = NO_MOVE;
 };
 
 

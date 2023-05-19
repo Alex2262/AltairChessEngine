@@ -388,6 +388,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Hack to determine pv_node, because when it is not a pv node we are being searched by
     // a zero window with alpha == beta - 1
     bool pv_node = alpha != beta - 1;
+    bool singular_search = position.state_stack[thread_state.search_ply].excluded_move != NO_MOVE;
     bool null_search = !do_null && !root;
     bool in_check;
 
@@ -413,6 +414,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // TT probing
     TT_Entry tt_entry{};
     short tt_return_type = engine.probe_tt_entry(thread_id, position.hash_key, alpha, beta, depth, tt_entry);
+
+    if (singular_search) tt_return_type = USE_HASH_MOVE;
 
     SCORE_TYPE tt_value = tt_entry.score;
     MOVE_TYPE tt_move = tt_entry.move;
@@ -449,12 +452,12 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     // Internal Iterative Reduction. Rebel's idea
-    if (tt_move == NO_MOVE) {
+    if (tt_move == NO_MOVE && !singular_search) {
         if (depth >= 4) depth--;
         if (depth >= 8) depth--;
     }
 
-    if (!pv_node && !in_check) {
+    if (!pv_node && !in_check && !singular_search) {
 
         // Reverse Futility Pruning
         // If the last move was very bad, such that the static evaluation - a margin is still greater
@@ -508,7 +511,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         }
     }
 
-    if (pv_node && depth >= 4 && tt_move == NO_MOVE) {
+    // Internal Iterative Deepening
+    if (pv_node && depth >= 4 && tt_move == NO_MOVE && !singular_search) {
         negamax(engine, alpha, beta, static_cast<PLY_TYPE>(depth - 3), true, thread_id);  // TODO: test no null moves here
         tt_move = engine.transposition_table[position.hash_key % engine.transposition_table.size()].move;
         if (!position.get_is_pseudo_legal(tt_move)) tt_move = NO_MOVE;
@@ -540,6 +544,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         sort_next_move(position.moves[thread_state.search_ply], position.move_scores[thread_state.search_ply], move_index);
         MOVE_TYPE move = position.moves[thread_state.search_ply][move_index];
         SCORE_TYPE move_score = position.move_scores[thread_state.search_ply][move_index];
+
+        // Skip the excluded move since we are in a singular search
+        if (move == position.state_stack[thread_state.search_ply].excluded_move) continue;
 
         SCORE_TYPE move_history_score = thread_state.history_moves
         [get_selected(move)][MAILBOX_TO_STANDARD[get_target_square(move)]];
@@ -587,16 +594,41 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             recapture = true;
         }
 
-        PLY_TYPE extensions = 0;
+        // Extensions
+        PLY_TYPE extension = 0;
 
         bool passed_pawn = get_selected(move) == WHITE_PAWN + BLACK_PAWN * position.side &&
                            MAILBOX_TO_STANDARD[get_target_square(move)] / 8 == 1 + 5 * position.side;
         bool queen_promotion = get_move_type(move) == MOVE_TYPE_PROMOTION &&
                                get_promotion_piece(move) == WHITE_QUEEN + BLACK_PAWN * position.side;
 
-        if (move_score >= 0 && (passed_pawn || queen_promotion)) extensions++;
+        if (move_score >= 0 && (passed_pawn || queen_promotion)) extension++;
 
-        PLY_TYPE new_depth = depth + extensions - 1;
+        // Singular Extensions
+        if (!root &&
+            depth >= 8 &&
+            move == tt_move &&
+            tt_entry.depth >= depth - 3 &&
+            tt_entry.flag != HASH_FLAG_ALPHA &&
+            position.state_stack[thread_state.search_ply].excluded_move == NO_MOVE) {
+
+            position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
+
+            int singular_beta = tt_entry.score - depth * 2;
+
+            position.state_stack[thread_state.search_ply].excluded_move = move;
+            SCORE_TYPE return_eval = negamax(engine, singular_beta - 1, singular_beta, (depth - 1) / 2,
+                                             false, thread_id);
+            position.state_stack[thread_state.search_ply].excluded_move = NO_MOVE;
+
+            if (return_eval < singular_beta) {
+                extension++;
+            }
+
+            position.make_move(move, thread_state.search_ply, thread_state.fifty_move);
+        }
+
+        PLY_TYPE new_depth = depth + extension - 1;
 
         thread_state.search_ply++;
         thread_state.fifty_move++;
