@@ -30,6 +30,7 @@ public:
     Position() = default;
 
     void clear_movelist();
+    void clear_state_stack();
     void compute_hash_key();
 
     PLY_TYPE set_fen(const std::string& fen_string);

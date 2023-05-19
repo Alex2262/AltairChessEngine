@@ -19,6 +19,20 @@ void Position::clear_movelist() {
 }
 
 
+void Position::clear_state_stack() {
+    for (auto& state : state_stack) {
+        state.in_check = -1;
+        state.current_hash_key = 0ULL;
+        state.move = NO_MOVE;
+        state.evaluation = NO_EVALUATION;
+        state.current_ep_square = 0;
+        state.current_castle_ability_bits = 0;
+        state.current_fifty_move = 0;
+        state.excluded_move = NO_MOVE;
+    }
+}
+
+
 void Position::compute_hash_key() {
     hash_key = 0;
 
