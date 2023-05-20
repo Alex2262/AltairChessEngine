@@ -712,6 +712,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
 
+        position.state_stack[thread_state.search_ply].in_check = -1;
+
         if (engine.stopped) return 0;
 
         // Update legal move count
@@ -1004,6 +1006,7 @@ void iterative_search(Engine& engine, int thread_id) {
 
     while (running_depth <= engine.max_depth) {
         thread_state.current_search_depth = running_depth;
+        position.clear_state_stack();
 
         // Run a search with aspiration window bounds
         previous_score = aspiration_window(engine, previous_score, asp_depth, thread_id);
