@@ -467,16 +467,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             return static_eval;
         }
 
-        // Razoring
-        // If the evaluation is really low, and we cannot improve alpha even with qsearch, then return.
-        // If the evaluation is improving then increase the margin because we are less certain that the
-        // position is terrible.
-        constexpr int razoring_margins[3] = {0, 320, 800};
-        if (depth <= 2 && static_eval + razoring_margins[depth] + improving * 120 < alpha) {
-            SCORE_TYPE return_eval = qsearch(engine, alpha, beta, engine.max_q_depth, thread_id);
-            if (return_eval < alpha) return return_eval;
-        }
-
         // Null move pruning
         // We give the opponent an extra move and if they are not able to make their position
         // any better, then our position is too good, and we don't need to search any deeper.
