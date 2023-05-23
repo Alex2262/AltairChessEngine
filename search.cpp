@@ -623,6 +623,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             if (return_eval < singular_beta) {
                 extension++;
+            } else if (singular_beta >= beta) {
+                return singular_beta;
             }
 
             position.make_move(move, thread_state.search_ply, thread_state.fifty_move);
