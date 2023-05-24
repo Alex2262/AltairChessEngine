@@ -1052,18 +1052,18 @@ void lazy_smp_search(Engine& engine) {
     //std::vector<Position> new_positions;
 
     for (int thread_id = 1; thread_id < engine.num_threads; thread_id++) {
-        std::cout << "Creating Helper Thread #" << thread_id << std::endl;
+        // std::cout << "Creating Helper Thread #" << thread_id << std::endl;
         engine.thread_states[thread_id] = engine.thread_states[0];
         search_threads.emplace_back(iterative_search, std::ref(engine), thread_id);
     }
 
     //engine.thread_states[0].position.print_board();
     iterative_search(engine, 0);
-    std::cout << "Search ended" << std::endl;
+    // std::cout << "Search ended" << std::endl;
 
     for (int thread_id = engine.num_threads - 1; thread_id >= 1; thread_id--) {
         search_threads[thread_id - 1].join();
-        std::cout << "Helper Thread #" << thread_id << " closed." << std::endl;
+        // std::cout << "Helper Thread #" << thread_id << " closed." << std::endl;
     }
 
 }
