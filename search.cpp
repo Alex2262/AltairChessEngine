@@ -614,12 +614,24 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             if (return_eval < singular_beta) {
                 extension++;
+                if (!pv_node && return_eval < singular_beta - 24) extension++;
             } else if (singular_beta >= beta) {
                 return singular_beta;
             }
 
             position.make_move(move, thread_state.search_ply, thread_state.fifty_move);
         }
+
+        extension = std::min<PLY_TYPE>(extension, 2);
+
+        int double_extensions = root ? 0 : position.state_stack[thread_state.search_ply].double_extensions;
+
+        if (double_extensions >= 7) {
+            extension = std::min<PLY_TYPE>(extension, 1);
+        }
+
+        position.state_stack[thread_state.search_ply].double_extensions =
+                position.state_stack[thread_state.search_ply - 1].double_extensions + (extension == 2);
 
         PLY_TYPE new_depth = depth + extension - 1;
 
