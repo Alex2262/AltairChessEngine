@@ -457,7 +457,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (depth >= 8) depth--;
     }
 
-    if (!pv_node && !in_check && !singular_search) {
+    if (!pv_node && !in_check && !singular_search && abs(beta) < MATE_BOUND) {
 
         // Reverse Futility Pruning
         // If the last move was very bad, such that the static evaluation - a margin is still greater
@@ -544,7 +544,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
 
         // Pruning
-        if (!pv_node && legal_moves > 0) {
+        if (!pv_node && legal_moves > 0 && abs(best_score) < MATE_BOUND) {
             // Late Move Pruning
             if (depth <= engine.tuning_parameters.LMP_depth &&
                 legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;
@@ -600,7 +600,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             move == tt_move &&
             tt_entry.depth >= depth - 3 &&
             tt_entry.flag != HASH_FLAG_ALPHA &&
-            position.state_stack[thread_state.search_ply].excluded_move == NO_MOVE) {
+            position.state_stack[thread_state.search_ply].excluded_move == NO_MOVE &&
+            abs(tt_entry.score) < MATE_BOUND) {
 
             position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
 
