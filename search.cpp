@@ -616,7 +616,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             if (return_eval < singular_beta) {
                 extension++;
                 if (!pv_node && return_eval < singular_beta - 24) extension++;
-                if (!pv_node && return_eval < singular_beta - 24) extension++;
             }
 
             // Multi-cut Pruning
