@@ -624,11 +624,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 return singular_beta;
             }
 
-            // Negative Extensions
-            else if (tt_entry.score >= beta) {
-                extension = -1;
-            }
-
             position.make_move(move, thread_state.search_ply, thread_state.fifty_move);
         }
 
