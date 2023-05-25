@@ -20,6 +20,7 @@ struct State_Struct {
     uint16_t current_castle_ability_bits;
     PLY_TYPE current_fifty_move;
     MOVE_TYPE excluded_move = NO_MOVE;
+    int double_extensions = 0;
 };
 
 
