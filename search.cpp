@@ -624,6 +624,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 return singular_beta;
             }
 
+            else if (tt_entry.score >= beta) {
+                extension--;
+            }
+
             position.make_move(move, thread_state.search_ply, thread_state.fifty_move);
         }
 
