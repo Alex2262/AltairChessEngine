@@ -594,7 +594,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         if (move_score >= 0 && (passed_pawn || queen_promotion)) extension++;
 
-        // Singular Extensions
+        // Checking for singularity
         if (!root &&
             depth >= 8 &&
             move == tt_move &&
@@ -612,11 +612,21 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                                              false, thread_id);
             position.state_stack[thread_state.search_ply].excluded_move = NO_MOVE;
 
+            // Singular Extensions
             if (return_eval < singular_beta) {
                 extension++;
                 if (!pv_node && return_eval < singular_beta - 24) extension++;
-            } else if (singular_beta >= beta) {
+                if (!pv_node && return_eval < singular_beta - 24) extension++;
+            }
+
+            // Multi-cut Pruning
+            else if (singular_beta >= beta) {
                 return singular_beta;
+            }
+
+            // Negative Extensions
+            else if (tt_entry.score >= beta) {
+                extension = -1;
             }
 
             position.make_move(move, thread_state.search_ply, thread_state.fifty_move);
