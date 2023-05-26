@@ -1159,7 +1159,22 @@ void print_statistics(Search_Results& res) {
 }
 
 
-void print_tuning_config(Tuning_Parameters& tuning_parameters) {
+void print_search_tuning_config(Tuning_Parameters& tuning_parameters) {
+    std::cout << "{";
+    for (auto & i : tuning_parameters.tuning_parameter_array) {
+        std::cout << "\n\t\"" << i.name << "\": {"
+                  << "\n\t\t\"value\": " << i.value
+                  << ",\n\t\t\"min_value\": " << i.min
+                  << ",\n\t\t\"max_value\": " << i.max
+                  << ",\n\t\t\"step\": " << i.step
+                  << "\n\t},"
+                  << std::endl;
+    }
+    std::cout << "}" << std::endl;
+}
+
+
+void print_move_ordering_tuning_config(Move_Ordering_Parameters& tuning_parameters) {
     std::cout << "{";
     for (auto & i : tuning_parameters.tuning_parameter_array) {
         std::cout << "\n\t\"" << i.name << "\": {"

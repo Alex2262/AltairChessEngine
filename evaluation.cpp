@@ -1059,18 +1059,24 @@ SCORE_TYPE score_move(const Thread_State& thread_state, Position& position, MOVE
     if (selected < BLACK_PAWN) {
         if (get_is_capture(move)) {
             score += thread_state.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
-            score += 2 * (MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected]);
+            score += thread_state.move_ordering_parameters.capture_scale
+                    * (MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected]);
 
             // Only Use SEE under certain conditions since it is expensive
             if (score >= -3000) {
-                if (score >= 3000) score += 20000;
-                else score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
+                if (score >= 3000 ||
+                    get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD))
+                    score += thread_state.move_ordering_parameters.winning_capture_margin;
             }
+
+            score += thread_state.move_ordering_parameters.base_capture_margin;
         }
         else {
             // score 1st and 2nd killer move
-            if (thread_state.killer_moves[0][thread_state.search_ply] == move) score += 12000;
-            else if (thread_state.killer_moves[1][thread_state.search_ply] == move) score += 11000;
+            if (thread_state.killer_moves[0][thread_state.search_ply] == move) score +=
+                    thread_state.move_ordering_parameters.first_killer_margin;
+            else if (thread_state.killer_moves[1][thread_state.search_ply] == move) score +=
+                    thread_state.move_ordering_parameters.second_killer_margin;
             else {
                 score += thread_state.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
@@ -1091,30 +1097,38 @@ SCORE_TYPE score_move(const Thread_State& thread_state, Position& position, MOVE
             if (move_type == MOVE_TYPE_PROMOTION) {
                 PIECE_TYPE promotion_piece = get_promotion_piece(move);
                 if (promotion_piece == WHITE_QUEEN) {
-                    score += 30000;
+                    score += thread_state.move_ordering_parameters.queen_promotion_margin;
                 } else {
-                    score = score - 2000 + MVV_LVA_VALUES[promotion_piece];
+                    score = score + thread_state.move_ordering_parameters.other_promotion_margin +
+                            MVV_LVA_VALUES[promotion_piece];
                 }
             }
-            else if (move_type == MOVE_TYPE_EP) score += 20050;
-            else if (move_type == MOVE_TYPE_CASTLE) score += 1200;
+            else if (move_type == MOVE_TYPE_EP) score += thread_state.move_ordering_parameters.winning_capture_margin +
+                    thread_state.move_ordering_parameters.capture_scale * (MVV_LVA_VALUES[WHITE_PAWN] / 2);
+            else if (move_type == MOVE_TYPE_CASTLE) score += thread_state.move_ordering_parameters.castle_margin;
         }
     }
     else {
         if (get_is_capture(move)) {
-            score += 2 * (MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN]);
             score += thread_state.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
+            score += thread_state.move_ordering_parameters.capture_scale
+                     * (MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN]);
 
             // Only Use SEE under certain conditions since it is expensive
             if (score >= -3000) {
-                if (score >= 3000) score += 20000;
-                else score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
+                if (score >= 3000 ||
+                    get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD))
+                    score += thread_state.move_ordering_parameters.winning_capture_margin;
             }
+
+            score += thread_state.move_ordering_parameters.base_capture_margin;
         }
         else {
             // score 1st and 2nd killer move
-            if (thread_state.killer_moves[0][thread_state.search_ply] == move) score += 12000;
-            else if (thread_state.killer_moves[1][thread_state.search_ply] == move) score += 11000;
+            if (thread_state.killer_moves[0][thread_state.search_ply] == move) score +=
+                    thread_state.move_ordering_parameters.first_killer_margin;
+            else if (thread_state.killer_moves[1][thread_state.search_ply] == move) score +=
+                    thread_state.move_ordering_parameters.second_killer_margin;
             else {
                 score += thread_state.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
@@ -1136,13 +1150,15 @@ SCORE_TYPE score_move(const Thread_State& thread_state, Position& position, MOVE
             if (move_type == MOVE_TYPE_PROMOTION) {
                 PIECE_TYPE promotion_piece = get_promotion_piece(move) - BLACK_PAWN;
                 if (promotion_piece == WHITE_QUEEN) {
-                    score += 30000;
+                    score += thread_state.move_ordering_parameters.queen_promotion_margin;
                 } else {
-                    score = score - 2000 + MVV_LVA_VALUES[promotion_piece];
+                    score = score + thread_state.move_ordering_parameters.other_promotion_margin +
+                            MVV_LVA_VALUES[promotion_piece];
                 }
             }
-            else if (move_type == MOVE_TYPE_EP) score += 20050;
-            else if (move_type == MOVE_TYPE_CASTLE) score += 1200;
+            else if (move_type == MOVE_TYPE_EP) score += thread_state.move_ordering_parameters.winning_capture_margin +
+                    thread_state.move_ordering_parameters.capture_scale * (MVV_LVA_VALUES[WHITE_PAWN] / 2);
+            else if (move_type == MOVE_TYPE_CASTLE) score += thread_state.move_ordering_parameters.castle_margin;
         }
     }
 
