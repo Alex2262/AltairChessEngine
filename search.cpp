@@ -668,8 +668,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             && !in_check
             ){
 
-            reduction = quiet ? LMR_REDUCTIONS_QUIET[depth][std::min(legal_moves, 63)] :
-                                LMR_REDUCTIONS_NOISY[depth][std::min(legal_moves, 63)];
+            reduction = quiet ?
+                    LMR_REDUCTIONS_QUIET[std::min<PLY_TYPE>(depth, MAX_AB_DEPTH - 1)][std::min(legal_moves, 63)] :
+                    LMR_REDUCTIONS_NOISY[std::min<PLY_TYPE>(depth, MAX_AB_DEPTH - 1)][std::min(legal_moves, 63)];
 
             reduction -= pv_node;
 

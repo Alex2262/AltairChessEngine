@@ -166,8 +166,8 @@ public:
     uint64_t max_nodes = 0;
     uint64_t node_count = 0;
 
-    MOVE_TYPE pv_table[MAX_AB_DEPTH][MAX_AB_DEPTH]{};
-    unsigned short pv_length[MAX_AB_DEPTH + 1] = {0};
+    MOVE_TYPE pv_table[MAX_AB_DEPTH + 1][MAX_AB_DEPTH + 1]{};
+    PLY_TYPE pv_length[MAX_AB_DEPTH + 1] = {0};
 
     // TT_Entry transposition_table[MAX_TT_SIZE]{};
     std::vector<TT_Entry> transposition_table;
