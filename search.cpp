@@ -493,11 +493,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             if (return_eval >= beta) {
                 return beta;
             }
-            else {
-                if (depth >= 8 && return_eval <= -MATE_BOUND && position.non_pawn_material_count >= (1 + depth / 8)) {
-                    depth++;
-                }
-            }
         }
     }
 
