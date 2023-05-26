@@ -29,8 +29,8 @@
 #define MATE_BOUND          99000
 #define NO_MOVE             0
 
-#define MAX_AB_DEPTH        64
-#define TOTAL_MAX_DEPTH     256
+#define MAX_AB_DEPTH        256
+#define TOTAL_MAX_DEPTH     512
 #define MAX_TT_SIZE         2666666
 
 #define HASH_FLAG_EXACT     0

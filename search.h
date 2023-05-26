@@ -126,12 +126,12 @@ public:
     PLY_TYPE game_ply = 0;
     PLY_TYPE fifty_move = 0;
 
-    MOVE_TYPE killer_moves[2][64]{};  // killer moves (2) | max_depth (64)
-    SCORE_TYPE history_moves[12][64]{}; // piece | target_square
-    SCORE_TYPE capture_history[12][12][64]{};
-    SCORE_TYPE continuation_history[12][64][12][64]{};
+    MOVE_TYPE killer_moves[2][MAX_AB_DEPTH]{};  // killer moves (2) | max_depth (64)
+    SCORE_TYPE history_moves[12][MAX_AB_DEPTH]{}; // piece | target_square
+    SCORE_TYPE capture_history[12][12][MAX_AB_DEPTH]{};
+    SCORE_TYPE continuation_history[12][MAX_AB_DEPTH][12][MAX_AB_DEPTH]{};
 
-    HASH_TYPE repetition_table[TOTAL_MAX_DEPTH+600] = {0};
+    HASH_TYPE repetition_table[TOTAL_MAX_DEPTH+512] = {0};
 
     bool do_move_ordering_tuning = true;
     Move_Ordering_Parameters move_ordering_parameters{};
@@ -155,8 +155,8 @@ public:
 
     PLY_TYPE selective_depth = 0;
 
-    PLY_TYPE max_depth = 64;
-    PLY_TYPE max_q_depth = 64;
+    PLY_TYPE max_depth = MAX_AB_DEPTH;
+    PLY_TYPE max_q_depth = TOTAL_MAX_DEPTH - MAX_AB_DEPTH;
     PLY_TYPE min_depth = 1;
 
     uint64_t hard_time_limit = 60000;
@@ -166,8 +166,8 @@ public:
     uint64_t max_nodes = 0;
     uint64_t node_count = 0;
 
-    MOVE_TYPE pv_table[64][64]{};
-    unsigned short pv_length[65] = {0};
+    MOVE_TYPE pv_table[MAX_AB_DEPTH][MAX_AB_DEPTH]{};
+    unsigned short pv_length[MAX_AB_DEPTH + 1] = {0};
 
     // TT_Entry transposition_table[MAX_TT_SIZE]{};
     std::vector<TT_Entry> transposition_table;
