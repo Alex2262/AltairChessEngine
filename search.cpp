@@ -18,20 +18,17 @@
 #include "see.h"
 
 
-static double LMR_REDUCTIONS_QUIET[MAX_AB_DEPTH + 1][64];
-static double LMR_REDUCTIONS_NOISY[MAX_AB_DEPTH + 1][64];
-
-void initialize_lmr_reductions(Engine& engine) {
+void Engine::initialize_lmr_reductions() {
     for (PLY_TYPE depth = 0; depth <= MAX_AB_DEPTH; depth++) {
-        for (int moves = 0; moves <= MAX_AB_DEPTH; moves++) {
+        for (int moves = 0; moves < 64; moves++) {
             LMR_REDUCTIONS_QUIET[depth][moves] =
                     std::max(0.0,
-                             std::log(depth) * std::log(moves) / double(engine.tuning_parameters.LMR_divisor_quiet / 100.0)
-                             + double(engine.tuning_parameters.LMR_base_quiet / 100.0));
+                             std::log(depth) * std::log(moves) / double(tuning_parameters.LMR_divisor_quiet / 100.0)
+                             + double(tuning_parameters.LMR_base_quiet / 100.0));
             LMR_REDUCTIONS_NOISY[depth][moves] =
                     std::max(0.0,
-                             std::log(depth) * std::log(moves) / double(engine.tuning_parameters.LMR_divisor_noisy / 100.0)
-                             + double(engine.tuning_parameters.LMR_base_noisy / 100.0));
+                             std::log(depth) * std::log(moves) / double(tuning_parameters.LMR_divisor_noisy / 100.0)
+                             + double(tuning_parameters.LMR_base_noisy / 100.0));
         }
     }
 }
@@ -669,8 +666,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             ){
 
             reduction = quiet ?
-                    LMR_REDUCTIONS_QUIET[std::min<PLY_TYPE>(depth, MAX_AB_DEPTH - 1)][std::min(legal_moves, 63)] :
-                    LMR_REDUCTIONS_NOISY[std::min<PLY_TYPE>(depth, MAX_AB_DEPTH - 1)][std::min(legal_moves, 63)];
+                    engine.LMR_REDUCTIONS_QUIET[std::min<PLY_TYPE>(depth, MAX_AB_DEPTH - 1)][std::min(legal_moves, 63)] :
+                    engine.LMR_REDUCTIONS_NOISY[std::min<PLY_TYPE>(depth, MAX_AB_DEPTH - 1)][std::min(legal_moves, 63)];
 
             reduction -= pv_node;
 

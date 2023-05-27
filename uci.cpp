@@ -15,7 +15,7 @@
 void UCI::initialize_uci() {
     engine->transposition_table.resize(MAX_TT_SIZE);
 
-    initialize_lmr_reductions(*engine);
+    engine->initialize_lmr_reductions();
 
     engine->thread_states.emplace_back();
 

@@ -153,6 +153,9 @@ public:
 
     bool stopped = true;
 
+    double LMR_REDUCTIONS_QUIET[MAX_AB_DEPTH + 1][64]{};
+    double LMR_REDUCTIONS_NOISY[MAX_AB_DEPTH + 1][64]{};
+
     PLY_TYPE selective_depth = 0;
 
     PLY_TYPE max_depth = MAX_AB_DEPTH;
@@ -183,6 +186,8 @@ public:
     void reset();
     void new_game();
 
+    void initialize_lmr_reductions();
+
     short probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
                          TT_Entry& return_entry);
     void record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
@@ -206,8 +211,6 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
 SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, int thread_id);
 void iterative_search(Engine& engine, int thread_id);
 void lazy_smp_search(Engine& engine);
-
-void initialize_lmr_reductions(Engine& engine);
 
 void print_statistics(Search_Results& res);
 
