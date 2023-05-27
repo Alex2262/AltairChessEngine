@@ -58,8 +58,8 @@ struct Tuning_Parameters {
             T{"NMP_base", 1, 5, 3, 1},
             T{"NMP_depth_divisor", 2, 6, 4, 1},
             T{"NMP_eval_divisor", 100, 350, 297, 40},
-            T{"LMR_divisor_noisy", 280, 500, 350, 50},
-            T{"LMR_base_quiet", -20, 100, 30, 20}
+            T{"LMR_divisor_noisy", 180, 400, 210, 50},
+            T{"LMR_base_quiet", 0, 150, 100, 20}
     };
 
     int LMR_divisor_quiet = tuning_parameter_array[0].value;
