@@ -133,7 +133,7 @@ public:
 
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH+512] = {0};
 
-    bool do_move_ordering_tuning = true;
+    bool do_move_ordering_tuning = false;
     Move_Ordering_Parameters move_ordering_parameters{};
 
     bool terminated = true;
