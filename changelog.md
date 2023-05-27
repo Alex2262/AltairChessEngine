@@ -5211,3 +5211,54 @@ SPRT  | 8.0+0.08s Threads=1 Hash=16MB
 LLR   | 2.98 (-2.94, 2.94) [-5.00, 1.00]
 GAMES | N: 7896 W: 2248 L: 2165 D: 3483
 ```
+
+
+### 2.4.4
+Do not do certain pruning and heuristics when searching for a mate
+
+```
+ELO   | 1.43 +- 3.70 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.95 (-2.94, 2.94) [-4.00, 1.00]
+GAMES | N: 18768 W: 5242 L: 5165 D: 8361
+```
+
+### 2.4.5
+Double Extensions
+
+```
+ELO   | 2.66 +- 3.78 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 0.70 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 18040 W: 5106 L: 4968 D: 7966
+```
+
+### 2.4.6
+Negative Extensions
+
+```
+ELO   | 3.50 +- 2.78 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.96 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 33392 W: 9500 L: 9164 D: 14728
+```
+
+### 2.4.7
+Remove Mate Threat Extensions
+
+```
+ELO   | 0.65 +- 5.40 (95%)
+SPRT  | 40.0+0.40s Threads=1 Hash=128MB
+LLR   | 1.26 (-2.94, 2.94) [-5.00, 0.00]
+GAMES | N: 8016 W: 2036 L: 2021 D: 3959
+```
+
+### 2.4.8
+More aggressive Noisy LMR values
+
+```
+ELO   | 3.24 +- 2.53 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 40352 W: 11470 L: 11094 D: 17788
+```
