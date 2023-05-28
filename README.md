@@ -35,9 +35,9 @@ Altair utilizes many techniques for its search—the calculation of moves and di
 At the basis, Altair uses a version of minimax called negamax. On top of this, it uses the traditional alpha-beta pruning algorithm.
 
 Furthermore, different methods of selection, pruning, and reductions enables
-it to narrow down the amount of positions and moves it has to calculate. \
+it to narrow down the amount of positions and moves it has to calculate.
 
-A brief description of Altair's search layout: \
+A brief description of Altair's search layout:
 
 - Iterative Deepening
 - Aspiration Windows
@@ -55,7 +55,9 @@ A brief description of Altair's search layout: \
     - Pruning
   
 #### Move Ordering
-Altair's Move Ordering is structured like so: \
+It is advantageous for a chess engine to look at the best moves first, so worse moves can be easily pruned and discarded.
+
+Altair's Move Ordering is structured like so:
 
 - Transposition Table Move
 - Promotions
@@ -70,7 +72,7 @@ Altair's Move Ordering is structured like so: \
 - Castling
 
 ## Evaluation
-These are some of the evaluation features present in Altair: \
+These are some of the evaluation features present in Altair:
 
 - Material
 - Piece Square Tables
@@ -94,7 +96,7 @@ These are some of the evaluation features present in Altair: \
 Altair was created with the help of many people and usage of many resources. 
 Altair is also inspired from other strong and notable engines.
 
-Mentions: \
+Mentions:
 
 - [The Chess Programming Wiki](https://www.chessprogramming.org/Main_Page) contains invaluable resources that I have used.
 - [The Bitboard Chess Engine in C Playlist](https://www.youtube.com/playlist?list=PLmN0neTso3Jxh8ZIylk74JpwfiWNI76Cs) is a nice video series that contains implementations for different ideas and features.
