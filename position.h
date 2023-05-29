@@ -38,7 +38,8 @@ public:
 
     PLY_TYPE set_fen(const std::string& fen_string);
     void print_board();
-    void print_piece_index_board();
+    [[maybe_unused]] void print_piece_index_board();
+    [[maybe_unused]] bool check_valid(PLY_TYPE ply);
 
     bool is_attacked(SQUARE_TYPE pos);
 
