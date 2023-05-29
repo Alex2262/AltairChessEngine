@@ -28,7 +28,7 @@ void UCI::initialize_uci() {
 }
 
 
-void  UCI::time_handler(double self_time, double inc, double movetime, long movestogo) {
+void  UCI::time_handler(double self_time, double inc, double movetime, long movestogo) const {
     double rate = 20;
     double time_amt;
 
@@ -230,6 +230,9 @@ void UCI::uci_loop() {
                       << std::endl;
 
             std::cout << "option name Threads type spin default " << 1 << " min " << 1 << " max " << 1024
+                      << std::endl;
+
+            std::cout << "option name UCI_Chess960 type check default " << false
                       << std::endl;
 
             std::cout << "option name Statistic type check default " << false
