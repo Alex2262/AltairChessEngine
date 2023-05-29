@@ -30,7 +30,7 @@ public:
 
     Position() = default;
 
-    bool fischer_random_chess = false;
+    bool fischer_random_chess = true;
 
     void clear_movelist();
     void clear_state_stack();

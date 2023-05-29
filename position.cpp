@@ -130,28 +130,62 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
     for (char c : fen_tokens[2]) {
         if (fischer_random_chess) {
             if (isupper(c)) {
-                int rook_col = c - 'A';
-                int king_col = MAILBOX_TO_STANDARD[king_positions[WHITE_COLOR]] % 8;
-
-                if (rook_col > king_col) {
+                if (c == 'K') {
+                    for (SQUARE_TYPE test_pos = king_positions[WHITE_COLOR] + 1; test_pos <= H1; test_pos++) {
+                        if (board[test_pos] == WHITE_ROOK) {
+                            starting_rook_pos[WHITE_COLOR][0] = test_pos;
+                        }
+                    }
                     castle_ability_bits |= 1;
-                    starting_rook_pos[WHITE_COLOR][0] = STANDARD_TO_MAILBOX[rook_col + 56];
-                }
-                else {
+                } else if (c == 'Q') {
+                    for (SQUARE_TYPE test_pos = king_positions[WHITE_COLOR] - 1; test_pos >= A1; test_pos--) {
+                        if (board[test_pos] == WHITE_ROOK) {
+                            starting_rook_pos[WHITE_COLOR][1] = test_pos;
+                        }
+                    }
                     castle_ability_bits |= 2;
-                    starting_rook_pos[WHITE_COLOR][1] = STANDARD_TO_MAILBOX[rook_col + 56];
-                }
-            } else {
-                int rook_col = c - 'a';
-                int king_col = MAILBOX_TO_STANDARD[king_positions[BLACK_COLOR]] % 8;
+                } else {
+                    int rook_col = c - 'A';
+                    int king_col = MAILBOX_TO_STANDARD[king_positions[WHITE_COLOR]] % 8;
 
-                if (rook_col > king_col) {
-                    castle_ability_bits |= 4;
-                    starting_rook_pos[BLACK_COLOR][0] = STANDARD_TO_MAILBOX[rook_col];
+                    if (rook_col > king_col) {
+                        castle_ability_bits |= 1;
+                        starting_rook_pos[WHITE_COLOR][0] = STANDARD_TO_MAILBOX[rook_col + 56];
+                    }
+                    else {
+                        castle_ability_bits |= 2;
+                        starting_rook_pos[WHITE_COLOR][1] = STANDARD_TO_MAILBOX[rook_col + 56];
+                    }
                 }
-                else {
+            }
+
+            else {
+                if (c == 'k') {
+                    for (SQUARE_TYPE test_pos = king_positions[BLACK_COLOR] + 1; test_pos <= H8; test_pos++) {
+                        if (board[test_pos] == BLACK_ROOK) {
+                            starting_rook_pos[BLACK_COLOR][0] = test_pos;
+                        }
+                    }
+                    castle_ability_bits |= 4;
+                } else if (c == 'q') {
+                    for (SQUARE_TYPE test_pos = king_positions[BLACK_COLOR] - 1; test_pos >= A8; test_pos--) {
+                        if (board[test_pos] == BLACK_ROOK) {
+                            starting_rook_pos[BLACK_COLOR][0] = test_pos;
+                        }
+                    }
                     castle_ability_bits |= 8;
-                    starting_rook_pos[BLACK_COLOR][1] = STANDARD_TO_MAILBOX[rook_col];
+                } else {
+                    int rook_col = c - 'a';
+                    int king_col = MAILBOX_TO_STANDARD[king_positions[BLACK_COLOR]] % 8;
+
+                    if (rook_col > king_col) {
+                        castle_ability_bits |= 4;
+                        starting_rook_pos[BLACK_COLOR][0] = STANDARD_TO_MAILBOX[rook_col];
+                    }
+                    else {
+                        castle_ability_bits |= 8;
+                        starting_rook_pos[BLACK_COLOR][1] = STANDARD_TO_MAILBOX[rook_col];
+                    }
                 }
             }
         }

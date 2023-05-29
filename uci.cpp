@@ -321,6 +321,7 @@ void UCI::uci_loop() {
 
         else if (tokens[0] == "position") {
             parse_position();
+            engine->thread_states[0].position.print_board();
         }
 
         else if (tokens[0] == "go") {
