@@ -128,13 +128,56 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
 
     castle_ability_bits = 0;
     for (char c : fen_tokens[2]) {
+        if (fischer_random_chess) {
+            if (isupper(c)) {
+                int rook_col = c - 'A';
+                int king_col = MAILBOX_TO_STANDARD[king_positions[WHITE_COLOR]] % 8;
 
-        if (c == 'K') castle_ability_bits |= 1;
-        else if (c == 'Q') castle_ability_bits |= 2;
-        else if (c == 'k') castle_ability_bits |= 4;
-        else if (c == 'q') castle_ability_bits |= 8;
+                if (rook_col > king_col) {
+                    castle_ability_bits |= 1;
+                    starting_rook_pos[WHITE_COLOR][0] = STANDARD_TO_MAILBOX[rook_col + 56];
+                }
+                else {
+                    castle_ability_bits |= 2;
+                    starting_rook_pos[WHITE_COLOR][1] = STANDARD_TO_MAILBOX[rook_col + 56];
+                }
+            } else {
+                int rook_col = c - 'a';
+                int king_col = MAILBOX_TO_STANDARD[king_positions[BLACK_COLOR]] % 8;
 
+                if (rook_col > king_col) {
+                    castle_ability_bits |= 4;
+                    starting_rook_pos[BLACK_COLOR][0] = STANDARD_TO_MAILBOX[rook_col];
+                }
+                else {
+                    castle_ability_bits |= 8;
+                    starting_rook_pos[BLACK_COLOR][1] = STANDARD_TO_MAILBOX[rook_col];
+                }
+            }
+        }
+
+        else {
+            if (c == 'K') {
+                castle_ability_bits |= 1;
+                starting_rook_pos[WHITE_COLOR][0] = H1;
+            }
+            else if (c == 'Q') {
+                castle_ability_bits |= 2;
+                starting_rook_pos[WHITE_COLOR][1] = A1;
+            }
+            else if (c == 'k') {
+                castle_ability_bits |= 4;
+                starting_rook_pos[BLACK_COLOR][0] = H8;
+            }
+            else if (c == 'q') {
+                castle_ability_bits |= 8;
+                starting_rook_pos[BLACK_COLOR][1] = A8;
+            }
+        }
     }
+
+    // std::cout << starting_rook_pos[WHITE_COLOR][0] << " " << starting_rook_pos[WHITE_COLOR][1] << " " <<
+    //              starting_rook_pos[BLACK_COLOR][0] << " " << starting_rook_pos[BLACK_COLOR][1] << std::endl;
 
     if (fen_tokens[3].size() > 1) {
         auto square = static_cast<SQUARE_TYPE>((8 - (fen_tokens[3][1] - '0')) * 8 + fen_tokens[3][0] - 'a');
@@ -317,15 +360,18 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
 
     state_stack[search_ply].move = move;
 
-    piece_list_index[target_square] = selected_index;
+    bool legal = true;
+
     if (move_type == MOVE_TYPE_NORMAL) {
         // Set the piece to the target square and hash it
+        piece_list_index[target_square] = selected_index;
         board[target_square] = selected;
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[target_square]];
     }
 
     else if (move_type == MOVE_TYPE_EP) {
         // Set the piece to the target square and hash it
+        piece_list_index[target_square] = selected_index;
         board[target_square] = selected;
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[target_square]];
 
@@ -350,18 +396,18 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
     }
 
     else if (move_type == MOVE_TYPE_CASTLE) {
-        board[target_square] = selected;
-        hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[target_square]];
+
+        legal = !is_attacked(origin_square);
 
         // Queen side castling
-        if (target_square < origin_square) {
-            castled_pos[0] = target_square - 2;
-            castled_pos[1] = target_square + 1;
+        if (target_square == C1 || target_square == C8) {
+            castled_pos[0] = starting_rook_pos[side][1];  // Rook origin square
+            castled_pos[1] = target_square + 1;  // Rook target square
         }
         // King side castling
         else {
-            castled_pos[0] = target_square + 1;
-            castled_pos[1] = target_square - 1;
+            castled_pos[0] = starting_rook_pos[side][0];  // Rook origin square
+            castled_pos[1] = target_square - 1;  // Rook target square
         }
 
         piece_list_index[castled_pos[1]] = piece_list_index[castled_pos[0]];
@@ -386,16 +432,20 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
         }
 
         piece_list_index[castled_pos[0]] = NO_PIECE_INDEX;
+        board[target_square] = selected;
+        piece_list_index[target_square] = selected_index;
+        hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[target_square]];
     }
 
     else if (move_type == MOVE_TYPE_PROMOTION) {
         PIECE_TYPE promotion_piece = get_promotion_piece(move);
+        piece_list_index[target_square] = selected_index;
         board[target_square] = promotion_piece;
         hash_key ^= ZobristHashKeys.piece_hash_keys[promotion_piece][MAILBOX_TO_STANDARD[target_square]];
     }
 
     // Remove the piece from the source square
-    board[origin_square] = EMPTY;
+    if (target_square != origin_square && castled_pos[1] != origin_square) board[origin_square] = EMPTY;
     hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[origin_square]];
 
     if (!side) {
@@ -420,7 +470,7 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
         }
     }
 
-    piece_list_index[origin_square] = NO_PIECE_INDEX;
+    if (target_square != origin_square && castled_pos[1] != origin_square) piece_list_index[origin_square] = NO_PIECE_INDEX;
 
     // Change the king position for check detection
     if (selected == WHITE_KING || selected == BLACK_KING) king_positions[side] = target_square;
@@ -428,12 +478,20 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
     // Legal move checking.
     // Return False if we are in check after our move or castling isn't legal.
 
+    if (!legal) return false;
     if (is_attacked(king_positions[side])) return false;
     if (castled_pos[0]) {
         // If we have castled, then we already checked to_square with is_attacked since the king moved.
         // We then check the position of where the rook would be, and where the king originally was
-        if (is_attacked(castled_pos[1])) return false;
-        if (is_attacked(origin_square)) return false;
+        if (target_square == C1 || target_square == C8) {
+            for (SQUARE_TYPE temp_pos = origin_square - 1; temp_pos > target_square; temp_pos--) {
+                if (is_attacked(temp_pos)) return false;
+            }
+        } else {
+            for (SQUARE_TYPE temp_pos = origin_square + 1; temp_pos < target_square; temp_pos++) {
+                if (is_attacked(temp_pos)) return false;
+            }
+        }
     }
 
     // --- The move is legal ---
@@ -463,10 +521,14 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
         castle_ability_bits &= ~(1 << 3);
     }
 
-    if (origin_square == H1 || target_square == H1) castle_ability_bits &= ~(1 << 0);
-    else if (origin_square == A1 || target_square == A1) castle_ability_bits &= ~(1 << 1);
-    else if (origin_square == H8 || target_square == H8) castle_ability_bits &= ~(1 << 2);
-    else if (origin_square == A8 || target_square == A8) castle_ability_bits &= ~(1 << 3);
+    if (origin_square == starting_rook_pos[WHITE_COLOR][0] ||
+        target_square == starting_rook_pos[WHITE_COLOR][0]) castle_ability_bits &= ~(1 << 0);
+    else if (origin_square == starting_rook_pos[WHITE_COLOR][1] ||
+             target_square == starting_rook_pos[WHITE_COLOR][1]) castle_ability_bits &= ~(1 << 1);
+    else if (origin_square == starting_rook_pos[BLACK_COLOR][0] ||
+             target_square == starting_rook_pos[BLACK_COLOR][0]) castle_ability_bits &= ~(1 << 2);
+    else if (origin_square == starting_rook_pos[BLACK_COLOR][1] ||
+             target_square == starting_rook_pos[BLACK_COLOR][1]) castle_ability_bits &= ~(1 << 3);
 
     hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
@@ -483,11 +545,14 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
     hash_key = state_stack[search_ply].current_hash_key;
     fifty_move = state_stack[search_ply].current_fifty_move;
 
+    SQUARE_TYPE castled_pos[2]{};
+
     // Get move info
     SQUARE_TYPE origin_square = get_origin_square(move);
     SQUARE_TYPE target_square = get_target_square(move);
     PIECE_TYPE selected = get_selected(move);
     PIECE_TYPE occupied = get_occupied(move);
+    SQUARE_TYPE occupied_index = piece_list_index[target_square];
     uint16_t move_type = get_move_type(move);
 
     if (move_type == MOVE_TYPE_EP) {
@@ -503,14 +568,12 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
     }
 
     else if (move_type == MOVE_TYPE_CASTLE) {
-
-        SQUARE_TYPE castled_pos[2];
-        if (target_square < origin_square) {
-            castled_pos[0] = origin_square - 1;
-            castled_pos[1] = target_square - 2;
+        if (target_square == C1 || target_square == C8) {
+            castled_pos[0] = target_square + 1;  // Current rook square
+            castled_pos[1] = starting_rook_pos[side][1];  // Old rook square
         } else {
-            castled_pos[0] = origin_square + 1;
-            castled_pos[1] = target_square + 1;
+            castled_pos[0] = target_square - 1;  // Current rook square
+            castled_pos[1] = starting_rook_pos[side][0];  // Old rook square
         }
 
         piece_list_index[castled_pos[1]] = piece_list_index[castled_pos[0]];
@@ -528,11 +591,11 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
 
     }
 
-    board[target_square] = occupied;
+    if (castled_pos[1] != target_square) board[target_square] = occupied;
     board[origin_square] = selected;
 
-    piece_list_index[origin_square] = piece_list_index[target_square];
-    piece_list_index[target_square] = NO_PIECE_INDEX;
+    piece_list_index[origin_square] = occupied_index;
+    if (target_square != origin_square && castled_pos[1] != target_square) piece_list_index[target_square] = NO_PIECE_INDEX;
 
     if (!side) {
         white_pieces[piece_list_index[origin_square]] = origin_square;
@@ -604,7 +667,57 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
 
                     PIECE_TYPE occupied = board[new_pos];
 
-                    if (occupied == PADDING || occupied < BLACK_PAWN) break;
+                    if (occupied == PADDING || occupied < BLACK_PAWN) {
+
+                        if (piece == WHITE_ROOK && board[new_pos] == WHITE_KING) {
+                            if ((castle_ability_bits & 1) == 1 && pos == starting_rook_pos[WHITE_COLOR][0]) {
+                                if (fischer_random_chess) {
+                                    if (new_pos >= G1) {
+                                        if (board[F1] != EMPTY) break;
+                                    } else if (new_pos < F1) {
+                                        bool flag = true;
+                                        for (SQUARE_TYPE temp_pos = F1; temp_pos > pos; temp_pos--) {
+                                            if (board[temp_pos] != EMPTY) {
+                                                flag = false;
+                                                break;
+                                            }
+                                        }
+
+                                        if (!flag) break;
+                                    }
+                                }
+                                moves[ply].push_back(
+                                        encode_move(new_pos, G1, WHITE_KING,
+                                                    EMPTY, MOVE_TYPE_CASTLE, 0, false)
+                                );
+                            } else if ((castle_ability_bits & 2) == 2 && pos == starting_rook_pos[WHITE_COLOR][1]) {
+                                if (fischer_random_chess) {
+                                    if (new_pos <= C1) {
+                                        if (board[C1] != EMPTY && board[C1] != WHITE_KING) break;
+                                        if (board[D1] != EMPTY) break;
+                                    } else if (new_pos > D1){
+                                        bool flag = true;
+                                        for (SQUARE_TYPE temp_pos = C1; temp_pos < pos; temp_pos++) {
+                                            if (board[temp_pos] != EMPTY) {
+                                                flag = false;
+                                                break;
+                                            }
+                                        }
+
+                                        if (!flag) break;
+                                    }
+                                }
+                                moves[ply].push_back(
+                                        encode_move(new_pos, C1, WHITE_KING,
+                                                    EMPTY, MOVE_TYPE_CASTLE, 0, false)
+                                );
+                            }
+
+                        }
+
+                        break;
+                    }
+
                     if (piece == WHITE_PAWN && (increment == -10 || increment == -20) &&
                         board[pos - 10] != EMPTY) break;
                     if (piece == WHITE_PAWN && increment == -20 && (pos < 81 || occupied != EMPTY)) break;
@@ -646,18 +759,6 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                                                          MOVE_TYPE_NORMAL, 0, false));
 
                     if (piece == WHITE_PAWN || piece == WHITE_KNIGHT || piece == WHITE_KING) break;
-
-                    if ((castle_ability_bits & 1) == 1 && pos == H1 &&
-                        board[new_pos - 1] == WHITE_KING) moves[ply].push_back(
-                                encode_move(E1, G1, WHITE_KING,
-                                            EMPTY, MOVE_TYPE_CASTLE, 0, false)
-                        );
-
-                    else if ((castle_ability_bits & 2) == 2 && pos == A1 &&
-                             board[new_pos + 1] == WHITE_KING) moves[ply].push_back(
-                                encode_move(E1, C1, WHITE_KING,
-                                            EMPTY, MOVE_TYPE_CASTLE, 0, false)
-                        );
                 }
             }
         }
@@ -678,7 +779,56 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
 
                     PIECE_TYPE occupied = board[new_pos];
 
-                    if (occupied != EMPTY && occupied > WHITE_KING) break;
+                    if (occupied != EMPTY && occupied > WHITE_KING) {
+                        if (piece == BLACK_ROOK && board[new_pos] == BLACK_KING) {
+                            if ((castle_ability_bits & 4) == 4 && pos == starting_rook_pos[BLACK_COLOR][0]) {
+                                if (fischer_random_chess) {
+                                    if (new_pos >= G8) {
+                                        if (board[F8] != EMPTY) break;
+                                    } else if (new_pos < F8) {
+                                        bool flag = true;
+                                        for (SQUARE_TYPE temp_pos = F8; temp_pos > pos; temp_pos--) {
+                                            if (board[temp_pos] != EMPTY) {
+                                                flag = false;
+                                                break;
+                                            }
+                                        }
+
+                                        if (!flag) break;
+                                    }
+                                }
+
+                                moves[ply].push_back(
+                                        encode_move(new_pos, G8, BLACK_KING,
+                                                    EMPTY, MOVE_TYPE_CASTLE, 0, false)
+                                );
+                            } else if ((castle_ability_bits & 8) == 8 && pos == starting_rook_pos[BLACK_COLOR][1]) {
+                                if (fischer_random_chess) {
+                                    if (new_pos <= C8) {
+                                        if (board[C8] != EMPTY && board[C8] != WHITE_KING) break;
+                                        if (board[D8] != EMPTY) break;
+                                    } else if (new_pos > D8){
+                                        bool flag = true;
+                                        for (SQUARE_TYPE temp_pos = C8; temp_pos < pos; temp_pos++) {
+                                            if (board[temp_pos] != EMPTY) {
+                                                flag = false;
+                                                break;
+                                            }
+                                        }
+
+                                        if (!flag) break;
+                                    }
+                                }
+                                moves[ply].push_back(
+                                        encode_move(new_pos, C8, BLACK_KING,
+                                                    EMPTY, MOVE_TYPE_CASTLE, 0, false)
+                                );
+                            }
+
+                        }
+                        break;
+                    }
+
                     if (piece == BLACK_PAWN && (increment == 10 || increment == 20) &&
                         board[pos + 10] != EMPTY) break;
                     if (piece == BLACK_PAWN && increment == 20 && (pos > 38 || occupied != EMPTY)) break;
@@ -720,18 +870,6 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                                                          MOVE_TYPE_NORMAL, 0, false));
 
                     if (piece == BLACK_PAWN || piece == BLACK_KNIGHT || piece == BLACK_KING) break;
-
-                    if ((castle_ability_bits & 4) == 4 && pos == H8 &&
-                        board[new_pos - 1] == BLACK_KING) moves[ply].push_back(
-                                encode_move(E8, G8, BLACK_KING,
-                                            EMPTY, MOVE_TYPE_CASTLE, 0, false)
-                        );
-
-                    else if ((castle_ability_bits & 8) == 8 && pos == A8 &&
-                             board[new_pos + 1] == BLACK_KING) moves[ply].push_back(
-                                encode_move(E8, C8, BLACK_KING,
-                                            EMPTY, MOVE_TYPE_CASTLE, 0, false)
-                        );
                 }
             }
         }

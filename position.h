@@ -30,6 +30,8 @@ public:
 
     Position() = default;
 
+    bool fischer_random_chess = false;
+
     void clear_movelist();
     void clear_state_stack();
     void compute_hash_key();
@@ -54,6 +56,8 @@ public:
 
     PIECE_TYPE board[120]{};
     SQUARE_TYPE piece_list_index[120] = {NO_PIECE_INDEX};
+
+    SQUARE_TYPE starting_rook_pos[2][2]{};
 
     std::vector<PIECE_TYPE> white_pieces;
     std::vector<PIECE_TYPE> black_pieces;

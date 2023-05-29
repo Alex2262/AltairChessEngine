@@ -24,7 +24,7 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
 
     for (MOVE_TYPE move : position.moves[ply]) {
 
-        // std::cout << "move: " << get_uci_from_move(move) << std::endl;
+        // std::cout << "move: " << get_uci_from_move(position, move) << std::endl;
 
         bool attempt = position.make_move(move, ply, fifty);
 
@@ -128,7 +128,7 @@ long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
         position.side ^= 1;
         position.undo_move(move, ply, fifty);
 
-        std::cout << "Move " + get_uci_from_move(move) << ": " << amt << std::endl;
+        std::cout << get_uci_from_move(position, move) << ": " << amt << std::endl;
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();

@@ -7,7 +7,7 @@
 #include "position.h"
 
 
-std::string get_uci_from_move(MOVE_TYPE move);
+std::string get_uci_from_move(const Position& position, MOVE_TYPE move);
 
 MOVE_TYPE get_move_from_uci(const Position& position, std::string uci);
 

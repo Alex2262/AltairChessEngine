@@ -902,7 +902,7 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
     // Get the PV line
     SQUARE_TYPE original_side = position.side;
     for (int c = 0; c < max_pv_length; c++) {
-        pv_line += get_uci_from_move(engine.pv_table[0][c]);
+        pv_line += get_uci_from_move(position, engine.pv_table[0][c]);
         pv_line += " ";
         position.side ^= 1;
     }
@@ -1050,7 +1050,7 @@ void iterative_search(Engine& engine, int thread_id) {
     engine.search_results.node_count = engine.node_count;
 
     if (thread_id == 0) {
-        std::string best_move_str = get_uci_from_move(best_move);
+        std::string best_move_str = get_uci_from_move(position, best_move);
         std::cout << "bestmove " << best_move_str << std::endl;
     }
 

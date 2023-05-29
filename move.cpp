@@ -3,7 +3,7 @@
 #include "move.h"
 
 
-std::string get_uci_from_move(MOVE_TYPE move) {
+std::string get_uci_from_move(const Position& position, MOVE_TYPE move) {
 
     std::string uci_move;
 
@@ -11,6 +11,14 @@ std::string get_uci_from_move(MOVE_TYPE move) {
     SQUARE_TYPE target_square = MAILBOX_TO_STANDARD[get_target_square(move)];
 
     uint16_t move_type = get_move_type(move);
+
+    if (move_type == MOVE_TYPE_CASTLE && position.fischer_random_chess) {
+        if (target_square == MAILBOX_TO_STANDARD[C1] || target_square == MAILBOX_TO_STANDARD[C8]) {
+            target_square = MAILBOX_TO_STANDARD[position.starting_rook_pos[position.side][1]];
+        } else {
+            target_square = MAILBOX_TO_STANDARD[position.starting_rook_pos[position.side][0]];
+        }
+    }
 
     uci_move += char(origin_square % 8 + 'a');
     uci_move += char((8 - origin_square / 8) + '0');
@@ -50,6 +58,33 @@ MOVE_TYPE get_move_from_uci(const Position& position, std::string uci) {
     PIECE_TYPE selected = position.board[origin_square];
     PIECE_TYPE occupied = position.board[target_square];
 
+    bool castle_move = false;
+    if (position.fischer_random_chess) {
+        if (!position.side) {
+            if (selected == WHITE_KING && occupied == WHITE_ROOK) {
+                castle_move = true;
+                if (target_square == position.starting_rook_pos[WHITE_COLOR][0]) {
+                    target_square = G1;
+                } else if (target_square == position.starting_rook_pos[WHITE_COLOR][1]) {
+                    target_square = C1;
+                }
+
+                occupied = EMPTY;
+            }
+        } else {
+            if (selected == BLACK_KING && occupied == BLACK_ROOK) {
+                castle_move = true;
+                if (target_square == position.starting_rook_pos[BLACK_COLOR][0]) {
+                    target_square = G8;
+                } else if (target_square == position.starting_rook_pos[BLACK_COLOR][1]) {
+                    target_square = C8;
+                }
+
+                occupied = EMPTY;
+            }
+        }
+    }
+
     uint16_t move_type = 0;
 
     if (selected % BLACK_PAWN == WHITE_PAWN) {
@@ -59,7 +94,7 @@ MOVE_TYPE get_move_from_uci(const Position& position, std::string uci) {
     }
 
     else if (selected % BLACK_PAWN == WHITE_KING) {
-        if (abs(target_square - origin_square) == 2) move_type = 2;
+        if (castle_move || abs(target_square - origin_square) == 2) move_type = 2;
     }
 
     bool is_capture = occupied < EMPTY;

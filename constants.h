@@ -73,6 +73,10 @@
 #define C8      23
 #define G1      97
 #define G8      27
+#define D1      94
+#define D8      24
+#define F1      96
+#define F8      26
 
 enum NodeType {
     Exact_Node,
