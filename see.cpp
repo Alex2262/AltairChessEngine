@@ -117,6 +117,7 @@ SQUARE_TYPE get_cheapest_attacker(Position& position, SQUARE_TYPE pos) {
 
 SCORE_TYPE get_static_exchange_evaluation(Position& position, MOVE_TYPE move, SCORE_TYPE threshold) {
     uint16_t move_type = get_move_type(move);
+    if (move_type == MOVE_TYPE_CASTLE) return true;
     if (move_type == MOVE_TYPE_PROMOTION) return true;
     if (move_type == MOVE_TYPE_EP) return true;
 
