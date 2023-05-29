@@ -170,7 +170,7 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
                 } else if (c == 'q') {
                     for (SQUARE_TYPE test_pos = king_positions[BLACK_COLOR] - 1; test_pos >= A8; test_pos--) {
                         if (board[test_pos] == BLACK_ROOK) {
-                            starting_rook_pos[BLACK_COLOR][0] = test_pos;
+                            starting_rook_pos[BLACK_COLOR][1] = test_pos;
                         }
                     }
                     castle_ability_bits |= 8;
@@ -274,6 +274,55 @@ void Position::print_board() {
     }
 
     std::cout << new_board << std::endl;
+}
+
+
+[[maybe_unused]] bool Position::check_valid(PLY_TYPE ply) {
+    for (SQUARE_TYPE pos : STANDARD_TO_MAILBOX) {
+        PIECE_TYPE piece = board[pos];
+
+        if (piece == EMPTY) {
+            if (piece_list_index[pos] != -1) {
+                std::cout << "EMPTY PIECE EXPECTED " << -1 << " GOT " << piece_list_index[pos] << std::endl;
+                print_board();
+                return false;
+            }
+        }
+
+        else if (piece < BLACK_PAWN) {
+            if (board[white_pieces[piece_list_index[pos]]] != piece) {
+                std::cout << "NOT MATCHING WHITE PIECE EXPECTED " << piece << " GOT " <<
+                             board[white_pieces[piece_list_index[pos]]]  << std::endl;
+                std::cout << pos << " " << piece_list_index[pos] << " " << black_pieces[piece_list_index[pos]] << std::endl;
+
+                std::cout << "Previous moves:" << std::endl;
+                for (int test_ply = 0; test_ply <= ply; test_ply++) {
+                    std::cout << get_uci_from_move(*this, state_stack[test_ply].move) << " ";
+                }
+                std::cout << std::endl;
+                print_board();
+                return false;
+            }
+        }
+
+        else if (piece < EMPTY) {
+            if (board[black_pieces[piece_list_index[pos]]] != piece) {
+                std::cout << "NOT MATCHING BLACK PIECE EXPECTED " << piece << " GOT " <<
+                          board[black_pieces[piece_list_index[pos]]]  << std::endl;
+                std::cout << pos << " " << piece_list_index[pos] << " " << black_pieces[piece_list_index[pos]] << std::endl;
+
+                std::cout << "Previous moves:" << std::endl;
+                for (int test_ply = 0; test_ply <= ply; test_ply++) {
+                    std::cout << get_uci_from_move(*this, state_stack[test_ply].move) << " ";
+                }
+                std::cout << std::endl;
+                print_board();
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 
@@ -444,28 +493,31 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             castled_pos[1] = target_square - 1;  // Rook target square
         }
 
-        piece_list_index[castled_pos[1]] = piece_list_index[castled_pos[0]];
+        if (castled_pos[0] != castled_pos[1]) {
+            piece_list_index[castled_pos[1]] = piece_list_index[castled_pos[0]];
 
-        // Move the rook and hash it
-        if (!side) {
-            board[castled_pos[1]] = WHITE_ROOK;
-            hash_key ^= ZobristHashKeys.piece_hash_keys[WHITE_ROOK][MAILBOX_TO_STANDARD[castled_pos[1]]];
+            // Move the rook and hash it
+            if (!side) {
+                board[castled_pos[1]] = WHITE_ROOK;
+                hash_key ^= ZobristHashKeys.piece_hash_keys[WHITE_ROOK][MAILBOX_TO_STANDARD[castled_pos[1]]];
 
-            board[castled_pos[0]] = EMPTY;
-            hash_key ^= ZobristHashKeys.piece_hash_keys[WHITE_ROOK][MAILBOX_TO_STANDARD[castled_pos[0]]];
+                board[castled_pos[0]] = EMPTY;
+                hash_key ^= ZobristHashKeys.piece_hash_keys[WHITE_ROOK][MAILBOX_TO_STANDARD[castled_pos[0]]];
 
-            white_pieces[piece_list_index[castled_pos[0]]] = castled_pos[1];
-        } else {
-            board[castled_pos[1]] = BLACK_ROOK;
-            hash_key ^= ZobristHashKeys.piece_hash_keys[BLACK_ROOK][MAILBOX_TO_STANDARD[castled_pos[1]]];
+                white_pieces[piece_list_index[castled_pos[1]]] = castled_pos[1];
+            } else {
+                board[castled_pos[1]] = BLACK_ROOK;
+                hash_key ^= ZobristHashKeys.piece_hash_keys[BLACK_ROOK][MAILBOX_TO_STANDARD[castled_pos[1]]];
 
-            board[castled_pos[0]] = EMPTY;
-            hash_key ^= ZobristHashKeys.piece_hash_keys[BLACK_ROOK][MAILBOX_TO_STANDARD[castled_pos[0]]];
+                board[castled_pos[0]] = EMPTY;
+                hash_key ^= ZobristHashKeys.piece_hash_keys[BLACK_ROOK][MAILBOX_TO_STANDARD[castled_pos[0]]];
 
-            black_pieces[piece_list_index[castled_pos[0]]] = castled_pos[1];
+                black_pieces[piece_list_index[castled_pos[1]]] = castled_pos[1];
+            }
+
+            piece_list_index[castled_pos[0]] = NO_PIECE_INDEX;
         }
 
-        piece_list_index[castled_pos[0]] = NO_PIECE_INDEX;
         board[target_square] = selected;
         piece_list_index[target_square] = selected_index;
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[target_square]];
@@ -610,19 +662,20 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             castled_pos[1] = starting_rook_pos[side][0];  // Old rook square
         }
 
-        piece_list_index[castled_pos[1]] = piece_list_index[castled_pos[0]];
+        if (castled_pos[0] != castled_pos[1]) {
+            piece_list_index[castled_pos[1]] = piece_list_index[castled_pos[0]];
 
-        if (!side) {
-            board[castled_pos[1]] = WHITE_ROOK;
-            white_pieces[piece_list_index[castled_pos[0]]] = castled_pos[1];
-        } else {
-            board[castled_pos[1]] = BLACK_ROOK;
-            black_pieces[piece_list_index[castled_pos[0]]] = castled_pos[1];
+            if (!side) {
+                board[castled_pos[1]] = WHITE_ROOK;
+                white_pieces[piece_list_index[castled_pos[0]]] = castled_pos[1];
+            } else {
+                board[castled_pos[1]] = BLACK_ROOK;
+                black_pieces[piece_list_index[castled_pos[0]]] = castled_pos[1];
+            }
+
+            board[castled_pos[0]] = EMPTY;
+            piece_list_index[castled_pos[0]] = NO_PIECE_INDEX;
         }
-
-        board[castled_pos[0]] = EMPTY;
-        piece_list_index[castled_pos[0]] = NO_PIECE_INDEX;
-
     }
 
     if (castled_pos[1] != target_square) board[target_square] = occupied;
