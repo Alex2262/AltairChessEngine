@@ -768,7 +768,7 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                                         if (board[F1] != EMPTY) break;
                                     } else if (new_pos < F1) {
                                         bool flag = true;
-                                        for (SQUARE_TYPE temp_pos = F1; temp_pos > pos; temp_pos--) {
+                                        for (SQUARE_TYPE temp_pos = G1; temp_pos > pos; temp_pos--) {
                                             if (board[temp_pos] != EMPTY) {
                                                 flag = false;
                                                 break;
@@ -879,7 +879,7 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                                         if (board[F8] != EMPTY) break;
                                     } else if (new_pos < F8) {
                                         bool flag = true;
-                                        for (SQUARE_TYPE temp_pos = F8; temp_pos > pos; temp_pos--) {
+                                        for (SQUARE_TYPE temp_pos = G8; temp_pos > pos; temp_pos--) {
                                             if (board[temp_pos] != EMPTY) {
                                                 flag = false;
                                                 break;
