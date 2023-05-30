@@ -63,6 +63,7 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
 
 long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 
+    assert(position.check_valid(ply - 1));
     if (depth == 0) {
         return 1;
     }

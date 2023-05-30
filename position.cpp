@@ -284,6 +284,11 @@ void Position::print_board() {
         if (piece == EMPTY) {
             if (piece_list_index[pos] != -1) {
                 std::cout << "EMPTY PIECE EXPECTED " << -1 << " GOT " << piece_list_index[pos] << std::endl;
+                std::cout << "Previous moves:" << std::endl;
+                for (int test_ply = 0; test_ply <= ply; test_ply++) {
+                    std::cout << get_uci_from_move(*this, state_stack[test_ply].move) << " ";
+                }
+                std::cout << std::endl;
                 print_board();
                 return false;
             }
