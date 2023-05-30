@@ -282,6 +282,10 @@ void UCI::uci_loop() {
                 std::cout << "max nodes set to " << engine->max_nodes << std::endl;
             }
 
+            else if (tokens[2] == "UCI_Chess960") {
+                engine->thread_states[0].position.fischer_random_chess = tokens[4] == "true";
+            }
+
             else if (tokens[2] == "Statistics") {
                 engine->show_stats = tokens[4] == "true";
             }
@@ -317,6 +321,7 @@ void UCI::uci_loop() {
 
         else if (tokens[0] == "position") {
             parse_position();
+            engine->thread_states[0].position.print_board();
         }
 
         else if (tokens[0] == "go") {

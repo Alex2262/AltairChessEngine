@@ -30,13 +30,16 @@ public:
 
     Position() = default;
 
+    bool fischer_random_chess = false;
+
     void clear_movelist();
     void clear_state_stack();
     void compute_hash_key();
 
     PLY_TYPE set_fen(const std::string& fen_string);
     void print_board();
-    void print_piece_index_board();
+    [[maybe_unused]] void print_piece_index_board();
+    [[maybe_unused]] bool check_valid(PLY_TYPE ply);
 
     bool is_attacked(SQUARE_TYPE pos);
 
@@ -54,6 +57,8 @@ public:
 
     PIECE_TYPE board[120]{};
     SQUARE_TYPE piece_list_index[120] = {NO_PIECE_INDEX};
+
+    SQUARE_TYPE starting_rook_pos[2][2]{};
 
     std::vector<PIECE_TYPE> white_pieces;
     std::vector<PIECE_TYPE> black_pieces;
