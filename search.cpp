@@ -847,9 +847,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     engine.tt_prefetch_write(position.hash_key);
 
-    if (legal_moves == 0 && !in_check) return 0;
-    else if (legal_moves == 0) return -MATE_SCORE + thread_state.search_ply;
-
+    if (legal_moves == 0) {
+        if (singular_search) return alpha;
+        if (!in_check) return 0;
+        else return -MATE_SCORE + thread_state.search_ply;
+    }
 
     engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval);
 
