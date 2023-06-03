@@ -1,4 +1,13 @@
 # Altair
+
+<div align="center">
+  
+  [![License][license-badge]][license-link]
+  [![Release][release-badge]][release-link]
+  [![Commits][commits-badge]][commits-link]
+  
+</div>
+
 Altair is a strong UCI-protocol chess engine that succeeds my old python engine Antares.
 
 ## Ratings
@@ -108,3 +117,11 @@ Mentions:
 contributions in testing my engine.
 
 Many people have helped me along the development of this chess engine. Without them, Altair would have never reached this stage.
+
+
+[commits-badge]:https://img.shields.io/github/commits-since/Alex2262/AltairChessEngine/latest?style=for-the-badge
+[commits-link]:https://github.com/Alex2262/AltairChessEngine/commits/master
+[release-badge]:https://img.shields.io/github/v/release/Alex2262/AltairChessEngine?style=for-the-badge&label=official%20release
+[release-link]:https://github.com/Alex2262/AltairChessEngine/releases/latest
+[license-badge]:https://img.shields.io/github/license/Alex2262/AltairChessEngine?style=for-the-badge&label=license&color=success
+[license-link]:https://github.com/Alex2262/AltairChessEngine/blob/master/LICENSE
