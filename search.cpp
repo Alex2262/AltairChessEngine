@@ -1038,7 +1038,7 @@ void iterative_search(Engine& engine, int thread_id) {
                         [MAILBOX_TO_STANDARD[get_target_square(best_move)]]) /
                         static_cast<double>(engine.node_count);
 
-                double node_scaling_factor = (1.37 - best_node_percentage) * 1.3;
+                double node_scaling_factor = (1.5 - best_node_percentage) * 1.35;
 
                 engine.soft_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit) * node_scaling_factor);
                 // std::cout << best_node_percentage << " " << node_scaling_factor << std::endl;
