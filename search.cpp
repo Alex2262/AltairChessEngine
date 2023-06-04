@@ -630,7 +630,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             extension = std::min<PLY_TYPE>(extension, 1);
         }
 
-        position.state_stack[thread_state.search_ply].double_extensions =
+        position.state_stack[thread_state.search_ply].double_extensions = root ? 0 :
                 position.state_stack[thread_state.search_ply - 1].double_extensions + (extension == 2);
 
         PLY_TYPE new_depth = depth + extension - 1;
@@ -714,11 +714,12 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         position.side ^= 1;
         thread_state.game_ply--;
+
+        position.state_stack[thread_state.search_ply].in_check = -1;
+
         thread_state.search_ply--;
 
         position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
-
-        position.state_stack[thread_state.search_ply].in_check = -1;
 
         if (engine.stopped) return 0;
 
