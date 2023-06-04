@@ -168,6 +168,7 @@ public:
 
     uint64_t max_nodes = 0;
     uint64_t node_count = 0;
+    uint64_t node_table[12][64]{};
 
     MOVE_TYPE pv_table[MAX_AB_DEPTH + 1][MAX_AB_DEPTH + 1]{};
     PLY_TYPE pv_length[MAX_AB_DEPTH + 1] = {0};
