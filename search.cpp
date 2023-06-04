@@ -48,6 +48,7 @@ void Engine::clear_tt() {
 
 void Engine::reset() {
     node_count = 0;
+    std::memset(node_table, 0, sizeof(node_table));
 
     for (Thread_State& thread_state : thread_states) {
         thread_state.current_search_depth = 1;
@@ -646,6 +647,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         SCORE_TYPE return_eval = -SCORE_INF;
 
+        uint64_t current_nodes = engine.node_count;
+
         double reduction;
 
         bool is_killer_move = move == thread_state.killer_moves[0][thread_state.search_ply - 1] ||
@@ -730,6 +733,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (return_eval > best_score) {
             best_score = return_eval;
             best_move = move;
+
+            if (root) {
+                engine.node_table[get_selected(best_move)][MAILBOX_TO_STANDARD[get_target_square(best_move)]] += engine.node_count - current_nodes;
+            }
 
             if (thread_id == 0) {
                 // Write moves into PV table
@@ -1011,6 +1018,7 @@ void iterative_search(Engine& engine, int thread_id) {
     PLY_TYPE running_depth = 1;
     PLY_TYPE asp_depth = 6;
 
+    uint64_t original_soft_time_limit = engine.soft_time_limit;
     MOVE_TYPE best_move = NO_MOVE;
 
     while (running_depth <= engine.max_depth) {
@@ -1023,16 +1031,33 @@ void iterative_search(Engine& engine, int thread_id) {
         // Store the best move when the engine has finished a search (it hasn't stopped in the middle of a search)
         if (thread_id == 0 && !engine.stopped) best_move = engine.pv_table[0][0];
 
-        // Calculate the elapsed time
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
-                                                                            - start_time);
-        uint64_t elapsed_time = ms_int.count();
-        elapsed_time = std::max<uint64_t>(elapsed_time, 1);
+        if (thread_id == 0) {
+            if (running_depth >= 8) {
+                auto best_node_percentage =
+                        static_cast<double>(engine.node_table[get_selected(best_move)]
+                        [MAILBOX_TO_STANDARD[get_target_square(best_move)]]) /
+                        static_cast<double>(engine.node_count);
 
-        // Stop the engine when we have exceeded the soft time limit
-        if (running_depth >= engine.min_depth && thread_id == 0) {
-            if (elapsed_time >= engine.soft_time_limit) engine.stopped = true;
+                double node_scaling_factor = (1.5 - best_node_percentage) * 1.35;
+
+                engine.soft_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit) * node_scaling_factor);
+                // std::cout << best_node_percentage << " " << node_scaling_factor << std::endl;
+
+                // std::cout << "Soft Time Limit changed to: " << engine.soft_time_limit << std::endl;
+            }
+
+
+            // Calculate the elapsed time
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
+                                                                                - start_time);
+            uint64_t elapsed_time = ms_int.count();
+            elapsed_time = std::max<uint64_t>(elapsed_time, 1);
+
+            // Stop the engine when we have exceeded the soft time limit
+            if (running_depth >= engine.min_depth && thread_id == 0) {
+                if (elapsed_time >= engine.soft_time_limit) engine.stopped = true;
+            }
         }
 
         // End the search when the engine has stopped running
