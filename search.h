@@ -126,10 +126,10 @@ public:
     PLY_TYPE game_ply = 0;
     PLY_TYPE fifty_move = 0;
 
-    MOVE_TYPE killer_moves[2][MAX_AB_DEPTH]{};  // killer moves (2) | max_depth (64)
-    SCORE_TYPE history_moves[12][MAX_AB_DEPTH]{}; // piece | target_square
-    SCORE_TYPE capture_history[12][12][MAX_AB_DEPTH]{};
-    SCORE_TYPE continuation_history[12][MAX_AB_DEPTH][12][MAX_AB_DEPTH]{};
+    MOVE_TYPE killer_moves[2][MAX_AB_DEPTH + 1]{};  // killer moves (2) | max_depth (64)
+    SCORE_TYPE history_moves[12][64]{}; // piece | target_square
+    SCORE_TYPE capture_history[12][12][64]{};
+    SCORE_TYPE continuation_history[12][64][12][64]{};
 
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH+512] = {0};
 
