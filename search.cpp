@@ -665,7 +665,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             && ((thread_state.search_ply && !pv_node) || legal_moves >= 4)
             && depth >= 3
             && (quiet || bad_capture)
-            && !in_check
             ){
 
             reduction = quiet ?
@@ -679,6 +678,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             reduction -= is_killer_move * 0.75;
 
             reduction -= move_gives_check * 0.6;
+
+            reduction -= in_check;
 
             reduction -= move_history_score > 0 ? move_history_score / 7200.0 : move_history_score / 16000.0;
 
