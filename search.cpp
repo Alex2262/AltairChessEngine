@@ -544,6 +544,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // Quiet Late Move Pruning
             if (quiet && legal_moves >= 2 + depth * depth / (1 + !improving)) continue;
+
+            // Futility Pruning
             if (quiet && depth <= 5 && static_eval + depth * 150 + 60 <= alpha) break;
 
             // History Pruning
