@@ -7,327 +7,338 @@
 
 #include "constants.h"
 
-constexpr SCORE_TYPE MAX_MINOR_PIECE_VALUE_MID = 419;
-constexpr SCORE_TYPE PIECE_VALUES_MID[6] = { 103, 392, 419, 606,1472,   0};
+constexpr SCORE_TYPE MAX_MINOR_PIECE_VALUE_MID = 438;
+constexpr SCORE_TYPE PIECE_VALUES_MID[6] = { 101, 433, 438, 638,1492,   0};
 
-constexpr SCORE_TYPE PIECE_VALUES_END[6] = { 128, 372, 368, 726,1400,   0};
+constexpr SCORE_TYPE PIECE_VALUES_END[6] = { 134, 388, 395, 761,1416,   0};
 
 constexpr SCORE_TYPE PAWN_PST_MID[64] = {
         0,   0,   0,   0,   0,   0,   0,   0,
-        180, 175, 113, 166, 110, 202,  48,  50,
-        9,  20,  42,  57,  83,  86,  60,  12,
-        0,  13,  11,  27,  33,  37,  33,  -7,
-        -5, -11,   3,   9,  16,  20,   6, -17,
-        -18, -22, -15,  -9,   1,  -5,   6, -18,
-        -10,  -7, -15, -11,  -4,  24,  30,  -7,
+        177, 153, 101, 164, 111, 209,  55,  51,
+        15,  18,  39,  55,  75,  71,  54,   9,
+        4,   6,   7,  21,  29,  39,  23,   1,
+        -4, -11,   1,   7,  13,  18,   6, -15,
+        -16, -19, -15,  -8,   1,  -3,   5, -16,
+        -9,  -5, -16,  -5,  -4,  22,  29,  -4,
         0,   0,   0,   0,   0,   0,   0,   0
 };
 
 constexpr SCORE_TYPE PAWN_PST_END[64] = {
         0,   0,   0,   0,   0,   0,   0,   0,
-        96,  91,  94,  31,  65,  56, 124, 123,
-        73,  70,  38,   3,   0,  30,  67,  92,
-        28,  17,  10, -13,  -7,  11,  27,  38,
-        7,  11,  -3,  -5,  -6,  -3,  10,  15,
-        1,   7,   5,   5,  13,   6,   5,  11,
-        13,  14,  26,  12,  30,   9,  16,  17,
+        97,  97,  97,  35,  65,  49, 127, 121,
+        71,  72,  40,   3,   0,  37,  70,  90,
+        29,  17,  11, -14,  -8,  11,  27,  35,
+        9,  11,  -3,  -8,  -7,  -2,  12,  14,
+        2,   6,   6,   3,  13,   7,   8,  10,
+        14,  14,  26,   1,  33,  11,  19,  18,
         0,   0,   0,   0,   0,   0,   0,   0
 };
 
 constexpr SCORE_TYPE KNIGHT_PST_MID[64] = {
-        -114, -58, -16,  51, 129,-109,  13, -55,
-        57,  27,  72,  65,  67,  70,  18,  50,
-        35,  63,  65,  82,  95, 131,  82, 100,
-        91,  77,  59,  75,  46,  61,  48,  85,
-        67,  53,  49,  47,  51,  37,  71,  51,
-        47,  31,  21,  24,  27,  11,  35,  34,
-        25,  31,  20,  24,  17,  23,  35,  53,
-        -34,  33,   4,   5,  24,  11,  22,   0
+        -112, -60, -47,  40, 124,-128,  37, -54,
+        63,  31,  85,  74,  84,  98,  12,  61,
+        35,  74,  88, 101, 118, 147,  86, 114,
+        91,  91,  89,  98,  73,  86,  61,  79,
+        69,  75,  75,  75,  78,  60,  86,  55,
+        49,  50,  48,  56,  53,  36,  48,  36,
+        24,  25,  40,  42,  34,  37,  29,  49,
+        -50,  34,   2,  16,  23,  16,  22, -16
 };
 
 constexpr SCORE_TYPE KNIGHT_PST_END[64] = {
-        0,  39,  66,  37,  40,  60,   0, -55,
-        34,  60,  42,  77,  64,  36,  45,  23,
-        35,  47,  64,  71,  51,  38,  36,   6,
-        46,  63,  72,  83,  88,  76,  70,  56,
-        56,  55,  71,  86,  80,  72,  61,  58,
-        7,  46,  46,  69,  61,  40,  33,  47,
-        30,  53,  35,  72,  81,  41,  50,  32,
-        31,  35,  56,  69,  54,  63,  51,  10
+        37,  62,  85,  51,  43,  81,   8, -18,
+        47,  65,  39,  78,  64,  28,  58,  44,
+        48,  46,  73,  74,  54,  51,  39,  14,
+        55,  61,  77,  90,  89,  82,  68,  69,
+        64,  51,  76,  85,  80,  77,  57,  76,
+        2,  41,  52,  73,  64,  45,  32,  62,
+        51,  67,  23,  62,  76,  35,  57,  50,
+        55,  48,  64,  70,  60,  64,  70,  55
 };
 
 constexpr SCORE_TYPE BISHOP_PST_MID[64] = {
-        -27,  16, -99, -71, -69, -83,  12,  55,
-        -14,   9,   9, -11,  -2,  41,  -2, -25,
-        34,  36,  54,  27,  49,  55,  62,  32,
-        7,  28,  12,  52,  34,  42,  23,  17,
-        17,  22,  30,  35,  52,  16,  24,  45,
-        28,  41,  34,  31,  32,  40,  48,  52,
-        41,  49,  48,  33,  33,  45,  72,  51,
-        58,  41,  33,  28,  23,  31,  23,  42
+        -19,  -5,-110, -83, -97, -96,  29,  39,
+        -9,  17,  17,   4,  -3,  48,   9,  -1,
+        35,  41,  73,  40,  70,  61,  74,  30,
+        6,  41,  28,  71,  49,  52,  27,  15,
+        23,  35,  44,  54,  65,  31,  31,  43,
+        36,  48,  45,  44,  44,  50,  55,  56,
+        52,  52,  55,  40,  40,  47,  75,  66,
+        65,  55,  37,  29,  29,  36,  40,  50
 };
 
 constexpr SCORE_TYPE BISHOP_PST_END[64] = {
-        46,  49,  75,  75,  78,  62,  51,  32,
-        68,  52,  60,  57,  65,  51,  50,  58,
-        49,  50,  40,  49,  39,  56,  56,  70,
-        52,  52,  54,  44,  45,  43,  66,  71,
-        41,  41,  43,  46,  32,  47,  37,  35,
-        29,  34,  37,  40,  49,  34,  27,  30,
-        17,  15,  27,  39,  42,  23,  44,   8,
-        -11,  21,  60,  46,  43,  56,  51,   5
+        54,  63,  86,  90,  93,  71,  53,  48,
+        81,  59,  68,  63,  74,  60,  58,  66,
+        57,  60,  57,  62,  52,  75,  61,  78,
+        59,  59,  67,  61,  68,  63,  78,  79,
+        43,  48,  58,  64,  53,  62,  50,  39,
+        31,  38,  47,  51,  63,  44,  35,  38,
+        24,  20,  35,  44,  50,  33,  57,  15,
+        -1,  24,  71,  54,  48,  66,  61,  16
 };
 
 constexpr SCORE_TYPE ROOK_PST_MID[64] = {
-        46,  45,   5,   8,  38,  42,  15, 100,
-        28,   9,  34,  43,  36,  71,  14,  55,
-        9,  34,  45,  43,  48,  88, 104,  60,
-        20,  19,  37,  50,  26,  53,   4,  21,
-        -9, -12,  -1,   3,   4,  13,  20,   1,
-        -10,  -4, -11,  -6,  -8,   8,  13,  -5,
-        -15,   6,  -9,  -3,   4,  17,  19, -51,
-        14,  12,  16,  22,  18,  13,   0,  14
+        59,  44,  -3,  -7,  44,  43,  60,  98,
+        31,  10,  27,  41,  27,  66,  19,  49,
+        13,  44,  48,  46,  54, 101, 111,  61,
+        26,  25,  36,  51,  33,  47,  18,  22,
+        -6,   1,  -6,   7,   2,   8,  17,   6,
+        -11,  -3,  -7,  -5, -12,   9,  21,   1,
+        -21,   6,  -4,   1,   1,  15,  21, -54,
+        14,  12,  19,  24,  19,  13,   7,  14
 };
 
 constexpr SCORE_TYPE ROOK_PST_END[64] = {
-        67,  72,  82,  85,  76,  73,  78,  60,
-        66,  76,  71,  72,  67,  48,  71,  57,
-        62,  55,  53,  53,  48,  45,  40,  40,
-        58,  55,  60,  51,  57,  51,  59,  58,
-        62,  68,  63,  65,  59,  44,  47,  49,
-        45,  49,  52,  56,  54,  39,  44,  38,
-        42,  36,  52,  48,  46,  34,  31,  56,
-        42,  44,  44,  36,  36,  49,  49,  26
+        68,  77,  89,  93,  77,  75,  68,  64,
+        66,  75,  76,  75,  74,  48,  65,  60,
+        63,  55,  55,  55,  46,  44,  38,  44,
+        57,  54,  63,  52,  58,  55,  53,  58,
+        59,  64,  67,  63,  62,  52,  52,  48,
+        42,  49,  52,  54,  52,  38,  43,  36,
+        41,  35,  47,  43,  45,  36,  30,  53,
+        42,  45,  42,  35,  34,  51,  46,  23
 };
 
 constexpr SCORE_TYPE QUEEN_PST_MID[64] = {
-        -27, -35,  -9, -11,  31,  58,  64,  29,
-        5, -52, -45, -71,-104,   1,   3,  20,
-        8,   4, -11, -58, -48,  45,  51, -13,
-        16,   4, -22, -41, -45, -23, -14,  -8,
-        28,  23,   3, -12, -17, -10,  10,   3,
-        30,  56,  26,  10,   5,   6,  26,  12,
-        40,  51,  50,  25,  21,  34,  24,  10,
-        62,  44,  43,  39,  31,  13,  34,  -6
+        -13, -23,  -6, -11,   6,  54,  90,  54,
+        -1, -58, -40, -85,-106,   2,  -4,  19,
+        6,   3, -10, -51, -52,  41,  36, -17,
+        16,   4, -21, -35, -39, -22, -15,  -7,
+        27,  27,   5, -10, -21,  -3,  13,   9,
+        33,  54,  34,   9,   5,   3,  29,  19,
+        41,  56,  48,  25,  20,  31,  33,  24,
+        68,  47,  41,  38,  29,  10,  48,  16
 };
 
 constexpr SCORE_TYPE QUEEN_PST_END[64] = {
-        11,  61,  45,  23,  27,  14,   2,  19,
-        12,  56,  71,  74, 103,  51,  45,  34,
-        9,  18,  24,  85,  78,  34,  25,  91,
-        7,  49,  59,  76,  85,  72,  79,  78,
-        5,  43,  44,  80,  58,  58,  30,  14,
-        -2, -52,  26,  18,  25,  35,   2,  14,
-        -24, -41, -45,  15,   9, -40, -26, -11,
-        -40, -37, -20,  67, -19, -32, -39, -35
+        11,  52,  43,  24,  45,  23,  -2,   7,
+        31,  73,  67,  83, 111,  58,  59,  56,
+        21,  25,  35,  80,  90,  44,  45, 104,
+        22,  52,  57,  73,  86,  83,  90,  81,
+        13,  37,  48,  80,  65,  51,  32,  13,
+        -13, -42,  19,  25,  25,  40,  -6,   2,
+        -26, -45, -46,  21,  14, -46, -46, -32,
+        -44, -33, -12,  73, -11, -32, -56, -42
 };
 
 constexpr SCORE_TYPE KING_PST_MID[64] = {
-        -199, 218, 285, 105,-225,-115,   4,  22,
-        196, 143, 170,  73,  27,  90, -80,-228,
-        54, 173, 157, -25,  59, 113, 163, -55,
-        13,  73,  95, -39, -90,  18,  13,-123,
-        -19, 150,  58, -98, -75, -24,   4, -96,
-        -16,  30,  11, -76, -47,  -7,  23, -38,
-        2,   6,  -7,-134, -98, -51,   7,   0,
-        2,  25, -18,-146, -65,-100, -17, -27
+        -173, 225, 300, 107,-212,-136,  62, -16,
+        185, 173, 198,  64,  46, 114, -53,-202,
+        60, 156, 167, -23,  56, 103, 148, -71,
+        -5,  79,  84, -17, -81,  34,  32,-110,
+        -1, 143,  68,-110, -61,  -8,  38, -80,
+        -36,  20,  12, -76, -52,  -9,  19, -42,
+        -9,   2,  -6,-134, -94, -55,   1,  -5,
+        -25,  18, -27,-149, -67,-104, -22, -30
 };
 
 constexpr SCORE_TYPE KING_PST_END[64] = {
-        -69, -76, -71,   3,  60,  26,  -4, -68,
-        -51,  26,  22,  75,  81,  34,  62,  30,
-        22,  24,  33,  90,  77,  59,  44,  20,
-        2,  28,  32, 103, 103,  44,  38,  17,
-        -26, -25,  17,  96,  92,  27,   7, -11,
-        -32, -11,   5,  75,  64,   9, -13, -26,
-        -47, -29, -11,  59,  53,   4, -28, -54,
-        -124, -77, -46,  19, -13, -23, -51,-103
+        -73, -77, -67,   7,  63,  30,  -9, -68,
+        -43,  25,  23,  81,  82,  32,  63,  27,
+        30,  33,  37,  93,  80,  63,  46,  24,
+        11,  33,  41, 106, 108,  46,  38,  18,
+        -24, -17,  22, 106,  95,  28,   4, -15,
+        -30,  -5,  11,  81,  71,  12,  -9, -26,
+        -40, -25,  -8,  62,  56,   8, -25, -52,
+        -111, -74, -37,  20, -10, -21, -50,-107
 };
 
 constexpr SCORE_TYPE PASSED_PAWN_BONUSES_MID[3][8] = {
-        {   0,  -1,   0,  -6,  13,  23,  17,   0},
-        {   0,   3,   4,  -3,  25,  55, 324,   0},
-        {   0,   3,  56,  -9,  47,  47, 724,   0}
+        {   0,  -2,  -1,  -5,  12,  28,  21,   0},
+        {   0,   3,   5,  -4,  29,  67, 339,   0},
+        {   0,   3,  46,  12,  60,  95, 678,   0}
 };
 
 constexpr SCORE_TYPE PASSED_PAWN_BONUSES_END[3][8] = {
-        {   0,  10,  19,  46,  74, 149, 212,   0},
-        {   0,   3,  12,  35,  85, 189, 166,   0},
-        {   0,   3,   5,  11,  54, 143, -50,   0}
+        {   0,  11,  19,  48,  76, 147, 206,   0},
+        {   0,   3,  10,  38,  88, 190, 176,   0},
+        {   0,   3,   4,  -2,  57, 123, -45,   0}
 };
 
 constexpr SCORE_TYPE ISOLATED_PAWN_PENALTY_MID =  -10;
-constexpr SCORE_TYPE ISOLATED_PAWN_PENALTY_END =    0;
+constexpr SCORE_TYPE ISOLATED_PAWN_PENALTY_END =   -1;
 
-constexpr SCORE_TYPE ISOLATED_PAWN_SEMI_OPEN_FILE_PENALTY_MID =  -21;
-constexpr SCORE_TYPE ISOLATED_PAWN_SEMI_OPEN_FILE_PENALTY_END =  -14;
+constexpr SCORE_TYPE ISOLATED_PAWN_SEMI_OPEN_FILE_PENALTY_MID =  -20;
+constexpr SCORE_TYPE ISOLATED_PAWN_SEMI_OPEN_FILE_PENALTY_END =  -15;
 
-constexpr SCORE_TYPE DOUBLED_PAWN_PENALTY_MID =   -6;
-constexpr SCORE_TYPE DOUBLED_PAWN_PENALTY_END =  -34;
+constexpr SCORE_TYPE DOUBLED_PAWN_PENALTY_MID =   -7;
+constexpr SCORE_TYPE DOUBLED_PAWN_PENALTY_END =  -37;
 
 constexpr SCORE_TYPE BACKWARDS_PAWN_PENALTY_MID =   -4;
-constexpr SCORE_TYPE BACKWARDS_PAWN_PENALTY_END =    6;
+constexpr SCORE_TYPE BACKWARDS_PAWN_PENALTY_END =    4;
 
 constexpr SCORE_TYPE BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_MID =  -14;
-constexpr SCORE_TYPE BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_END =   -5;
+constexpr SCORE_TYPE BACKWARDS_PAWN_SEMI_OPEN_FILE_PENALTY_END =   -4;
 
-constexpr SCORE_TYPE PHALANX_PAWN_BONUS_MID[8] = {   0,   5,  21,  25,  43,  11,-121,   0};
+constexpr SCORE_TYPE PHALANX_PAWN_BONUS_MID[8] = {   0,   6,  21,  23,  49,  75,  47,   0};
 
-constexpr SCORE_TYPE PHALANX_PAWN_BONUS_END[8] = {   0,   4,   8,  20,  85, 190, 507,   0};
+constexpr SCORE_TYPE PHALANX_PAWN_BONUS_END[8] = {   0,   1,   7,  23,  86, 171, 362,   0};
 
 constexpr SCORE_TYPE PIECE_SUPPORT_MID[6][6] = {
-        {  21,   5,   7,   6,  -7, -85},
-        {  -6,   1,  -1,   1,   5,  -2},
-        {  -6,   7, -69,   0,   7,  -3},
-        {   0,  11,   5,   6,   7,   7},
-        {  -2,   7,   5,   5,  25,   1},
+        {  20,   4,   8,   7,  -6, -83},
+        {  -6,   2,   0,   2,   6,  -2},
+        {  -9,   3, -17,   0,   5,  -3},
+        {   1,  11,   5,   7,   5,   6},
+        {  -1,   6,   5,   6,  97,   0},
         {   0,   0,   0,   0,   0,   0}
 };
 
 constexpr SCORE_TYPE PIECE_SUPPORT_END[6][6] = {
-        {  17,  22,  30,   7,   1,  31},
-        {   3,  11,   1,  -2, -10,  -3},
-        {  -5,  10,  67,   4,   8,   3},
-        {   0,   1,   6,  12,  43,  -8},
-        {   6,   7, -12, -10,-547, -14},
+        {  17,  20,  28,   7,   4,  31},
+        {   2,  11,   1,  -3,  -7,  -3},
+        {  -9,   7,  27,   0,   7,   0},
+        {  -1,  -1,   4,  11,  47, -10},
+        {   7,   8, -15,  -9,-608, -12},
         {   0,   0,   0,   0,   0,   0}
 };
 
 constexpr SCORE_TYPE PIECE_THREAT_MID[6][6] = {
-        {  10,  79,  66, 107,  72, 181},
-        {  -6,  20,  33,  61,  51, 124},
-        {  -2,  33,  20,  48,  58,  74},
-        { -10,   3,   8,  10,  63, 136},
-        {  -7,   4,   0,  -8,  10,  79},
+        {  10,  72,  66, 103,  67, 141},
+        {  -5,  20,  29,  54,  51, 110},
+        {  -2,  32,  20,  47,  55,  54},
+        {  -7,   5,  13,  10,  68, 133},
+        {  -5,   5,   2,  -2,  10,  73},
         {   0,   0,   0,   0,   0,   0}
 };
 
 constexpr SCORE_TYPE PIECE_THREAT_END[6][6] = {
-        {  10,  33,  77,   2,  40,  32},
-        {  21,  20,  52,  25,  13,  30},
-        {  18,  55,  20,  38,  64,  81},
-        {  26,  33,  41,  10,  53,  36},
-        {  14,  14,  40,  38,  10, 120},
+        {  10,  36,  80,   3,  34,  19},
+        {  18,  20,  54,  30,  10,  27},
+        {  16,  49,  20,  35,  53,  78},
+        {  23,  30,  35,  10,  38,  25},
+        {  15,   9,  32,  30,  10, 109},
         {   0,   0,   0,   0,   0,   0}
 };
 
 constexpr SCORE_TYPE BLOCKER_VALUES_MID[6][8] = {
         {   0,   0,   0,   0,   0,   0,   0,   0},
-        {   0,  23, -12,   1, -14, -11, 134,   0},
-        {   0,  -5, -10, -15,  -2, -14,  18,   0},
-        {   0,  21, -15,  -2,  21,   6,  26,   0},
-        {   0,   9, -55,  21,  11,  34,  79,   0},
-        {   0,  58,  59, -83, -30, -82, -25,   0}
+        {   0,   6, -23,  -2,  -7, -23, 124,   0},
+        {   0, -10,  -9, -17,   4, -20,   5,   0},
+        {   0,   4, -15,   5,  11,  13,  16,   0},
+        {   0,  52, -49,  19,   8,  25,  38,   0},
+        {   0,  69,  49,-104, -41, -87, -56,   0}
 };
 
 constexpr SCORE_TYPE BLOCKER_VALUES_END[6][8] = {
         {   0,   0,   0,   0,   0,   0,   0,   0},
-        {   0, -59,  -8, -36, -78,-109,-230,   0},
-        {   0, -34, -46, -36, -62,-118,-212,   0},
-        {   0, -18,  29,   6, -10, -55,-145,   0},
-        {   0, -23,  66, -42,  -4, -50,  71,   0},
-        {   0, -19, -22, -32, -58,-137,-254,   0}
+        {   0, -34,  -6, -39, -84,-116,-222,   0},
+        {   0, -25, -48, -37, -63,-114,-208,   0},
+        {   0, -19,  17,  -2, -14, -69,-142,   0},
+        {   0, -74,  46, -38, -14, -48,  70,   0},
+        {   0, -28, -20, -36, -65,-133,-236,   0}
 };
 
 constexpr SCORE_TYPE BLOCKER_TWO_SQUARE_VALUES_MID[6][8] = {
         {   0,   0,   0,   0,   0,   0,   0,   0},
-        {   0,   0, -14,  -2,  10,  51,   0,   0},
-        {   0,   2,  -2, -14,   3,  39,   0,   0},
-        {   0,  13,  25,  -6,   9,  43,   0,   0},
-        {   0,  33,   4,  11,  32,  16,   0,   0},
-        {   0, 195,  50, -42,   4,  46,   0,   0}
+        {   0,  -7,   2,   2,   4,  48,   0,   0},
+        {   0,  -1,  -3, -11,   1,  32,   0,   0},
+        {   0,   0,  14,  -4,  17,  32,   0,   0},
+        {   0,  10,   7,  15,  27,   4,   0,   0},
+        {   0, 186,  48, -35,   4,  28,   0,   0}
 };
 
 constexpr SCORE_TYPE BLOCKER_TWO_SQUARE_VALUES_END[6][8] = {
         {   0,   0,   0,   0,   0,   0,   0,   0},
-        {   0, -27, -16, -13, -20,-121,   0,   0},
-        {   0, -21, -10,  -2, -27, -70,   0,   0},
-        {   0, -19, -20,  17,   3, -68,   0,   0},
-        {   0, -19,  -1, -21, -33,  98,   0,   0},
-        {   0,   0,  -1,  -1, -28,-109,   0,   0}
+        {   0, -18, -19, -19, -18,-117,   0,   0},
+        {   0,  -7,  -5,  -4, -30, -70,   0,   0},
+        {   0, -19, -11,  14,   1, -59,   0,   0},
+        {   0,   5, -28, -29, -22,  92,   0,   0},
+        {   0,   3,  -1,  -3, -28, -96,   0,   0}
 };
 
 constexpr SCORE_TYPE ROOK_SEMI_OPEN_FILE_BONUS_MID =   19;
 constexpr SCORE_TYPE ROOK_SEMI_OPEN_FILE_BONUS_END =    7;
 
-constexpr SCORE_TYPE ROOK_OPEN_FILE_BONUS_MID =   45;
-constexpr SCORE_TYPE ROOK_OPEN_FILE_BONUS_END =   -1;
+constexpr SCORE_TYPE ROOK_OPEN_FILE_BONUS_MID =   42;
+constexpr SCORE_TYPE ROOK_OPEN_FILE_BONUS_END =    3;
 
 constexpr SCORE_TYPE QUEEN_SEMI_OPEN_FILE_BONUS_MID =    1;
-constexpr SCORE_TYPE QUEEN_SEMI_OPEN_FILE_BONUS_END =   32;
+constexpr SCORE_TYPE QUEEN_SEMI_OPEN_FILE_BONUS_END =   35;
 
-constexpr SCORE_TYPE QUEEN_OPEN_FILE_BONUS_MID =   -8;
-constexpr SCORE_TYPE QUEEN_OPEN_FILE_BONUS_END =   35;
+constexpr SCORE_TYPE QUEEN_OPEN_FILE_BONUS_MID =   -5;
+constexpr SCORE_TYPE QUEEN_OPEN_FILE_BONUS_END =   31;
 
 constexpr SCORE_TYPE KING_SEMI_OPEN_FILE_PENALTY_MID =  -23;
-constexpr SCORE_TYPE KING_SEMI_OPEN_FILE_PENALTY_END =    3;
+constexpr SCORE_TYPE KING_SEMI_OPEN_FILE_PENALTY_END =    2;
 
-constexpr SCORE_TYPE KING_OPEN_FILE_PENALTY_MID =  -11;
+constexpr SCORE_TYPE KING_OPEN_FILE_PENALTY_MID =  -12;
 constexpr SCORE_TYPE KING_OPEN_FILE_PENALTY_END =  -14;
 
-constexpr SCORE_TYPE BISHOP_PAIR_BONUS_MID =   28;
-constexpr SCORE_TYPE BISHOP_PAIR_BONUS_END =   76;
+constexpr SCORE_TYPE BISHOP_PAIR_BONUS_MID =   26;
+constexpr SCORE_TYPE BISHOP_PAIR_BONUS_END =   78;
 
-constexpr SCORE_TYPE TEMPO_BONUS_MID =   28;
-constexpr SCORE_TYPE TEMPO_BONUS_END =   23;
+constexpr SCORE_TYPE TEMPO_BONUS_MID =   25;
+constexpr SCORE_TYPE TEMPO_BONUS_END =   21;
 
-constexpr double MOBILITY_COEFFICIENTS_MID[6] = {      0,      5.99,      3.21,      2.19,      1.45,      0};
+constexpr SCORE_TYPE KNIGHT_MOBILITY_MID[9] = { -39, -28,  -7,   8,  24,  30,  40,  52,  68};
 
-constexpr double MOBILITY_COEFFICIENTS_END[6] = {      0,      2.01,      3.03,      1.66,      -0.128,      0};
+constexpr SCORE_TYPE KNIGHT_MOBILITY_END[9] = {-114, -43, -25,   4,  16,  32,  41,  43,  33};
 
-constexpr double OWN_KING_DISTANCE_COEFFICIENTS_MID[6] = {      0,     -6.02,      0,      0,      0,      0};
+constexpr SCORE_TYPE BISHOP_MOBILITY_MID[14] = {  -60, -43, -16,  -1,  12,  24,  28,  32,  32,  37,  45,  65,  68, 114};
 
-constexpr double OWN_KING_DISTANCE_COEFFICIENTS_END[6] = {      0,      0.677,      0,      0,      0,      0};
+constexpr SCORE_TYPE BISHOP_MOBILITY_END[14] = {-184, -96,  -3,   8,  12,  23,  39,  46,  57,  61,  62,  52,  68,  36};
 
-constexpr double OPP_KING_DISTANCE_COEFFICIENTS_MID[6] = {      0,     -1.11,      -0.248,     -4.22,    -10.4,      0};
+constexpr SCORE_TYPE ROOK_MOBILITY_MID[15] = { -100, -35, -39, -24, -20, -11,  -6,  -4,   4,  10,  15,  21,  31,  46,  89};
 
-constexpr double OPP_KING_DISTANCE_COEFFICIENTS_END[6] = {      0,     -1.3,      1.89,      3.82,      6.4,      0};
+constexpr SCORE_TYPE ROOK_MOBILITY_END[15] = {-200,-175, -29, -10,  21,   5,  11,  27,  31,  34,  44,  48,  51,  46,  25};
+
+constexpr SCORE_TYPE QUEEN_MOBILITY_MID[28] = {   -90, -75, -60, -54, -62, -38, -33, -27, -24, -14,  -7,  -3,   3,   9,  11,  10,  17,  12,  13,  11,  18,  22,  44,  33,  35,  32, -31, 201};
+
+constexpr SCORE_TYPE QUEEN_MOBILITY_END[28] = {   -190, -170, -150,-163, -99, -64,  45,  75,  68,  24,   2,   9,   9,  14,  17,  25,  22,  32,  33,  39,  36,  35,  12,  15,  17,  -5,   9,-116};
+
+constexpr double OWN_KING_DISTANCE_COEFFICIENTS_MID[6] = {      0,     -5.26,      0,      0,      0,      0};
+
+constexpr double OWN_KING_DISTANCE_COEFFICIENTS_END[6] = {      0,      -0.339,      0,      0,      0,      0};
+
+constexpr double OPP_KING_DISTANCE_COEFFICIENTS_MID[6] = {      0,     -1.7,      -0.062,     -4.01,    -9.85,      0};
+
+constexpr double OPP_KING_DISTANCE_COEFFICIENTS_END[6] = {      0,     -0.947,      1.99,      3.53,      5.45,      0};
 
 constexpr SCORE_TYPE KING_PAWN_SHIELD_OWN_PENALTIES_MID[3][8] = {
-        {   1,  -1, -33,   0,   0, -16, -13,   5},
-        {   2, -45, -34,   0,   0, -21, -23,   3},
-        { -37, -61, -58,   0,   0, -35, -58, -23}
+        {   0,   2, -33,   0,   0, -17, -12,   6},
+        {   2, -43, -35,   0,   0, -17, -23,   1},
+        { -40, -58, -47,   0,   0, -31, -58, -25}
 };
 
 constexpr SCORE_TYPE KING_PAWN_SHIELD_OWN_PENALTIES_END[3][8] = {
-        {  13,   4,  19,   0,   0,  -3,  10,  21},
-        {  32,  31,  21,   0,   0, -16,  13,  24},
-        {  21,   9,   9,   0,   0,  -9,  24,  35}
+        {  11,   2,  20,   0,   0,  -5,  12,  23},
+        {  28,  27,  21,   0,   0, -20,  12,  25},
+        {  22,   6,   8,   0,   0, -10,  26,  36}
 };
 
 constexpr SCORE_TYPE KING_PAWN_SHIELD_OPP_PENALTIES_MID[3][8] = {
-        {  -4, -29,  -4,   0,   0,  -4, -19,   8},
-        {  -5, -12, -35,   0,   0, -32,   0, -13},
-        { -12, -85,-156,   0,   0, -87, -58, -43}
+        {  -3, -36,  -3,   0,   0,  -3, -19,   2},
+        {  -1, -23, -34,   0,   0, -27,  -6,  -7},
+        { -29,-114,-121,   0,   0, -92, -49, -39}
 };
 
 constexpr SCORE_TYPE KING_PAWN_SHIELD_OPP_PENALTIES_END[3][8] = {
-        {  -5,   4,  -9,   0,   0,  -5,  -4, -13},
-        {  31,  30,  18,   0,   0,  27,  22,  19},
-        {  58,  75,  46,   0,   0,  36,  67,  70}
+        {  -5,   4,  -8,   0,   0,  -5,  -5, -11},
+        {  31,  28,  13,   0,   0,  28,  19,  17},
+        {  61,  85,  47,   0,   0,  39,  61,  66}
 };
 
 constexpr SCORE_TYPE KING_RING_ATTACKS_MID[2][6] = {
-        {   0,  14,  18,  27,  18,   0},
-        {   0,   9,   3,   5,   6,   0}
+        {   0,  13,  20,  27,  19,   0},
+        {   0,   8,   5,   6,   6,   0}
 };
 
 constexpr SCORE_TYPE KING_RING_ATTACKS_END[2][6] = {
-        {   0, -11,  -4,  -7,  14,   0},
-        {   0,   1,   0,   1,  16,   0}
+        {   0,  -8,  -3,  -6,  15,   0},
+        {   0,   2,   1,   1,  17,   0}
 };
 
-constexpr SCORE_TYPE OUTPOST_PENALTY_MID =   -4;
-constexpr SCORE_TYPE OUTPOST_PENALTY_END =  -16;
+constexpr SCORE_TYPE OUTPOST_PENALTY_MID =   -3;
+constexpr SCORE_TYPE OUTPOST_PENALTY_END =  -18;
 
-constexpr SCORE_TYPE OUTPOST_KNIGHT_PENALTY_MID =  -26;
+constexpr SCORE_TYPE OUTPOST_KNIGHT_PENALTY_MID =  -28;
 constexpr SCORE_TYPE OUTPOST_KNIGHT_PENALTY_END =  -45;
 
-constexpr SCORE_TYPE OUTPOST_BISHOP_PENALTY_MID =  -41;
-constexpr SCORE_TYPE OUTPOST_BISHOP_PENALTY_END =   -5;
+constexpr SCORE_TYPE OUTPOST_BISHOP_PENALTY_MID =  -38;
+constexpr SCORE_TYPE OUTPOST_BISHOP_PENALTY_END =  -12;
 
-constexpr SCORE_TYPE SQUARE_OF_THE_PAWN_MID =  -22;
-constexpr SCORE_TYPE SQUARE_OF_THE_PAWN_END =   67;
-
+constexpr SCORE_TYPE SQUARE_OF_THE_PAWN_MID =  -17;
+constexpr SCORE_TYPE SQUARE_OF_THE_PAWN_END =   63;
 
 #endif //ALTAIRCHESSENGINE_EVALUATION_CONSTANTS_CPP
