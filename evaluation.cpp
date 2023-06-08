@@ -332,9 +332,9 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
             // If there is an enemy pawn controlling this square then we deduct 2.
             if (position.board[new_pos - 11] == BLACK_PAWN || position.board[new_pos - 9] == BLACK_PAWN)
-                mobility -= 2;
+                mobility--;
 
-            mobility += 3;
+            mobility++;
 
             // If we hit a piece of ours, we still add 1 to mobility because
             // that means we are protecting a piece of ours.
@@ -370,9 +370,9 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
             // If there is an enemy pawn controlling this square then we deduct 2.
             if (position.board[new_pos + 11] == WHITE_PAWN || position.board[new_pos + 9] == WHITE_PAWN)
-                mobility -= 2;
+                mobility--;
 
-            mobility += 3;
+            mobility++;
 
             // If we hit a piece of ours, we still add 1 to mobility because
             // that means we are protecting a piece of ours.
@@ -401,8 +401,8 @@ void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE
     scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_KNIGHT] * distance_to_opp_king);
     scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_KNIGHT] * distance_to_opp_king);
 
-    scores.mid += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_MID[WHITE_KNIGHT]);
-    scores.end += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_END[WHITE_KNIGHT]);
+    scores.mid += KNIGHT_MOBILITY_MID[mobility];
+    scores.end += KNIGHT_MOBILITY_END[mobility];
 
     scores.mid += king_ring_attacks[0] * KING_RING_ATTACKS_MID[0][WHITE_KNIGHT];
     scores.end += king_ring_attacks[0] * KING_RING_ATTACKS_END[0][WHITE_KNIGHT];
@@ -441,9 +441,9 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
                 // If there is an enemy pawn controlling this square then we deduct 2.
                 if (position.board[new_pos - 11] == BLACK_PAWN || position.board[new_pos - 9] == BLACK_PAWN)
-                    mobility -= 2;
+                    mobility--;
 
-                mobility += 3;
+                mobility++;
 
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
@@ -484,9 +484,9 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
 
                 // If there is an enemy pawn controlling this square then we deduct 2.
                 if (position.board[new_pos + 11] == WHITE_PAWN || position.board[new_pos + 9] == WHITE_PAWN)
-                    mobility -= 2;
+                    mobility--;
 
-                mobility += 3;
+                mobility++;
 
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
@@ -510,8 +510,8 @@ void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE
     scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_BISHOP] * distance_to_opp_king);
     scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_BISHOP] * distance_to_opp_king);
 
-    scores.mid += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_MID[WHITE_BISHOP]);
-    scores.end += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_END[WHITE_BISHOP]);
+    scores.mid += BISHOP_MOBILITY_MID[mobility];
+    scores.end += BISHOP_MOBILITY_END[mobility];
 
     scores.mid += king_ring_attacks[0] * KING_RING_ATTACKS_MID[0][WHITE_BISHOP];
     scores.end += king_ring_attacks[0] * KING_RING_ATTACKS_END[0][WHITE_BISHOP];
@@ -562,9 +562,9 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
                 // If there is an enemy pawn controlling this square then we deduct 2.
                 if (position.board[new_pos - 11] == BLACK_PAWN || position.board[new_pos - 9] == BLACK_PAWN)
-                    mobility -= 2;
+                    mobility--;
 
-                mobility += 3;
+                mobility++;
 
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
@@ -617,9 +617,9 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
 
                 // If there is an enemy pawn controlling this square then we deduct 2.
                 if (position.board[new_pos + 11] == WHITE_PAWN || position.board[new_pos + 9] == WHITE_PAWN)
-                    mobility -= 2;
+                    mobility--;
 
-                mobility += 3;
+                mobility++;
 
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
@@ -644,8 +644,8 @@ void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE p
     scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_ROOK] * distance_to_opp_king);
     scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_ROOK] * distance_to_opp_king);
 
-    scores.mid += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_MID[WHITE_ROOK]);  // Already gets open + semi-open file bonuses
-    scores.end += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_END[WHITE_ROOK]);  // Active rooks in the endgame are very important
+    scores.mid += ROOK_MOBILITY_MID[mobility];
+    scores.end += ROOK_MOBILITY_END[mobility];
 
     scores.mid += king_ring_attacks[0] * KING_RING_ATTACKS_MID[0][WHITE_ROOK];
     scores.end += king_ring_attacks[0] * KING_RING_ATTACKS_END[0][WHITE_ROOK];
@@ -695,9 +695,9 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
 
                 // If there is an enemy pawn controlling this square then we deduct 2.
                 if (position.board[new_pos - 11] == BLACK_PAWN || position.board[new_pos - 9] == BLACK_PAWN)
-                    mobility -= 2;
+                    mobility--;
 
-                mobility += 3;
+                mobility++;
 
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
@@ -749,9 +749,9 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
 
                 // If there is an enemy pawn controlling this square then we deduct 2.
                 if (position.board[new_pos + 11] == WHITE_PAWN || position.board[new_pos + 9] == WHITE_PAWN)
-                    mobility -= 2;
+                    mobility--;
 
-                mobility += 3;
+                mobility++;
 
                 // If we hit a piece of ours, we still add 1 to mobility because
                 // that means we are protecting a piece of ours.
@@ -776,8 +776,8 @@ void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE 
     scores.mid += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_MID[WHITE_QUEEN] * distance_to_opp_king);
     scores.end += static_cast<SCORE_TYPE>(OPP_KING_DISTANCE_COEFFICIENTS_END[WHITE_QUEEN] * distance_to_opp_king);
 
-    scores.mid += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_MID[WHITE_QUEEN]);  // Already gets open + semi-open file bonuses
-    scores.end += static_cast<SCORE_TYPE>(mobility * MOBILITY_COEFFICIENTS_END[WHITE_QUEEN]);  // Active queen in the endgame is pretty important
+    scores.mid += QUEEN_MOBILITY_MID[mobility];
+    scores.end += QUEEN_MOBILITY_END[mobility];
 
     scores.mid += king_ring_attacks[0] * KING_RING_ATTACKS_MID[0][WHITE_QUEEN];
     scores.end += king_ring_attacks[0] * KING_RING_ATTACKS_END[0][WHITE_QUEEN];
