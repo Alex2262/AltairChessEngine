@@ -388,15 +388,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     bool pv_node = alpha != beta - 1;
     bool singular_search = position.state_stack[thread_state.search_ply].excluded_move != NO_MOVE;
     bool null_search = !do_null && !root;
-    bool in_check;
-
-    if (position.state_stack[thread_state.search_ply].in_check != -1) {
-        in_check = static_cast<bool>(position.state_stack[thread_state.search_ply].in_check);
-    } else {
-        in_check = position.is_attacked(position.king_positions[position.side]);
-    }
-
-    if (in_check) depth++;  // Check extension
 
     // Start quiescence search at the start of regular negamax search to counter the horizon effect.
     if (depth <= 0) {
@@ -430,6 +421,14 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Get evaluation
     SCORE_TYPE static_eval = NO_EVALUATION;
+
+    bool in_check;
+
+    if (position.state_stack[thread_state.search_ply].in_check != -1) {
+        in_check = static_cast<bool>(position.state_stack[thread_state.search_ply].in_check);
+    } else {
+        in_check = position.is_attacked(position.king_positions[position.side]);
+    }
 
     if (!in_check) {
         static_eval = engine.probe_tt_evaluation(position.hash_key);
@@ -578,7 +577,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         }
 
         // Extensions
-        PLY_TYPE extension = 0;
+        PLY_TYPE extension = in_check;
 
         bool passed_pawn = get_selected(move) == WHITE_PAWN + BLACK_PAWN * position.side &&
                            MAILBOX_TO_STANDARD[get_target_square(move)] / 8 == 1 + 5 * position.side;
