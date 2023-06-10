@@ -18,6 +18,7 @@
 #include "see.h"
 
 
+// Initialize a table for Late Move Reductions, and the base reductions to be applied
 void Engine::initialize_lmr_reductions() {
     for (PLY_TYPE depth = 0; depth <= MAX_AB_DEPTH; depth++) {
         for (int moves = 0; moves < 64; moves++) {
@@ -34,6 +35,7 @@ void Engine::initialize_lmr_reductions() {
 }
 
 
+// Clear the transposition table
 void Engine::clear_tt() {
     for (TT_Entry& tt_entry : transposition_table) {
         tt_entry.key = 0;
@@ -46,6 +48,7 @@ void Engine::clear_tt() {
 }
 
 
+// Resets the Engine object for a new iterative deepening search
 void Engine::reset() {
     node_count = 0;
     std::memset(node_table, 0, sizeof(node_table));
@@ -72,6 +75,7 @@ void Engine::reset() {
 }
 
 
+// Resets the Engine object for a new game
 void Engine::new_game() {
     reset();
 
@@ -95,6 +99,7 @@ void Engine::new_game() {
 }
 
 
+// Detects a repetition (Checks for only 2 repetitions)
 bool Thread_State::detect_repetition() {
 
     for (int i = game_ply - 2; i >= game_ply - fifty_move; i--) {
@@ -107,6 +112,7 @@ bool Thread_State::detect_repetition() {
 }
 
 
+// Probes the transposition table for a matching entry based on the position's hash key and other factors.
 short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
                              TT_Entry& return_entry) {
     TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
@@ -117,6 +123,8 @@ short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha
         return_entry.flag = tt_entry.flag;
 
         return_entry.score = tt_entry.score;
+
+        // Adjust mate scores based on ply
         if (return_entry.score < -MATE_BOUND) return_entry.score += thread_states[thread_id].search_ply;
         else if (return_entry.score > MATE_BOUND) return_entry.score -= thread_states[thread_id].search_ply;
 
@@ -133,6 +141,8 @@ short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha
     return NO_HASH_ENTRY;
 }
 
+
+// Records an entry to the transposition table
 void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
                              SCORE_TYPE static_eval) {
 
@@ -152,6 +162,7 @@ void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score
 }
 
 
+// Probes the transposition table for a matching entry (only for quiescence search)
 short Engine::probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
                                SCORE_TYPE& return_score, MOVE_TYPE& tt_move) {
     TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
@@ -175,6 +186,7 @@ short Engine::probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alp
 }
 
 
+// Records an entry to the transposition table (only for quiescence search)
 void Engine::record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move,
                                SCORE_TYPE static_eval) {
     TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
@@ -193,6 +205,7 @@ void Engine::record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE sco
 }
 
 
+// Probes the transposition table for an evaluation
 SCORE_TYPE Engine::probe_tt_evaluation(HASH_TYPE hash_key) {
     TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
 
@@ -200,6 +213,7 @@ SCORE_TYPE Engine::probe_tt_evaluation(HASH_TYPE hash_key) {
     return NO_EVALUATION;
 }
 
+// Prefetching for cache
 void Engine::tt_prefetch_read(HASH_TYPE hash_key) {
     __builtin_prefetch(&transposition_table[hash_key % transposition_table.size()]);
 }
@@ -209,24 +223,28 @@ void Engine::tt_prefetch_write(HASH_TYPE hash_key) {
 }
 
 
+// History entry updates with scaling
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
     score -= (score * abs(bonus)) / 324;
     score += bonus * 32;
 }
 
 
+// The Quiescence Search function
+// This is used to counter the horizon effect in which negamax is unable to resolve
+// noisy moves after a certain depth has been reached. The qsearch function will look at remaining captures
+// until it reaches a quiet position.
 SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id) {
 
+    // Initialize Variables
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
 
-    engine.tt_prefetch_read(position.hash_key);
+    engine.tt_prefetch_read(position.hash_key);  // Prefetch the TT for cache
 
-    // position.print_board();
     engine.node_count++;
-    // engine.selective_depth = std::max(engine.search_ply, engine.selective_depth);
 
-    // Check time and max nodes
+    // Check the remaining time
     if (thread_state.current_search_depth >= engine.min_depth && (engine.node_count & 2047) == 0) {
         auto time = std::chrono::high_resolution_clock::now();
         uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>
@@ -237,8 +255,10 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         }
     }
 
+    // Check remaining nodes to be searched
     if (engine.max_nodes && engine.node_count >= engine.max_nodes) engine.stopped = true;
 
+    // Probe the transposition table
     SCORE_TYPE tt_value = 0;
     MOVE_TYPE tt_move = NO_MOVE;
     short tt_return_type = engine.probe_tt_entry_q(thread_id, position.hash_key, alpha, beta, tt_value, tt_move);
@@ -247,30 +267,36 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         return tt_value;
     }
 
+    // Get the static evaluation of the position
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
     if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
-    // SCORE_TYPE static_eval = evaluate(position);
 
+    // Return the evaluation if we have reached a stand-pat, or we have reached the maximum depth
     if (depth == 0 || static_eval >= beta) return static_eval;
+
+    // Set alpha to the greatest of either alpha or the evaluation
+    alpha = (static_eval > alpha) ? static_eval : alpha;
 
     // Variable to record the hash flag
     short tt_hash_flag = HASH_FLAG_ALPHA;
-
-    alpha = (static_eval > alpha) ? static_eval : alpha;
 
     // Set values for State
     position.set_state(thread_state.search_ply, thread_state.fifty_move);
     position.state_stack[thread_state.search_ply].evaluation = static_eval;
 
+    // Get the moves and score them
     position.get_pseudo_legal_captures(thread_state.search_ply);
     get_capture_scores(thread_state, position, position.moves[thread_state.search_ply], position.move_scores[thread_state.search_ply], tt_move);
 
+    // Variables for getting information about the best score / best move
     SCORE_TYPE best_score = static_eval;
     MOVE_TYPE best_move = NO_MOVE;
 
+    // Search loop
     int legal_moves = 0;
     for (int move_index = 0; move_index < static_cast<int>(position.moves[thread_state.search_ply].size()); move_index++) {
 
+        // Sort and choose the next move to be searched
         sort_next_move(position.moves[thread_state.search_ply], position.move_scores[thread_state.search_ply], move_index);
         MOVE_TYPE move = position.moves[thread_state.search_ply][move_index];
 
@@ -288,6 +314,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             continue;
         }
 
+        // Attempt the current pseudo-legal move
         bool attempt = position.make_move(move, thread_state.search_ply, thread_state.fifty_move);
 
         if (!attempt) {
@@ -295,6 +322,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             continue;
         }
 
+        // Recursively search
         thread_state.search_ply++;
         position.side ^= 1;
 
@@ -303,12 +331,14 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         position.side ^= 1;
         thread_state.search_ply--;
 
+        // Undo the move
         position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
 
         if (engine.stopped) return 0;
 
         legal_moves++;
 
+        // Update information
         if (return_eval > best_score) {
             best_score = return_eval;
             best_move = move;
@@ -338,6 +368,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     }
 
+    // Save to the transposition table
     engine.tt_prefetch_write(position.hash_key);
     engine.record_tt_entry_q(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, static_eval);
 
@@ -345,25 +376,29 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 }
 
 
+// The core of the engine, negamax.
+// This is a recursive search function based on the minimax algorithm that uses alpha-beta pruning
+// among other heuristics.
 SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, int thread_id) {
 
+    // Initialize Variables
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
+    engine.selective_depth = std::max(thread_state.search_ply, engine.selective_depth);
 
-    engine.tt_prefetch_read(position.hash_key);
+    engine.tt_prefetch_read(position.hash_key);  // Prefetch
 
+    // Initialize PV length
     if (thread_id == 0) {
-        // Initialize PV length
         engine.pv_length[thread_state.search_ply] = thread_state.search_ply;
     }
-
-    engine.selective_depth = std::max(thread_state.search_ply, engine.selective_depth);
 
     bool root = !thread_state.search_ply;
 
     // Early search exits
     if (!root) {
 
+        // Depth guard
         if (thread_state.search_ply >= MAX_AB_DEPTH - 1) return evaluate(position);
 
         // Detect repetitions and fifty move rule
@@ -383,16 +418,17 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     }
 
+    // Start quiescence search at the start of regular negamax search to counter the horizon effect.
+    if (depth <= 0) {
+        return qsearch(engine, alpha, beta, engine.max_q_depth, thread_id);
+    }
+
+    // Information about the current node
     // Hack to determine pv_node, because when it is not a pv node we are being searched by
     // a zero window with alpha == beta - 1
     bool pv_node = alpha != beta - 1;
     bool singular_search = position.state_stack[thread_state.search_ply].excluded_move != NO_MOVE;
     bool null_search = !do_null && !root;
-
-    // Start quiescence search at the start of regular negamax search to counter the horizon effect.
-    if (depth <= 0) {
-        return qsearch(engine, alpha, beta, engine.max_q_depth, thread_id);
-    }
 
     // Increase node count
     engine.node_count++;
@@ -417,23 +453,16 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Variable to record the hash flag
     short tt_hash_flag = HASH_FLAG_ALPHA;
 
-    // if (!pv_node) std::cout << alpha << " " << beta << std::endl;
-
     // Get evaluation
     SCORE_TYPE static_eval = NO_EVALUATION;
 
+    // Check if we are currently in check.
     bool in_check;
 
     if (position.state_stack[thread_state.search_ply].in_check != -1) {
         in_check = static_cast<bool>(position.state_stack[thread_state.search_ply].in_check);
     } else {
         in_check = position.is_attacked(position.king_positions[position.side]);
-    }
-
-    if (!in_check) {
-        static_eval = engine.probe_tt_evaluation(position.hash_key);
-        if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
-        position.state_stack[thread_state.search_ply].evaluation = static_eval;
     }
 
     // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
@@ -443,17 +472,26 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // that the position is awful.
     bool improving = false;
 
+    // Save the current evaluation
+    if (!in_check) {
+        static_eval = engine.probe_tt_evaluation(position.hash_key);
+        if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
+        position.state_stack[thread_state.search_ply].evaluation = static_eval;
+    }
+
+    // Calculate if we are "improving"
     if (!in_check && static_eval != NO_EVALUATION && thread_state.search_ply >= 2) {
         SCORE_TYPE past_eval = position.state_stack[thread_state.search_ply - 2].evaluation;
         if (past_eval != NO_EVALUATION && static_eval > past_eval) improving = true;
     }
 
-    // Internal Iterative Reduction. Rebel's idea
+    // Internal Iterative Reduction. Based on Rebel's idea
     if (tt_move == NO_MOVE && !singular_search) {
         if (depth >= 4) depth--;
         if (depth >= 8) depth--;
     }
 
+    // Forward Pruning Methods
     if (!pv_node && !in_check && !singular_search && abs(beta) < MATE_BOUND) {
 
         // Reverse Futility Pruning
@@ -500,11 +538,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (!position.get_is_pseudo_legal(tt_move)) tt_move = NO_MOVE;
     }
 
-    int legal_moves = 0;
+    // Used for the continuation history heuristic
     MOVE_TYPE last_move_one = thread_state.search_ply >= 1 ? position.state_stack[thread_state.search_ply - 1].move : NO_MOVE;
     MOVE_TYPE last_move_two = thread_state.search_ply >= 2 ? position.state_stack[thread_state.search_ply - 2].move : NO_MOVE;
-
-    bool recapture_found = false;
 
     // Retrieving the pseudo legal moves in the current position as a list of integers
     // Score the moves
@@ -516,7 +552,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     SCORE_TYPE best_score = -SCORE_INF;
     MOVE_TYPE best_move = NO_MOVE;
 
+    // Other information for pruning / reductions
     int alpha_raised_count = 0;
+    int legal_moves = 0;
+    bool recapture_found = false;
 
     // Iterate through moves and recursively search with Negamax
     for (int move_index = 0; move_index < static_cast<int>(position.moves[thread_state.search_ply].size()); move_index++) {
@@ -569,8 +608,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             continue;
         }
 
+        // Calculate if the current move is a recapture
         bool recapture = false;
-
         if (last_move_one != NO_MOVE && get_target_square(last_move_one) == get_target_square(move)) {
             recapture_found = true;
             recapture = true;
@@ -635,6 +674,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         PLY_TYPE new_depth = depth + extension - 1;
 
+        // Prepare for recursive searching
         thread_state.search_ply++;
         thread_state.fifty_move++;
         thread_state.game_ply++;
@@ -655,12 +695,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         uint64_t current_nodes = engine.node_count;
 
         double reduction;
-
         bool full_depth_zero_window;
-
         bool bad_capture = move_score < 10000;
 
-        // Late Move Reductions
+        // Late Move Reductions (LMR)
         // The idea that if moves are ordered well, then moves that are searched
         // later shouldn't be as good, and therefore we don't need to search them to a very high depth
         if (legal_moves >= 2
@@ -669,24 +707,31 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             && (quiet || bad_capture)
             ){
 
+            // Get the base reduction based on depth and moves searched
             reduction = quiet ?
                     engine.LMR_REDUCTIONS_QUIET[std::min<PLY_TYPE>(depth, MAX_AB_DEPTH - 1)][std::min(legal_moves, 63)] :
                     engine.LMR_REDUCTIONS_NOISY[std::min<PLY_TYPE>(depth, MAX_AB_DEPTH - 1)][std::min(legal_moves, 63)];
 
+            // Fewer reductions if we are in a pv node, since moves are likely to be better and more important
             reduction -= pv_node;
 
+            // Fewer reductions when improving, since the current node and moves searched in it are more important
             reduction -= improving * 0.9;
 
+            // Fewer reductions for interesting moves which we define above
             reduction -= interesting;
 
+            // Do not reduce moves as much if we are in check, because the position is possibly volatile
             reduction -= in_check;
 
+            // Scale the reduction based on the move's history score
             reduction -= move_history_score > 0 ? move_history_score / 7200.0 : move_history_score / 16000.0;
 
+            // Scale reductions if the move is a recapture, or if we have already found a recapture
             reduction -= recapture * 0.5;
-
             reduction += !recapture && recapture_found && quiet && !move_gives_check && move_history_score <= 0;
 
+            // Scale reductions based on how many moves have already raised alpha
             reduction += static_cast<double>(alpha_raised_count) * (0.3 + 0.5 * get_is_capture(tt_move));
 
             // My idea that in a null move search you can be more aggressive with LMR
@@ -695,35 +740,40 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             // Idea from Weiss, where you reduce more if the TT move is a capture
             reduction += get_is_capture(tt_move) * 0.3;
 
+            // Clamp the LMR depth
             auto lmr_depth = std::clamp<PLY_TYPE>(new_depth - static_cast<PLY_TYPE>(reduction), 1, new_depth);
 
+            // Recursively search
             return_eval = -negamax(engine, -alpha - 1, -alpha, lmr_depth, true, thread_id);
 
+            // Check if we need to search at full depth with a zero window
             full_depth_zero_window = return_eval > alpha && lmr_depth != new_depth;
         }
 
         else {
+            // Check if we need to search at full depth with a zero window
             full_depth_zero_window = !pv_node || legal_moves >= 1;
         }
 
-        // Principle Variation Search
-        // We assume that the first move should be the principle variation / best move, so the rest of the moves
-        // should be searched with a zero window
+        // Search at a full depth with a zero window
+        // The zero window is a type of assumption that the current move being searched will not raise alpha,
+        // which is why the bounds are [-alpha - 1, -alpha] instead of [-beta, -alpha]
         if (full_depth_zero_window)
             return_eval = -negamax(engine, -alpha - 1, -alpha, new_depth, true, thread_id);
 
+        // Search to a full depth at normal bounds if necessary
         if (return_eval == -SCORE_INF || (pv_node && ((return_eval > alpha && return_eval < beta) || legal_moves == 0)))
             return_eval = -negamax(engine, -beta, -alpha, new_depth, true, thread_id);
 
+        // Undo the move and other changes
         position.side ^= 1;
         thread_state.game_ply--;
-
         position.state_stack[thread_state.search_ply].in_check = -1;
-
         thread_state.search_ply--;
 
         position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
 
+        // Return early if the engine is stopped in order to prevent changes
         if (engine.stopped) return 0;
 
         // Update legal move count
@@ -734,12 +784,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             best_score = return_eval;
             best_move = move;
 
+            // Calculate nodes for each move for time management scaling
             if (root) {
                 engine.node_table[get_selected(best_move)][MAILBOX_TO_STANDARD[get_target_square(best_move)]] += engine.node_count - current_nodes;
             }
 
+            // Write moves into the PV table
             if (thread_id == 0) {
-                // Write moves into PV table
                 engine.pv_table[thread_state.search_ply][thread_state.search_ply] = move;
                 for (int next_ply = thread_state.search_ply+1; next_ply < engine.pv_length[thread_state.search_ply+1]; next_ply++) {
                     engine.pv_table[thread_state.search_ply][next_ply] = engine.pv_table[thread_state.search_ply + 1][next_ply];
@@ -748,6 +799,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 engine.pv_length[thread_state.search_ply] = engine.pv_length[thread_state.search_ply + 1];
             }
 
+            // The move has raised alpha
             if (return_eval > alpha) {
                 alpha_raised_count++;
                 alpha = return_eval;
