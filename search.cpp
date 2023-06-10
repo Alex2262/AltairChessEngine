@@ -695,8 +695,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             // Idea from Weiss, where you reduce more if the TT move is a capture
             reduction += get_is_capture(tt_move) * 0.3;
 
-            PLY_TYPE lmr_depth = static_cast<PLY_TYPE>(new_depth -
-                                 std::min<PLY_TYPE>(new_depth, std::max<PLY_TYPE>(0, static_cast<PLY_TYPE>(reduction))));
+            auto lmr_depth = std::clamp<PLY_TYPE>(new_depth - static_cast<PLY_TYPE>(reduction), 1, new_depth);
 
             return_eval = -negamax(engine, -alpha - 1, -alpha, lmr_depth, true, thread_id);
 
