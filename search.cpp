@@ -644,14 +644,17 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         bool move_gives_check = position.is_attacked(position.king_positions[position.side]);
         position.state_stack[thread_state.search_ply].in_check = static_cast<int>(move_gives_check);
 
+
+        bool is_killer_move = move == thread_state.killer_moves[0][thread_state.search_ply - 1] ||
+                              move == thread_state.killer_moves[1][thread_state.search_ply - 1];
+
+        bool interesting = passed_pawn || queen_promotion || move_gives_check || is_killer_move;
+
         SCORE_TYPE return_eval = -SCORE_INF;
 
         uint64_t current_nodes = engine.node_count;
 
         double reduction;
-
-        bool is_killer_move = move == thread_state.killer_moves[0][thread_state.search_ply - 1] ||
-                              move == thread_state.killer_moves[1][thread_state.search_ply - 1];
 
         bool full_depth_zero_window;
 
@@ -674,9 +677,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             reduction -= improving * 0.9;
 
-            reduction -= is_killer_move * 0.75;
-
-            reduction -= move_gives_check * 0.6;
+            reduction -= interesting;
 
             reduction -= in_check;
 
