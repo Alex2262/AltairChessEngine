@@ -58,7 +58,6 @@ void Engine::reset() {
         thread_state.search_ply = 0;
 
         std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
-        std::memset(thread_state.continuation_history, 0, sizeof(thread_state.continuation_history));
     }
 
     selective_depth = 0;
