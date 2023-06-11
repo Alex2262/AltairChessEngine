@@ -47,11 +47,11 @@ SCORE_TYPE evaluate(Position& position);
 SCORE_TYPE score_move(const Thread_State& thread_state, Position& position, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move_one, MOVE_TYPE last_move_two);
 SCORE_TYPE score_capture(const Thread_State& thread_state, Position& position, MOVE_TYPE move, MOVE_TYPE tt_move);
 
-void get_move_scores(const Thread_State& thread_state, Position& position, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+void get_move_scores(const Thread_State& thread_state, Position& position, std::vector<Move_Struct>& moves,
                      MOVE_TYPE tt_move, MOVE_TYPE last_move_one, MOVE_TYPE last_move_two);
-void get_capture_scores(const Thread_State& thread_state, Position& position, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+void get_capture_scores(const Thread_State& thread_state, Position& position, std::vector<Move_Struct>& moves,
                         MOVE_TYPE tt_move);
-void sort_next_move(std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores, int current_count);
+void sort_next_move(std::vector<Move_Struct>& moves, int current_count);
 
 template<int n>
 struct KingRing {
