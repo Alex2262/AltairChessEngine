@@ -255,8 +255,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     engine.tt_prefetch_read(position.hash_key);  // Prefetch the TT for cache
 
-    engine.node_count++;
-
     // Check the remaining time
     if (thread_state.current_search_depth >= engine.min_depth && (engine.node_count & 2047) == 0 && engine.check_time()) {
         return 0;
@@ -328,6 +326,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
             continue;
         }
+
+        engine.node_count++;
 
         // Recursively search
         thread_state.search_ply++;
@@ -441,9 +441,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     bool pv_node = alpha != beta - 1;
     bool singular_search = position.state_stack[thread_state.search_ply].excluded_move != NO_MOVE;
     bool null_search = !do_null && !root;
-
-    // Increase node count
-    engine.node_count++;
 
     // Set values for State
     position.set_state(thread_state.search_ply, thread_state.fifty_move);
@@ -619,6 +616,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
             continue;
         }
+
+        // Increase node count
+        engine.node_count++;
 
         // Calculate if the current move is a recapture
         bool recapture = false;
