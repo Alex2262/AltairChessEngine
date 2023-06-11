@@ -222,6 +222,20 @@ void Engine::tt_prefetch_write(HASH_TYPE hash_key) {
 }
 
 
+bool Engine::check_time() {
+    auto time = std::chrono::high_resolution_clock::now();
+    uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::time_point_cast<std::chrono::milliseconds>(time).time_since_epoch()).count();
+
+    if (current_time - start_time >= hard_time_limit) {
+        stopped = true;
+        return true;
+    }
+
+    return false;
+}
+
+
 // History entry updates with scaling
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
     score -= (score * abs(bonus)) / 324;
@@ -244,14 +258,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     engine.node_count++;
 
     // Check the remaining time
-    if (thread_state.current_search_depth >= engine.min_depth && (engine.node_count & 2047) == 0) {
-        auto time = std::chrono::high_resolution_clock::now();
-        uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>
-                (std::chrono::time_point_cast<std::chrono::milliseconds>(time).time_since_epoch()).count();
-
-        if (current_time - engine.start_time >= engine.hard_time_limit) {
-            engine.stopped = true;
-        }
+    if (thread_state.current_search_depth >= engine.min_depth && (engine.node_count & 2047) == 0 && engine.check_time()) {
+        return 0;
     }
 
     // Check remaining nodes to be searched
@@ -390,6 +398,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Initialize PV length
     if (thread_id == 0) {
         engine.pv_length[thread_state.search_ply] = thread_state.search_ply;
+    }
+
+    // Check the remaining time
+    if (thread_state.current_search_depth >= engine.min_depth && (engine.node_count & 2047) == 0 && engine.check_time()) {
+        return 0;
     }
 
     bool root = !thread_state.search_ply;

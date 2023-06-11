@@ -201,6 +201,8 @@ public:
 
     void tt_prefetch_read(HASH_TYPE hash_key);
     void tt_prefetch_write(HASH_TYPE hash_key);
+
+    bool check_time();
 };
 
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus);
