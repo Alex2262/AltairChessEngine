@@ -101,7 +101,7 @@ void Engine::new_game() {
 // Detects a repetition (Checks for only 2 repetitions)
 bool Thread_State::detect_repetition() {
 
-    for (int i = game_ply - 2; i >= game_ply - fifty_move; i--) {
+    for (int i = game_ply - 2; i >= std::max(game_ply - fifty_move, 0); i--) {
         if (repetition_table[i] == repetition_table[game_ply]) {
             return true;
         }
