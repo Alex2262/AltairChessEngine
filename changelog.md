@@ -5253,7 +5253,7 @@ LLR   | 1.26 (-2.94, 2.94) [-5.00, 0.00]
 GAMES | N: 8016 W: 2036 L: 2021 D: 3959
 ```
 
-### 2.4.8
+### 2.4.8 (3.0.0)
 More aggressive Noisy LMR values
 
 ```
@@ -5261,4 +5261,143 @@ ELO   | 3.24 +- 2.53 (95%)
 SPRT  | 8.0+0.08s Threads=1 Hash=16MB
 LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
 GAMES | N: 40352 W: 11470 L: 11094 D: 17788
+```
+
+### 3.0.1
+Fischer Random Chess Implemented
+
+### 3.0.2
+Small Singular Extensions fix
+
+```
+ELO   | 1.93 +- 3.34 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | -0.10 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 23032 W: 6465 L: 6337 D: 10230
+```
+
+### 3.0.3
+bug-fix that possibly fixes some out of bounds errors
+```
+ELO   | -0.29 +- 2.19 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.95 (-2.94, 2.94) [-4.00, 1.00]
+GAMES | N: 53632 W: 14862 L: 14906 D: 23864
+```
+
+### 3.0.4
+More history bonus when improving or for pv-nodes
+
+```
+ELO   | 1.64 +- 1.86 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | -1.61 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 73928 W: 20668 L: 20319 D: 32941
+```
+
+### 3.0.5
+Scale soft time limit by best move node count percentage
+
+STC:
+```
+ELO   | 20.14 +- 9.64 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.97 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 2712 W: 814 L: 657 D: 1241
+```
+
+LTC:
+```
+ELO   | 17.75 +- 8.68 (95%)
+SPRT  | 40.0+0.40s Threads=1 Hash=128MB
+LLR   | 3.02 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 3056 W: 837 L: 681 D: 1538
+```
+
+### 3.0.6
+Allow checks in LMR
+```
+ELO   | 12.90 +- 7.49 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 4472 W: 1295 L: 1129 D: 2048
+```
+
+### 3.0.7 & 3.0.8
+Pruning fixes (kept for simplification)
+
+First part
+```
+ELO   | -9.70 +- 7.61 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | -3.02 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 4264 W: 1077 L: 1196 D: 1991
+```
+
+Second part
+```
+ELO   | 8.53 +- 5.80 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 7456 W: 2114 L: 1931 D: 3411
+```
+
+### 3.0.9
+Mobility arrays instead of multipliers
+
+```
+ELO   | 4.56 +- 3.60 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 3.03 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 19816 W: 5633 L: 5373 D: 8810
+```
+
+### 3.1.0
+Change check extension location to extensions area for simplification
+
+```
+ELO   | 1.04 +- 2.18 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | -2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 52496 W: 14231 L: 14074 D: 24191
+```
+
+### 3.1.1
+Interesting moves and fewer reductions for these moves
+
+```
+ELO   | 5.10 +- 3.97 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.99 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 15600 W: 4266 L: 4037 D: 7297
+```
+
+### 3.1.2
+Clamp the LMR depth to prevent reducing into qsearch immediately
+
+```
+ELO   | 4.36 +- 3.48 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.98 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 20552 W: 5668 L: 5410 D: 9474
+```
+
+### 3.1.3
+Do not reset continuation histories every move
+
+```
+ELO   | 17.87 +- 9.00 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 3056 W: 894 L: 737 D: 1425
+```
+
+### 3.1.4
+Improving Heuristic for futility pruning
+
+```
+ELO   | 2.52 +- 1.68 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 87320 W: 23705 L: 23072 D: 40543
 ```
