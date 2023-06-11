@@ -291,7 +291,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Get the moves and score them
     position.get_pseudo_legal_captures(thread_state.search_ply);
-    get_capture_scores(thread_state, position, position.moves[thread_state.search_ply], position.move_scores[thread_state.search_ply], tt_move);
+    get_capture_scores(thread_state, position, position.moves[thread_state.search_ply], tt_move);
 
     // Variables for getting information about the best score / best move
     SCORE_TYPE best_score = static_eval;
@@ -302,8 +302,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     for (int move_index = 0; move_index < static_cast<int>(position.moves[thread_state.search_ply].size()); move_index++) {
 
         // Sort and choose the next move to be searched
-        sort_next_move(position.moves[thread_state.search_ply], position.move_scores[thread_state.search_ply], move_index);
-        MOVE_TYPE move = position.moves[thread_state.search_ply][move_index];
+        sort_next_move(position.moves[thread_state.search_ply], move_index);
+        MOVE_TYPE move = position.moves[thread_state.search_ply][move_index].move;
 
         // Delta / Futility pruning
         // If the piece we capture plus a margin cannot even improve our score then
@@ -554,7 +554,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Retrieving the pseudo legal moves in the current position as a list of integers
     // Score the moves
     position.get_pseudo_legal_moves(thread_state.search_ply);
-    get_move_scores(thread_state, position, position.moves[thread_state.search_ply], position.move_scores[thread_state.search_ply],
+    get_move_scores(thread_state, position, position.moves[thread_state.search_ply],
                     tt_move, last_move_one, last_move_two);
 
     // Best score for fail soft, and best move for tt
@@ -571,9 +571,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         // Sort the next move. If an early move causes a cutoff then we have saved time
         // by only sorting one or a few moves rather than the whole list.
-        sort_next_move(position.moves[thread_state.search_ply], position.move_scores[thread_state.search_ply], move_index);
-        MOVE_TYPE move = position.moves[thread_state.search_ply][move_index];
-        SCORE_TYPE move_score = position.move_scores[thread_state.search_ply][move_index];
+        sort_next_move(position.moves[thread_state.search_ply], move_index);
+        MOVE_TYPE move = position.moves[thread_state.search_ply][move_index].move;
+        SCORE_TYPE move_score = position.moves[thread_state.search_ply][move_index].score;
 
         // Skip the excluded move since we are in a singular search
         if (move == position.state_stack[thread_state.search_ply].excluded_move) continue;
@@ -853,7 +853,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
                 // Deduct bonus for moves that don't raise alpha
                 for (int failed_move_index = 0; failed_move_index < move_index; failed_move_index++) {
-                    MOVE_TYPE temp_move = position.moves[thread_state.search_ply][failed_move_index];
+                    MOVE_TYPE temp_move = position.moves[thread_state.search_ply][failed_move_index].move;
                     if (!get_is_capture(temp_move) && get_move_type(move) != MOVE_TYPE_EP) {
                         update_history_entry(thread_state.history_moves
                                              [get_selected(temp_move)]

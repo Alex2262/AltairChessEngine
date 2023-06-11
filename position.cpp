@@ -14,7 +14,6 @@
 void Position::clear_movelist() {
     for (int i = 0; i < TOTAL_MAX_DEPTH; i++) {
         moves[i].clear();
-        move_scores[i].clear();
     }
 }
 
@@ -779,8 +778,10 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                                     }
                                 }
                                 moves[ply].push_back(
-                                        encode_move(new_pos, G1, WHITE_KING,
-                                                    EMPTY, MOVE_TYPE_CASTLE, 0, false)
+                                        Move_Struct{encode_move(new_pos, G1, WHITE_KING,
+                                                    EMPTY, MOVE_TYPE_CASTLE, 0, false),
+                                                    0,
+                                                    false}
                                 );
                             } else if ((castle_ability_bits & 2) == 2 && pos == starting_rook_pos[WHITE_COLOR][1]) {
                                 if (fischer_random_chess) {
@@ -800,8 +801,10 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                                     }
                                 }
                                 moves[ply].push_back(
-                                        encode_move(new_pos, C1, WHITE_KING,
-                                                    EMPTY, MOVE_TYPE_CASTLE, 0, false)
+                                        Move_Struct{encode_move(new_pos, C1, WHITE_KING,
+                                                    EMPTY, MOVE_TYPE_CASTLE, 0, false),
+                                                    0,
+                                                    false}
                                 );
                             }
 
@@ -817,9 +820,11 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                     // En Passant
                     if (piece == WHITE_PAWN && (increment == -11 || increment == -9) && occupied == EMPTY) {
                         if (new_pos == ep_square) {
-                            moves[ply].push_back(encode_move(pos, new_pos,
+                            moves[ply].push_back(Move_Struct{encode_move(pos, new_pos,
                                                                  WHITE_PAWN, EMPTY,
-                                                                 MOVE_TYPE_EP, 0, false));
+                                                                 MOVE_TYPE_EP, 0, false),
+                                                             0,
+                                                             false});
                         }
 
                         break;
@@ -828,10 +833,12 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                     // Promotion
                     if (piece == WHITE_PAWN && new_pos < 31) {
                         for (PIECE_TYPE new_piece = WHITE_KNIGHT; new_piece < WHITE_KING; new_piece++) {
-                            moves[ply].push_back(encode_move(pos, new_pos,
+                            moves[ply].push_back(Move_Struct{encode_move(pos, new_pos,
                                                                  WHITE_PAWN, occupied,
                                                                  MOVE_TYPE_PROMOTION, new_piece,
-                                                                 occupied < EMPTY));
+                                                                 occupied < EMPTY),
+                                                             0,
+                                                             false});
                         }
 
                         break;
@@ -839,16 +846,20 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
 
                     // Captures
                     if (occupied < EMPTY) {
-                        moves[ply].push_back(encode_move(pos, new_pos,
+                        moves[ply].push_back(Move_Struct{encode_move(pos, new_pos,
                                                              piece, occupied,
-                                                             MOVE_TYPE_NORMAL, 0, true));
+                                                             MOVE_TYPE_NORMAL, 0, true),
+                                                         0,
+                                                         false});
 
                         break;
                     }
 
-                    moves[ply].push_back(encode_move(pos, new_pos,
+                    moves[ply].push_back(Move_Struct{encode_move(pos, new_pos,
                                                          piece, EMPTY,
-                                                         MOVE_TYPE_NORMAL, 0, false));
+                                                         MOVE_TYPE_NORMAL, 0, false),
+                                                     0,
+                                                     false});
 
                     if (piece == WHITE_PAWN || piece == WHITE_KNIGHT || piece == WHITE_KING) break;
                 }
@@ -891,8 +902,10 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                                 }
 
                                 moves[ply].push_back(
-                                        encode_move(new_pos, G8, BLACK_KING,
-                                                    EMPTY, MOVE_TYPE_CASTLE, 0, false)
+                                        Move_Struct{encode_move(new_pos, G8, BLACK_KING,
+                                                    EMPTY, MOVE_TYPE_CASTLE, 0, false),
+                                                    0,
+                                                    false}
                                 );
                             } else if ((castle_ability_bits & 8) == 8 && pos == starting_rook_pos[BLACK_COLOR][1]) {
                                 if (fischer_random_chess) {
@@ -912,8 +925,10 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                                     }
                                 }
                                 moves[ply].push_back(
-                                        encode_move(new_pos, C8, BLACK_KING,
-                                                    EMPTY, MOVE_TYPE_CASTLE, 0, false)
+                                        Move_Struct{encode_move(new_pos, C8, BLACK_KING,
+                                                    EMPTY, MOVE_TYPE_CASTLE, 0, false),
+                                                    0,
+                                                    false}
                                 );
                             }
 
@@ -928,9 +943,11 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                     // En Passant
                     if (piece == BLACK_PAWN && (increment == 11 || increment == 9) && occupied == EMPTY) {
                         if (new_pos == ep_square) {
-                            moves[ply].push_back(encode_move(pos, new_pos,
+                            moves[ply].push_back(Move_Struct{encode_move(pos, new_pos,
                                                                  BLACK_PAWN, EMPTY,
-                                                                 MOVE_TYPE_EP, 0, false));
+                                                                 MOVE_TYPE_EP, 0, false),
+                                                             0,
+                                                             false});
                         }
 
                         break;
@@ -939,10 +956,12 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                     // Promotion
                     if (piece == BLACK_PAWN && new_pos > 88) {
                         for (PIECE_TYPE new_piece = BLACK_KNIGHT; new_piece <= BLACK_QUEEN; new_piece++) {
-                            moves[ply].push_back(encode_move(pos, new_pos,
+                            moves[ply].push_back(Move_Struct{encode_move(pos, new_pos,
                                                                  BLACK_PAWN, occupied,
                                                                  MOVE_TYPE_PROMOTION, new_piece,
-                                                                 occupied < BLACK_PAWN));
+                                                                 occupied < BLACK_PAWN),
+                                                             0,
+                                                             false});
                         }
 
                         break;
@@ -950,16 +969,20 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
 
                     // Captures
                     if (occupied < BLACK_PAWN) {
-                        moves[ply].push_back(encode_move(pos, new_pos,
+                        moves[ply].push_back(Move_Struct{encode_move(pos, new_pos,
                                                              piece, occupied,
-                                                             MOVE_TYPE_NORMAL, 0, true));
+                                                             MOVE_TYPE_NORMAL, 0, true),
+                                                         0,
+                                                         false});
 
                         break;
                     }
 
-                    moves[ply].push_back(encode_move(pos, new_pos,
+                    moves[ply].push_back(Move_Struct{encode_move(pos, new_pos,
                                                          piece, EMPTY,
-                                                         MOVE_TYPE_NORMAL, 0, false));
+                                                         MOVE_TYPE_NORMAL, 0, false),
+                                                     0,
+                                                     false});
 
                     if (piece == BLACK_PAWN || piece == BLACK_KNIGHT || piece == BLACK_KING) break;
                 }
@@ -991,9 +1014,11 @@ void Position::get_pseudo_legal_captures(PLY_TYPE ply) {
                     if (occupied == PADDING || occupied < BLACK_PAWN) break;
 
                     if (occupied < EMPTY) {
-                        moves[ply].push_back(encode_move(pos, new_pos,
+                        moves[ply].push_back(Move_Struct{encode_move(pos, new_pos,
                                                              piece, occupied,
-                                                             MOVE_TYPE_NORMAL, 0, true));
+                                                             MOVE_TYPE_NORMAL, 0, true),
+                                                         0,
+                                                         false});
 
                         break;
                     }
@@ -1021,9 +1046,11 @@ void Position::get_pseudo_legal_captures(PLY_TYPE ply) {
                     if (occupied != EMPTY && occupied > WHITE_KING) break;
 
                     if (occupied < BLACK_PAWN) {
-                        moves[ply].push_back(encode_move(pos, new_pos,
+                        moves[ply].push_back(Move_Struct{encode_move(pos, new_pos,
                                                              piece, occupied,
-                                                             MOVE_TYPE_NORMAL, 0, true));
+                                                             MOVE_TYPE_NORMAL, 0, true),
+                                                         0,
+                                                         false});
 
                         break;
                     }

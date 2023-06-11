@@ -1190,36 +1190,30 @@ SCORE_TYPE score_capture(const Thread_State& thread_state, Position& position,  
 }
 
 
-void get_move_scores(const Thread_State& thread_state, Position& position, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+void get_move_scores(const Thread_State& thread_state, Position& position, std::vector<Move_Struct>& moves,
                      MOVE_TYPE tt_move, MOVE_TYPE last_move_one, MOVE_TYPE last_move_two) {
-    move_scores.clear();
 
-    for (MOVE_TYPE move : moves) {
-        move_scores.push_back(score_move(thread_state, position, move, tt_move, last_move_one, last_move_two));
+    for (Move_Struct& move_struct : moves) {
+        move_struct.score = score_move(thread_state, position, move_struct.move, tt_move, last_move_one, last_move_two);
     }
 }
 
 
-void get_capture_scores(const Thread_State& thread_state, Position& position, const std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores,
+void get_capture_scores(const Thread_State& thread_state, Position& position, std::vector<Move_Struct>& moves,
                         MOVE_TYPE tt_move) {
-    move_scores.clear();
 
-    for (MOVE_TYPE move : moves) {
-        move_scores.push_back(score_capture(thread_state, position, move, tt_move));
+    for (Move_Struct& move_struct : moves) {
+        move_struct.score = score_capture(thread_state, position, move_struct.move, tt_move);
     }
 }
 
 
-void sort_next_move(std::vector<MOVE_TYPE>& moves, std::vector<SCORE_TYPE>& move_scores, int current_count) {
+void sort_next_move(std::vector<Move_Struct>& moves, int current_count) {
     for (int next_count = current_count; next_count < static_cast<int>(moves.size()); next_count++) {
-        if (move_scores[current_count] < move_scores[next_count]) {
-            MOVE_TYPE current_move = moves[current_count];
+        if (moves[current_count].score < moves[next_count].score) {
+            Move_Struct current_move_struct = moves[current_count];
             moves[current_count] = moves[next_count];
-            moves[next_count] = current_move;
-
-            SCORE_TYPE current_score = move_scores[current_count];
-            move_scores[current_count] = move_scores[next_count];
-            move_scores[next_count] = current_score;
+            moves[next_count] = current_move_struct;
         }
     }
 }

@@ -22,8 +22,9 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
     position.set_state(ply, fifty);
     position.get_pseudo_legal_moves(ply);
 
-    for (MOVE_TYPE move : position.moves[ply]) {
+    for (Move_Struct move_struct : position.moves[ply]) {
 
+        MOVE_TYPE move = move_struct.move;
         // std::cout << "move: " << get_uci_from_move(position, move) << std::endl;
 
         bool attempt = position.make_move(move, ply, fifty);
@@ -74,7 +75,9 @@ long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 
     long long amt = 0;
 
-    for (MOVE_TYPE move : position.moves[ply]) {
+    for (Move_Struct move_struct : position.moves[ply]) {
+
+        MOVE_TYPE move = move_struct.move;
 
         bool attempt = position.make_move(move, ply, fifty);
 
@@ -111,7 +114,9 @@ long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 
     long long total_amt = 0;
 
-    for (MOVE_TYPE move : position.moves[ply]) {
+    for (Move_Struct move_struct : position.moves[ply]) {
+
+        MOVE_TYPE move = move_struct.move;
 
         bool attempt = position.make_move(move, ply, fifty);
 

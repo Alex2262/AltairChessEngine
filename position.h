@@ -11,6 +11,13 @@
 #include "constants.h"
 
 
+struct Move_Struct {
+    MOVE_TYPE move = NO_MOVE;
+    SCORE_TYPE score = 0;
+    bool legal = false;
+};
+
+
 struct State_Struct {
     int in_check = -1;
     uint64_t current_hash_key;
@@ -63,8 +70,7 @@ public:
     std::vector<PIECE_TYPE> white_pieces;
     std::vector<PIECE_TYPE> black_pieces;
 
-    std::array<std::vector<MOVE_TYPE>, TOTAL_MAX_DEPTH> moves;
-    std::array<std::vector<SCORE_TYPE>, TOTAL_MAX_DEPTH> move_scores;
+    std::array<std::vector<Move_Struct>, TOTAL_MAX_DEPTH> moves;
 
     std::array<State_Struct, TOTAL_MAX_DEPTH> state_stack{};
 
