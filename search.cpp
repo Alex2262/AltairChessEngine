@@ -497,7 +497,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         SCORE_TYPE past_eval = position.state_stack[thread_state.search_ply - 2].evaluation;
         if (past_eval != NO_EVALUATION) {
             if (static_eval > past_eval) improving = true;
-            if (static_eval < past_eval - (100 + 20 * depth)) failing = true;
+            if (!pv_node && static_eval < past_eval - (60 + 40 * depth)) failing = true;
         }
     }
 
