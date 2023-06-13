@@ -591,13 +591,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
 
         // Pruning
-        if (!pv_node && legal_moves > 0 && abs(best_score) < MATE_BOUND) {
+        if (!pv_node && legal_moves >= 2 && abs(best_score) < MATE_BOUND) {
             // Late Move Pruning
             if (depth <= engine.tuning_parameters.LMP_depth &&
                 legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;
 
             // Quiet Late Move Pruning
-            if (quiet && legal_moves >= 2 + depth * depth / (1 + !improving + failing)) continue;
+            if (quiet && legal_moves >= 3 + depth * depth / (1 + !improving + failing)) continue;
 
             // Futility Pruning
             if (quiet && depth <= 5 && static_eval + (depth - !improving) * 140 + 70 <= alpha) break;
