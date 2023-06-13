@@ -178,7 +178,7 @@ void UCI::parse_go() {
         double self_time = (position.side == 0) ? wtime : btime;
         double inc = (position.side == 0) ? winc : binc;
 
-        time_handler(self_time, inc, movetime, movestogo);
+        time_handler(std::max<double>(self_time - engine->move_overhead, 0.0), inc, movetime, movestogo);
     }
 
     if (d) engine->max_depth = d;
@@ -238,6 +238,9 @@ void UCI::uci_loop() {
             std::cout << "option name Statistic type check default " << false
                       << std::endl;
 
+            std::cout << "option name Move Overhead type spin default " << 10 << " min " << 0 << " max " << 1000
+                      << std::endl;
+
             if (engine->do_tuning) {
                 for (auto & i : engine->tuning_parameters.tuning_parameter_array) {
                     std::cout << "option name " << i.name
@@ -288,6 +291,10 @@ void UCI::uci_loop() {
 
             else if (tokens[2] == "Statistics") {
                 engine->show_stats = tokens[4] == "true";
+            }
+
+            else if (tokens[2] == "Move" && tokens[3] == "Overhead") {
+                engine->move_overhead = std::stoi(tokens[5]);
             }
 
             else {
