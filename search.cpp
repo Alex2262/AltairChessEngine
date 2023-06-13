@@ -479,7 +479,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // beta-reductions (eval is too high) as we will have more certainty that the position is better;
     // however, we should be less aggressive with alpha-reductions (eval is too low) as we have less certainty
     // that the position is awful.
+
+    // The failing heuristic is the opposite. We are failing when the current evaluation is worse than the
+    // previous evaluation by a certain margin.
     bool improving = false;
+    bool failing = false;
 
     // Save the current evaluation
     if (!in_check) {
@@ -488,10 +492,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         position.state_stack[thread_state.search_ply].evaluation = static_eval;
     }
 
-    // Calculate if we are "improving"
+    // Calculate if we are "improving", or "failing"
     if (!in_check && static_eval != NO_EVALUATION && thread_state.search_ply >= 2) {
         SCORE_TYPE past_eval = position.state_stack[thread_state.search_ply - 2].evaluation;
-        if (past_eval != NO_EVALUATION && static_eval > past_eval) improving = true;
+        if (past_eval != NO_EVALUATION) {
+            if (static_eval > past_eval) improving = true;
+            if (!pv_node && static_eval < past_eval - (60 + 40 * depth)) failing = true;
+        }
     }
 
     // Internal Iterative Reduction. Based on Rebel's idea
@@ -584,13 +591,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
 
         // Pruning
-        if (!pv_node && legal_moves > 0 && abs(best_score) < MATE_BOUND) {
+        if (!pv_node && legal_moves >= 1 && abs(best_score) < MATE_BOUND) {
             // Late Move Pruning
             if (depth <= engine.tuning_parameters.LMP_depth &&
                 legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;
 
             // Quiet Late Move Pruning
-            if (quiet && legal_moves >= 2 + depth * depth / (1 + !improving)) continue;
+            if (quiet && legal_moves >= 2 + depth * depth / (1 + !improving + failing)) continue;
 
             // Futility Pruning
             if (quiet && depth <= 5 && static_eval + (depth - !improving) * 140 + 70 <= alpha) break;
