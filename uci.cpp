@@ -118,7 +118,6 @@ void UCI::parse_position() {
         position.make_move(move, 0, engine->thread_states[0].fifty_move);
 
         engine->thread_states[0].game_ply++;
-        engine->thread_states[0].fifty_move++;
         engine->thread_states[0].repetition_table[engine->thread_states[0].game_ply] = position.hash_key;
 
         position.side ^= 1;

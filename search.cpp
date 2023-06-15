@@ -695,7 +695,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         // Prepare for recursive searching
         thread_state.search_ply++;
-        thread_state.fifty_move++;
         thread_state.game_ply++;
         thread_state.repetition_table[thread_state.game_ply] = position.hash_key;
         position.side ^= 1;
