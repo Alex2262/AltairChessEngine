@@ -449,6 +449,8 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
 
     bool legal = true;
 
+    fifty_move++;
+
     if (move_type == MOVE_TYPE_NORMAL) {
         // Set the piece to the target square and hash it
         piece_list_index[target_square] = selected_index;
