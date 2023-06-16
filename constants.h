@@ -5,8 +5,8 @@
 #include <cstdint>
 
 #define N_TUNING_PARAMETERS         18
-#define FAIL_HIGH_STATS_COUNT       100
-#define ALPHA_RAISE_STATS_COUNT     100
+#define FAIL_HIGH_STATS_COUNT       5
+#define ALPHA_RAISE_STATS_COUNT     5
 
 #define BENCH_DEPTH                 14
 

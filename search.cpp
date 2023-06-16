@@ -1179,6 +1179,8 @@ void lazy_smp_search(Engine& engine) {
         // std::cout << "Helper Thread #" << thread_id << " closed." << std::endl;
     }
 
+    if (engine.show_stats) print_statistics(engine.search_results);
+
 }
 
 
