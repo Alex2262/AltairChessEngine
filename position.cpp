@@ -32,6 +32,21 @@ void Position::clear_state_stack() {
 }
 
 
+void Position::reset_nnue()
+{
+    nnue_state.m_accumulator_stack.clear();
+    nnue_state.m_curr = &nnue_state.m_accumulator_stack.emplace_back();
+
+    nnue_state.m_curr->init(g_nnue.feature_bias);
+
+    for (SQUARE_TYPE square : STANDARD_TO_MAILBOX) {
+        if (board[square] < EMPTY) {
+            nnue_state.update_feature<true>(board[square], MAILBOX_TO_STANDARD[square]);
+        }
+    }
+}
+
+
 void Position::compute_hash_key() {
     hash_key = 0;
 
@@ -224,6 +239,7 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
     if (fen_tokens[1] == "b") side = 1;
 
     compute_hash_key();
+    reset_nnue();
 
     if (fen_tokens.size() >= 5) {
         return static_cast<PLY_TYPE>(std::stoi(fen_tokens[4]));
@@ -455,6 +471,7 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
         // Set the piece to the target square and hash it
         piece_list_index[target_square] = selected_index;
         board[target_square] = selected;
+        nnue_state.update_feature<true>(selected, MAILBOX_TO_STANDARD[target_square]);
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[target_square]];
     }
 
@@ -462,11 +479,13 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
         // Set the piece to the target square and hash it
         piece_list_index[target_square] = selected_index;
         board[target_square] = selected;
+        nnue_state.update_feature<true>(selected, MAILBOX_TO_STANDARD[target_square]);
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[target_square]];
 
         // Remove the en passant captured pawn and hash it
         if (!side) {
             board[target_square + 10] = EMPTY;
+            nnue_state.update_feature<false>(static_cast<PIECE_TYPE>(BLACK_PAWN), MAILBOX_TO_STANDARD[target_square + 10]);
             hash_key ^= ZobristHashKeys.piece_hash_keys[BLACK_PAWN][MAILBOX_TO_STANDARD[target_square + 10]];
 
             black_pieces.erase(black_pieces.begin() + piece_list_index[target_square + 10]);
@@ -475,6 +494,7 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             piece_list_index[target_square + 10] = NO_PIECE_INDEX;
         } else {
             board[target_square - 10] = EMPTY;
+            nnue_state.update_feature<false>(static_cast<PIECE_TYPE>(WHITE_PAWN), MAILBOX_TO_STANDARD[target_square - 10]);
             hash_key ^= ZobristHashKeys.piece_hash_keys[WHITE_PAWN][MAILBOX_TO_STANDARD[target_square - 10]];
 
             white_pieces.erase(white_pieces.begin() + piece_list_index[target_square - 10]);
@@ -505,17 +525,21 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             // Move the rook and hash it
             if (!side) {
                 board[castled_pos[1]] = WHITE_ROOK;
+                nnue_state.update_feature<true>(static_cast<PIECE_TYPE>(WHITE_ROOK), MAILBOX_TO_STANDARD[castled_pos[1]]);
                 hash_key ^= ZobristHashKeys.piece_hash_keys[WHITE_ROOK][MAILBOX_TO_STANDARD[castled_pos[1]]];
 
                 board[castled_pos[0]] = EMPTY;
+                nnue_state.update_feature<false>(static_cast<PIECE_TYPE>(WHITE_ROOK), MAILBOX_TO_STANDARD[castled_pos[0]]);
                 hash_key ^= ZobristHashKeys.piece_hash_keys[WHITE_ROOK][MAILBOX_TO_STANDARD[castled_pos[0]]];
 
                 white_pieces[piece_list_index[castled_pos[1]]] = castled_pos[1];
             } else {
                 board[castled_pos[1]] = BLACK_ROOK;
+                nnue_state.update_feature<true>(static_cast<PIECE_TYPE>(BLACK_ROOK), MAILBOX_TO_STANDARD[castled_pos[1]]);
                 hash_key ^= ZobristHashKeys.piece_hash_keys[BLACK_ROOK][MAILBOX_TO_STANDARD[castled_pos[1]]];
 
                 board[castled_pos[0]] = EMPTY;
+                nnue_state.update_feature<false>(static_cast<PIECE_TYPE>(BLACK_ROOK), MAILBOX_TO_STANDARD[castled_pos[0]]);
                 hash_key ^= ZobristHashKeys.piece_hash_keys[BLACK_ROOK][MAILBOX_TO_STANDARD[castled_pos[0]]];
 
                 black_pieces[piece_list_index[castled_pos[1]]] = castled_pos[1];
@@ -526,6 +550,7 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
 
         board[target_square] = selected;
         piece_list_index[target_square] = selected_index;
+        nnue_state.update_feature<true>(selected, MAILBOX_TO_STANDARD[target_square]);
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[target_square]];
     }
 
@@ -533,11 +558,15 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
         PIECE_TYPE promotion_piece = get_promotion_piece(move);
         piece_list_index[target_square] = selected_index;
         board[target_square] = promotion_piece;
+        nnue_state.update_feature<true>(promotion_piece, MAILBOX_TO_STANDARD[target_square]);
         hash_key ^= ZobristHashKeys.piece_hash_keys[promotion_piece][MAILBOX_TO_STANDARD[target_square]];
     }
 
     // Remove the piece from the source square
-    if (target_square != origin_square && castled_pos[1] != origin_square) board[origin_square] = EMPTY;
+    if (target_square != origin_square && castled_pos[1] != origin_square) {
+        board[origin_square] = EMPTY;
+        nnue_state.update_feature<false>(selected, MAILBOX_TO_STANDARD[origin_square]);
+    }
     hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[origin_square]];
 
     if (!side) {
@@ -545,6 +574,7 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
 
         if (get_is_capture(move)) {
             fifty_move = 0;
+            nnue_state.update_feature<false>(occupied, MAILBOX_TO_STANDARD[target_square]);
             hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][MAILBOX_TO_STANDARD[target_square]];
             black_pieces.erase(black_pieces.begin() + occupied_index);
             update_piece_list_index(occupied_index, black_pieces.size(), BLACK_COLOR);
@@ -555,6 +585,7 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
 
         if (get_is_capture(move)) {
             fifty_move = 0;
+            nnue_state.update_feature<false>(occupied, MAILBOX_TO_STANDARD[target_square]);
             hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][MAILBOX_TO_STANDARD[target_square]];
             white_pieces.erase(white_pieces.begin() + occupied_index);
             update_piece_list_index(occupied_index, white_pieces.size(), WHITE_COLOR);
@@ -627,6 +658,8 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
     // Switch hash side (actual side is switched in loop)
     hash_key ^= ZobristHashKeys.side_hash_key;
 
+    // reset_nnue();
+
     return true;
 
 }
@@ -650,10 +683,12 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
     if (move_type == MOVE_TYPE_EP) {
         if (!side) {
             board[target_square + 10] = BLACK_PAWN;
+            nnue_state.update_feature<true>(static_cast<PIECE_TYPE>(BLACK_PAWN), MAILBOX_TO_STANDARD[target_square + 10]);
             black_pieces.push_back(target_square + 10);
             piece_list_index[target_square + 10] = black_pieces.size() - 1;
         } else {
             board[target_square - 10] = WHITE_PAWN;
+            nnue_state.update_feature<true>(static_cast<PIECE_TYPE>(WHITE_PAWN), MAILBOX_TO_STANDARD[target_square - 10]);
             white_pieces.push_back(target_square - 10);
             piece_list_index[target_square - 10] = white_pieces.size() - 1;
         }
@@ -674,18 +709,26 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             if (!side) {
                 board[castled_pos[1]] = WHITE_ROOK;
                 white_pieces[piece_list_index[castled_pos[0]]] = castled_pos[1];
+                nnue_state.update_feature<true>(static_cast<PIECE_TYPE>(WHITE_ROOK), MAILBOX_TO_STANDARD[castled_pos[1]]);
             } else {
                 board[castled_pos[1]] = BLACK_ROOK;
                 black_pieces[piece_list_index[castled_pos[0]]] = castled_pos[1];
+                nnue_state.update_feature<true>(static_cast<PIECE_TYPE>(BLACK_ROOK), MAILBOX_TO_STANDARD[castled_pos[1]]);
             }
 
+            nnue_state.update_feature<false>(board[castled_pos[0]], MAILBOX_TO_STANDARD[castled_pos[0]]);
             board[castled_pos[0]] = EMPTY;
             piece_list_index[castled_pos[0]] = NO_PIECE_INDEX;
         }
     }
 
-    if (castled_pos[1] != target_square) board[target_square] = occupied;
+    if (castled_pos[1] != target_square) {
+        nnue_state.update_feature<false>(selected, MAILBOX_TO_STANDARD[target_square]);
+
+        board[target_square] = occupied;
+    }
     board[origin_square] = selected;
+    nnue_state.update_feature<true>(selected, MAILBOX_TO_STANDARD[origin_square]);
 
     piece_list_index[origin_square] = occupied_index;
     if (target_square != origin_square && castled_pos[1] != target_square) piece_list_index[target_square] = NO_PIECE_INDEX;
@@ -697,6 +740,8 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             black_pieces.push_back(target_square);
             piece_list_index[target_square] = black_pieces.size() - 1;
             if (occupied != BLACK_PAWN) non_pawn_material_count++;
+
+            nnue_state.update_feature<true>(occupied, MAILBOX_TO_STANDARD[target_square]);
         }
     } else {
         black_pieces[piece_list_index[origin_square]] = origin_square;
@@ -705,6 +750,8 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             white_pieces.push_back(target_square);
             piece_list_index[target_square] = white_pieces.size() - 1;
             if (occupied != WHITE_PAWN) non_pawn_material_count++;
+
+            nnue_state.update_feature<true>(occupied, MAILBOX_TO_STANDARD[target_square]);
         }
     }
 
@@ -714,6 +761,8 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
     castle_ability_bits = state_stack[search_ply].current_castle_ability_bits;
 
     if (selected == WHITE_KING || selected == BLACK_KING) king_positions[side] = origin_square;
+
+    // reset_nnue();
 }
 
 

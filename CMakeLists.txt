@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 project(AltairChessEngine)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
@@ -24,4 +24,4 @@ add_executable(AltairChess
         search.cpp
         search.h
         useful.cpp
-        useful.h uci.cpp uci.h zobrist.h bench.cpp bench.h see.cpp see.h evaluation_constants.h)
+        useful.h uci.cpp uci.h zobrist.h bench.cpp bench.h see.cpp see.h evaluation_constants.h nnue.cpp nnue.h)

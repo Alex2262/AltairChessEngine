@@ -3,7 +3,7 @@ EXE      = Altair
 SOURCES      := evaluation.cpp main.cpp move.cpp perft.cpp position.cpp search.cpp useful.cpp uci.cpp bench.cpp see.cpp
 
 TEMPDIR      := tmp/
-CXXFLAGS     := -O3 -std=c++17 -Wall -Wextra -pedantic -DNDEBUG
+CXXFLAGS     := -O3 -std=c++20 -Wall -Wextra -pedantic -DNDEBUG
 
 CXX          := g++
 SUFFIX       :=

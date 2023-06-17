@@ -9,6 +9,7 @@
 #include <array>
 #include <string>
 #include "constants.h"
+#include "nnue.h"
 
 
 struct Move_Struct {
@@ -38,7 +39,9 @@ public:
     Position() = default;
 
     bool fischer_random_chess = false;
+    NNUE_State nnue_state{};
 
+    void reset_nnue();
     void clear_movelist();
     void clear_state_stack();
     void compute_hash_key();
