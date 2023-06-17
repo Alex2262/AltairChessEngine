@@ -1,4 +1,4 @@
-# Altair
+# Altair (EXPERIMENTAL NNUE BRANCH USING VIRIDITHAS NNUE)
 
 <div align="center">
   
