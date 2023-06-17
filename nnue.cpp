@@ -2,6 +2,7 @@
 // Created by Alexander Tian on 6/16/23.
 //
 
+#include <iostream>
 #include "nnue.h"
 #include "incbin.h"
 
@@ -38,9 +39,11 @@ std::pair<size_t , size_t> NNUE_State::feature_indices(PIECE_TYPE piece, SQUARE_
     const auto base = static_cast<PIECE_TYPE>(piece % BLACK_PAWN);
     const size_t color = piece >= BLACK_PAWN;
 
-    const auto whiteIdx =  color * color_stride + base * piece_stride +  static_cast<size_t>(sq)      ;
-    const auto blackIdx =  (color ^ 1) * color_stride + base * piece_stride + (static_cast<size_t>(sq ^ 56));
+    // std::cout << piece << " " << sq << " " << base << " " << color << std::endl;
+    const auto whiteIdx =  color * color_stride + base * piece_stride +  static_cast<size_t>(sq ^ 56);
+    const auto blackIdx =  (color ^ 1) * color_stride + base * piece_stride + (static_cast<size_t>(sq));
 
+    // std::cout << whiteIdx << " " << blackIdx << std::endl;
     return {whiteIdx, blackIdx};
 }
 
