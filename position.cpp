@@ -683,12 +683,12 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
     if (move_type == MOVE_TYPE_EP) {
         if (!side) {
             board[target_square + 10] = BLACK_PAWN;
-            nnue_state.update_feature<true>(static_cast<PIECE_TYPE>(BLACK_PAWN), MAILBOX_TO_STANDARD[target_square + 10]);
+            // nnue_state.update_feature<true>(static_cast<PIECE_TYPE>(BLACK_PAWN), MAILBOX_TO_STANDARD[target_square + 10]);
             black_pieces.push_back(target_square + 10);
             piece_list_index[target_square + 10] = black_pieces.size() - 1;
         } else {
             board[target_square - 10] = WHITE_PAWN;
-            nnue_state.update_feature<true>(static_cast<PIECE_TYPE>(WHITE_PAWN), MAILBOX_TO_STANDARD[target_square - 10]);
+            // nnue_state.update_feature<true>(static_cast<PIECE_TYPE>(WHITE_PAWN), MAILBOX_TO_STANDARD[target_square - 10]);
             white_pieces.push_back(target_square - 10);
             piece_list_index[target_square - 10] = white_pieces.size() - 1;
         }
@@ -709,26 +709,26 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             if (!side) {
                 board[castled_pos[1]] = WHITE_ROOK;
                 white_pieces[piece_list_index[castled_pos[0]]] = castled_pos[1];
-                nnue_state.update_feature<true>(static_cast<PIECE_TYPE>(WHITE_ROOK), MAILBOX_TO_STANDARD[castled_pos[1]]);
+                // nnue_state.update_feature<true>(static_cast<PIECE_TYPE>(WHITE_ROOK), MAILBOX_TO_STANDARD[castled_pos[1]]);
             } else {
                 board[castled_pos[1]] = BLACK_ROOK;
                 black_pieces[piece_list_index[castled_pos[0]]] = castled_pos[1];
-                nnue_state.update_feature<true>(static_cast<PIECE_TYPE>(BLACK_ROOK), MAILBOX_TO_STANDARD[castled_pos[1]]);
+                // nnue_state.update_feature<true>(static_cast<PIECE_TYPE>(BLACK_ROOK), MAILBOX_TO_STANDARD[castled_pos[1]]);
             }
 
-            nnue_state.update_feature<false>(board[castled_pos[0]], MAILBOX_TO_STANDARD[castled_pos[0]]);
+            // nnue_state.update_feature<false>(board[castled_pos[0]], MAILBOX_TO_STANDARD[castled_pos[0]]);
             board[castled_pos[0]] = EMPTY;
             piece_list_index[castled_pos[0]] = NO_PIECE_INDEX;
         }
     }
 
     if (castled_pos[1] != target_square) {
-        nnue_state.update_feature<false>(selected, MAILBOX_TO_STANDARD[target_square]);
+        // nnue_state.update_feature<false>(selected, MAILBOX_TO_STANDARD[target_square]);
 
         board[target_square] = occupied;
     }
     board[origin_square] = selected;
-    nnue_state.update_feature<true>(selected, MAILBOX_TO_STANDARD[origin_square]);
+    // nnue_state.update_feature<true>(selected, MAILBOX_TO_STANDARD[origin_square]);
 
     piece_list_index[origin_square] = occupied_index;
     if (target_square != origin_square && castled_pos[1] != target_square) piece_list_index[target_square] = NO_PIECE_INDEX;
@@ -741,7 +741,7 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             piece_list_index[target_square] = black_pieces.size() - 1;
             if (occupied != BLACK_PAWN) non_pawn_material_count++;
 
-            nnue_state.update_feature<true>(occupied, MAILBOX_TO_STANDARD[target_square]);
+            // nnue_state.update_feature<true>(occupied, MAILBOX_TO_STANDARD[target_square]);
         }
     } else {
         black_pieces[piece_list_index[origin_square]] = origin_square;
@@ -751,7 +751,7 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             piece_list_index[target_square] = white_pieces.size() - 1;
             if (occupied != WHITE_PAWN) non_pawn_material_count++;
 
-            nnue_state.update_feature<true>(occupied, MAILBOX_TO_STANDARD[target_square]);
+            // nnue_state.update_feature<true>(occupied, MAILBOX_TO_STANDARD[target_square]);
         }
     }
 
