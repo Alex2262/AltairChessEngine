@@ -467,6 +467,8 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
 
     fifty_move++;
 
+    nnue_state.push();
+
     if (move_type == MOVE_TYPE_NORMAL) {
         // Set the piece to the target square and hash it
         piece_list_index[target_square] = selected_index;
@@ -679,6 +681,8 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
     PIECE_TYPE occupied = get_occupied(move);
     SQUARE_TYPE occupied_index = piece_list_index[target_square];
     uint16_t move_type = get_move_type(move);
+
+    nnue_state.pop();
 
     if (move_type == MOVE_TYPE_EP) {
         if (!side) {

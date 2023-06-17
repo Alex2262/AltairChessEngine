@@ -21,17 +21,6 @@ void NNUE_State::pop()
 }
 
 
-
-void NNUE_State::move_feature(PIECE_TYPE piece, SQUARE_TYPE origin_square, SQUARE_TYPE target_square)
-{
-    const auto [white_origin, black_origin] = feature_indices(piece, origin_square);
-    const auto [white_target, black_target] = feature_indices(piece, target_square);
-
-    subtract_and_add_to_all(m_curr->white, g_nnue.feature_weights, white_origin * LAYER1_SIZE, white_target * LAYER1_SIZE);
-    subtract_and_add_to_all(m_curr->black, g_nnue.feature_weights, black_origin * LAYER1_SIZE, black_target * LAYER1_SIZE);
-}
-
-
 SCORE_TYPE NNUE_State::evaluate(int color) const
 {
     const auto output = color == WHITE_COLOR

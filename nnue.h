@@ -54,7 +54,7 @@ class NNUE_State {
 public:
     explicit NNUE_State()
     {
-        m_accumulator_stack.reserve(1);
+        m_accumulator_stack.reserve(TOTAL_MAX_DEPTH);
     }
 
     ~NNUE_State() = default;
@@ -62,8 +62,6 @@ public:
     void push();
 
     void pop();
-
-    void move_feature(PIECE_TYPE piece, SQUARE_TYPE origin_square, SQUARE_TYPE target_square);
 
     template <bool Activate>
     inline void update_feature(PIECE_TYPE piece, SQUARE_TYPE square) {
@@ -85,17 +83,6 @@ public:
 
     std::vector<Accumulator<LAYER1_SIZE>> m_accumulator_stack{};
     Accumulator<LAYER1_SIZE> *m_curr{};
-
-    template <size_t size, size_t weights>
-    inline void subtract_and_add_to_all(std::array<int16_t, size> &input,
-                                             const std::array<int16_t, weights> &delta,
-                                             size_t sub_offset, size_t add_offset)
-    {
-        for (size_t i = 0; i < size; ++i)
-        {
-            input[i] += delta[add_offset + i] - delta[sub_offset + i];
-        }
-    }
 
     template <size_t size, size_t weights>
     inline void add_to_all(std::array<int16_t, size> &input, const std::array<int16_t, weights> &delta, size_t offset)
