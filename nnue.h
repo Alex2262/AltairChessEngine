@@ -5,6 +5,7 @@
 #ifndef ALTAIRCHESSENGINE_NNUE_H
 #define ALTAIRCHESSENGINE_NNUE_H
 
+#include <cstring>
 #include <array>
 #include <span>
 #include "constants.h"
