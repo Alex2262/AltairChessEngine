@@ -536,10 +536,13 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
         hash_key ^= ZobristHashKeys.piece_hash_keys[promotion_piece][MAILBOX_TO_STANDARD[target_square]];
     }
 
-    // Remove the piece from the source square
-    if (target_square != origin_square && castled_pos[1] != origin_square) board[origin_square] = EMPTY;
-    hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[origin_square]];
+    // Remove the piece from the source square except for some FRC edge cases
+    if (target_square != origin_square && castled_pos[1] != origin_square) {
+        board[origin_square] = EMPTY;
+        hash_key ^= ZobristHashKeys.piece_hash_keys[selected][MAILBOX_TO_STANDARD[origin_square]];
+    }
 
+    // Update certain information for both sides in the case of capturing moves
     if (!side) {
         white_pieces[selected_index] = target_square;
 
@@ -548,6 +551,7 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][MAILBOX_TO_STANDARD[target_square]];
             black_pieces.erase(black_pieces.begin() + occupied_index);
             update_piece_list_index(occupied_index, black_pieces.size(), BLACK_COLOR);
+
             if (occupied != BLACK_PAWN) non_pawn_material_count--;
         }
     } else {
@@ -558,10 +562,12 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
             hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][MAILBOX_TO_STANDARD[target_square]];
             white_pieces.erase(white_pieces.begin() + occupied_index);
             update_piece_list_index(occupied_index, white_pieces.size(), WHITE_COLOR);
+
             if (occupied != WHITE_PAWN) non_pawn_material_count--;
         }
     }
 
+    // Piece List Index updating except in the case of FRC edge cases
     if (target_square != origin_square && castled_pos[1] != origin_square) piece_list_index[origin_square] = NO_PIECE_INDEX;
 
     // Change the king position for check detection
@@ -594,7 +600,7 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
         // Reset the hashed ep square if it exists
         if (ep_square)  hash_key ^= ZobristHashKeys.ep_hash_keys[MAILBOX_TO_STANDARD[ep_square]];
 
-        ep_square = target_square - side * 20 + 10;  // 119 - (target_square + 10)
+        ep_square = target_square - side * 20 + 10;
         hash_key ^= ZobristHashKeys.ep_hash_keys[MAILBOX_TO_STANDARD[ep_square]];  // Set new EP hash
     } else {
         if (ep_square) {
@@ -605,6 +611,7 @@ bool Position::make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
 
     hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
+    // Update Castling Rights
     if (selected == WHITE_KING) {
         castle_ability_bits &= ~(1 << 0);
         castle_ability_bits &= ~(1 << 1);
@@ -684,10 +691,13 @@ void Position::undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_mo
         }
     }
 
+    // Set the occupied piece back except in FRC edge cases
     if (castled_pos[1] != target_square) board[target_square] = occupied;
     board[origin_square] = selected;
 
     piece_list_index[origin_square] = occupied_index;
+
+    // Reset the piece list index target square except in FRC edge cases
     if (target_square != origin_square && castled_pos[1] != target_square) piece_list_index[target_square] = NO_PIECE_INDEX;
 
     if (!side) {
@@ -745,11 +755,14 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
 
     moves[ply].clear();
 
+    // Pseudo legals for White
     if (!side) {
 
+        // Loop through the white pieces
         for (SQUARE_TYPE pos : white_pieces) {
             PIECE_TYPE piece = board[pos];
 
+            // Generate the directions for the piece to move in
             for (short increment : WHITE_INCREMENTS[piece]) {
                 if (!increment) break;
 
@@ -762,12 +775,25 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
 
                     if (occupied == PADDING || occupied < BLACK_PAWN) {
 
+                        // Castling
                         if (piece == WHITE_ROOK && board[new_pos] == WHITE_KING) {
+
+                            // King side castling
                             if ((castle_ability_bits & 1) == 1 && pos == starting_rook_pos[WHITE_COLOR][0]) {
+
+                                // FRC Castling Cases
                                 if (fischer_random_chess) {
-                                    if (new_pos >= G1) {
+
+                                    // The rook is to the right of the F1 square (the square it will go to)
+                                    if (new_pos > F1) {
+                                        // Ensure that the rook can go to the F1 square
                                         if (board[F1] != EMPTY) break;
-                                    } else if (new_pos < F1) {
+                                    }
+
+                                    // The rook is to the left of the F1 square (the square it will go to)
+                                    else if (new_pos < F1) {
+                                        // Ensure that all the squares between the king's square,
+                                        // and its current square are empty
                                         bool flag = true;
                                         for (SQUARE_TYPE temp_pos = G1; temp_pos > pos; temp_pos--) {
                                             if (board[temp_pos] != EMPTY) {
@@ -779,18 +805,33 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                                         if (!flag) break;
                                     }
                                 }
+
+                                // Add the castling move
                                 moves[ply].push_back(
                                         Move_Struct{encode_move(new_pos, G1, WHITE_KING,
                                                     EMPTY, MOVE_TYPE_CASTLE, 0, false),
                                                     0,
                                                     false}
                                 );
-                            } else if ((castle_ability_bits & 2) == 2 && pos == starting_rook_pos[WHITE_COLOR][1]) {
+                            }
+
+                            // Queen side castling
+                            else if ((castle_ability_bits & 2) == 2 && pos == starting_rook_pos[WHITE_COLOR][1]) {
+
+                                // FRC Castling Cases
                                 if (fischer_random_chess) {
-                                    if (new_pos <= C1) {
+
+                                    // The rook is to the left of the D1 square (the square it will go to)
+                                    if (new_pos < D1) {
+                                        // Guard certain cases
                                         if (board[C1] != EMPTY && board[C1] != WHITE_KING) break;
                                         if (board[D1] != EMPTY) break;
-                                    } else if (new_pos > D1){
+                                    }
+
+                                    // The rook is to the right of the D1 square (the square it will go to)
+                                    else if (new_pos > D1){
+                                        // Ensure that all the squares between the king's square,
+                                        // and its current square are empty
                                         bool flag = true;
                                         for (SQUARE_TYPE temp_pos = C1; temp_pos < pos; temp_pos++) {
                                             if (board[temp_pos] != EMPTY) {
@@ -802,6 +843,8 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                                         if (!flag) break;
                                     }
                                 }
+
+                                // Add the castling move
                                 moves[ply].push_back(
                                         Move_Struct{encode_move(new_pos, C1, WHITE_KING,
                                                     EMPTY, MOVE_TYPE_CASTLE, 0, false),
@@ -857,6 +900,7 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                         break;
                     }
 
+                    // Ordinary moves
                     moves[ply].push_back(Move_Struct{encode_move(pos, new_pos,
                                                          piece, EMPTY,
                                                          MOVE_TYPE_NORMAL, 0, false),
@@ -869,11 +913,14 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
         }
     }
 
+    // Pseudo legals for Black
     else {
 
+        // Loop through the black pieces
         for (SQUARE_TYPE pos : black_pieces) {
             PIECE_TYPE piece = board[pos];
 
+            // Generate the directions for the piece to move in
             for (short increment : BLACK_INCREMENTS[piece - BLACK_PAWN]) {
                 if (!increment) break;
 
@@ -885,12 +932,26 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                     PIECE_TYPE occupied = board[new_pos];
 
                     if (occupied != EMPTY && occupied > WHITE_KING) {
+
+                        // Castling
                         if (piece == BLACK_ROOK && board[new_pos] == BLACK_KING) {
+
+                            // King side castling
                             if ((castle_ability_bits & 4) == 4 && pos == starting_rook_pos[BLACK_COLOR][0]) {
+
+                                // FRC Castling Cases
                                 if (fischer_random_chess) {
-                                    if (new_pos >= G8) {
+
+                                    // The rook is to the right of the F8 square (the square it will go to)
+                                    if (new_pos > F8) {
+                                        // Ensure that the rook can go to the F1 square
                                         if (board[F8] != EMPTY) break;
-                                    } else if (new_pos < F8) {
+                                    }
+
+                                    // The rook is to the left of the F8 square (the square it will go to)
+                                    else if (new_pos < F8) {
+                                        // Ensure that all the squares between the king's square,
+                                        // and its current square are empty
                                         bool flag = true;
                                         for (SQUARE_TYPE temp_pos = G8; temp_pos > pos; temp_pos--) {
                                             if (board[temp_pos] != EMPTY) {
@@ -903,18 +964,32 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                                     }
                                 }
 
+                                // Add the castling move
                                 moves[ply].push_back(
                                         Move_Struct{encode_move(new_pos, G8, BLACK_KING,
                                                     EMPTY, MOVE_TYPE_CASTLE, 0, false),
                                                     0,
                                                     false}
                                 );
-                            } else if ((castle_ability_bits & 8) == 8 && pos == starting_rook_pos[BLACK_COLOR][1]) {
+                            }
+
+
+                            else if ((castle_ability_bits & 8) == 8 && pos == starting_rook_pos[BLACK_COLOR][1]) {
+
+                                // FRC Castling Cases
                                 if (fischer_random_chess) {
-                                    if (new_pos <= C8) {
+
+                                    // The rook is to the left of the D8 square (the square it will go to)
+                                    if (new_pos < D8) {
+                                        // Guard certain cases
                                         if (board[C8] != EMPTY && board[C8] != WHITE_KING) break;
                                         if (board[D8] != EMPTY) break;
-                                    } else if (new_pos > D8){
+                                    }
+
+                                    // The rook is to the right of the D8 square (the square it will go to)
+                                    else if (new_pos > D8){
+                                        // Ensure that all the squares between the king's square,
+                                        // and its current square are empty
                                         bool flag = true;
                                         for (SQUARE_TYPE temp_pos = C8; temp_pos < pos; temp_pos++) {
                                             if (board[temp_pos] != EMPTY) {
@@ -926,6 +1001,8 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                                         if (!flag) break;
                                     }
                                 }
+
+                                // Add the castling move
                                 moves[ply].push_back(
                                         Move_Struct{encode_move(new_pos, C8, BLACK_KING,
                                                     EMPTY, MOVE_TYPE_CASTLE, 0, false),
@@ -980,6 +1057,7 @@ void Position::get_pseudo_legal_moves(PLY_TYPE ply) {
                         break;
                     }
 
+                    // Ordinary moves
                     moves[ply].push_back(Move_Struct{encode_move(pos, new_pos,
                                                          piece, EMPTY,
                                                          MOVE_TYPE_NORMAL, 0, false),

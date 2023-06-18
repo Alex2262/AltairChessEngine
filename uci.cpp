@@ -220,7 +220,7 @@ void UCI::uci_loop() {
 
         else if (msg == "uci") {
             std::cout << "id name Altair" << std::endl;
-            std::cout << "id author Alexander_Tian" << std::endl;
+            std::cout << "id author Alexander Tian" << std::endl;
 
             std::cout << "option name Hash type spin default " << 64 << " min " << 1 << " max " << 1024
                       << std::endl;
