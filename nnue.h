@@ -8,6 +8,8 @@
 #include <cstring>
 #include <array>
 #include <span>
+#include <vector>
+#include <algorithm>
 #include "constants.h"
 
 constexpr size_t INPUT_SIZE = 768;
