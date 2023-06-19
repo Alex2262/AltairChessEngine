@@ -4,6 +4,8 @@
 
 #include <cstdint>
 
+#define MAX_ELO                     3100
+
 #define N_TUNING_PARAMETERS         18
 #define FAIL_HIGH_STATS_COUNT       5
 #define ALPHA_RAISE_STATS_COUNT     5

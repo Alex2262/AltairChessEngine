@@ -148,6 +148,8 @@ public:
 
     Engine() = default;
 
+    int skill_level = 100;
+
     int num_threads = 1;
     std::vector<Thread_State> thread_states;
 
