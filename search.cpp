@@ -1167,6 +1167,7 @@ void lazy_smp_search(Engine& engine) {
     for (int thread_id = 1; thread_id < engine.num_threads; thread_id++) {
         // std::cout << "Creating Helper Thread #" << thread_id << std::endl;
         engine.thread_states[thread_id] = engine.thread_states[0];
+        // engine.thread_states[thread_id].position.print_board();
         search_threads.emplace_back(iterative_search, std::ref(engine), thread_id);
     }
 

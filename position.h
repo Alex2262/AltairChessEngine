@@ -5,6 +5,7 @@
 #ifndef ANTARESCHESSENGINE_POSITION_H
 #define ANTARESCHESSENGINE_POSITION_H
 
+#include <iostream>
 #include <vector>
 #include <array>
 #include <string>
@@ -41,7 +42,6 @@ public:
     bool fischer_random_chess = false;
     NNUE_State nnue_state{};
 
-    void reset_nnue();
     void clear_movelist();
     void clear_state_stack();
     void compute_hash_key();
@@ -73,7 +73,7 @@ public:
     std::vector<PIECE_TYPE> white_pieces;
     std::vector<PIECE_TYPE> black_pieces;
 
-    std::array<std::vector<Move_Struct>, TOTAL_MAX_DEPTH> moves;
+    std::array<std::vector<Move_Struct>, TOTAL_MAX_DEPTH> moves{};
 
     std::array<State_Struct, TOTAL_MAX_DEPTH> state_stack{};
 
@@ -98,6 +98,46 @@ public:
                 piece_list_index[black_pieces[i]] = i;
             }
         }
+    }
+
+    Position& operator=(const Position& copy_position) {
+        fischer_random_chess = copy_position.fischer_random_chess;
+
+        for (SQUARE_TYPE square = 0; square < 120; square++) {
+            board[square] = copy_position.board[square];
+            piece_list_index[square] = copy_position.piece_list_index[square];
+        }
+
+        starting_rook_pos[0][0] = copy_position.starting_rook_pos[0][0];
+        starting_rook_pos[0][1] = copy_position.starting_rook_pos[0][1];
+        starting_rook_pos[1][0] = copy_position.starting_rook_pos[1][0];
+        starting_rook_pos[1][1] = copy_position.starting_rook_pos[1][1];
+
+        white_pieces = copy_position.white_pieces;
+        black_pieces = copy_position.black_pieces;
+
+        king_positions[0] = copy_position.king_positions[0];
+        king_positions[1] = copy_position.king_positions[1];
+
+        castle_ability_bits = copy_position.castle_ability_bits;
+        ep_square = copy_position.ep_square;
+        side = copy_position.side;
+        hash_key = copy_position.hash_key;
+
+        non_pawn_material_count = copy_position.non_pawn_material_count;
+
+        clear_movelist();
+        clear_state_stack();
+
+        nnue_state.m_accumulator_stack.reserve(TOTAL_MAX_DEPTH);
+        nnue_state.reset_nnue(*this);
+
+        // std::cout << nnue_state.m_accumulator_stack.size() << std::endl;
+
+        // print_board();
+        // print_piece_index_board();
+
+        return *this;
     }
 
 

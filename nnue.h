@@ -10,6 +10,8 @@
 #include <span>
 #include "constants.h"
 
+class Position;
+
 constexpr size_t INPUT_SIZE = 768;
 constexpr size_t LAYER1_SIZE = 768;
 
@@ -108,5 +110,7 @@ public:
     static int32_t screlu_flatten(const std::array<int16_t, LAYER1_SIZE> &us,
                                          const std::array<int16_t, LAYER1_SIZE> &them,
                                          const std::array<int16_t, LAYER1_SIZE * 2> &weights);
+
+    void reset_nnue(Position& position);
 };
 #endif //ALTAIRCHESSENGINE_NNUE_H

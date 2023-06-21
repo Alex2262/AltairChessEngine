@@ -4,6 +4,7 @@
 
 #include "nnue.h"
 #include "incbin.h"
+#include "position.h"
 
 INCBIN(nnue, "gemstone.nnue");
 const NNUE_Params &g_nnue = *reinterpret_cast<const NNUE_Params *>(gnnueData);
@@ -38,6 +39,8 @@ std::pair<size_t , size_t> NNUE_State::feature_indices(PIECE_TYPE piece, SQUARE_
     const auto base = static_cast<PIECE_TYPE>(piece % BLACK_PAWN);
     const size_t color = piece >= BLACK_PAWN;
 
+    assert(sq <= 63);
+    assert(sq >= 0);
     // std::cout << piece << " " << sq << " " << base << " " << color << std::endl;
     const auto whiteIdx =  color * color_stride + base * piece_stride +  static_cast<size_t>(sq ^ 56);
     const auto blackIdx =  (color ^ 1) * color_stride + base * piece_stride + (static_cast<size_t>(sq));
@@ -58,4 +61,18 @@ int32_t NNUE_State::screlu_flatten(const std::array<int16_t, LAYER1_SIZE> &us,
     }
 
     return sum / QA;
+}
+
+void NNUE_State::reset_nnue(Position& position)
+{
+    m_accumulator_stack.clear();
+    m_curr = &m_accumulator_stack.emplace_back();
+
+    m_curr->init(g_nnue.feature_bias);
+
+    for (SQUARE_TYPE square : STANDARD_TO_MAILBOX) {
+        if (position.board[square] < EMPTY) {
+            update_feature<true>(position.board[square], MAILBOX_TO_STANDARD[square]);
+        }
+    }
 }

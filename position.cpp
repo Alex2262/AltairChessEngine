@@ -32,21 +32,6 @@ void Position::clear_state_stack() {
 }
 
 
-void Position::reset_nnue()
-{
-    nnue_state.m_accumulator_stack.clear();
-    nnue_state.m_curr = &nnue_state.m_accumulator_stack.emplace_back();
-
-    nnue_state.m_curr->init(g_nnue.feature_bias);
-
-    for (SQUARE_TYPE square : STANDARD_TO_MAILBOX) {
-        if (board[square] < EMPTY) {
-            nnue_state.update_feature<true>(board[square], MAILBOX_TO_STANDARD[square]);
-        }
-    }
-}
-
-
 void Position::compute_hash_key() {
     hash_key = 0;
 
@@ -239,7 +224,7 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
     if (fen_tokens[1] == "b") side = 1;
 
     compute_hash_key();
-    reset_nnue();
+    nnue_state.reset_nnue(*this);
 
     if (fen_tokens.size() >= 5) {
         return static_cast<PLY_TYPE>(std::stoi(fen_tokens[4]));
