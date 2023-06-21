@@ -8,6 +8,8 @@
 #include <cstring>
 #include <array>
 #include <span>
+#include <vector>
+#include <algorithm>
 #include "constants.h"
 
 class Position;
