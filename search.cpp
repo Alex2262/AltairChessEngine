@@ -256,7 +256,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     engine.tt_prefetch_read(position.hash_key);  // Prefetch the TT for cache
 
     // Check the remaining time
-    if (thread_state.current_search_depth >= engine.min_depth && (engine.node_count & 2047) == 0 && engine.check_time()) {
+    if (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
+        (engine.node_count & 2047) == 0 && engine.check_time()) {
         return 0;
     }
 
@@ -328,6 +329,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         }
 
         engine.node_count++;
+        if (thread_id == 0) engine.primary_thread_node_count++;
 
         // Recursively search
         thread_state.search_ply++;
@@ -401,7 +403,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     // Check the remaining time
-    if (thread_state.current_search_depth >= engine.min_depth && (engine.node_count & 2047) == 0 && engine.check_time()) {
+    if (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
+        (engine.node_count & 2047) == 0 && engine.check_time()) {
         return 0;
     }
 
@@ -626,6 +629,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         // Increase node count
         engine.node_count++;
+        if (thread_id == 0) engine.primary_thread_node_count++;
 
         // Calculate if the current move is a recapture
         bool recapture = false;
@@ -710,7 +714,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         SCORE_TYPE return_eval = -SCORE_INF;
 
-        uint64_t current_nodes = engine.node_count;
+        uint64_t current_nodes = engine.primary_thread_node_count++;
 
         double reduction;
         bool full_depth_zero_window;
@@ -804,8 +808,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             best_move = move;
 
             // Calculate nodes for each move for time management scaling
-            if (root) {
-                engine.node_table[get_selected(best_move)][MAILBOX_TO_STANDARD[get_target_square(best_move)]] += engine.node_count - current_nodes;
+            if (root && thread_id == 0) {
+                engine.node_table[get_selected(best_move)]
+                    [MAILBOX_TO_STANDARD[get_target_square(best_move)]] += engine.primary_thread_node_count
+                                                                                  - current_nodes;
             }
 
             // Write moves into the PV table
@@ -1107,7 +1113,7 @@ void iterative_search(Engine& engine, int thread_id) {
                 auto best_node_percentage =
                         static_cast<double>(engine.node_table[get_selected(best_move)]
                         [MAILBOX_TO_STANDARD[get_target_square(best_move)]]) /
-                        static_cast<double>(engine.node_count);
+                        static_cast<double>(engine.primary_thread_node_count);
 
                 double node_scaling_factor = (1.5 - best_node_percentage) * 1.35;
 

@@ -168,6 +168,7 @@ public:
     uint64_t start_time = 0;
 
     uint64_t max_nodes = 0;
+    uint64_t primary_thread_node_count = 0;
     uint64_t node_count = 0;
     uint64_t node_table[12][64]{};
 
