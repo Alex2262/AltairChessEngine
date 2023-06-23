@@ -194,7 +194,7 @@ public:
     short probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
                          TT_Entry& return_entry);
     void record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
-                         SCORE_TYPE static_eval);
+                         SCORE_TYPE static_eval, bool pv_node);
     short probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
                            SCORE_TYPE& return_score, MOVE_TYPE& tt_move);
     void record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move,
