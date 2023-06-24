@@ -144,14 +144,16 @@ short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha
 
 // Records an entry to the transposition table
 void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
-                             SCORE_TYPE static_eval) {
+                             SCORE_TYPE static_eval, bool pv_node) {
 
     TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
 
     if (score < -MATE_BOUND) score -= thread_states[thread_id].search_ply;
     else if (score > MATE_BOUND) score += thread_states[thread_id].search_ply;
 
-    if (tt_entry.key != hash_key || depth + 2 > tt_entry.depth || tt_flag == HASH_FLAG_EXACT) {
+    PLY_TYPE artificial_depth = depth + 3 + 2 * pv_node;
+
+    if (tt_entry.key != hash_key || artificial_depth >= tt_entry.depth || tt_flag == HASH_FLAG_EXACT) {
         tt_entry.key = hash_key;
         tt_entry.depth = depth;
         tt_entry.flag = tt_flag;
@@ -938,7 +940,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         else return -MATE_SCORE + thread_state.search_ply;
     }
 
-    engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval);
+    engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval, pv_node);
 
     return best_score;
 }
