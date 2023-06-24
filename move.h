@@ -2,51 +2,90 @@
 #ifndef ANTARESCHESSENGINE_MOVE_H
 #define ANTARESCHESSENGINE_MOVE_H
 
-#include <string>
-#include "constants.h"
-#include "position.h"
+// Major contributions by Archishmaan Peyyety as a pull request to Alex2262/BitboardEngine
+
+#include <cstdint>
+#include "types.h"
+
+enum MoveType : uint8_t {
+    MOVE_TYPE_NORMAL	= 0b0000,
+    MOVE_TYPE_EP		= 0b0001,
+    MOVE_TYPE_CASTLE	= 0b0010,
+    MOVE_TYPE_PROMOTION	= 0b0011,
+};
+
+enum PromotionType : uint8_t {
+    PROMOTION_KNIGHT	= 0b0000,
+    PROMOTION_BISHOP	= 0b0001,
+    PROMOTION_ROOK		= 0b0010,
+    PROMOTION_QUEEN		= 0b0011,
+};
 
 
-std::string get_uci_from_move(const Position& position, MOVE_TYPE move);
+// The normal Move class that is used for the most part as it only requires an uint16_t
+class Move {
+private:
+    // Bits are arranged as follows
+    // | 2 bits for promotion piece | 2 bits for type | 6 bits for from | 6 bits for to
+    uint16_t move;
+public:
+    inline Move() : move(0) {}
 
-MOVE_TYPE get_move_from_uci(const Position& position, std::string uci);
+    inline explicit Move(uint16_t m) { move = m; }
+
+    inline Move(Square from, Square to) : move(0) {
+        move = (from << 6) | to;
+    }
+
+    inline Move(Square from, Square to, MoveType type) : move(0) {
+        move = (type << 12) | (from << 6) | to;
+    }
+
+    inline Move(Square from, Square to, MoveType type, PromotionType promotion_type) : move(0) {
+        move = (promotion_type << 14) | (type << 12) | (from << 6) | to;
+    }
+
+    [[nodiscard]] inline Square to() const { return Square(move & 0x3f); }
+    [[nodiscard]] inline Square from() const { return Square((move >> 6) & 0x3f); }
+    [[nodiscard]] inline MoveType type() const { return MoveType((move >> 12) & 0x3); }
+    [[nodiscard]] inline PromotionType promotion_piece() const { return PromotionType((move >> 14) & 0x3); }
+
+    bool operator==(Move a) const { return move == a.move; }
+    bool operator!=(Move a) const { return move != a.move; }
+};
 
 
-inline MOVE_TYPE encode_move(SQUARE_TYPE origin_square, SQUARE_TYPE target_square,
-                             PIECE_TYPE selected, PIECE_TYPE occupied,
-                             uint16_t move_type, PIECE_TYPE promotion_piece, bool is_capture) {
-    return origin_square | target_square << 7 | selected << 14 | occupied << 18 | move_type << 22 | \
-        promotion_piece << 25 | is_capture << 29;
-}
+// The InformativeMove class stores selected and occupied pieces as extra information for usage in tables such as
+// continuation histories that require this information to be preserved in the move class
+class InformativeMove {
+private:
+    // Bits are arranged as follows
+    // | 4 bits for selected | 4 bits for occupied | 2 bits for promotion piece -->
+    // | 2 bits for type | 6 bits for from | 6 bits for to
+    uint32_t move;
+public:
+    inline InformativeMove() : move(0) {}
 
+    inline explicit InformativeMove(uint32_t m) { move = m; }
 
-inline SQUARE_TYPE get_origin_square(MOVE_TYPE move) {
-    return move & 0x7f;
-}
+    inline InformativeMove(Square from, Square to, Piece selected, Piece occupied,
+                           MoveType type, PromotionType promotion_type) : move(0) {
+        move = (occupied << 20) | (occupied << 16) | (promotion_type << 14) | (type << 12) | (from << 6) | to;
+    }
 
-inline SQUARE_TYPE get_target_square(MOVE_TYPE move) {
-    return (move & 0x3f80) >> 7;
-}
+    [[nodiscard]] inline Square to() const { return Square(move & 0x3f); }
+    [[nodiscard]] inline Square from() const { return Square((move >> 6) & 0x3f); }
+    [[nodiscard]] inline MoveType type() const { return MoveType((move >> 12) & 0x3); }
+    [[nodiscard]] inline PromotionType promotion_piece() const { return PromotionType((move >> 14) & 0x3); }
+    [[nodiscard]] inline Piece occupied() const { return Piece((move >> 16) & 0xf); }
+    [[nodiscard]] inline Piece selected() const { return Piece((move >> 20) & 0xf); }
 
-inline PIECE_TYPE get_selected(MOVE_TYPE move) {
-    return (move & 0x3c000) >> 14;
-}
+    bool operator==(InformativeMove a) const { return move == a.move; }
+    bool operator!=(InformativeMove a) const { return move != a.move; }
+};
 
-inline PIECE_TYPE get_occupied(MOVE_TYPE move) {
-    return (move & 0x3c0000) >> 18;
-}
-
-inline uint16_t get_move_type(MOVE_TYPE move) {
-    return (move & 0x1c00000) >> 22;
-}
-
-inline PIECE_TYPE get_promotion_piece(MOVE_TYPE move) {
-    return (move & 0x1e000000) >> 25;
-}
-
-inline bool get_is_capture(MOVE_TYPE move) {
-    return (move & 0x20000000) >> 29;
-}
+const Move EMPTY_MOVE = Move();
+const InformativeMove EMPTY_INFORMATIVE_MOVE = InformativeMove();
 
 
 #endif //ANTARESCHESSENGINE_MOVE_H

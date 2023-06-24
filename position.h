@@ -5,98 +5,83 @@
 #ifndef ANTARESCHESSENGINE_POSITION_H
 #define ANTARESCHESSENGINE_POSITION_H
 
-#include <vector>
-#include <array>
 #include <string>
 #include "constants.h"
+#include "types.h"
+#include "fixed_vector.h"
+#include "bitboard.h"
+#include "tables.h"
+#include "move.h"
 
 
-struct Move_Struct {
-    MOVE_TYPE move = NO_MOVE;
+struct ScoredMove {
+    Move move = EMPTY_MOVE;
     SCORE_TYPE score = 0;
-    bool legal = false;
 };
-
-
-struct State_Struct {
-    int in_check = -1;
-    uint64_t current_hash_key;
-    MOVE_TYPE move = NO_MOVE;
-    SCORE_TYPE evaluation = NO_EVALUATION;
-    SQUARE_TYPE current_ep_square;
-    uint16_t current_castle_ability_bits;
-    PLY_TYPE current_fifty_move;
-    MOVE_TYPE excluded_move = NO_MOVE;
-    int double_extensions = 0;
-};
-
 
 class Position {
 
 public:
 
     Position() = default;
+    BITBOARD all_pieces{};
+    BITBOARD our_pieces{};
+    BITBOARD opp_pieces{};
+    BITBOARD empty_squares{};
 
-    bool fischer_random_chess = false;
+    BITBOARD pieces[12]{};
 
-    void clear_movelist();
-    void clear_state_stack();
-    void compute_hash_key();
+    Piece board[64]{};
 
-    PLY_TYPE set_fen(const std::string& fen_string);
-    void print_board();
-    [[maybe_unused]] void print_piece_index_board();
-    [[maybe_unused]] bool check_valid(PLY_TYPE ply);
+    Color side = WHITE;
 
-    bool is_attacked(SQUARE_TYPE pos);
-
-    void set_state(PLY_TYPE search_ply, PLY_TYPE fifty_move);
-
-    bool make_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_move);
-    void undo_move(MOVE_TYPE move, PLY_TYPE search_ply, PLY_TYPE& fifty_move);
-    void make_null_move(PLY_TYPE search_ply, PLY_TYPE& fifty_move);
-    void undo_null_move(PLY_TYPE search_ply, PLY_TYPE& fifty_move);
-
-    void get_pseudo_legal_moves(PLY_TYPE ply);
-    void get_pseudo_legal_captures(PLY_TYPE ply);
-
-    bool get_is_pseudo_legal(MOVE_TYPE move);
-
-    PIECE_TYPE board[120]{};
-    SQUARE_TYPE piece_list_index[120] = {NO_PIECE_INDEX};
-
-    SQUARE_TYPE starting_rook_pos[2][2]{};
-
-    std::vector<PIECE_TYPE> white_pieces;
-    std::vector<PIECE_TYPE> black_pieces;
-
-    std::array<std::vector<Move_Struct>, TOTAL_MAX_DEPTH> moves;
-
-    std::array<State_Struct, TOTAL_MAX_DEPTH> state_stack{};
-
-    SQUARE_TYPE king_positions[2]{};
-
-    SQUARE_TYPE pawn_rank[2][10]{};
-
-    SQUARE_TYPE castle_ability_bits = 0;
-    SQUARE_TYPE ep_square = 0;
-    SQUARE_TYPE side = 0;
+    uint8_t castle_ability_bits = 0;
+    Square ep_square = NO_SQUARE;
     HASH_TYPE hash_key = 0;
 
-    int non_pawn_material_count = 0;
+    std::array<FixedVector<ScoredMove, MAX_MOVES>, TOTAL_MAX_DEPTH> scored_moves;
 
-    inline void update_piece_list_index(SQUARE_TYPE left_range, SQUARE_TYPE right_range, SQUARE_TYPE side_to_use) {
-        if (!side_to_use) {
-            for (int i = left_range; i < right_range; i++) {
-                piece_list_index[white_pieces[i]] = i;
-            }
-        } else {
-            for (int i = left_range; i < right_range; i++) {
-                piece_list_index[black_pieces[i]] = i;
-            }
-        }
-    }
+    BITBOARD get_pieces(Piece piece);
+    BITBOARD get_pieces(PieceType piece, Color color);
 
+    [[nodiscard]] BITBOARD get_our_pieces();
+    [[nodiscard]] BITBOARD get_opp_pieces();
+    [[nodiscard]] BITBOARD get_all_pieces() const;
+    [[nodiscard]] BITBOARD get_empty_squares() const;
+
+    Square get_king_pos(Color color);
+
+    void remove_piece(Piece piece, Square square);
+    void place_piece(Piece piece, Square square);
+
+    void set_fen(const std::string& fen);
+
+    friend std::ostream& operator<<(std::ostream& os, const Position& p);
+
+    void get_pawn_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+    void get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
+
+    void get_knight_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+    void get_knight_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+
+    void get_bishop_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
+    void get_bishop_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
+
+    void get_rook_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
+    void get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
+
+    void get_queen_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
+    void get_queen_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
+
+    void get_king_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+    void get_king_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+
+    void get_piece_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, PieceType piece, Square square);
+    void get_piece_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, PieceType piece, Square square);
+
+    void get_pseudo_legal_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves);
+
+    void get_pseudo_legal_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves);
 
 };
 
