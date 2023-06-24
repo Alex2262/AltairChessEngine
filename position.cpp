@@ -260,7 +260,7 @@ void Position::get_knight_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_sc
 }
 
 void Position::get_knight_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const {
-    BITBOARD bitboard =  KNIGHT_ATTACKS[square] & (~our_pieces);
+    BITBOARD bitboard = KNIGHT_ATTACKS[square] & (~our_pieces);
     while (bitboard) {
         Square new_square = poplsb(bitboard);
         current_scored_moves.push_back({

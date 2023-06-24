@@ -1,7 +1,4 @@
 
-#include <cstring>
-#include "uci.h"
-#include "bench.h"
 
 int main(int argc, char* argv[]) {
 
