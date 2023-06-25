@@ -5401,3 +5401,63 @@ SPRT  | 8.0+0.08s Threads=1 Hash=16MB
 LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
 GAMES | N: 87320 W: 23705 L: 23072 D: 40543
 ```
+
+### 3.1.5
+Failing term implemented.
+This term is true when the current evaluation is worse than the previous evaluation by a certain margin.
+Tested in quiet LMP.
+
+```
+ELO   | 0.40 +- 2.81 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | -2.94 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 31184 W: 8332 L: 8296 D: 14556
+```
+
+(Kept the patch because it is interesting)
+
+### 3.1.6
+Failing term tested in LMR
+
+```
+ELO   | 0.63 +- 2.60 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | -2.97 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 36816 W: 9930 L: 9863 D: 17023
+```
+
+(Kept the patch because it is interesting)
+
+### 3.1.7
+Fix 50 move related issues
+
+```
+ELO   | 4.83 +- 6.79 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | 2.97 (-2.94, 2.94) [-5.00, 3.00]
+GAMES | N: 5464 W: 1524 L: 1448 D: 2492
+```
+
+### 3.1.8
+LMR moves condition simplification patch
+
+```
+ELO   | 0.15 +- 2.99 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=16MB
+LLR   | -2.97 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 27256 W: 7193 L: 7181 D: 12882
+https://chess.swehosting.se/test/1812/
+```
+
+### 3.1.9
+Favor PV nodes for TT entry replacement
+
+```
+ELO   | 0.64 +- 2.56 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | -2.96 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 37336 W: 9902 L: 9833 D: 17601
+https://chess.swehosting.se/test/1885/
+```
+
+(Kept the patch because it is interesting)
