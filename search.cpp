@@ -20,7 +20,7 @@
 
 // Initialize a table for Late Move Reductions, and the base reductions to be applied
 void Engine::initialize_lmr_reductions() {
-    for (PLY_TYPE depth = 0; depth <= MAX_AB_DEPTH; depth++) {
+    for (PLY_TYPE depth = 0; depth < MAX_AB_DEPTH; depth++) {
         for (int moves = 0; moves < 64; moves++) {
             LMR_REDUCTIONS_QUIET[depth][moves] =
                     std::max(0.0,
@@ -687,7 +687,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             position.make_move(move, thread_state.search_ply, thread_state.fifty_move);
         }
 
-        extension = std::min<PLY_TYPE>(extension, 2);
+        extension = std::min<PLY_TYPE>(extension, std::min<PLY_TYPE>(2, MAX_AB_DEPTH - 1 - depth));
 
         int double_extensions = root ? 0 : position.state_stack[thread_state.search_ply].double_extensions;
 
@@ -733,8 +733,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // Get the base reduction based on depth and moves searched
             reduction = quiet ?
-                    engine.LMR_REDUCTIONS_QUIET[std::min<PLY_TYPE>(depth, MAX_AB_DEPTH - 1)][std::min(legal_moves, 63)] :
-                    engine.LMR_REDUCTIONS_NOISY[std::min<PLY_TYPE>(depth, MAX_AB_DEPTH - 1)][std::min(legal_moves, 63)];
+                    engine.LMR_REDUCTIONS_QUIET[depth][std::min(legal_moves, 63)] :
+                    engine.LMR_REDUCTIONS_NOISY[depth][std::min(legal_moves, 63)];
 
             // Fewer reductions if we are in a pv node, since moves are likely to be better and more important
             reduction -= pv_node;
@@ -819,7 +819,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             // Write moves into the PV table
             if (thread_id == 0) {
                 engine.pv_table[thread_state.search_ply][thread_state.search_ply] = move;
-                for (int next_ply = thread_state.search_ply+1; next_ply < engine.pv_length[thread_state.search_ply+1]; next_ply++) {
+
+                for (int next_ply = thread_state.search_ply + 1; next_ply < engine.pv_length[thread_state.search_ply + 1]; next_ply++) {
                     engine.pv_table[thread_state.search_ply][next_ply] = engine.pv_table[thread_state.search_ply + 1][next_ply];
                 }
 
