@@ -20,7 +20,7 @@
 
 // Initialize a table for Late Move Reductions, and the base reductions to be applied
 void Engine::initialize_lmr_reductions() {
-    for (PLY_TYPE depth = 0; depth <= MAX_AB_DEPTH; depth++) {
+    for (PLY_TYPE depth = 0; depth < MAX_AB_DEPTH; depth++) {
         for (int moves = 0; moves < 64; moves++) {
             LMR_REDUCTIONS_QUIET[depth][moves] =
                     std::max(0.0,
@@ -144,14 +144,16 @@ short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha
 
 // Records an entry to the transposition table
 void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
-                             SCORE_TYPE static_eval) {
+                             SCORE_TYPE static_eval, bool pv_node) {
 
     TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
 
     if (score < -MATE_BOUND) score -= thread_states[thread_id].search_ply;
     else if (score > MATE_BOUND) score += thread_states[thread_id].search_ply;
 
-    if (tt_entry.key != hash_key || depth + 2 > tt_entry.depth || tt_flag == HASH_FLAG_EXACT) {
+    PLY_TYPE artificial_depth = depth + 3 + 2 * pv_node;
+
+    if (tt_entry.key != hash_key || artificial_depth >= tt_entry.depth || tt_flag == HASH_FLAG_EXACT) {
         tt_entry.key = hash_key;
         tt_entry.depth = depth;
         tt_entry.flag = tt_flag;
@@ -601,7 +603,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;
 
             // Quiet Late Move Pruning
-            if (quiet && legal_moves >= 2 + depth * depth / (1 + !improving + failing)) continue;
+            if (quiet && legal_moves >= 2 + depth * depth / (1 + !improving + failing)) break;
 
             // Futility Pruning
             if (quiet && depth <= 5 && static_eval + (depth - !improving) * 140 + 70 <= alpha) break;
@@ -685,7 +687,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             position.make_move(move, thread_state.search_ply, thread_state.fifty_move);
         }
 
-        extension = std::min<PLY_TYPE>(extension, 2);
+        extension = std::min<PLY_TYPE>(extension, std::min<PLY_TYPE>(2, MAX_AB_DEPTH - 1 - depth));
 
         int double_extensions = root ? 0 : position.state_stack[thread_state.search_ply].double_extensions;
 
@@ -724,16 +726,15 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Late Move Reductions (LMR)
         // The idea that if moves are ordered well, then moves that are searched
         // later shouldn't be as good, and therefore we don't need to search them to a very high depth
-        if (legal_moves >= 2
-            && ((thread_state.search_ply && !pv_node) || legal_moves >= 4)
+        if (legal_moves >= 2 + 2 * root + pv_node
             && depth >= 3
             && (quiet || bad_capture)
             ){
 
             // Get the base reduction based on depth and moves searched
             reduction = quiet ?
-                    engine.LMR_REDUCTIONS_QUIET[std::min<PLY_TYPE>(depth, MAX_AB_DEPTH - 1)][std::min(legal_moves, 63)] :
-                    engine.LMR_REDUCTIONS_NOISY[std::min<PLY_TYPE>(depth, MAX_AB_DEPTH - 1)][std::min(legal_moves, 63)];
+                    engine.LMR_REDUCTIONS_QUIET[depth][std::min(legal_moves, 63)] :
+                    engine.LMR_REDUCTIONS_NOISY[depth][std::min(legal_moves, 63)];
 
             // Fewer reductions if we are in a pv node, since moves are likely to be better and more important
             reduction -= pv_node;
@@ -818,7 +819,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             // Write moves into the PV table
             if (thread_id == 0) {
                 engine.pv_table[thread_state.search_ply][thread_state.search_ply] = move;
-                for (int next_ply = thread_state.search_ply+1; next_ply < engine.pv_length[thread_state.search_ply+1]; next_ply++) {
+
+                for (int next_ply = thread_state.search_ply + 1; next_ply < engine.pv_length[thread_state.search_ply + 1]; next_ply++) {
                     engine.pv_table[thread_state.search_ply][next_ply] = engine.pv_table[thread_state.search_ply + 1][next_ply];
                 }
 
@@ -939,7 +941,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         else return -MATE_SCORE + thread_state.search_ply;
     }
 
-    engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval);
+    engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval, pv_node);
 
     return best_score;
 }
