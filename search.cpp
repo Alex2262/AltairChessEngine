@@ -603,7 +603,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;
 
             // Quiet Late Move Pruning
-            if (quiet && legal_moves >= 2 + depth * depth / (1 + !improving + failing)) continue;
+            if (quiet && legal_moves >= 2 + depth * depth / (1 + !improving + failing)) break;
 
             // Futility Pruning
             if (quiet && depth <= 5 && static_eval + (depth - !improving) * 140 + 70 <= alpha) break;
