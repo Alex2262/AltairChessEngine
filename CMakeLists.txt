@@ -15,8 +15,8 @@ add_executable(AltairChess
         main.cpp
         move.cpp
         move.h
-        #perft.cpp
-        #perft.h
+        perft.cpp
+        perft.h
         position.cpp
         position.h
         #search.cpp
@@ -24,10 +24,10 @@ add_executable(AltairChess
         useful.cpp
         useful.h
         #uci.cpp
-        #uci.h
+        uci.h
         zobrist.h
         #bench.cpp
-        #bench.h
+        bench.h
         #see.cpp
         #see.h
         types.h

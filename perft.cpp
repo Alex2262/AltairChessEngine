@@ -34,8 +34,6 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
             continue;
         }
 
-        position.side = ~position.side;
-
         if (depth == 1) {
             int move_type = move.type();
 
@@ -49,12 +47,11 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
             else if (move_type == MOVE_TYPE_PROMOTION) res.promotion_amount += 1;
             else if (move_type == MOVE_TYPE_CASTLE) res.castle_amount += 1;
 
-            if (position.in_check(position.side)) res.check_amount += 1;
+            if (position.is_attacked(position.get_king_pos(position.side), position.side)) res.check_amount += 1;
         }
 
         debug_perft(position, res, depth - 1, ply + 1);
 
-        position.side = ~position.side;
         position.undo_move(move, position.state_stack[ply], fifty);
     }
 
@@ -63,6 +60,9 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
 
 
 long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
+
+    // std::cout << position.state_stack[ply - 1].move.get_uci(position) << std::endl;
+    // std::cout << position;
 
     if (depth == 0) {
         return 1;
@@ -86,11 +86,8 @@ long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
             continue;
         }
 
-        position.side = ~position.side;
-
         amt += fast_perft(position, depth - 1, ply + 1);
 
-        position.side = ~position.side;
         position.undo_move(move, position.state_stack[ply], fifty);
     }
 
@@ -125,12 +122,9 @@ long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
             continue;
         }
 
-        position.side = ~position.side;
-
         long long amt = fast_perft(position, depth - 1, ply + 1);
         total_amt += amt;
 
-        position.side = ~position.side;
         position.undo_move(move, position.state_stack[ply], fifty);
 
         std::cout << move.get_uci(position) << ": " << amt << std::endl;

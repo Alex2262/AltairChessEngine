@@ -25,6 +25,8 @@ struct State_Struct {
     uint8_t current_castle_ability_bits = 0;
     PLY_TYPE current_fifty_move = 0;
 
+    Piece selected = EMPTY;
+    Piece occupied = EMPTY;
     Move move = NO_MOVE;
     Move excluded_move = NO_MOVE;
 
@@ -67,8 +69,8 @@ public:
     void clear_state_stack();
     void set_state(State_Struct& state_struct, PLY_TYPE fifty_move) const;
 
-    BITBOARD get_pieces(Piece piece) const;
-    BITBOARD get_pieces(PieceType piece, Color color) const;
+    [[nodiscard]] BITBOARD get_pieces(Piece piece) const;
+    [[nodiscard]] BITBOARD get_pieces(PieceType piece, Color color) const;
 
     [[nodiscard]] BITBOARD get_our_pieces();
     [[nodiscard]] BITBOARD get_opp_pieces();
@@ -77,9 +79,8 @@ public:
 
     [[nodiscard]] BITBOARD get_attacked_squares(Color color) const;
 
-    Square get_king_pos(Color color);
+    Square get_king_pos(Color color) const;
 
-    bool in_check(Color color) const;
     bool is_attacked(Square square, Color color) const;
 
     void remove_piece(Piece piece, Square square);
@@ -87,7 +88,7 @@ public:
 
     void set_fen(const std::string& fen);
 
-    friend std::ostream& operator<<(std::ostream& os, const Position& p);
+    friend std::ostream& operator<<(std::ostream& os, const Position& position);
 
     void get_pawn_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
     void get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;

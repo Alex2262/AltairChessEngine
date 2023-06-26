@@ -47,7 +47,7 @@ public:
         move = (promotion_type << 14) | (type << 12) | (origin_square << 6) | target_square;
     }
 
-    inline bool is_capture(const Position& position);
+    bool is_capture(const Position& position);
 
     Move(const Position& position, std::string uci);
     std::string get_uci(const Position& position) const;

@@ -2,7 +2,7 @@
 #include "position.h"
 #include "move.h"
 
-inline bool Move::is_capture(const Position& position) {
+bool Move::is_capture(const Position& position) {
     return position.board[target()] < EMPTY;
 }
 
@@ -15,11 +15,11 @@ std::string Move::get_uci(const Position& position) const {
 
     MoveType move_type = type();
 
-    if (move_type == MOVE_TYPE_CASTLE && !position.fischer_random_chess) {
-        if (target_square == a1) target_square = c1;
-        else if (target_square == a8) target_square = c8;
-        else if (target_square == h1) target_square = g1;
-        else if (target_square == h8) target_square = g8;
+    if (move_type == MOVE_TYPE_CASTLE && position.fischer_random_chess) {
+        if (target_square == b1) target_square = a1;
+        else if (target_square == b8) target_square = a8;
+        else if (target_square == g1) target_square = h1;
+        else if (target_square == g8) target_square = h8;
     }
 
     uci_move += char(origin_square % 8 + 'a');
