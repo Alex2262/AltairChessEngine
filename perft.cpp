@@ -19,7 +19,7 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
 
     PLY_TYPE fifty = 0;
 
-    position.set_state(ply, fifty);
+    position.set_state(position.state_stack[ply], fifty);
     position.get_pseudo_legal_moves(position.scored_moves[ply]);
 
     for (ScoredMove& scored_move : position.scored_moves[ply]) {
@@ -27,10 +27,10 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
         Move move = scored_move.move;
         // std::cout << "move: " << get_uci_from_move(position, move) << std::endl;
 
-        bool attempt = position.make_move(move, ply, fifty);
+        bool attempt = position.make_move(move, position.state_stack[ply], fifty);
 
         if (!attempt) {
-            position.undo_move(move, ply, fifty);
+            position.undo_move(move, position.state_stack[ply], fifty);
             continue;
         }
 
@@ -39,7 +39,7 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
         if (depth == 1) {
             int move_type = move.type();
 
-            if (position.get_is_capture(move)) {
+            if (move.is_capture(position)) {
                 res.capture_amount += 1;
             }
             else if (move_type == MOVE_TYPE_EP) {
@@ -49,13 +49,13 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
             else if (move_type == MOVE_TYPE_PROMOTION) res.promotion_amount += 1;
             else if (move_type == MOVE_TYPE_CASTLE) res.castle_amount += 1;
 
-            if (position.is_attacked(position.king_positions[position.side])) res.check_amount += 1;
+            if (position.in_check(position.side)) res.check_amount += 1;
         }
 
         debug_perft(position, res, depth - 1, ply + 1);
 
         position.side = ~position.side;
-        position.undo_move(move, ply, fifty);
+        position.undo_move(move, position.state_stack[ply], fifty);
     }
 
 }
@@ -70,7 +70,7 @@ long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 
     PLY_TYPE fifty = 0;
 
-    position.set_state(ply, fifty);
+    position.set_state(position.state_stack[ply], fifty);
     position.get_pseudo_legal_moves(position.scored_moves[ply]);
 
     long long amt = 0;
@@ -79,19 +79,19 @@ long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 
         Move move = scored_move.move;
 
-        bool attempt = position.make_move(move, ply, fifty);
+        bool attempt = position.make_move(move, position.state_stack[ply], fifty);
 
         if (!attempt) {
-            position.undo_move(move, ply, fifty);
+            position.undo_move(move, position.state_stack[ply], fifty);
             continue;
         }
 
-        position.side ^= 1;
+        position.side = ~position.side;
 
         amt += fast_perft(position, depth - 1, ply + 1);
 
-        position.side ^= 1;
-        position.undo_move(move, ply, fifty);
+        position.side = ~position.side;
+        position.undo_move(move, position.state_stack[ply], fifty);
     }
 
     return amt;
@@ -109,7 +109,7 @@ long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
         return 1;
     }
 
-    position.set_state(ply, fifty);
+    position.set_state(position.state_stack[ply], fifty);
     position.get_pseudo_legal_moves(position.scored_moves[ply]);
 
     long long total_amt = 0;
@@ -118,10 +118,10 @@ long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 
         Move move = scored_move.move;
 
-        bool attempt = position.make_move(move, ply, fifty);
+        bool attempt = position.make_move(move, position.state_stack[ply], fifty);
 
         if (!attempt) {
-            position.undo_move(move, ply, fifty);
+            position.undo_move(move, position.state_stack[ply], fifty);
             continue;
         }
 
@@ -131,9 +131,9 @@ long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
         total_amt += amt;
 
         position.side = ~position.side;
-        position.undo_move(move, ply, fifty);
+        position.undo_move(move, position.state_stack[ply], fifty);
 
-        std::cout << get_uci_from_move(position, move) << ": " << amt << std::endl;
+        std::cout << move.get_uci(position) << ": " << amt << std::endl;
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();

@@ -7,6 +7,7 @@
 
 #include <random>
 #include "constants.h"
+#include "types.h"
 
 
 //A psuedorandom number generator

@@ -15,19 +15,40 @@
 
 
 struct ScoredMove {
-    Move move = EMPTY_MOVE;
+    Move move = NO_MOVE;
     SCORE_TYPE score = 0;
 };
+
+struct State_Struct {
+    uint64_t current_hash_key = 0ULL;
+    Square current_ep_square = NO_SQUARE;
+    uint8_t current_castle_ability_bits = 0;
+    PLY_TYPE current_fifty_move = 0;
+
+    Move move = NO_MOVE;
+    Move excluded_move = NO_MOVE;
+
+    SCORE_TYPE evaluation = NO_EVALUATION;
+
+    int double_extensions = 0;
+    int in_check = -1;
+};
+
 
 class Position {
 
 public:
 
     Position() = default;
+
+    bool fischer_random_chess = false;
+
     BITBOARD all_pieces{};
     BITBOARD our_pieces{};
     BITBOARD opp_pieces{};
     BITBOARD empty_squares{};
+
+    BITBOARD attacked_squares[2]{};
 
     BITBOARD pieces[12]{};
 
@@ -39,17 +60,27 @@ public:
     Square ep_square = NO_SQUARE;
     HASH_TYPE hash_key = 0;
 
+    std::array<State_Struct, TOTAL_MAX_DEPTH> state_stack{};
+
     std::array<FixedVector<ScoredMove, MAX_MOVES>, TOTAL_MAX_DEPTH> scored_moves;
 
-    BITBOARD get_pieces(Piece piece);
-    BITBOARD get_pieces(PieceType piece, Color color);
+    void clear_state_stack();
+    void set_state(State_Struct& state_struct, PLY_TYPE fifty_move) const;
+
+    BITBOARD get_pieces(Piece piece) const;
+    BITBOARD get_pieces(PieceType piece, Color color) const;
 
     [[nodiscard]] BITBOARD get_our_pieces();
     [[nodiscard]] BITBOARD get_opp_pieces();
     [[nodiscard]] BITBOARD get_all_pieces() const;
     [[nodiscard]] BITBOARD get_empty_squares() const;
 
+    [[nodiscard]] BITBOARD get_attacked_squares(Color color) const;
+
     Square get_king_pos(Color color);
+
+    bool in_check(Color color) const;
+    bool is_attacked(Square square, Color color) const;
 
     void remove_piece(Piece piece, Square square);
     void place_piece(Piece piece, Square square);
@@ -58,10 +89,8 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Position& p);
 
-    bool get_is_capture(Move move);
-
     void get_pawn_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
-    void get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
+    void get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
 
     void get_knight_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
     void get_knight_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
@@ -79,11 +108,14 @@ public:
     void get_king_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
 
     void get_piece_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, PieceType piece, Square square) const;
-    void get_piece_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, PieceType piece, Square square);
+    void get_piece_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, PieceType piece, Square square) const;
 
-    void get_pseudo_legal_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves);
+    void get_pseudo_legal_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
 
-    void get_pseudo_legal_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves);
+    void get_pseudo_legal_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
+
+    bool make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_move);
+    void undo_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_move);
 
 };
 

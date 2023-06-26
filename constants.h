@@ -22,7 +22,6 @@
 #define NO_EVALUATION       500000
 #define MATE_SCORE          100000
 #define MATE_BOUND          99000
-#define NO_MOVE             0
 
 #define MAX_AB_DEPTH        256
 #define TOTAL_MAX_DEPTH     512

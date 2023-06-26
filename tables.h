@@ -290,4 +290,15 @@ constexpr BITBOARD get_queen_attacks(Square square, BITBOARD occupancy) {
     return get_bishop_attacks(square, occupancy) | get_rook_attacks(square, occupancy);
 }
 
+constexpr BITBOARD get_piece_attacks(Piece piece, Square square, BITBOARD occupancy) {
+    auto piece_type = static_cast<PieceType>(piece % COLOR_OFFSET);
+    if (piece == WHITE_PAWN) return WHITE_PAWN_ATTACKS[square];
+    else if (piece == BLACK_PAWN) return BLACK_PAWN_ATTACKS[square];
+    else if (piece_type == KNIGHT) return KNIGHT_ATTACKS[square];
+    else if (piece_type == BISHOP) return get_bishop_attacks(square, occupancy);
+    else if (piece_type == ROOK) return get_rook_attacks(square, occupancy);
+    else if (piece_type == QUEEN) return get_queen_attacks(square, occupancy);
+    else return KING_ATTACKS[square];
+}
+
 #endif //ALTAIRCHESSENGINE_TABLES_H

@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include "types.h"
+#include "string"
 
 enum MoveType : uint8_t {
     MOVE_TYPE_NORMAL	= 0b0000,
@@ -21,6 +22,7 @@ enum PromotionType : uint8_t {
     PROMOTION_QUEEN		= 0b0011,
 };
 
+class Position;
 
 // The normal Move class that is used for the most part as it only requires an uint16_t
 class Move {
@@ -33,22 +35,27 @@ public:
 
     inline explicit Move(uint16_t m) { move = m; }
 
-    inline Move(Square from, Square to) : move(0) {
-        move = (from << 6) | to;
+    inline Move(Square origin_square, Square target_square) : move(0) {
+        move = (origin_square << 6) | target_square;
     }
 
-    inline Move(Square from, Square to, MoveType type) : move(0) {
-        move = (type << 12) | (from << 6) | to;
+    inline Move(Square origin_square, Square target_square, MoveType type) : move(0) {
+        move = (type << 12) | (origin_square << 6) | target_square;
     }
 
-    inline Move(Square from, Square to, MoveType type, PromotionType promotion_type) : move(0) {
-        move = (promotion_type << 14) | (type << 12) | (from << 6) | to;
+    inline Move(Square origin_square, Square target_square, MoveType type, PromotionType promotion_type) : move(0) {
+        move = (promotion_type << 14) | (type << 12) | (origin_square << 6) | target_square;
     }
 
-    [[nodiscard]] inline Square to() const { return Square(move & 0x3f); }
-    [[nodiscard]] inline Square from() const { return Square((move >> 6) & 0x3f); }
+    inline bool is_capture(const Position& position);
+
+    Move(const Position& position, std::string uci);
+    std::string get_uci(const Position& position) const;
+
+    [[nodiscard]] inline Square target() const { return Square(move & 0x3f); }
+    [[nodiscard]] inline Square origin() const { return Square((move >> 6) & 0x3f); }
     [[nodiscard]] inline MoveType type() const { return MoveType((move >> 12) & 0x3); }
-    [[nodiscard]] inline PromotionType promotion_piece() const { return PromotionType((move >> 14) & 0x3); }
+    [[nodiscard]] inline PromotionType promotion_type() const { return PromotionType((move >> 14) & 0x3); }
 
     bool operator==(Move a) const { return move == a.move; }
     bool operator!=(Move a) const { return move != a.move; }
@@ -84,8 +91,8 @@ public:
     bool operator!=(InformativeMove a) const { return move != a.move; }
 };
 
-const Move EMPTY_MOVE = Move();
-const InformativeMove EMPTY_INFORMATIVE_MOVE = InformativeMove();
+const Move NO_MOVE = Move();
+const InformativeMove NO_INFORMATIVE_MOVE = InformativeMove();
 
 
 #endif //ANTARESCHESSENGINE_MOVE_H
