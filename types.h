@@ -13,7 +13,7 @@ enum Color : int {
 };
 
 constexpr Color operator~(Color c) {
-    return Color(c ^ BLACK);
+    return Color(c ^ 1);
 }
 
 constexpr uint32_t N_PIECES = 13;
@@ -57,14 +57,14 @@ enum PieceType : uint32_t {
     KING
 };
 
-const uint32_t N_DIRS = 8;
+constexpr uint32_t N_DIRS = 8;
 enum Direction : int32_t {
     NORTH = 8, NORTH_EAST = 9, EAST = 1, SOUTH_EAST = -7,
     SOUTH = -8, SOUTH_WEST = -9, WEST = -1, NORTH_WEST = 7,
     NORTH_NORTH = 16, SOUTH_SOUTH = -16
 };
 
-const uint32_t N_FILES = 8;
+constexpr uint32_t N_FILES = 8;
 using File = uint32_t;
 
 constexpr File FILE_A = 0;

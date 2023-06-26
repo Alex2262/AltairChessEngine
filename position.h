@@ -58,28 +58,30 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Position& p);
 
-    void get_pawn_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+    bool get_is_capture(Move move);
+
+    void get_pawn_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
     void get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
 
-    void get_knight_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+    void get_knight_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
     void get_knight_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
 
-    void get_bishop_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
-    void get_bishop_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
+    void get_bishop_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+    void get_bishop_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
 
-    void get_rook_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
-    void get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
+    void get_rook_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+    void get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
 
-    void get_queen_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
-    void get_queen_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square);
+    void get_queen_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+    void get_queen_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
 
-    void get_king_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+    void get_king_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
     void get_king_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
 
-    void get_piece_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, PieceType piece, Square square);
+    void get_piece_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, PieceType piece, Square square) const;
     void get_piece_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, PieceType piece, Square square);
 
-    void get_pseudo_legal_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves);
+    void get_pseudo_legal_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves);
 
     void get_pseudo_legal_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves);
 

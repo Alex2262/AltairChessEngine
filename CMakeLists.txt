@@ -15,8 +15,8 @@ add_executable(AltairChess
         main.cpp
         move.cpp
         move.h
-        perft.cpp
-        perft.h
+        #perft.cpp
+        #perft.h
         position.cpp
         position.h
         #search.cpp

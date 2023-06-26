@@ -22,8 +22,8 @@ public:
     inline size_t size() { return current_index; }
     inline bool empty() { return current_index == 0; }
 
-    inline size_t begin() { return fixed_vector.begin(); }
-    inline size_t end() { return begin() + current_index; }
+    inline auto begin() { return fixed_vector.begin(); }
+    inline auto end() { return begin() + current_index; }
 
     inline T operator[](size_t index) { return fixed_vector[index]; }
 

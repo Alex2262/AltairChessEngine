@@ -8,20 +8,7 @@
 #include "types.h"
 #include "bitboard.h"
 
-template<Direction D>
-BITBOARD shift(BITBOARD b) {
-    if constexpr (D == NORTH) return b << 8;
-    else if constexpr (D == SOUTH) return b >> 8;
-    else if constexpr (D == NORTH + NORTH) return b << 16;
-    else if constexpr (D == SOUTH + SOUTH) return b >> 16;
-    else if constexpr (D == EAST) return (b & ~MASK_FILE[FILE_H]) << 1;
-    else if constexpr (D == WEST) return (b & ~MASK_FILE[FILE_A]) >> 1;
-    else if constexpr (D == NORTH_EAST) return (b & ~MASK_FILE[FILE_H]) << 9;
-    else if constexpr (D == NORTH_WEST) return (b & ~MASK_FILE[FILE_A]) << 7;
-    else if constexpr (D == SOUTH_EAST) return (b & ~MASK_FILE[FILE_H]) >> 7;
-    else if constexpr (D == SOUTH_WEST) return (b & ~MASK_FILE[FILE_A]) >> 9;
-    return 0;
-}
+// Major contributions by Archishmaan Peyyety as a pull request to Alex2262/BitboardEngine
 
 void print_bitboard(BITBOARD bitboard) {
     std::bitset<64> b(bitboard);

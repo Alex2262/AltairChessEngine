@@ -159,7 +159,11 @@ std::ostream& operator << (std::ostream& os, const Position& p) {
     return os;
 }
 
-void Position::get_pawn_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const {
+bool Position::get_is_capture(Move move) {
+    return board[move.to()] < EMPTY;
+}
+
+void Position::get_pawn_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const {
     BITBOARD bitboard = (side == WHITE ? WHITE_PAWN_ATTACKS[square] : BLACK_PAWN_ATTACKS[square]) & opp_pieces;
     while (bitboard) {
         Square new_square = poplsb(bitboard);
@@ -248,7 +252,7 @@ void Position::get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
 
 }
 
-void Position::get_knight_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const {
+void Position::get_knight_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const {
     BITBOARD bitboard = KNIGHT_ATTACKS[square] & opp_pieces;
     while (bitboard) {
         Square new_square = poplsb(bitboard);
@@ -270,31 +274,91 @@ void Position::get_knight_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scor
     }
 }
 
-void get_bishop_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) {
+void Position::get_bishop_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const {
+    BITBOARD other_pieces = all_pieces & (~from_square(square));
+    BITBOARD bishop_attacks = get_bishop_attacks(square, other_pieces);
+    BITBOARD bishop_moves = bishop_attacks & opp_pieces;
 
+    while (bishop_moves) {
+        Square new_square = poplsb(bishop_moves);
+        current_scored_moves.push_back({
+            Move(square, new_square),
+            0
+        });
+    }
 }
 
-void get_bishop_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) {
+void Position::get_bishop_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const {
+    BITBOARD other_pieces = all_pieces & (~from_square(square));
+    BITBOARD bishop_attacks = get_bishop_attacks(square, other_pieces);
+    BITBOARD bishop_moves = bishop_attacks & (~our_pieces);
 
+    while (bishop_moves) {
+        Square new_square = poplsb(bishop_moves);
+        current_scored_moves.push_back({
+            Move(square, new_square),
+            0
+        });
+    }
 }
 
-void get_rook_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) {
+void Position::get_rook_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const {
+    BITBOARD other_pieces = all_pieces & (~from_square(square));
+    BITBOARD rook_attacks = get_rook_attacks(square, other_pieces);
+    BITBOARD rook_moves = rook_attacks & opp_pieces;
 
+    while (rook_moves) {
+        Square new_square = poplsb(rook_moves);
+        current_scored_moves.push_back({
+            Move(square, new_square),
+            0
+        });
+    }
 }
 
-void get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) {
+void Position::get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const {
+    BITBOARD other_pieces = all_pieces & (~from_square(square));
+    BITBOARD rook_attacks = get_rook_attacks(square, other_pieces);
+    BITBOARD rook_moves = rook_attacks & (~our_pieces);
 
+    while (rook_moves) {
+        Square new_square = poplsb(rook_moves);
+        current_scored_moves.push_back({
+            Move(square, new_square),
+            0
+        });
+    }
 }
 
-void get_queen_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) {
+void Position::get_queen_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const {
+    BITBOARD other_pieces = all_pieces & (~from_square(square));
+    BITBOARD queen_attacks = get_queen_attacks(square, other_pieces);
+    BITBOARD queen_moves = queen_attacks & opp_pieces;
 
+    while (queen_moves) {
+        Square new_square = poplsb(queen_moves);
+        current_scored_moves.push_back({
+            Move(square, new_square),
+            0
+        });
+    }
 }
 
-void get_queen_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) {
+void Position::get_queen_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const {
+    BITBOARD other_pieces = all_pieces & (~from_square(square));
+    BITBOARD queen_attacks = get_queen_attacks(square, other_pieces);
+    BITBOARD queen_moves = queen_attacks & (~our_pieces);
 
+    while (queen_moves) {
+        Square new_square = poplsb(queen_moves);
+        current_scored_moves.push_back({
+            Move(square, new_square),
+            0
+        });
+    }
 }
 
-void Position::get_king_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const {
+void Position::get_king_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const {
     BITBOARD bitboard = KING_ATTACKS[square] & opp_pieces;
     while (bitboard) {
         Square new_square = poplsb(bitboard);
@@ -316,13 +380,13 @@ void Position::get_king_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
     }
 }
 
-void Position::get_piece_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, PieceType piece, Square square) {
-    if (piece == PAWN) get_pawn_attacks(current_scored_moves, square);
-    else if (piece == KNIGHT) get_knight_attacks(current_scored_moves, square);
-    else if (piece == BISHOP) get_bishop_attacks(current_scored_moves, square);
-    else if (piece == ROOK) get_rook_attacks(current_scored_moves, square);
-    else if (piece == QUEEN) get_queen_attacks(current_scored_moves, square);
-    else if (piece == KING) get_king_attacks(current_scored_moves, square);
+void Position::get_piece_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, PieceType piece, Square square) const {
+    if (piece == PAWN) get_pawn_captures(current_scored_moves, square);
+    else if (piece == KNIGHT) get_knight_captures(current_scored_moves, square);
+    else if (piece == BISHOP) get_bishop_captures(current_scored_moves, square);
+    else if (piece == ROOK) get_rook_captures(current_scored_moves, square);
+    else if (piece == QUEEN) get_queen_captures(current_scored_moves, square);
+    else if (piece == KING) get_king_captures(current_scored_moves, square);
 }
 
 void Position::get_piece_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, PieceType piece, Square square) {
@@ -334,14 +398,14 @@ void Position::get_piece_moves(FixedVector<ScoredMove, MAX_MOVES>& current_score
     else if (piece == KING) get_king_moves(current_scored_moves, square);
 }
 
-void Position::get_pseudo_legal_attacks(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) {
+void Position::get_pseudo_legal_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) {
     current_scored_moves.clear();
 
     for (int piece = 0; piece < 6; piece++) {
         BITBOARD piece_bitboard = pieces[piece + side * COLOR_OFFSET];
         while (piece_bitboard) {
             Square square = poplsb(piece_bitboard);
-            get_piece_attacks(current_scored_moves, static_cast<PieceType>(piece), square);
+            get_piece_captures(current_scored_moves, static_cast<PieceType>(piece), square);
         }
     }
 }
