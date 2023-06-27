@@ -18,7 +18,7 @@ public:
     std::vector<std::string> tokens;
 
     std::unique_ptr<Engine> engine = std::make_unique<Engine>();
-    MOVE_TYPE last_move = NO_MOVE;
+    Move last_move = NO_MOVE;
 
     std::vector<std::thread> search_threads;
 

@@ -19,44 +19,19 @@ add_executable(AltairChess
         perft.h
         position.cpp
         position.h
-        #search.cpp
-        #search.h
+        search.cpp
+        search.h
         useful.cpp
         useful.h
-        #uci.cpp
+        uci.cpp
         uci.h
         zobrist.h
-        #bench.cpp
+        bench.cpp
         bench.h
-        #see.cpp
-        #see.h
+        see.cpp
+        see.h
         types.h
         bitboard.cpp
         bitboard.h
-        tables.h fixed_vector.h)
-
-
-#add_executable(AltairChess
-#        constants.h
-#        main.cpp
-#        move.cpp
-#        move.h
-#        perft.cpp
-#        perft.h
-#        position.cpp
-#        position.h
-#        search.cpp
-#        search.h
-#        useful.cpp
-#        useful.h
-#        uci.cpp
-#        uci.h
-#        zobrist.h
-#        bench.cpp
-#        bench.h
-#        see.cpp
-#        see.h
-#        types.h
-#        bitboard.cpp
-#        bitboard.h
-#        tables.h)
+        tables.h
+        fixed_vector.h evaluation.cpp evaluation.h evaluation_constants.h move_ordering.cpp move_ordering.h)

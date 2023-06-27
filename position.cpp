@@ -16,14 +16,12 @@ void Position::clear_state_stack() {
     for (auto& state : state_stack) {
         state.in_check = -1;
         state.current_hash_key = 0ULL;
-        state.move = NO_MOVE;
+        state.move = NO_INFORMATIVE_MOVE;
         state.evaluation = NO_EVALUATION;
         state.current_ep_square = NO_SQUARE;
         state.current_castle_ability_bits = 0;
         state.current_fifty_move = 0;
         state.excluded_move = NO_MOVE;
-        state.selected = EMPTY;
-        state.occupied = EMPTY;
     }
 }
 
@@ -113,6 +111,20 @@ bool Position::is_attacked(Square square, Color color) const {
     return false;
 }
 
+uint32_t Position::get_non_pawn_material_count() const {
+    uint32_t non_pawn_material_count = 0;
+
+    for (int piece = 1; piece < 5; piece++) {
+        BITBOARD white_pieces = get_pieces(static_cast<PieceType>(piece), WHITE);
+        BITBOARD black_pieces = get_pieces(static_cast<PieceType>(piece), BLACK);
+
+        non_pawn_material_count += popcount(white_pieces);
+        non_pawn_material_count += popcount(black_pieces);
+    }
+
+    return non_pawn_material_count;
+}
+
 void Position::remove_piece(Piece piece, Square square) {
     pieces[piece] &= ~(1ULL << square);
     board[square] = EMPTY;
@@ -123,7 +135,7 @@ void Position::place_piece(Piece piece, Square square) {
     board[square] = piece;
 }
 
-void Position::set_fen(const std::string& fen_string) {
+PLY_TYPE Position::set_fen(const std::string& fen_string) {
 
     std::vector<std::string> fen_tokens = split(fen_string, ' ');
 
@@ -136,8 +148,8 @@ void Position::set_fen(const std::string& fen_string) {
     const std::string castling = fen_tokens[2];
     const std::string en_passant = fen_tokens[3];
 
-    const std::string half_move_clock = fen_tokens.size() > 4 ? fen_tokens[4] : "0";
-    const std::string full_move_counter = fen_tokens.size() > 4 ? fen_tokens[5] : "1";
+    const std::string half_move_clock = fen_tokens.size() >= 5 ? fen_tokens[4] : "0";
+    const std::string full_move_counter = fen_tokens.size() >= 6 ? fen_tokens[5] : "1";
 
     side = (player == "w") ? WHITE : BLACK;
 
@@ -191,6 +203,8 @@ void Position::set_fen(const std::string& fen_string) {
     opp_pieces = get_opp_pieces();
     all_pieces = get_all_pieces();
     empty_squares = get_empty_squares();
+
+    return static_cast<PLY_TYPE>(std::stoi(half_move_clock));
 }
 
 std::ostream& operator << (std::ostream& os, const Position& position) {
@@ -531,9 +545,7 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
     Piece occupied = board[target_square];
     MoveType move_type = move.type();
 
-    state_struct.move = move;
-    state_struct.selected = selected;
-    state_struct.occupied = occupied;
+    state_struct.move = InformativeMove(move, selected, occupied);
 
     bool legal = true;
 
@@ -684,8 +696,8 @@ void Position::undo_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
     // Get move info
     Square origin_square = move.origin();
     Square target_square = move.target();
-    Piece selected = state_struct.selected;
-    Piece occupied = state_struct.occupied;
+    Piece selected = state_struct.move.selected();
+    Piece occupied = state_struct.move.occupied();
     MoveType move_type = move.type();
 
     // Reset certain information
@@ -728,5 +740,25 @@ void Position::undo_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
     opp_pieces = get_opp_pieces();
     all_pieces = get_all_pieces();
     empty_squares = get_empty_squares();
+}
+
+void Position::make_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move) {
+    side = ~side;
+    hash_key ^= ZobristHashKeys.side_hash_key;
+    state_struct.move = NO_INFORMATIVE_MOVE;
+
+    if (ep_square != NO_SQUARE) {
+        hash_key ^= ZobristHashKeys.ep_hash_keys[ep_square];
+        ep_square = NO_SQUARE;
+    }
+
+    fifty_move = 0;
+}
+
+void Position::undo_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move) {
+    side = ~side;
+    ep_square = state_struct.current_ep_square;
+    hash_key = state_struct.current_hash_key;
+    fifty_move = state_struct.current_fifty_move;
 }
 

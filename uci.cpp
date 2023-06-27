@@ -34,8 +34,8 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
 
     Position& position = engine->thread_states[0].position;
 
-    if (position.is_attacked(position.king_positions[position.side])) rate -= 3;
-    if (get_is_capture(last_move)) rate -= 1.5;
+    if (position.is_attacked(position.get_king_pos(position.side), position.side)) rate -= 3;
+    if (last_move.is_capture(position)) rate -= 1.5;
 
     if (movetime > 0) time_amt = movetime * 0.9;
     else if (inc > 0 && movestogo > 0) {
@@ -112,15 +112,13 @@ void UCI::parse_position() {
 
     for (int i = next_idx + 1; i < static_cast<int>(tokens.size()); i++) {
         // std::cout << tokens[i] << std::endl;
-        MOVE_TYPE move = get_move_from_uci(position, tokens[i]);
+        Move move = Move(position, tokens[i]);
         last_move = move;
         // std::cout << move << " " << get_uci_from_move(move) << std::endl;
-        position.make_move(move, 0, engine->thread_states[0].fifty_move);
+        position.make_move(move, position.state_stack[0], engine->thread_states[0].fifty_move);
 
         engine->thread_states[0].game_ply++;
         engine->thread_states[0].repetition_table[engine->thread_states[0].game_ply] = position.hash_key;
-
-        position.side ^= 1;
     }
 
     // std::cout << engine.detect_repetition() << std::endl;
@@ -133,7 +131,7 @@ void UCI::parse_go() {
 
     Position& position = engine->thread_states[0].position;
 
-    PLY_TYPE d = 0, perft_depth = -1;
+    PLY_TYPE d = 0, perft_depth = 0;
     double wtime = 0, btime = 0, winc = 0, binc = 0, movetime = 0;
     long movestogo = 0;
     bool infinite = false;
@@ -164,8 +162,7 @@ void UCI::parse_go() {
 
     }
 
-    if (perft_depth > -1) {
-        position.print_board();
+    if (perft_depth > 0) {
         uci_perft(position, perft_depth, 0);
         return;
     }
@@ -327,7 +324,6 @@ void UCI::uci_loop() {
 
         else if (tokens[0] == "position") {
             parse_position();
-            engine->thread_states[0].position.print_board();
         }
 
         else if (tokens[0] == "go") {

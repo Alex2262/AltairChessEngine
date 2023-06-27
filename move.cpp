@@ -2,7 +2,7 @@
 #include "position.h"
 #include "move.h"
 
-bool Move::is_capture(const Position& position) {
+bool Move::is_capture(const Position& position) const {
     return position.board[target()] < EMPTY;
 }
 

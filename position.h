@@ -25,9 +25,7 @@ struct State_Struct {
     uint8_t current_castle_ability_bits = 0;
     PLY_TYPE current_fifty_move = 0;
 
-    Piece selected = EMPTY;
-    Piece occupied = EMPTY;
-    Move move = NO_MOVE;
+    InformativeMove move = NO_INFORMATIVE_MOVE;
     Move excluded_move = NO_MOVE;
 
     SCORE_TYPE evaluation = NO_EVALUATION;
@@ -79,14 +77,16 @@ public:
 
     [[nodiscard]] BITBOARD get_attacked_squares(Color color) const;
 
-    Square get_king_pos(Color color) const;
+    [[nodiscard]] Square get_king_pos(Color color) const;
 
-    bool is_attacked(Square square, Color color) const;
+    [[nodiscard]] bool is_attacked(Square square, Color color) const;
+
+    uint32_t get_non_pawn_material_count() const;
 
     void remove_piece(Piece piece, Square square);
     void place_piece(Piece piece, Square square);
 
-    void set_fen(const std::string& fen);
+    PLY_TYPE set_fen(const std::string& fen);
 
     friend std::ostream& operator<<(std::ostream& os, const Position& position);
 
@@ -117,6 +117,9 @@ public:
 
     bool make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_move);
     void undo_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_move);
+
+    void make_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move);
+    void undo_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move);
 
 };
 

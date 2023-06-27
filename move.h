@@ -47,15 +47,16 @@ public:
         move = (promotion_type << 14) | (type << 12) | (origin_square << 6) | target_square;
     }
 
-    bool is_capture(const Position& position);
+    [[nodiscard]] bool is_capture(const Position& position) const;
 
     Move(const Position& position, std::string uci);
-    std::string get_uci(const Position& position) const;
+    [[nodiscard]] std::string get_uci(const Position& position) const;
 
     [[nodiscard]] inline Square target() const { return Square(move & 0x3f); }
     [[nodiscard]] inline Square origin() const { return Square((move >> 6) & 0x3f); }
     [[nodiscard]] inline MoveType type() const { return MoveType((move >> 12) & 0x3); }
     [[nodiscard]] inline PromotionType promotion_type() const { return PromotionType((move >> 14) & 0x3); }
+    [[nodiscard]] inline uint16_t internal_move() const { return move; };
 
     bool operator==(Move a) const { return move == a.move; }
     bool operator!=(Move a) const { return move != a.move; }
@@ -75,17 +76,24 @@ public:
 
     inline explicit InformativeMove(uint32_t m) { move = m; }
 
-    inline InformativeMove(Square from, Square to, Piece selected, Piece occupied,
+    inline InformativeMove(Square origin, Square target, Piece selected, Piece occupied,
                            MoveType type, PromotionType promotion_type) : move(0) {
-        move = (occupied << 20) | (occupied << 16) | (promotion_type << 14) | (type << 12) | (from << 6) | to;
+        move = (selected << 20) | (occupied << 16) | (promotion_type << 14) | (type << 12) | (origin << 6) | target;
     }
 
-    [[nodiscard]] inline Square to() const { return Square(move & 0x3f); }
-    [[nodiscard]] inline Square from() const { return Square((move >> 6) & 0x3f); }
+    inline InformativeMove(Move normal_move, Piece selected, Piece occupied) : move(0) {
+        move = (selected << 20) | (occupied << 16) | normal_move.internal_move();
+    }
+
+    [[nodiscard]] inline Square target() const { return Square(move & 0x3f); }
+    [[nodiscard]] inline Square origin() const { return Square((move >> 6) & 0x3f); }
     [[nodiscard]] inline MoveType type() const { return MoveType((move >> 12) & 0x3); }
-    [[nodiscard]] inline PromotionType promotion_piece() const { return PromotionType((move >> 14) & 0x3); }
+    [[nodiscard]] inline PromotionType promotion_type() const { return PromotionType((move >> 14) & 0x3); }
     [[nodiscard]] inline Piece occupied() const { return Piece((move >> 16) & 0xf); }
     [[nodiscard]] inline Piece selected() const { return Piece((move >> 20) & 0xf); }
+    [[nodiscard]] inline Move normal_move() const { return Move(move & 0xffff); }
+
+    [[nodiscard]] inline bool is_capture() const { return occupied() < EMPTY; }
 
     bool operator==(InformativeMove a) const { return move == a.move; }
     bool operator!=(InformativeMove a) const { return move != a.move; }

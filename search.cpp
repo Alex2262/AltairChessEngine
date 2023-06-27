@@ -16,6 +16,7 @@
 #include "move.h"
 #include "useful.h"
 #include "see.h"
+#include "move_ordering.h"
 
 
 // Initialize a table for Late Move Reductions, and the base reductions to be applied
@@ -102,7 +103,7 @@ void Engine::new_game() {
 // Detects a repetition (Checks for only 2 repetitions)
 bool Thread_State::detect_repetition() {
 
-    for (int i = game_ply - 2; i >= std::max(game_ply - fifty_move, 0); i--) {
+    for (PLY_TYPE i = game_ply - 2; i >= std::max<PLY_TYPE>(game_ply - fifty_move, 0); i--) {
         if (repetition_table[i] == repetition_table[game_ply]) {
             return true;
         }
@@ -143,7 +144,7 @@ short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha
 
 
 // Records an entry to the transposition table
-void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
+void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move, PLY_TYPE depth,
                              SCORE_TYPE static_eval, bool pv_node) {
 
     TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
@@ -166,7 +167,7 @@ void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score
 
 // Probes the transposition table for a matching entry (only for quiescence search)
 short Engine::probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
-                               SCORE_TYPE& return_score, MOVE_TYPE& tt_move) {
+                               SCORE_TYPE& return_score, Move& tt_move) {
     TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
 
     if (tt_entry.key == hash_key) {
@@ -189,7 +190,7 @@ short Engine::probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alp
 
 
 // Records an entry to the transposition table (only for quiescence search)
-void Engine::record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move,
+void Engine::record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move,
                                SCORE_TYPE static_eval) {
     TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
 
@@ -269,7 +270,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Probe the transposition table
     SCORE_TYPE tt_value = 0;
-    MOVE_TYPE tt_move = NO_MOVE;
+    Move tt_move = NO_MOVE;
     short tt_return_type = engine.probe_tt_entry_q(thread_id, position.hash_key, alpha, beta, tt_value, tt_move);
 
     if (tt_return_type == RETURN_HASH_SCORE) {
@@ -290,29 +291,29 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     short tt_hash_flag = HASH_FLAG_ALPHA;
 
     // Set values for State
-    position.set_state(thread_state.search_ply, thread_state.fifty_move);
+    position.set_state(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
     position.state_stack[thread_state.search_ply].evaluation = static_eval;
 
     // Get the moves and score them
-    position.get_pseudo_legal_captures(thread_state.search_ply);
-    get_capture_scores(thread_state, position, position.moves[thread_state.search_ply], tt_move);
+    position.get_pseudo_legal_captures(position.scored_moves[thread_state.search_ply]);
+    get_capture_scores(thread_state, position.scored_moves[thread_state.search_ply], tt_move);
 
     // Variables for getting information about the best score / best move
     SCORE_TYPE best_score = static_eval;
-    MOVE_TYPE best_move = NO_MOVE;
+    Move best_move = NO_MOVE;
 
     // Search loop
     int legal_moves = 0;
-    for (int move_index = 0; move_index < static_cast<int>(position.moves[thread_state.search_ply].size()); move_index++) {
+    for (int move_index = 0; move_index < static_cast<int>(position.scored_moves[thread_state.search_ply].size()); move_index++) {
 
         // Sort and choose the next move to be searched
-        sort_next_move(position.moves[thread_state.search_ply], move_index);
-        MOVE_TYPE move = position.moves[thread_state.search_ply][move_index].move;
+        sort_next_move(position.scored_moves[thread_state.search_ply], move_index);
+        Move move = position.scored_moves[thread_state.search_ply][move_index].move;
 
         // Delta / Futility pruning
         // If the piece we capture plus a margin cannot even improve our score then
         // there is no point in searching it
-        if (static_eval + PIECE_VALUES_MID[get_occupied(move) % BLACK_PAWN] +
+        if (static_eval + PIECE_VALUES_MID[position.board[move.target()] % BLACK_PAWN] +
             engine.tuning_parameters.delta_margin < alpha) {
             continue;
         }
@@ -324,10 +325,10 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         }
 
         // Attempt the current pseudo-legal move
-        bool attempt = position.make_move(move, thread_state.search_ply, thread_state.fifty_move);
+        bool attempt = position.make_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
         if (!attempt) {
-            position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
+            position.undo_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
             continue;
         }
 
@@ -336,15 +337,13 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         // Recursively search
         thread_state.search_ply++;
-        position.side ^= 1;
 
         SCORE_TYPE return_eval = -qsearch(engine, -beta, -alpha, depth - 1, thread_id);
 
-        position.side ^= 1;
         thread_state.search_ply--;
 
         // Undo the move
-        position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
+        position.undo_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
         if (engine.stopped) return 0;
 
@@ -361,8 +360,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
                 // Captures History Heuristic for move ordering
                 SCORE_TYPE bonus = 2;
-                update_history_entry(thread_state.capture_history[get_selected(move)]
-                                     [get_occupied(move)][MAILBOX_TO_STANDARD[get_target_square(move)]],
+                update_history_entry(thread_state.capture_history[position.board[move.origin()]]
+                                     [position.board[move.target()]][move.target()],
                                      bonus);
 
                 if (return_eval >= beta) {
@@ -392,6 +391,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 // This is a recursive search function based on the minimax algorithm that uses alpha-beta pruning
 // among other heuristics.
 SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, int thread_id) {
+
+    std::cout << "depth: " << depth << std::endl;
 
     // Initialize Variables
     Thread_State& thread_state = engine.thread_states[thread_id];
@@ -441,6 +442,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         return qsearch(engine, alpha, beta, engine.max_q_depth, thread_id);
     }
 
+    std::cout << "HI" << std::endl;
+
     // Information about the current node
     // Hack to determine pv_node, because when it is not a pv node we are being searched by
     // a zero window with alpha == beta - 1
@@ -449,7 +452,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     bool null_search = !do_null && !root;
 
     // Set values for State
-    position.set_state(thread_state.search_ply, thread_state.fifty_move);
+    position.set_state(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
     // TT probing
     TT_Entry tt_entry{};
@@ -458,7 +461,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     if (singular_search) tt_return_type = USE_HASH_MOVE;
 
     SCORE_TYPE tt_value = tt_entry.score;
-    MOVE_TYPE tt_move = tt_entry.move;
+    Move tt_move = tt_entry.move;
 
     // We are allowed to return the hash score
     if (tt_return_type == RETURN_HASH_SCORE && !pv_node) {
@@ -477,8 +480,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     if (position.state_stack[thread_state.search_ply].in_check != -1) {
         in_check = static_cast<bool>(position.state_stack[thread_state.search_ply].in_check);
     } else {
-        in_check = position.is_attacked(position.king_positions[position.side]);
+        in_check = position.is_attacked(position.get_king_pos(position.side), position.side);
     }
+
+    std::cout << "HI" << std::endl;
 
     // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
     // from a full-move or two plies ago. When this is true, we can be more aggressive with
@@ -513,6 +518,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (depth >= 8) depth--;
     }
 
+    std::cout << "HI" << std::endl;
+
     // Forward Pruning Methods
     if (!pv_node && !in_check && !singular_search && abs(beta) < MATE_BOUND) {
 
@@ -528,14 +535,14 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // We give the opponent an extra move and if they are not able to make their position
         // any better, then our position is too good, and we don't need to search any deeper.
         if (depth >= engine.tuning_parameters.NMP_depth && do_null && static_eval >= beta &&
-            position.non_pawn_material_count >= 1 + (depth >= 10)) {
+            position.get_non_pawn_material_count() >= 1 + (depth >= 10)) {
 
             // Adaptive NMP
             int reduction = engine.tuning_parameters.NMP_base +
                             depth / engine.tuning_parameters.NMP_depth_divisor +
                             std::min(3, (static_eval - beta) / engine.tuning_parameters.NMP_eval_divisor);
 
-            position.make_null_move(thread_state.search_ply, thread_state.fifty_move);
+            position.make_null_move(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
             thread_state.search_ply++;
             thread_state.game_ply++;
@@ -545,7 +552,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             thread_state.game_ply--;
             thread_state.search_ply--;
-            position.undo_null_move(thread_state.search_ply, thread_state.fifty_move);
+            position.undo_null_move(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
             if (return_eval >= beta) {
                 return beta;
@@ -557,44 +564,48 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     if (pv_node && depth >= 4 && tt_move == NO_MOVE && !singular_search) {
         negamax(engine, alpha, beta, static_cast<PLY_TYPE>(depth - 3), true, thread_id);  // TODO: test no null moves here
         tt_move = engine.transposition_table[position.hash_key % engine.transposition_table.size()].move;
-        if (!position.get_is_pseudo_legal(tt_move)) tt_move = NO_MOVE;
     }
 
     // Used for the continuation history heuristic
-    MOVE_TYPE last_move_one = thread_state.search_ply >= 1 ? position.state_stack[thread_state.search_ply - 1].move : NO_MOVE;
-    MOVE_TYPE last_move_two = thread_state.search_ply >= 2 ? position.state_stack[thread_state.search_ply - 2].move : NO_MOVE;
+    InformativeMove last_move_one = thread_state.search_ply >= 1 ? position.state_stack[thread_state.search_ply - 1].move : NO_INFORMATIVE_MOVE;
+    InformativeMove last_move_two = thread_state.search_ply >= 2 ? position.state_stack[thread_state.search_ply - 2].move : NO_INFORMATIVE_MOVE;
+
+    std::cout << "HI" << std::endl;
 
     // Retrieving the pseudo legal moves in the current position as a list of integers
     // Score the moves
-    position.get_pseudo_legal_moves(thread_state.search_ply);
-    get_move_scores(thread_state, position, position.moves[thread_state.search_ply],
+    position.get_pseudo_legal_moves(position.scored_moves[thread_state.search_ply]);
+    get_move_scores(thread_state, position.scored_moves[thread_state.search_ply],
                     tt_move, last_move_one, last_move_two);
 
     // Best score for fail soft, and best move for tt
     SCORE_TYPE best_score = -SCORE_INF;
-    MOVE_TYPE best_move = NO_MOVE;
+    Move best_move = NO_MOVE;
 
     // Other information for pruning / reductions
     int alpha_raised_count = 0;
     int legal_moves = 0;
     bool recapture_found = false;
 
+    std::cout << "HI" << std::endl;
+
     // Iterate through moves and recursively search with Negamax
-    for (int move_index = 0; move_index < static_cast<int>(position.moves[thread_state.search_ply].size()); move_index++) {
+    for (int move_index = 0; move_index < static_cast<int>(position.scored_moves[thread_state.search_ply].size()); move_index++) {
 
         // Sort the next move. If an early move causes a cutoff then we have saved time
         // by only sorting one or a few moves rather than the whole list.
-        sort_next_move(position.moves[thread_state.search_ply], move_index);
-        MOVE_TYPE move = position.moves[thread_state.search_ply][move_index].move;
-        SCORE_TYPE move_score = position.moves[thread_state.search_ply][move_index].score;
+        sort_next_move(position.scored_moves[thread_state.search_ply], move_index);
+        Move move = position.scored_moves[thread_state.search_ply][move_index].move;
+        InformativeMove informative_move = InformativeMove(move, position.board[move.origin()], position.board[move.target()]);
+        SCORE_TYPE move_score = position.scored_moves[thread_state.search_ply][move_index].score;
 
         // Skip the excluded move since we are in a singular search
         if (move == position.state_stack[thread_state.search_ply].excluded_move) continue;
 
         SCORE_TYPE move_history_score = thread_state.history_moves
-        [get_selected(move)][MAILBOX_TO_STANDARD[get_target_square(move)]];
+            [position.board[move.origin()]][move.target()];
 
-        bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
+        bool quiet = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
 
         // Pruning
         if (!pv_node && legal_moves >= 1 && abs(best_score) < MATE_BOUND) {
@@ -622,11 +633,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         }
 
         // Make the move
-        bool attempt = position.make_move(move, thread_state.search_ply, thread_state.fifty_move);
+        bool attempt = position.make_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
         // The move put us in check, therefore it was not legal, and we must disregard it
         if (!attempt) {
-            position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
+            position.undo_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
             continue;
         }
 
@@ -636,7 +647,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         // Calculate if the current move is a recapture
         bool recapture = false;
-        if (last_move_one != NO_MOVE && get_target_square(last_move_one) == get_target_square(move)) {
+        if (last_move_one != NO_INFORMATIVE_MOVE && last_move_one.target() == move.target()) {
             recapture_found = true;
             recapture = true;
         }
@@ -644,10 +655,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Extensions
         PLY_TYPE extension = in_check;
 
-        bool passed_pawn = get_selected(move) == WHITE_PAWN + BLACK_PAWN * position.side &&
-                           MAILBOX_TO_STANDARD[get_target_square(move)] / 8 == 1 + 5 * position.side;
-        bool queen_promotion = get_move_type(move) == MOVE_TYPE_PROMOTION &&
-                               get_promotion_piece(move) == WHITE_QUEEN + BLACK_PAWN * position.side;
+        // Pawn going to 7th rank must be passed
+        bool passed_pawn = static_cast<PieceType>(position.board[move.origin()] % COLOR_OFFSET) == PAWN &&
+                           rank_of(move.target()) == 6 - 5 * (~position.side);  // side has already been flipped
+        bool queen_promotion = move.type() == MOVE_TYPE_PROMOTION &&
+                               static_cast<PieceType>(move.promotion_type() + 1) == QUEEN;
 
         if (move_score >= 0 && (passed_pawn || queen_promotion)) extension++;
 
@@ -660,7 +672,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             position.state_stack[thread_state.search_ply].excluded_move == NO_MOVE &&
             abs(tt_entry.score) < MATE_BOUND) {
 
-            position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
+            position.undo_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
             int singular_beta = tt_entry.score - depth * 2;
 
@@ -684,7 +696,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 extension--;
             }
 
-            position.make_move(move, thread_state.search_ply, thread_state.fifty_move);
+            position.make_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
         }
 
         extension = std::min<PLY_TYPE>(extension, std::min<PLY_TYPE>(2, MAX_AB_DEPTH - 1 - depth));
@@ -704,14 +716,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         thread_state.search_ply++;
         thread_state.game_ply++;
         thread_state.repetition_table[thread_state.game_ply] = position.hash_key;
-        position.side ^= 1;
 
-        bool move_gives_check = position.is_attacked(position.king_positions[position.side]);
+        bool move_gives_check = position.is_attacked(position.get_king_pos(position.side), position.side);
         position.state_stack[thread_state.search_ply].in_check = static_cast<int>(move_gives_check);
 
 
-        bool is_killer_move = move == thread_state.killer_moves[0][thread_state.search_ply - 1] ||
-                              move == thread_state.killer_moves[1][thread_state.search_ply - 1];
+        bool is_killer_move = informative_move == thread_state.killer_moves[0][thread_state.search_ply - 1] ||
+                              informative_move == thread_state.killer_moves[1][thread_state.search_ply - 1];
 
         bool interesting = passed_pawn || queen_promotion || move_gives_check || is_killer_move;
 
@@ -757,13 +768,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             reduction += !recapture && recapture_found && quiet && !move_gives_check && move_history_score <= 0;
 
             // Scale reductions based on how many moves have already raised alpha
-            reduction += static_cast<double>(alpha_raised_count) * (0.3 + 0.5 * get_is_capture(tt_move));
+            reduction += static_cast<double>(alpha_raised_count) * (0.3 + 0.5 * tt_move.is_capture(position));
 
             // My idea that in a null move search you can be more aggressive with LMR
             reduction += null_search;
 
             // Idea from Weiss, where you reduce more if the TT move is a capture
-            reduction += get_is_capture(tt_move) * 0.3;
+            reduction += tt_move.is_capture(position) * 0.3;
 
             // Clamp the LMR depth
             auto lmr_depth = std::clamp<PLY_TYPE>(new_depth - static_cast<PLY_TYPE>(reduction), 1, new_depth);
@@ -791,12 +802,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             return_eval = -negamax(engine, -beta, -alpha, new_depth, true, thread_id);
 
         // Undo the move and other changes
-        position.side ^= 1;
         thread_state.game_ply--;
         position.state_stack[thread_state.search_ply].in_check = -1;
         thread_state.search_ply--;
 
-        position.undo_move(move, thread_state.search_ply, thread_state.fifty_move);
+        position.undo_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
         // Return early if the engine is stopped in order to prevent changes
         if (engine.stopped) return 0;
@@ -811,9 +821,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // Calculate nodes for each move for time management scaling
             if (root && thread_id == 0) {
-                engine.node_table[get_selected(best_move)]
-                    [MAILBOX_TO_STANDARD[get_target_square(best_move)]] += engine.primary_thread_node_count
-                                                                                  - current_nodes;
+                engine.node_table[position.board[best_move.origin()]]
+                    [best_move.target()] += engine.primary_thread_node_count - current_nodes;
             }
 
             // Write moves into the PV table
@@ -840,64 +849,64 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
                 if (quiet) {
                     update_history_entry(thread_state.history_moves
-                                         [get_selected(move)][MAILBOX_TO_STANDARD[get_target_square(move)]],
+                                         [position.board[move.origin()]][move.target()],
                                          bonus);
 
-                    if (last_move_one != NO_MOVE) {
+                    if (last_move_one != NO_INFORMATIVE_MOVE) {
                         update_history_entry(thread_state.continuation_history
-                                             [get_selected(last_move_one)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
-                                             [get_selected(move)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(move)]],
+                                             [last_move_one.selected()]
+                                             [last_move_one.target()]
+                                             [informative_move.selected()]
+                                             [informative_move.target()],
                                              bonus);
                     }
 
-                    if (last_move_two != NO_MOVE) {
+                    if (last_move_two != NO_INFORMATIVE_MOVE) {
                         update_history_entry(thread_state.continuation_history
-                                             [get_selected(last_move_two)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
-                                             [get_selected(move)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(move)]],
+                                             [last_move_two.selected()]
+                                             [last_move_two.target()]
+                                             [informative_move.selected()]
+                                             [informative_move.target()],
                                              bonus);
                     }
 
                 } else {
-                    update_history_entry(thread_state.capture_history[get_selected(move)]
-                                         [get_occupied(move)][MAILBOX_TO_STANDARD[get_target_square(move)]],
+                    update_history_entry(thread_state.capture_history[position.board[move.origin()]]
+                                         [position.board[move.target()]][move.target()],
                                          bonus);
                 }
 
                 // Deduct bonus for moves that don't raise alpha
                 for (int failed_move_index = 0; failed_move_index < move_index; failed_move_index++) {
-                    MOVE_TYPE temp_move = position.moves[thread_state.search_ply][failed_move_index].move;
-                    if (!get_is_capture(temp_move) && get_move_type(move) != MOVE_TYPE_EP) {
+                    Move temp_move = position.scored_moves[thread_state.search_ply][failed_move_index].move;
+                    if (!temp_move.is_capture(position) && move.type() != MOVE_TYPE_EP) {
                         update_history_entry(thread_state.history_moves
-                                             [get_selected(temp_move)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
+                                             [position.board[temp_move.origin()]]
+                                             [temp_move.target()],
                                              -bonus);
 
-                        if (last_move_one != NO_MOVE) {
+                        if (last_move_one != NO_INFORMATIVE_MOVE) {
                             update_history_entry(thread_state.continuation_history
-                                                 [get_selected(last_move_one)]
-                                                 [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
-                                                 [get_selected(temp_move)]
-                                                 [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
+                                                 [last_move_one.selected()]
+                                                 [last_move_one.target()]
+                                                 [position.board[temp_move.origin()]]
+                                                 [temp_move.target()],
                                                  -bonus);
                         }
 
-                        if (last_move_two != NO_MOVE) {
+                        if (last_move_two != NO_INFORMATIVE_MOVE) {
                             update_history_entry(thread_state.continuation_history
-                                                 [get_selected(last_move_two)]
-                                                 [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
-                                                 [get_selected(temp_move)]
-                                                 [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
+                                                 [last_move_two.selected()]
+                                                 [last_move_two.target()]
+                                                 [position.board[temp_move.origin()]]
+                                                 [temp_move.target()],
                                                  -bonus);
                         }
 
                     } else {
-                        update_history_entry(thread_state.capture_history[get_selected(temp_move)]
-                                             [get_occupied(temp_move)]
-                                             [MAILBOX_TO_STANDARD[get_target_square(temp_move)]],
+                        update_history_entry(thread_state.capture_history[position.board[temp_move.origin()]]
+                                             [position.board[temp_move.target()]]
+                                             [temp_move.target()],
                                              -bonus);
                     }
                 }
@@ -914,8 +923,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                     if (engine.show_stats) {
                         if (legal_moves <= FAIL_HIGH_STATS_COUNT) engine.search_results.search_fail_highs[legal_moves-1]++;
                         if (move == tt_move) engine.search_results.search_fail_high_types[0]++;
-                        else if (move == thread_state.killer_moves[0][thread_state.search_ply]) engine.search_results.search_fail_high_types[1]++;
-                        else if (move == thread_state.killer_moves[1][thread_state.search_ply]) engine.search_results.search_fail_high_types[2]++;
+                        else if (informative_move == thread_state.killer_moves[0][thread_state.search_ply]) engine.search_results.search_fail_high_types[1]++;
+                        else if (informative_move == thread_state.killer_moves[1][thread_state.search_ply]) engine.search_results.search_fail_high_types[2]++;
                         else if (quiet) engine.search_results.search_fail_high_types[4]++;
                         else engine.search_results.search_fail_high_types[5]++;
                     }
@@ -923,7 +932,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                     // Killer Heuristic for move ordering
                     if (quiet) {
                         thread_state.killer_moves[1][thread_state.search_ply] = thread_state.killer_moves[0][thread_state.search_ply];
-                        thread_state.killer_moves[0][thread_state.search_ply] = move;
+                        thread_state.killer_moves[0][thread_state.search_ply] = informative_move;
                     }
 
                     tt_hash_flag = HASH_FLAG_BETA;
@@ -990,11 +999,11 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
         max_pv_length = std::min(max_pv_length, 1 + max_pv_length / 3);
 
     // Get the PV line
-    SQUARE_TYPE original_side = position.side;
+    Color original_side = position.side;
     for (int c = 0; c < max_pv_length; c++) {
-        pv_line += get_uci_from_move(position, engine.pv_table[0][c]);
+        pv_line += engine.pv_table[0][c].get_uci(position);
         pv_line += " ";
-        position.side ^= 1;
+        position.side = ~position.side;
     }
     position.side = original_side;
 
@@ -1029,6 +1038,7 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
         if (alpha <= -1000) alpha = -SCORE_INF;
         if (beta  >=  1000) beta  =  SCORE_INF;
 
+        std::cout << alpha << " " << beta << " " << depth << " " << thread_id << std::endl;
         return_eval = negamax(engine, alpha, beta, depth, false, thread_id);
 
         if (engine.stopped) break;
@@ -1086,8 +1096,6 @@ void iterative_search(Engine& engine, int thread_id) {
     engine.stopped = false;
     thread_state.terminated = false;
 
-    position.clear_movelist();
-
     // Initialize the start time
     auto start_time = std::chrono::high_resolution_clock::now();
     engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
@@ -1099,7 +1107,7 @@ void iterative_search(Engine& engine, int thread_id) {
     PLY_TYPE asp_depth = 6;
 
     uint64_t original_soft_time_limit = engine.soft_time_limit;
-    MOVE_TYPE best_move = NO_MOVE;
+    Move best_move = NO_MOVE;
 
     while (running_depth <= engine.max_depth) {
         thread_state.current_search_depth = running_depth;
@@ -1114,8 +1122,7 @@ void iterative_search(Engine& engine, int thread_id) {
         if (thread_id == 0) {
             if (running_depth >= 8) {
                 auto best_node_percentage =
-                        static_cast<double>(engine.node_table[get_selected(best_move)]
-                        [MAILBOX_TO_STANDARD[get_target_square(best_move)]]) /
+                        static_cast<double>(engine.node_table[position.board[best_move.origin()]] [best_move.target()]) /
                         static_cast<double>(engine.primary_thread_node_count);
 
                 double node_scaling_factor = (1.5 - best_node_percentage) * 1.35;
@@ -1157,7 +1164,7 @@ void iterative_search(Engine& engine, int thread_id) {
     engine.search_results.node_count = engine.node_count;
 
     if (thread_id == 0) {
-        std::string best_move_str = get_uci_from_move(position, best_move);
+        std::string best_move_str = best_move.get_uci(position);
         std::cout << "bestmove " << best_move_str << std::endl;
     }
 

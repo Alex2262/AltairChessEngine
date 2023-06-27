@@ -3,6 +3,7 @@
 #define ANTARESCHESSENGINE_CONSTANTS_H
 
 #include <cstdint>
+#include "types.h"
 
 #define N_TUNING_PARAMETERS         18
 #define FAIL_HIGH_STATS_COUNT       5
@@ -18,10 +19,11 @@
 #define RETURN_HASH_SCORE   2
 
 #define TIME_INF            86400000
-#define SCORE_INF           1000000
-#define NO_EVALUATION       500000
-#define MATE_SCORE          100000
-#define MATE_BOUND          99000
+
+constexpr SCORE_TYPE SCORE_INF = 1000000;
+constexpr SCORE_TYPE NO_EVALUATION = 500000;
+constexpr SCORE_TYPE MATE_SCORE = 100000;
+constexpr SCORE_TYPE MATE_BOUND = 99000;
 
 #define MAX_AB_DEPTH        256
 #define TOTAL_MAX_DEPTH     512
@@ -34,7 +36,7 @@
 #define STARTING_WINDOW     26
 #define MINIMUM_ASP_DEPTH   6
 
-constexpr size_t MAX_MOVES = 218;
+constexpr size_t MAX_MOVES = 256;
 
 enum NodeType {
     Exact_Node,
