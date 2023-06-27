@@ -6,6 +6,7 @@
 #define ANTARESCHESSENGINE_UCI_H
 
 #include <thread>
+#include <vector>
 #include "position.h"
 #include "search.h"
 

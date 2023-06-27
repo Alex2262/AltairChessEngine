@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <cassert>
+#include <array>
 #include "types.h"
 
 // Major contributions by Archishmaan Peyyety as a pull request to Alex2262/BitboardEngine

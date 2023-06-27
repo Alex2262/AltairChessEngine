@@ -38,50 +38,50 @@ void print_bitboard(BITBOARD bitboard) {
 
 #ifdef _WIN64 // MSVC, WIN64
 #include <intrin.h>
-Square lsb(U64 b)
+Square lsb(uint64_t bitboard)
 {
     unsigned long idx;
-    _BitScanForward64(&idx, b);
+    _BitScanForward64(&idx, bitboard);
     return (Square)idx;
 }
 
-Square msb(U64 b)
+Square msb(uint64_t bitboard)
 {
     unsigned long idx;
-    _BitScanReverse64(&idx, b);
+    _BitScanReverse64(&idx, bitboard);
     return (Square)idx;
 }
 
 #else // MSVC, WIN32
 #include <intrin.h>
-Square lsb(U64 b)
+Square lsb(BITBOARD bitboard)
 {
     unsigned long idx;
 
-    if (b & 0xffffffff)
+    if (bitboard & 0xffffffff)
     {
-        _BitScanForward(&idx, int32_t(b));
+        _BitScanForward(&idx, int32_t(bitboard));
         return Square(idx);
     }
     else
     {
-        _BitScanForward(&idx, int32_t(b >> 32));
+        _BitScanForward(&idx, int32_t(bitboard >> 32));
         return Square(idx + 32);
     }
 }
 
-Square msb(U64 b)
+Square msb(BITBOARD bitboard)
 {
     unsigned long idx;
 
-    if (b >> 32)
+    if (bitboard >> 32)
     {
-        _BitScanReverse(&idx, int32_t(b >> 32));
+        _BitScanReverse(&idx, int32_t(bitboard >> 32));
         return Square(idx + 32);
     }
     else
     {
-        _BitScanReverse(&idx, int32_t(b));
+        _BitScanReverse(&idx, int32_t(bitboard));
         return Square(idx);
     }
 }
@@ -95,15 +95,7 @@ Square msb(U64 b)
 #endif
 
 [[nodiscard]] uint32_t popcount(BITBOARD bitboard) {
-#if defined(_MSC_VER) || defined(__INTEL_COMPILER)
-
-    return (uint8_t)_mm_popcnt_u64(mask);
-
-#else // Assumed gcc or compatible compiler
-
     return __builtin_popcountll(bitboard);
-
-#endif
 }
 
 [[nodiscard]] Square poplsb(BITBOARD& bitboard) {

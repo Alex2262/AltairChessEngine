@@ -5,6 +5,7 @@
 #ifndef ANTARESCHESSENGINE_SEARCH_H
 #define ANTARESCHESSENGINE_SEARCH_H
 
+#include <vector>
 #include "position.h"
 
 struct TT_Entry {
