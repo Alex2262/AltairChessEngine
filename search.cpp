@@ -246,6 +246,10 @@ void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
     score += bonus * 32;
 }
 
+SCORE_TYPE randomized_evaluate(Engine& engine, Position& position) {
+    return 4 - static_cast<int>(engine.node_count % 9) + evaluate(position);
+}
+
 
 // The Quiescence Search function
 // This is used to counter the horizon effect in which negamax is unable to resolve
@@ -279,7 +283,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Get the static evaluation of the position
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
+    if (static_eval == NO_EVALUATION) static_eval = randomized_evaluate(engine, position);
 
     // Return the evaluation if we have reached a stand-pat, or we have reached the maximum depth
     if (depth == 0 || static_eval >= beta) return static_eval;
@@ -416,7 +420,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     if (!root) {
 
         // Depth guard
-        if (thread_state.search_ply >= MAX_AB_DEPTH - 1) return evaluate(position);
+        if (thread_state.search_ply >= MAX_AB_DEPTH - 1) return randomized_evaluate(engine, position);
 
         // Detect repetitions and fifty move rule
         if (thread_state.fifty_move >= 100 || thread_state.detect_repetition()) return 3 - static_cast<int>(engine.node_count & 8);
@@ -493,7 +497,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Save the current evaluation
     if (!in_check) {
         static_eval = engine.probe_tt_evaluation(position.hash_key);
-        if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
+        if (static_eval == NO_EVALUATION) static_eval = randomized_evaluate(engine, position);
         position.state_stack[thread_state.search_ply].evaluation = static_eval;
     }
 
