@@ -13,7 +13,7 @@ Square get_cheapest_attacker(Position& position, Square square) {
     BITBOARD occupancy = position.all_pieces & (~from_square(square));
 
     // Treat square like a pawn
-    BITBOARD pawn_attackers = position.side == WHITE ? WHITE_PAWN_ATTACKS[square] : BLACK_PAWN_ATTACKS[square] &
+    BITBOARD pawn_attackers = (position.side == WHITE ? WHITE_PAWN_ATTACKS[square] : BLACK_PAWN_ATTACKS[square]) &
             position.get_pieces(PAWN, ~position.side);
 
     if (pawn_attackers) return poplsb(pawn_attackers);
@@ -34,6 +34,9 @@ Square get_cheapest_attacker(Position& position, Square square) {
 
     BITBOARD queen_attackers = (bishop_attacks | rook_attacks) & position.get_pieces(QUEEN, ~position.side);
     if (queen_attackers) return poplsb(queen_attackers);
+
+    BITBOARD king_attackers = KING_ATTACKS[square] & position.get_pieces(KING, ~position.side);
+    if (king_attackers) return poplsb(king_attackers);
 
     return NO_SQUARE;
 }
@@ -59,8 +62,10 @@ SCORE_TYPE get_static_exchange_evaluation(Position& position, Move move, SCORE_T
 
     std::vector<std::pair<Piece, Square>> removed_pieces;
 
-    position.remove_piece(occupied, target_square);
-    removed_pieces.emplace_back(occupied, target_square);
+    if (occupied < EMPTY) {
+        removed_pieces.emplace_back(occupied, target_square);
+        position.remove_piece(occupied, target_square);
+    }
 
     Color original_side = position.side;
 
@@ -77,8 +82,13 @@ SCORE_TYPE get_static_exchange_evaluation(Position& position, Move move, SCORE_T
             break;
         }
 
-        position.remove_piece(cheapest_attacker, cheapest_attacker_square);
         removed_pieces.emplace_back(cheapest_attacker, cheapest_attacker_square);
+        position.remove_piece(cheapest_attacker, cheapest_attacker_square);
+
+        position.our_pieces = position.get_our_pieces();
+        position.opp_pieces = position.get_opp_pieces();
+        position.all_pieces = position.get_all_pieces();
+        position.empty_squares = position.get_empty_squares();
     }
 
     for (auto removed : removed_pieces) {
@@ -88,6 +98,11 @@ SCORE_TYPE get_static_exchange_evaluation(Position& position, Move move, SCORE_T
     bool exchange_flag = position.side == original_side;
 
     position.side = original_side;
+
+    position.our_pieces = position.get_our_pieces();
+    position.opp_pieces = position.get_opp_pieces();
+    position.all_pieces = position.get_all_pieces();
+    position.empty_squares = position.get_empty_squares();
 
     return exchange_flag;
 

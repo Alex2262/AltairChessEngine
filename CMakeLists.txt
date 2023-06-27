@@ -34,4 +34,9 @@ add_executable(AltairChess
         bitboard.cpp
         bitboard.h
         tables.h
-        fixed_vector.h evaluation.cpp evaluation.h evaluation_constants.h move_ordering.cpp move_ordering.h)
+        fixed_vector.h
+        evaluation.cpp
+        evaluation.h
+        evaluation_constants.h
+        move_ordering.cpp
+        move_ordering.h)

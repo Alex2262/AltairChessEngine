@@ -48,8 +48,6 @@ public:
     BITBOARD opp_pieces{};
     BITBOARD empty_squares{};
 
-    BITBOARD attacked_squares[2]{};
-
     BITBOARD pieces[12]{};
 
     Piece board[64]{};

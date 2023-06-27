@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <bitset>
+#include <regex>
 #include "position.h"
 #include "useful.h"
 #include "bitboard.h"
@@ -137,7 +138,8 @@ void Position::place_piece(Piece piece, Square square) {
 
 PLY_TYPE Position::set_fen(const std::string& fen_string) {
 
-    std::vector<std::string> fen_tokens = split(fen_string, ' ');
+    std::string reduced_fen_string = std::regex_replace(fen_string, std::regex("^ +| +$|( ) +"), "$1");
+    std::vector<std::string> fen_tokens = split(reduced_fen_string, ' ');
 
     if (fen_tokens.size() < 4) {
         throw std::invalid_argument( "Fen is incorrect" );
@@ -241,7 +243,7 @@ std::ostream& operator << (std::ostream& os, const Position& position) {
         os << "Piece: " << piece << " bitboard: \n";
         print_bitboard(position.pieces[piece]);
     }
-     */
+    */
 
     return os;
 }
@@ -283,15 +285,17 @@ void Position::get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
     }
 
     // En Passant Code
-    BITBOARD ep_bitboard = (side == WHITE ? WHITE_PAWN_ATTACKS[square] : BLACK_PAWN_ATTACKS[square]) &
-            from_square(ep_square);
+    if (ep_square != NO_SQUARE) {
+        BITBOARD ep_bitboard = (side == WHITE ? WHITE_PAWN_ATTACKS[square] : BLACK_PAWN_ATTACKS[square]) &
+                               from_square(ep_square);
 
-    while (ep_bitboard) {
-        Square new_square = poplsb(ep_bitboard);
-        current_scored_moves.push_back({
-                Move(square, new_square, MOVE_TYPE_EP),
-                0
-        });
+        while (ep_bitboard) {
+            Square new_square = poplsb(ep_bitboard);
+            current_scored_moves.push_back({
+                                                   Move(square, new_square, MOVE_TYPE_EP),
+                                                   0
+                                           });
+        }
     }
 
     // Pawn Pushes
@@ -753,6 +757,10 @@ void Position::make_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move) 
     }
 
     fifty_move = 0;
+
+    BITBOARD temp_our_pieces = our_pieces;
+    our_pieces = opp_pieces;
+    opp_pieces = temp_our_pieces;
 }
 
 void Position::undo_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move) {
@@ -760,5 +768,9 @@ void Position::undo_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move) 
     ep_square = state_struct.current_ep_square;
     hash_key = state_struct.current_hash_key;
     fifty_move = state_struct.current_fifty_move;
+
+    BITBOARD temp_our_pieces = our_pieces;
+    our_pieces = opp_pieces;
+    opp_pieces = temp_our_pieces;
 }
 

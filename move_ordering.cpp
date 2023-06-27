@@ -2,6 +2,7 @@
 // Created by Alexander Tian on 6/26/23.
 //
 
+#include <iostream>
 #include "evaluation_constants.h"
 #include "move_ordering.h"
 #include "see.h"
@@ -47,16 +48,18 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
         else {
             score += thread_state.history_moves[selected][move.target()];
 
-        if (last_move_one != NO_INFORMATIVE_MOVE) {
-            score += thread_state.continuation_history[last_move_one.selected()]
-                    [last_move_one.target()][selected][move.target()];
+            if (last_move_one != NO_INFORMATIVE_MOVE) {
+                score += thread_state.continuation_history[last_move_one.selected()]
+                [last_move_one.target()][selected][move.target()];
+            }
+
+            if (last_move_two != NO_INFORMATIVE_MOVE) {
+                score += thread_state.continuation_history[last_move_two.selected()]
+                [last_move_two.target()][selected][move.target()];
+            }
+
         }
 
-        if (last_move_two != NO_INFORMATIVE_MOVE) {
-            score += thread_state.continuation_history[last_move_two.selected()]
-                    [last_move_two.target()][selected][move.target()];
-        }
-        }
         if (move_type == MOVE_TYPE_PROMOTION) {
             auto promotion_piece_type = static_cast<PieceType>(move.promotion_type() + 1);
             if (promotion_piece_type == QUEEN) {
@@ -67,7 +70,7 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
             }
         }
         else if (move_type == MOVE_TYPE_EP) score += thread_state.move_ordering_parameters.winning_capture_margin +
-                thread_state.move_ordering_parameters.capture_scale * (MVV_LVA_VALUES[WHITE_PAWN] / 2);
+                thread_state.move_ordering_parameters.capture_scale * (MVV_LVA_VALUES[PAWN] / 2);
         else if (move_type == MOVE_TYPE_CASTLE) score += thread_state.move_ordering_parameters.castle_margin;
     }
 

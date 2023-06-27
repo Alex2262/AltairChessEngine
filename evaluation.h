@@ -9,6 +9,6 @@
 #include "constants.h"
 #include "types.h"
 
-SCORE_TYPE evaluate(Position position);
+SCORE_TYPE evaluate(Position& position);
 
 #endif //ALTAIRCHESSENGINE_EVALUATION_H

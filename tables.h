@@ -13,7 +13,7 @@
 constexpr size_t ROOK_TABLE_SIZE = 4096;
 constexpr size_t BISHOP_TABLE_SIZE = 512;
 
-constexpr std::array<BITBOARD, N_SQUARES> WHITE_PAWN_ATTACKS = {
+static constexpr std::array<BITBOARD, N_SQUARES> WHITE_PAWN_ATTACKS = {
         0x200, 0x500, 0xa00, 0x1400,
         0x2800, 0x5000, 0xa000, 0x4000,
         0x20000, 0x50000, 0xa0000, 0x140000,
@@ -32,7 +32,7 @@ constexpr std::array<BITBOARD, N_SQUARES> WHITE_PAWN_ATTACKS = {
         0x0, 0x0, 0x0, 0x0,
 };
 
-constexpr std::array<BITBOARD, N_SQUARES> BLACK_PAWN_ATTACKS = {
+static constexpr std::array<BITBOARD, N_SQUARES> BLACK_PAWN_ATTACKS = {
         0x0, 0x0, 0x0, 0x0,
         0x0, 0x0, 0x0, 0x0,
         0x2, 0x5, 0xa, 0x14,
@@ -51,7 +51,7 @@ constexpr std::array<BITBOARD, N_SQUARES> BLACK_PAWN_ATTACKS = {
         0x28000000000000, 0x50000000000000, 0xa0000000000000, 0x40000000000000,
 };
 
-constexpr std::array<BITBOARD, N_SQUARES> KNIGHT_ATTACKS = {
+static constexpr std::array<BITBOARD, N_SQUARES> KNIGHT_ATTACKS = {
         0x20400, 0x50800, 0xa1100, 0x142200,
         0x284400, 0x508800, 0xa01000, 0x402000,
         0x2040004, 0x5080008, 0xa110011, 0x14220022,
@@ -70,7 +70,7 @@ constexpr std::array<BITBOARD, N_SQUARES> KNIGHT_ATTACKS = {
         0x44280000000000, 0x0088500000000000, 0x0010a00000000000, 0x20400000000000
 };
 
-constexpr std::array<BITBOARD, N_SQUARES> KING_ATTACKS = {
+static constexpr std::array<BITBOARD, N_SQUARES> KING_ATTACKS = {
         0x302, 0x705, 0xe0a, 0x1c14,
         0x3828, 0x7050, 0xe0a0, 0xc040,
         0x30203, 0x70507, 0xe0a0e, 0x1c141c,
@@ -92,7 +92,7 @@ constexpr std::array<BITBOARD, N_SQUARES> KING_ATTACKS = {
 
 
 // Shifts used in slider attack table generation
-constexpr std::array<int32_t, N_SQUARES> BISHOP_SHIFTS = {
+static constexpr std::array<int32_t, N_SQUARES> BISHOP_SHIFTS = {
         58, 59, 59, 59, 59, 59, 59, 58,
         59, 59, 59, 59, 59, 59, 59, 59,
         59, 59, 57, 57, 57, 57, 59, 59,
@@ -103,7 +103,7 @@ constexpr std::array<int32_t, N_SQUARES> BISHOP_SHIFTS = {
         58, 59, 59, 59, 59, 59, 59, 58,
 };
 
-constexpr std::array<int32_t, N_SQUARES> ROOK_SHIFTS = {
+static constexpr std::array<int32_t, N_SQUARES> ROOK_SHIFTS = {
         52, 53, 53, 53, 53, 53, 53, 52,
         53, 54, 54, 54, 54, 54, 54, 53,
         53, 54, 54, 54, 54, 54, 54, 53,
@@ -117,7 +117,7 @@ constexpr std::array<int32_t, N_SQUARES> ROOK_SHIFTS = {
 
 
 // Magic hashes for bishops
-constexpr std::array<BITBOARD, N_SQUARES> BISHOP_MAGICS = {
+static constexpr std::array<BITBOARD, N_SQUARES> BISHOP_MAGICS = {
         0x0002020202020200, 0x0002020202020000, 0x0004010202000000, 0x0004040080000000,
         0x0001104000000000, 0x0000821040000000, 0x0000410410400000, 0x0000104104104000,
         0x0000040404040400, 0x0000020202020200, 0x0000040102020000, 0x0000040400800000,
@@ -137,7 +137,7 @@ constexpr std::array<BITBOARD, N_SQUARES> BISHOP_MAGICS = {
 };
 
 // Magic hashes for rooks
-constexpr std::array<BITBOARD, N_SQUARES> ROOK_MAGICS = {
+static constexpr std::array<BITBOARD, N_SQUARES> ROOK_MAGICS = {
         0x0080001020400080, 0x0040001000200040, 0x0080081000200080, 0x0080040800100080,
         0x0080020400080080, 0x0080010200040080, 0x0080008001000200, 0x0080002040800100,
         0x0000800020400080, 0x0000400020005000, 0x0000801000200080, 0x0000800800100080,
@@ -218,8 +218,8 @@ template<Direction D>
     return rook_attack_masks;
 }
 
-constexpr auto bishop_relevant_blockers = generate_bishop_relevant_blockers();
-constexpr auto rook_relevant_blockers = generate_rook_relevant_blockers();
+static constexpr auto bishop_relevant_blockers = generate_bishop_relevant_blockers();
+static constexpr auto rook_relevant_blockers = generate_rook_relevant_blockers();
 
 [[nodiscard]] constexpr BITBOARD generate_slow_bishop_attacks(Square square, BITBOARD occupancy) {
     return generate_slow_sliding_attacks<NORTH_EAST>(square, occupancy) |
@@ -273,8 +273,8 @@ constexpr auto rook_relevant_blockers = generate_rook_relevant_blockers();
     return rook_attack_table;
 }
 
-const auto bishop_attack_table = generate_bishop_attack_table();
-const auto rook_attack_table = generate_rook_attack_table();
+static const auto bishop_attack_table = generate_bishop_attack_table();
+static const auto rook_attack_table = generate_rook_attack_table();
 
 constexpr BITBOARD get_bishop_attacks(Square square, BITBOARD occupancy) {
     size_t index = ((occupancy & bishop_relevant_blockers[square]) * BISHOP_MAGICS[square]) >> BISHOP_SHIFTS[square];

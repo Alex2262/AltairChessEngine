@@ -42,7 +42,7 @@ void Engine::clear_tt() {
         tt_entry.key = 0;
         tt_entry.score = 0;
         tt_entry.evaluation = NO_EVALUATION;
-        tt_entry.move = NO_MOVE;
+            tt_entry.move = NO_MOVE;
         tt_entry.depth = 0;
         tt_entry.flag = 0;
     }
@@ -53,19 +53,19 @@ void Engine::clear_tt() {
 void Engine::reset() {
     node_count = 0;
     primary_thread_node_count = 0;
-    std::memset(node_table, 0, sizeof(node_table));
+    //std::memset(node_table, 0, sizeof(node_table));
 
     for (Thread_State& thread_state : thread_states) {
         thread_state.current_search_depth = 1;
         thread_state.search_ply = 0;
 
-        std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
+        //std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
     }
 
     selective_depth = 0;
 
     std::memset(pv_length, 0, sizeof(pv_length));
-    std::memset(pv_table, 0, sizeof(pv_table));
+    //std::memset(pv_table, 0, sizeof(pv_table));
 
     if (show_stats) {
         search_results.alpha_raised_count = 0;
@@ -82,7 +82,7 @@ void Engine::new_game() {
 
     for (Thread_State& thread_state : thread_states) {
         std::memset(thread_state.repetition_table, 0, sizeof(thread_state.repetition_table));
-        std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
+        //std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
         std::memset(thread_state.history_moves, 0, sizeof(thread_state.history_moves));
         std::memset(thread_state.capture_history, 0, sizeof(thread_state.capture_history));
         std::memset(thread_state.continuation_history, 0, sizeof(thread_state.continuation_history));
@@ -95,7 +95,7 @@ void Engine::new_game() {
     stopped = true;
 
     std::memset(pv_length, 0, sizeof(pv_length));
-    std::memset(pv_table, 0, sizeof(pv_table));
+    //std::memset(pv_table, 0, sizeof(pv_table));
     clear_tt();
 }
 
@@ -392,9 +392,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 // among other heuristics.
 SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, int thread_id) {
 
-    std::cout << alpha << " " << beta << " " << depth << " " << thread_id << std::endl;
-    std::cout << "depth: " << depth << std::endl;
-
     // Initialize Variables
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
@@ -443,8 +440,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         return qsearch(engine, alpha, beta, engine.max_q_depth, thread_id);
     }
 
-    std::cout << "HI" << std::endl;
-
     // Information about the current node
     // Hack to determine pv_node, because when it is not a pv node we are being searched by
     // a zero window with alpha == beta - 1
@@ -484,8 +479,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         in_check = position.is_attacked(position.get_king_pos(position.side), position.side);
     }
 
-    std::cout << "HI" << std::endl;
-
     // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
     // from a full-move or two plies ago. When this is true, we can be more aggressive with
     // beta-reductions (eval is too high) as we will have more certainty that the position is better;
@@ -518,8 +511,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (depth >= 4) depth--;
         if (depth >= 8) depth--;
     }
-
-    std::cout << "HI" << std::endl;
 
     // Forward Pruning Methods
     if (!pv_node && !in_check && !singular_search && abs(beta) < MATE_BOUND) {
@@ -571,8 +562,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     InformativeMove last_move_one = thread_state.search_ply >= 1 ? position.state_stack[thread_state.search_ply - 1].move : NO_INFORMATIVE_MOVE;
     InformativeMove last_move_two = thread_state.search_ply >= 2 ? position.state_stack[thread_state.search_ply - 2].move : NO_INFORMATIVE_MOVE;
 
-    std::cout << "HI" << std::endl;
-
     // Retrieving the pseudo legal moves in the current position as a list of integers
     // Score the moves
     position.get_pseudo_legal_moves(position.scored_moves[thread_state.search_ply]);
@@ -587,8 +576,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     int alpha_raised_count = 0;
     int legal_moves = 0;
     bool recapture_found = false;
-
-    std::cout << "HI" << std::endl;
 
     // Iterate through moves and recursively search with Negamax
     for (int move_index = 0; move_index < static_cast<int>(position.scored_moves[thread_state.search_ply].size()); move_index++) {
@@ -1039,8 +1026,6 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
         if (alpha <= -1000) alpha = -SCORE_INF;
         if (beta  >=  1000) beta  =  SCORE_INF;
 
-        std::cout << alpha << " " << beta << " " << depth << " " << thread_id << std::endl;
-        std::cout << engine.thread_states[0].position << std::endl;
         return_eval = negamax(engine, alpha, beta, depth, false, thread_id);
 
         if (engine.stopped) break;

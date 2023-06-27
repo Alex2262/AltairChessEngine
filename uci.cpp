@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 #include "uci.h"
 #include "useful.h"
 #include "move.h"
@@ -11,6 +12,7 @@
 #include "evaluation.h"
 #include "perft.h"
 #include "bench.h"
+#include "see.h"
 
 void UCI::initialize_uci() {
     engine->transposition_table.resize(MAX_TT_SIZE);
@@ -22,8 +24,7 @@ void UCI::initialize_uci() {
     Position& position = engine->thread_states[0].position;
     position.set_fen(START_FEN);
 
-    std::cout << sizeof(engine) << " " << sizeof(engine->thread_states[0]) << std::endl;
-
+    // std::cout << sizeof(engine) << " " << sizeof(engine->thread_states[0]) << std::endl;
     std::cout << engine->transposition_table.size() << " number of hash entries" << std::endl;
 }
 
@@ -195,7 +196,6 @@ void UCI::parse_go() {
 
 void UCI::uci_loop() {
 
-    msg = "";
     while (getline(std::cin, msg)) {
         tokens.clear();
 
