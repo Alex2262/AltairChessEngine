@@ -136,6 +136,24 @@ void Position::place_piece(Piece piece, Square square) {
     board[square] = piece;
 }
 
+void Position::compute_hash_key() {
+    hash_key = 0;
+
+    for (int piece = 0; piece < EMPTY; piece++) {
+        BITBOARD piece_bitboard = get_pieces(static_cast<Piece>(piece));
+        while (piece_bitboard) {
+            Square square = poplsb(piece_bitboard);
+            hash_key ^= ZobristHashKeys.piece_hash_keys[piece][square];
+        }
+    }
+
+    if (ep_square != NO_SQUARE) hash_key ^= ZobristHashKeys.ep_hash_keys[ep_square];
+
+    hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+
+    if (side) hash_key ^= ZobristHashKeys.side_hash_key;
+}
+
 PLY_TYPE Position::set_fen(const std::string& fen_string) {
 
     std::string reduced_fen_string = std::regex_replace(fen_string, std::regex("^ +| +$|( ) +"), "$1");
@@ -205,6 +223,8 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
     opp_pieces = get_opp_pieces();
     all_pieces = get_all_pieces();
     empty_squares = get_empty_squares();
+
+    compute_hash_key();
 
     return static_cast<PLY_TYPE>(std::stoi(half_move_clock));
 }

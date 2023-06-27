@@ -84,6 +84,8 @@ public:
     void remove_piece(Piece piece, Square square);
     void place_piece(Piece piece, Square square);
 
+    void compute_hash_key();
+
     PLY_TYPE set_fen(const std::string& fen);
 
     friend std::ostream& operator<<(std::ostream& os, const Position& position);
