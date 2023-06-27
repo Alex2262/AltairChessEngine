@@ -392,6 +392,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 // among other heuristics.
 SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, int thread_id) {
 
+    std::cout << alpha << " " << beta << " " << depth << " " << thread_id << std::endl;
     std::cout << "depth: " << depth << std::endl;
 
     // Initialize Variables
@@ -1039,6 +1040,7 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
         if (beta  >=  1000) beta  =  SCORE_INF;
 
         std::cout << alpha << " " << beta << " " << depth << " " << thread_id << std::endl;
+        std::cout << engine.thread_states[0].position << std::endl;
         return_eval = negamax(engine, alpha, beta, depth, false, thread_id);
 
         if (engine.stopped) break;

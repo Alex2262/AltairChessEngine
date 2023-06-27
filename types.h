@@ -88,7 +88,7 @@ constexpr Rank RANK_6 = 5;
 constexpr Rank RANK_7 = 6;
 constexpr Rank RANK_8 = 7;
 
-using PLY_TYPE = uint32_t;
+using PLY_TYPE = int16_t;
 using HASH_TYPE = uint64_t;
 using SCORE_TYPE = int32_t;
 
