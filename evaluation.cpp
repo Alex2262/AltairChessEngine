@@ -31,13 +31,20 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, int& game_phase) {
         game_phase += GAME_PHASE_SCORES[PAWN];
 
         Direction up = color == WHITE ? NORTH : SOUTH;
+        Direction down = color == WHITE ? SOUTH : NORTH;
 
         // PASSED PAWN
         if (!(passed_pawn_masks[color][square] & opp_pawns)) {
-            score += PASSED_PAWN_BONUSES[relative_rank];
+            int protectors = 0;
+            if (!(from_square(square) & MASK_FILE[FILE_A]) &&
+                position.board[square + down + WEST] == get_piece(PAWN, color)) protectors++;
+            if (!(from_square(square) & MASK_FILE[FILE_H]) &&
+                position.board[square + down + EAST] == get_piece(PAWN, color)) protectors++;
+
+            score += PASSED_PAWN_BONUSES[protectors][relative_rank];
 
             // BLOCKERS
-            auto blocker_square = static_cast<Square>(square + static_cast<Square>(up));
+            auto blocker_square = square + up;
             if (from_square(blocker_square) & position.get_pieces(~color)) {
                 score += PASSED_PAWN_BLOCKERS[get_piece_type(position.board[blocker_square], ~color)][rank_of(
                         get_white_relative_square(blocker_square, color))];
