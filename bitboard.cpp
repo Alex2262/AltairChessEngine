@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <bitset>
+#include <algorithm>
 #include "types.h"
 #include "bitboard.h"
 
