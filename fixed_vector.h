@@ -25,7 +25,8 @@ public:
     inline auto begin() { return fixed_vector.begin(); }
     inline auto end() { return begin() + current_index; }
 
-    inline T operator[](size_t index) { return fixed_vector[index]; }
+    inline T& operator[](size_t index) { return fixed_vector[index]; }
+    inline const T& operator[](size_t index) const { return fixed_vector[index]; }
 
     inline void clear() { current_index = 0; }
 
