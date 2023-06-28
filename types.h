@@ -57,6 +57,10 @@ enum PieceType : uint32_t {
     KING
 };
 
+constexpr inline PieceType get_piece_type(Piece piece, Color color) {
+    return static_cast<PieceType>(static_cast<int>(piece) - static_cast<int>(color * COLOR_OFFSET));
+}
+
 constexpr uint32_t N_DIRS = 8;
 enum Direction : int32_t {
     NORTH = 8, NORTH_EAST = 9, EAST = 1, SOUTH_EAST = -7,

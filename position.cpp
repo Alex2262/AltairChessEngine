@@ -41,22 +41,21 @@ BITBOARD Position::get_pieces(PieceType piece, Color color) const {
     return pieces[piece + color * COLOR_OFFSET];
 }
 
+BITBOARD Position::get_pieces(Color color) const {
+    return get_pieces(PAWN, color) |
+           get_pieces(KNIGHT, color) |
+           get_pieces(BISHOP, color) |
+           get_pieces(ROOK, color) |
+           get_pieces(QUEEN, color) |
+           get_pieces(KING, color);
+}
+
 [[nodiscard]] BITBOARD Position::get_our_pieces() {
-    return get_pieces(PAWN, side) |
-           get_pieces(KNIGHT, side) |
-           get_pieces(BISHOP, side) |
-           get_pieces(ROOK, side) |
-           get_pieces(QUEEN, side) |
-           get_pieces(KING, side);
+    return get_pieces(side);
 }
 
 [[nodiscard]] BITBOARD Position::get_opp_pieces() {
-    return get_pieces(PAWN, static_cast<Color>(~side)) |
-           get_pieces(KNIGHT, static_cast<Color>(~side)) |
-           get_pieces(BISHOP, static_cast<Color>(~side)) |
-           get_pieces(ROOK, static_cast<Color>(~side)) |
-           get_pieces(QUEEN, static_cast<Color>(~side)) |
-           get_pieces(KING, static_cast<Color>(~side));
+    return get_pieces(~side);
 }
 
 [[nodiscard]] BITBOARD Position::get_all_pieces() const {
@@ -274,6 +273,7 @@ std::ostream& operator << (std::ostream& os, const Position& position) {
 
 void Position::get_pawn_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const {
     BITBOARD bitboard = (side == WHITE ? WHITE_PAWN_ATTACKS[square] : BLACK_PAWN_ATTACKS[square]) & opp_pieces;
+    bitboard &= ~(MASK_RANK[RANK_1] | MASK_RANK[RANK_8]);
     while (bitboard) {
         Square new_square = poplsb(bitboard);
         current_scored_moves.push_back({
