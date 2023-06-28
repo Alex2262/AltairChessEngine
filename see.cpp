@@ -7,38 +7,35 @@
 #include <iostream>
 #include "see.h"
 
-// TODO: get all attackers instead of the cheapest attacker, and then incrementally find the next cheapest one
-Square get_cheapest_attacker(Position& position, Square square) {
+BITBOARD get_all_attackers(Position& position, Square square) {
 
     BITBOARD occupancy = position.all_pieces & (~from_square(square));
 
     // Treat square like a pawn
-    BITBOARD pawn_attackers = (position.side == WHITE ? WHITE_PAWN_ATTACKS[square] : BLACK_PAWN_ATTACKS[square]) &
-            position.get_pieces(PAWN, ~position.side);
-
-    if (pawn_attackers) return poplsb(pawn_attackers);
+    BITBOARD pawn_attackers = (WHITE_PAWN_ATTACKS[square] & position.get_pieces(PAWN, BLACK)) |
+            (BLACK_PAWN_ATTACKS[square] & position.get_pieces(PAWN, WHITE));
 
     // Treat square like a knight
-    BITBOARD knight_attackers = KNIGHT_ATTACKS[square] & position.get_pieces(KNIGHT, ~position.side);
-    if (knight_attackers) return poplsb(knight_attackers);
+    BITBOARD knight_attackers = KNIGHT_ATTACKS[square] &
+            (position.get_pieces(WHITE_KNIGHT) | position.get_pieces(BLACK_KNIGHT));
 
     // Treat square like a bishop
     BITBOARD bishop_attacks = get_bishop_attacks(square, occupancy);
-    BITBOARD bishop_attackers = bishop_attacks & position.get_pieces(BISHOP, ~position.side);
-    if (bishop_attackers) return poplsb(bishop_attackers);
+    BITBOARD bishop_attackers = bishop_attacks &
+            (position.get_pieces(WHITE_BISHOP) | position.get_pieces(BLACK_BISHOP));
 
     // Treat square like a rook
     BITBOARD rook_attacks = get_rook_attacks(square, occupancy);
-    BITBOARD rook_attackers = rook_attacks & position.get_pieces(ROOK, ~position.side);
-    if (rook_attackers) return poplsb(rook_attackers);
+    BITBOARD rook_attackers = rook_attacks &
+            (position.get_pieces(WHITE_ROOK) | position.get_pieces(BLACK_ROOK));
 
-    BITBOARD queen_attackers = (bishop_attacks | rook_attacks) & position.get_pieces(QUEEN, ~position.side);
-    if (queen_attackers) return poplsb(queen_attackers);
+    BITBOARD queen_attackers = (bishop_attacks | rook_attacks) &
+            (position.get_pieces(WHITE_QUEEN) | position.get_pieces(BLACK_QUEEN));
 
-    BITBOARD king_attackers = KING_ATTACKS[square] & position.get_pieces(KING, ~position.side);
-    if (king_attackers) return poplsb(king_attackers);
+    BITBOARD king_attackers = KING_ATTACKS[square] &
+            (position.get_pieces(WHITE_KING) | position.get_pieces(BLACK_KING));
 
-    return NO_SQUARE;
+    return pawn_attackers | knight_attackers | bishop_attackers | rook_attackers | queen_attackers | king_attackers;
 }
 
 
@@ -60,49 +57,56 @@ SCORE_TYPE get_static_exchange_evaluation(Position& position, Move move, SCORE_T
     exchange_value -= SEE_values[selected];
     if (exchange_value >= 0) return true; // If we risk our piece being fully lost and the exchange value is still >= 0
 
-    std::vector<std::pair<Piece, Square>> removed_pieces;
+    BITBOARD occupancy = position.all_pieces & (~from_square(origin_square));
+    BITBOARD attackers = get_all_attackers(position, target_square);
 
-    if (occupied < EMPTY) {
-        removed_pieces.emplace_back(occupied, target_square);
-        position.remove_piece(occupied, target_square);
-    }
+    BITBOARD diagonal_attackers = position.get_pieces(WHITE_BISHOP) | position.get_pieces(BLACK_BISHOP) |
+                                  position.get_pieces(WHITE_QUEEN) | position.get_pieces(BLACK_QUEEN);
+
+    BITBOARD horizontal_attackers = position.get_pieces(WHITE_ROOK) | position.get_pieces(BLACK_ROOK) |
+                                    position.get_pieces(WHITE_QUEEN) | position.get_pieces(BLACK_QUEEN);
 
     Color original_side = position.side;
+    position.side = ~position.side;
 
     while (true) {
-        Square cheapest_attacker_square = get_cheapest_attacker(position, target_square);
-        if (cheapest_attacker_square == NO_SQUARE) break; // No attacking piece was found
+
+        // Removed used pieces from attackers
+        attackers &= occupancy;
+
+        BITBOARD our_attackers = attackers & position.get_our_pieces();
+        if (!our_attackers) break; // No attacking piece was found
+
+        PieceType cheapest_attacker = KING;
+        for (int piece = PAWN; piece < KING; piece++) {
+            if (our_attackers & position.get_pieces(static_cast<PieceType>(piece), position.side)) {
+                cheapest_attacker = static_cast<PieceType>(piece);
+                break;
+            }
+        }
 
         position.side = ~position.side;
 
-        Piece cheapest_attacker = position.board[cheapest_attacker_square];
-
         exchange_value = -exchange_value - 1 - SEE_values[cheapest_attacker];
         if (exchange_value >= 0) {
+            if (cheapest_attacker == KING && (attackers & position.get_our_pieces())) position.side = ~position.side;
             break;
         }
 
-        removed_pieces.emplace_back(cheapest_attacker, cheapest_attacker_square);
-        position.remove_piece(cheapest_attacker, cheapest_attacker_square);
+        occupancy ^= from_square(lsb(our_attackers & position.get_pieces(cheapest_attacker, ~position.side)));
 
-        position.our_pieces = position.get_our_pieces();
-        position.opp_pieces = position.get_opp_pieces();
-        position.all_pieces = position.get_all_pieces();
-        position.empty_squares = position.get_empty_squares();
+        if (cheapest_attacker == PAWN || cheapest_attacker == BISHOP || cheapest_attacker == QUEEN) {
+            attackers |= get_bishop_attacks(target_square, occupancy) & diagonal_attackers;
+        }
+        if (cheapest_attacker == ROOK || cheapest_attacker == QUEEN) {
+            attackers |= get_rook_attacks(target_square, occupancy) & horizontal_attackers;
+        }
     }
 
-    for (auto removed : removed_pieces) {
-        position.place_piece(removed.first, removed.second);
-    }
 
-    bool exchange_flag = position.side == original_side;
+    bool exchange_flag = position.side != original_side;
 
     position.side = original_side;
-
-    position.our_pieces = position.get_our_pieces();
-    position.opp_pieces = position.get_opp_pieces();
-    position.all_pieces = position.get_all_pieces();
-    position.empty_squares = position.get_empty_squares();
 
     return exchange_flag;
 
