@@ -14,7 +14,7 @@ SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color,
 SCORE_TYPE evaluate_pieces(Position& position, int& game_phase);
 SCORE_TYPE evaluate(Position& position);
 
-consteval SCORE_TYPE S(int mg, int eg) {
+constexpr SCORE_TYPE S(int mg, int eg) {
     return static_cast<SCORE_TYPE>(static_cast<unsigned int>(eg) << 16) + mg;
 }
 
