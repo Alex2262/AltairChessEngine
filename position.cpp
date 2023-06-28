@@ -173,8 +173,12 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
 
     side = (player == "w") ? WHITE : BLACK;
 
-    for (int piece = WHITE_PAWN; piece != EMPTY; piece++) {
+    for (int piece = WHITE_PAWN; piece < EMPTY; piece++) {
         pieces[piece] = 0ULL;
+    }
+
+    for (int square = 0; square < N_SQUARES; square++) {
+        board[square] = EMPTY;
     }
 
     auto pos = static_cast<Square>(56);
