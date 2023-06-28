@@ -67,6 +67,7 @@ public:
 
     [[nodiscard]] BITBOARD get_pieces(Piece piece) const;
     [[nodiscard]] BITBOARD get_pieces(PieceType piece, Color color) const;
+    [[nodiscard]] BITBOARD get_pieces(Color color) const;
 
     [[nodiscard]] BITBOARD get_our_pieces();
     [[nodiscard]] BITBOARD get_opp_pieces();
