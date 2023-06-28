@@ -15,6 +15,7 @@ void print_bitboard(BITBOARD bitboard) {
     std::string str_bitset = b.to_string();
     for (int i = 0; i < 64; i += 8) {
         std::string x = str_bitset.substr(i, 8);
+        std::reverse(x.begin(), x.end());
         for (auto c : x) std::cout << c << " ";
         std::cout << std::endl;
     }
