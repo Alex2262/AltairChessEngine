@@ -53,19 +53,19 @@ void Engine::clear_tt() {
 void Engine::reset() {
     node_count = 0;
     primary_thread_node_count = 0;
-    //std::memset(node_table, 0, sizeof(node_table));
+    std::memset(node_table, 0, sizeof(node_table));
 
     for (Thread_State& thread_state : thread_states) {
         thread_state.current_search_depth = 1;
         thread_state.search_ply = 0;
 
-        //std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
+        std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
     }
 
     selective_depth = 0;
 
     std::memset(pv_length, 0, sizeof(pv_length));
-    //std::memset(pv_table, 0, sizeof(pv_table));
+    std::memset(pv_table, 0, sizeof(pv_table));
 
     if (show_stats) {
         search_results.alpha_raised_count = 0;
@@ -82,7 +82,7 @@ void Engine::new_game() {
 
     for (Thread_State& thread_state : thread_states) {
         std::memset(thread_state.repetition_table, 0, sizeof(thread_state.repetition_table));
-        //std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
+        std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
         std::memset(thread_state.history_moves, 0, sizeof(thread_state.history_moves));
         std::memset(thread_state.capture_history, 0, sizeof(thread_state.capture_history));
         std::memset(thread_state.continuation_history, 0, sizeof(thread_state.continuation_history));
@@ -95,7 +95,7 @@ void Engine::new_game() {
     stopped = true;
 
     std::memset(pv_length, 0, sizeof(pv_length));
-    //std::memset(pv_table, 0, sizeof(pv_table));
+    std::memset(pv_table, 0, sizeof(pv_table));
     clear_tt();
 }
 

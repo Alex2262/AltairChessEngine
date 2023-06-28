@@ -120,7 +120,7 @@ public:
 
     Thread_State() = default;
 
-    Position position;
+    Position position{};
 
     PLY_TYPE current_search_depth = 0;
     PLY_TYPE search_ply = 0;
