@@ -5,55 +5,46 @@
 #include "evaluation.h"
 #include "evaluation_constants.h"
 
+Square relative_perspective_square(Square square, Color color) {
+    return static_cast<Square>(square ^ (~color * 56));
+}
+
+SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color, int& game_phase) {
+    SCORE_TYPE score = 0;
+    BITBOARD pieces = position.get_pieces(piece_type, color);
+
+    while (pieces) {
+        Square square = poplsb(pieces);
+        score += PIECE_VALUES[piece_type];
+
+        score += PIECE_SQUARE_TABLES[piece_type][relative_perspective_square(square, color)];
+
+        game_phase += GAME_PHASE_SCORES[piece_type];
+    }
+
+    return score;
+}
+
+SCORE_TYPE evaluate_pieces(Position& position, int& game_phase) {
+    SCORE_TYPE score = 0;
+    for (int piece = 0; piece < 6; piece++) {
+        score += evaluate_piece(position, static_cast<PieceType>(piece), WHITE, game_phase);
+        score -= evaluate_piece(position, static_cast<PieceType>(piece), BLACK, game_phase);
+    }
+
+    return score;
+}
+
 SCORE_TYPE evaluate(Position& position) {
-    uint32_t white_pawn_count = popcount(position.get_pieces(WHITE_PAWN));
-    uint32_t white_knight_count = popcount(position.get_pieces(WHITE_KNIGHT));
-    uint32_t white_bishop_count = popcount(position.get_pieces(WHITE_BISHOP));
-    uint32_t white_rook_count = popcount(position.get_pieces(WHITE_ROOK));
-    uint32_t white_queen_count = popcount(position.get_pieces(WHITE_QUEEN));
 
-    uint32_t black_pawn_count = popcount(position.get_pieces(BLACK_PAWN));
-    uint32_t black_knight_count = popcount(position.get_pieces(BLACK_KNIGHT));
-    uint32_t black_bishop_count = popcount(position.get_pieces(BLACK_BISHOP));
-    uint32_t black_rook_count = popcount(position.get_pieces(BLACK_ROOK));
-    uint32_t black_queen_count = popcount(position.get_pieces(BLACK_QUEEN));
+    SCORE_TYPE score = 0;
+    int game_phase = 0;
 
-    SCORE_TYPE white_material_mid = PIECE_VALUES_MID[PAWN] * white_pawn_count +
-                                    PIECE_VALUES_MID[KNIGHT] * white_knight_count +
-                                    PIECE_VALUES_MID[BISHOP] * white_bishop_count +
-                                    PIECE_VALUES_MID[ROOK] * white_rook_count +
-                                    PIECE_VALUES_MID[QUEEN] * white_queen_count;
-
-    SCORE_TYPE black_material_mid = PIECE_VALUES_MID[PAWN] * black_pawn_count +
-                                    PIECE_VALUES_MID[KNIGHT] * black_knight_count +
-                                    PIECE_VALUES_MID[BISHOP] * black_bishop_count +
-                                    PIECE_VALUES_MID[ROOK] * black_rook_count +
-                                    PIECE_VALUES_MID[QUEEN] * black_queen_count;
-
-    SCORE_TYPE white_material_end = PIECE_VALUES_END[PAWN] * white_pawn_count +
-                                    PIECE_VALUES_END[KNIGHT] * white_knight_count +
-                                    PIECE_VALUES_END[BISHOP] * white_bishop_count +
-                                    PIECE_VALUES_END[ROOK] * white_rook_count +
-                                    PIECE_VALUES_END[QUEEN] * white_queen_count;
-
-    SCORE_TYPE black_material_end = PIECE_VALUES_END[PAWN] * black_pawn_count +
-                                    PIECE_VALUES_END[KNIGHT] * black_knight_count +
-                                    PIECE_VALUES_END[BISHOP] * black_bishop_count +
-                                    PIECE_VALUES_END[ROOK] * black_rook_count +
-                                    PIECE_VALUES_END[QUEEN] * black_queen_count;
-
-    SCORE_TYPE material_mid = white_material_mid - black_material_mid;
-    SCORE_TYPE material_end = white_material_end - black_material_end;
-
-    int game_phase = GAME_PHASE_SCORES[PAWN] * (white_pawn_count + black_pawn_count) +
-                     GAME_PHASE_SCORES[KNIGHT] * (white_knight_count + black_knight_count) +
-                     GAME_PHASE_SCORES[BISHOP] * (white_bishop_count + black_bishop_count) +
-                     GAME_PHASE_SCORES[ROOK] * (white_rook_count + black_rook_count) +
-                     GAME_PHASE_SCORES[QUEEN] * (white_queen_count + black_queen_count);
-
+    score += evaluate_pieces(position, game_phase);
     game_phase = std::min(game_phase, 24);
 
-    SCORE_TYPE evaluation = (material_mid * game_phase + material_end * (24 - game_phase)) / 24;
+    SCORE_TYPE evaluation = (mg_score(score) * game_phase + eg_score(score) * (24 - game_phase)) / 24;
 
     return (position.side * -2 + 1) * evaluation;
+
 }
