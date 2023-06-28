@@ -78,6 +78,19 @@ constexpr BITBOARD shift(BITBOARD b) {
     return 0;
 }
 
+template<Direction D>
+constexpr BITBOARD fill(BITBOARD b) {
+    if constexpr (D == NORTH) {
+        b |= (b << 8);
+        b |= (b << 16);
+        return b | (b << 32);
+    } else if constexpr (D == SOUTH) {
+        b |= (b >> 8);
+        b |= (b >> 16);
+        return b | (b >> 32);
+    }
+}
+
 [[nodiscard]] Square lsb(BITBOARD bitboard);
 [[nodiscard]] Square msb(BITBOARD bitboard);
 

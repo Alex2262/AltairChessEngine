@@ -9,7 +9,9 @@
 #include "constants.h"
 #include "types.h"
 
-Square relative_perspective_square(Square square, Color color);
+Square get_white_relative_square(Square square, Color color);
+Square get_black_relative_square(Square square, Color color);
+
 SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color, int& game_phase);
 SCORE_TYPE evaluate_pieces(Position& position, int& game_phase);
 SCORE_TYPE evaluate(Position& position);
