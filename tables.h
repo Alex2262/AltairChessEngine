@@ -301,4 +301,25 @@ constexpr BITBOARD get_piece_attacks(Piece piece, Square square, BITBOARD occupa
     else return KING_ATTACKS[square];
 }
 
+
+consteval std::array<std::array<BITBOARD, 64>, 2> generate_passed_pawn_masks() {
+    std::array<std::array<BITBOARD, 64>, 2> masks{};
+
+    for (int i = 0; i < 64; i++) {
+        masks[WHITE][i] = from_square(static_cast<Square>(i));
+        masks[WHITE][i] |= shift<EAST>(masks[WHITE][i]) | shift<WEST>(masks[WHITE][i]);
+        masks[WHITE][i] ^= fill<NORTH>(masks[WHITE][i]);
+    }
+
+    for (int i = 0; i < 64; i++) {
+        masks[BLACK][i] = from_square(static_cast<Square>(i));
+        masks[BLACK][i] |= shift<EAST>(masks[BLACK][i]) | shift<WEST>(masks[BLACK][i]);
+        masks[BLACK][i] ^= fill<SOUTH>(masks[BLACK][i]);
+    }
+
+    return masks;
+}
+
+constexpr auto passed_pawn_masks = generate_passed_pawn_masks();
+
 #endif //ALTAIRCHESSENGINE_TABLES_H

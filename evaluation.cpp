@@ -5,8 +5,37 @@
 #include "evaluation.h"
 #include "evaluation_constants.h"
 
-Square relative_perspective_square(Square square, Color color) {
+Square get_white_relative_square(Square square, Color color) {
+    return static_cast<Square>(square ^ (color * 56));
+}
+
+Square get_black_relative_square(Square square, Color color) {
     return static_cast<Square>(square ^ (~color * 56));
+}
+
+SCORE_TYPE evaluate_pawns(Position& position, Color color, int& game_phase) {
+    SCORE_TYPE score = 0;
+    BITBOARD our_pawns = position.get_pieces(PAWN, color);
+    BITBOARD opp_pawns = position.get_pieces(PAWN, ~color);
+
+    while (our_pawns) {
+        Square square = poplsb(our_pawns);
+        Square black_relative_square = get_black_relative_square(square, color);
+        Rank relative_rank = rank_of(get_white_relative_square(square, color));
+
+        score += PIECE_VALUES[PAWN];
+
+        score += PIECE_SQUARE_TABLES[PAWN][black_relative_square];
+
+        game_phase += GAME_PHASE_SCORES[PAWN];
+
+        // PASSED PAWN
+        if (!(passed_pawn_masks[color][square] & opp_pawns)) {
+            score += PASSED_PAWN_BONUSES[relative_rank];
+        }
+    }
+
+    return score;
 }
 
 SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color, int& game_phase) {
@@ -17,7 +46,7 @@ SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color,
         Square square = poplsb(pieces);
         score += PIECE_VALUES[piece_type];
 
-        score += PIECE_SQUARE_TABLES[piece_type][relative_perspective_square(square, color)];
+        score += PIECE_SQUARE_TABLES[piece_type][get_black_relative_square(square, color)];
 
         game_phase += GAME_PHASE_SCORES[piece_type];
     }
@@ -27,7 +56,11 @@ SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color,
 
 SCORE_TYPE evaluate_pieces(Position& position, int& game_phase) {
     SCORE_TYPE score = 0;
-    for (int piece = 0; piece < 6; piece++) {
+
+    score += evaluate_pawns(position, WHITE, game_phase);
+    score -= evaluate_pawns(position, BLACK, game_phase);
+
+    for (int piece = 1; piece < 6; piece++) {
         score += evaluate_piece(position, static_cast<PieceType>(piece), WHITE, game_phase);
         score -= evaluate_piece(position, static_cast<PieceType>(piece), BLACK, game_phase);
     }
