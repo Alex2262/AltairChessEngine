@@ -22,6 +22,8 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, int& game_phase) {
 
     while (our_pawns) {
         Square square = poplsb(our_pawns);
+        BITBOARD bb_square = from_square(square);
+
         Square black_relative_square = get_black_relative_square(square, color);
         Rank relative_rank = rank_of(get_white_relative_square(square, color));
 
@@ -37,9 +39,9 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, int& game_phase) {
         // PASSED PAWN
         if (!(passed_pawn_masks[color][square] & opp_pawns)) {
             int protectors = 0;
-            if (!(from_square(square) & MASK_FILE[FILE_A]) &&
+            if (!(bb_square & MASK_FILE[FILE_A]) &&
                 position.board[square + down + WEST] == get_piece(PAWN, color)) protectors++;
-            if (!(from_square(square) & MASK_FILE[FILE_H]) &&
+            if (!(bb_square & MASK_FILE[FILE_H]) &&
                 position.board[square + down + EAST] == get_piece(PAWN, color)) protectors++;
 
             score += PASSED_PAWN_BONUSES[protectors][relative_rank];
@@ -50,6 +52,12 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, int& game_phase) {
                 score += PASSED_PAWN_BLOCKERS[get_piece_type(position.board[blocker_square], ~color)][rank_of(
                         get_white_relative_square(blocker_square, color))];
             }
+        }
+
+        // ISOLATED PAWN
+        BITBOARD isolated_pawn_mask = fill<SOUTH>(fill<NORTH>(shift<WEST>(bb_square) | shift<EAST>(bb_square)));
+        if (!(isolated_pawn_mask & our_pawns)) {
+            score += ISOLATED_PAWN_PENALTY;
         }
     }
 
