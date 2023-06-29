@@ -398,6 +398,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     engine.tt_prefetch_read(position.hash_key);  // Prefetch
 
+    // Initialize PV length
+    if (thread_id == 0 && thread_state.search_ply <= MAX_AB_DEPTH) {
+        engine.pv_length[thread_state.search_ply] = thread_state.search_ply;
+    }
+
     // Check the remaining time
     if (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
         (engine.node_count & 2047) == 0 && engine.check_time()) {
@@ -427,11 +432,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             if (beta <= mating_value) return mating_value;
         }
 
-    }
-
-    // Initialize PV length
-    if (thread_id == 0) {
-        engine.pv_length[thread_state.search_ply] = thread_state.search_ply;
     }
 
     engine.selective_depth = std::max(thread_state.search_ply, engine.selective_depth);
