@@ -91,6 +91,10 @@ constexpr BITBOARD fill(BITBOARD b) {
     }
 }
 
+constexpr Square operator+(Square s, Direction d) {
+    return Square(static_cast<int32_t>(s) + static_cast<int32_t>(d));
+}
+
 [[nodiscard]] Square lsb(BITBOARD bitboard);
 [[nodiscard]] Square msb(BITBOARD bitboard);
 
