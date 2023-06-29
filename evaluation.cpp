@@ -18,6 +18,7 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, int& game_phase) {
     SCORE_TYPE score = 0;
     BITBOARD our_pawns = position.get_pieces(PAWN, color);
     BITBOARD opp_pawns = position.get_pieces(PAWN, ~color);
+    BITBOARD phalanx_pawns = our_pawns & shift<WEST>(our_pawns);
 
     while (our_pawns) {
         Square square = poplsb(our_pawns);
@@ -50,6 +51,14 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, int& game_phase) {
                         get_white_relative_square(blocker_square, color))];
             }
         }
+    }
+
+    // Phalanx Pawns
+    while (phalanx_pawns) {
+        Square square = poplsb(phalanx_pawns);
+        Rank relative_rank = rank_of(get_white_relative_square(square, color));
+
+        score += PHALANX_PAWN_BONUSES[relative_rank];
     }
 
     return score;
