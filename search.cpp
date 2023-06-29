@@ -645,7 +645,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         PLY_TYPE extension = in_check;
 
         // Pawn going to 7th rank must be passed
-        bool passed_pawn = static_cast<PieceType>(position.board[move.origin()] % COLOR_OFFSET) == PAWN &&
+        bool passed_pawn = get_piece_type(informative_move.selected(), ~position.side) == PAWN &&
                            rank_of(move.target()) == 6 - 5 * (~position.side);  // side has already been flipped
         bool queen_promotion = move.type() == MOVE_TYPE_PROMOTION &&
                                static_cast<PieceType>(move.promotion_type() + 1) == QUEEN;
