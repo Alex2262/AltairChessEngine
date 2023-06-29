@@ -395,14 +395,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Initialize Variables
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
-    engine.selective_depth = std::max(thread_state.search_ply, engine.selective_depth);
 
     engine.tt_prefetch_read(position.hash_key);  // Prefetch
-
-    // Initialize PV length
-    if (thread_id == 0) {
-        engine.pv_length[thread_state.search_ply] = thread_state.search_ply;
-    }
 
     // Check the remaining time
     if (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
@@ -434,6 +428,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         }
 
     }
+
+    // Initialize PV length
+    if (thread_id == 0) {
+        engine.pv_length[thread_state.search_ply] = thread_state.search_ply;
+    }
+
+    engine.selective_depth = std::max(thread_state.search_ply, engine.selective_depth);
 
     // Start quiescence search at the start of regular negamax search to counter the horizon effect.
     if (depth <= 0) {
