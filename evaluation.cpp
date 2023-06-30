@@ -48,9 +48,16 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, int& game_phase) {
 
             // BLOCKERS
             auto blocker_square = square + up;
-            if (from_square(blocker_square) & position.get_pieces(~color)) {
+            BITBOARD opponent_pieces = position.get_pieces(~color);
+            if (from_square(blocker_square) & opponent_pieces) {
                 score += PASSED_PAWN_BLOCKERS[get_piece_type(position.board[blocker_square], ~color)][rank_of(
                         get_white_relative_square(blocker_square, color))];
+            }
+
+            auto blocker_square_2 = blocker_square + up;
+            if (relative_rank <= 5 && from_square(blocker_square_2) & opponent_pieces) {
+                score += PASSED_PAWN_BLOCKERS_2[get_piece_type(position.board[blocker_square_2], ~color)][rank_of(
+                        get_white_relative_square(blocker_square_2, color))];
             }
         }
 
