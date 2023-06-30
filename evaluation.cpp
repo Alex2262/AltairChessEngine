@@ -119,6 +119,9 @@ SCORE_TYPE evaluate(Position& position) {
     int game_phase = 0;
 
     score += evaluate_pieces(position, game_phase);
+
+    score += (position.side * -2 + 1) * TEMPO_BONUS;
+
     game_phase = std::min(game_phase, 24);
 
     SCORE_TYPE evaluation = (mg_score(score) * game_phase + eg_score(score) * (24 - game_phase)) / 24;
