@@ -76,6 +76,10 @@ SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color,
     SCORE_TYPE score = 0;
     BITBOARD pieces = position.get_pieces(piece_type, color);
 
+    if (piece_type == BISHOP && popcount(pieces) >= 2) {
+        score += BISHOP_PAIR_BONUS;
+    }
+
     while (pieces) {
         Square square = poplsb(pieces);
         score += PIECE_VALUES[piece_type];
