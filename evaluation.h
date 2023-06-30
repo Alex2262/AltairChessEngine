@@ -9,6 +9,13 @@
 #include "constants.h"
 #include "types.h"
 
+struct EvaluationInformation {
+    int game_phase = 0;
+    BITBOARD pieces[2]{};
+};
+
+void initialize_evaluation_information(Position& position, EvaluationInformation& evaluation_information);
+
 Square get_white_relative_square(Square square, Color color);
 Square get_black_relative_square(Square square, Color color);
 
