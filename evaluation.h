@@ -11,6 +11,8 @@
 
 struct EvaluationInformation {
     int game_phase = 0;
+
+    BITBOARD pawns[2]{};
     BITBOARD pieces[2]{};
     BITBOARD pawn_attacks[2]{};
 };
