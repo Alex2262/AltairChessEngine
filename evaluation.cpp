@@ -127,6 +127,12 @@ SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color,
                 }
             }
         }
+
+        for (int our_piece = 0; our_piece < 6; our_piece++) {
+            score += static_cast<SCORE_TYPE>(popcount(
+                    piece_attacks & position.get_pieces(static_cast<PieceType>(our_piece), color))) *
+                     PIECE_SUPPORT[piece_type][our_piece];
+        }
     }
 
     return score;
