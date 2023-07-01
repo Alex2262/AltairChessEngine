@@ -32,6 +32,7 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
     BITBOARD our_pawns = position.get_pieces(PAWN, color);
     BITBOARD opp_pawns = position.get_pieces(PAWN, ~color);
     BITBOARD phalanx_pawns = our_pawns & shift<WEST>(our_pawns);
+    BITBOARD pawn_threats = evaluation_information.pawn_attacks[color] & evaluation_information.pieces[~color];
 
     while (our_pawns) {
         Square square = poplsb(our_pawns);
@@ -88,6 +89,11 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
         score += PHALANX_PAWN_BONUSES[relative_rank];
     }
 
+    while (pawn_threats) {
+        Square square = poplsb(pawn_threats);
+        score += PIECE_THREATS[PAWN][get_piece_type(position.board[square], ~color)];
+    }
+
     return score;
 }
 
@@ -126,6 +132,12 @@ SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color,
                     score += SEMI_OPEN_FILE_VALUES[piece_type];
                 }
             }
+        }
+
+        for (int opp_piece = 0; opp_piece < 6; opp_piece++) {
+            score += static_cast<SCORE_TYPE>(popcount(
+                    piece_attacks & position.get_pieces(static_cast<PieceType>(opp_piece), ~color))) *
+                     PIECE_THREATS[piece_type][opp_piece];
         }
     }
 
