@@ -18,13 +18,14 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
     Piece selected = position.board[move.origin()];
     Piece occupied = position.board[move.target()];
 
-    auto selected_type = static_cast<PieceType>(selected % COLOR_OFFSET);
-    auto occupied_type = static_cast<PieceType>(occupied % COLOR_OFFSET);
+    auto selected_type = get_piece_type(selected, position.side);
 
     MoveType move_type = move.type();
     InformativeMove informative_move = InformativeMove(move, selected, occupied);
 
     if (move.is_capture(position)) {
+        auto occupied_type = get_piece_type(occupied, ~position.side);
+        
         score += thread_state.capture_history[selected][occupied][move.target()];
         score += thread_state.move_ordering_parameters.capture_scale
                 * (MVV_LVA_VALUES[occupied_type] - MVV_LVA_VALUES[selected_type]);
