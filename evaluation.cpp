@@ -9,11 +9,14 @@
 void initialize_evaluation_information(Position& position, EvaluationInformation& evaluation_information) {
     evaluation_information.game_phase = 0;
 
+    evaluation_information.pawns[WHITE] = position.get_pieces(PAWN, WHITE);
+    evaluation_information.pawns[BLACK] = position.get_pieces(PAWN, BLACK);
+
     evaluation_information.pieces[WHITE] = position.get_pieces(WHITE);
     evaluation_information.pieces[BLACK] = position.get_pieces(BLACK);
 
-    evaluation_information.pawn_attacks[WHITE] = get_pawn_bitboard_attacks(position.get_pieces(WHITE_PAWN), WHITE);
-    evaluation_information.pawn_attacks[BLACK] = get_pawn_bitboard_attacks(position.get_pieces(BLACK_PAWN), BLACK);
+    evaluation_information.pawn_attacks[WHITE] = get_pawn_bitboard_attacks(evaluation_information.pawns[WHITE], WHITE);
+    evaluation_information.pawn_attacks[BLACK] = get_pawn_bitboard_attacks(evaluation_information.pawns[BLACK], BLACK);
 }
 
 Square get_white_relative_square(Square square, Color color) {
@@ -112,6 +115,17 @@ SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color,
                                 (~evaluation_information.pawn_attacks[~color]);
 
             score += static_cast<SCORE_TYPE>(popcount(mobility)) * MOBILITY_VALUES[piece_type];
+        }
+
+        if (piece_type == KING || piece_type == QUEEN || piece_type == ROOK) {
+            if (!(MASK_FILE[file_of(square)] & evaluation_information.pawns[color])) {
+                if (!(MASK_FILE[file_of(square)] & evaluation_information.pawns[~color])) {
+                    score += OPEN_FILE_VALUES[piece_type];
+                }
+                else {
+                    score += SEMI_OPEN_FILE_VALUES[piece_type];
+                }
+            }
         }
     }
 
