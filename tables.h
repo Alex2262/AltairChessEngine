@@ -322,4 +322,10 @@ consteval std::array<std::array<BITBOARD, 64>, 2> generate_passed_pawn_masks() {
 
 constexpr auto passed_pawn_masks = generate_passed_pawn_masks();
 
+constexpr BITBOARD get_pawn_bitboard_attacks(BITBOARD pawns, Color color) {
+    BITBOARD attacks = color == WHITE ? shift<NORTH>(pawns) : shift<SOUTH>(pawns);
+    return shift<WEST>(attacks) | shift<EAST>(attacks);
+}
+
+
 #endif //ALTAIRCHESSENGINE_TABLES_H
