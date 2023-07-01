@@ -11,6 +11,9 @@ void initialize_evaluation_information(Position& position, EvaluationInformation
 
     evaluation_information.pieces[WHITE] = position.get_pieces(WHITE);
     evaluation_information.pieces[BLACK] = position.get_pieces(BLACK);
+
+    evaluation_information.pawn_attacks[WHITE] = get_pawn_bitboard_attacks(position.get_pieces(WHITE_PAWN), WHITE);
+    evaluation_information.pawn_attacks[BLACK] = get_pawn_bitboard_attacks(position.get_pieces(BLACK_PAWN), BLACK);
 }
 
 Square get_white_relative_square(Square square, Color color) {
@@ -100,6 +103,16 @@ SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color,
         score += PIECE_SQUARE_TABLES[piece_type][get_black_relative_square(square, color)];
 
         evaluation_information.game_phase += GAME_PHASE_SCORES[piece_type];
+
+        BITBOARD piece_attacks = get_piece_attacks(get_piece(piece_type, color), square, position.all_pieces);
+
+        if (piece_type != KING) {
+            BITBOARD mobility = piece_attacks &
+                                (~evaluation_information.pieces[color]) &
+                                (~evaluation_information.pawn_attacks[~color]);
+
+            score += static_cast<SCORE_TYPE>(popcount(mobility)) * MOBILITY_VALUES[piece_type];
+        }
     }
 
     return score;

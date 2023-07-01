@@ -12,6 +12,7 @@
 struct EvaluationInformation {
     int game_phase = 0;
     BITBOARD pieces[2]{};
+    BITBOARD pawn_attacks[2]{};
 };
 
 void initialize_evaluation_information(Position& position, EvaluationInformation& evaluation_information);
