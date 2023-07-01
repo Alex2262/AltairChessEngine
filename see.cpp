@@ -9,8 +9,6 @@
 
 BITBOARD get_all_attackers(Position& position, Square square) {
 
-    BITBOARD occupancy = position.all_pieces & (~from_square(square));
-
     // Treat square like a pawn
     BITBOARD pawn_attackers = (WHITE_PAWN_ATTACKS[square] & position.get_pieces(PAWN, BLACK)) |
             (BLACK_PAWN_ATTACKS[square] & position.get_pieces(PAWN, WHITE));
@@ -20,12 +18,12 @@ BITBOARD get_all_attackers(Position& position, Square square) {
             (position.get_pieces(WHITE_KNIGHT) | position.get_pieces(BLACK_KNIGHT));
 
     // Treat square like a bishop
-    BITBOARD bishop_attacks = get_bishop_attacks(square, occupancy);
+    BITBOARD bishop_attacks = get_bishop_attacks(square, position.all_pieces);
     BITBOARD bishop_attackers = bishop_attacks &
             (position.get_pieces(WHITE_BISHOP) | position.get_pieces(BLACK_BISHOP));
 
     // Treat square like a rook
-    BITBOARD rook_attacks = get_rook_attacks(square, occupancy);
+    BITBOARD rook_attacks = get_rook_attacks(square, position.all_pieces);
     BITBOARD rook_attackers = rook_attacks &
             (position.get_pieces(WHITE_ROOK) | position.get_pieces(BLACK_ROOK));
 
@@ -57,7 +55,7 @@ SCORE_TYPE get_static_exchange_evaluation(Position& position, Move move, SCORE_T
     exchange_value -= SEE_values[selected];
     if (exchange_value >= 0) return true; // If we risk our piece being fully lost and the exchange value is still >= 0
 
-    BITBOARD occupancy = position.all_pieces & (~from_square(origin_square));
+    BITBOARD occupancy = position.all_pieces ^ from_square(origin_square);
     BITBOARD attackers = get_all_attackers(position, target_square);
 
     BITBOARD diagonal_attackers = position.get_pieces(WHITE_BISHOP) | position.get_pieces(BLACK_BISHOP) |

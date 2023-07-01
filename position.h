@@ -65,14 +65,38 @@ public:
     void clear_state_stack();
     void set_state(State_Struct& state_struct, PLY_TYPE fifty_move) const;
 
-    [[nodiscard]] BITBOARD get_pieces(Piece piece) const;
-    [[nodiscard]] BITBOARD get_pieces(PieceType piece, Color color) const;
-    [[nodiscard]] BITBOARD get_pieces(Color color) const;
+    [[nodiscard]] inline BITBOARD get_pieces(Piece piece) const {
+        return pieces[piece];
+    }
 
-    [[nodiscard]] BITBOARD get_our_pieces();
-    [[nodiscard]] BITBOARD get_opp_pieces();
-    [[nodiscard]] BITBOARD get_all_pieces() const;
-    [[nodiscard]] BITBOARD get_empty_squares() const;
+    [[nodiscard]] inline BITBOARD get_pieces(PieceType piece, Color color) const {
+        return pieces[piece + color * COLOR_OFFSET];
+    }
+
+    [[nodiscard]] inline BITBOARD get_pieces(Color color) const {
+        return get_pieces(PAWN, color) |
+               get_pieces(KNIGHT, color) |
+               get_pieces(BISHOP, color) |
+               get_pieces(ROOK, color) |
+               get_pieces(QUEEN, color) |
+               get_pieces(KING, color);
+    }
+
+    [[nodiscard]] inline BITBOARD get_our_pieces() const {
+        return get_pieces(side);
+    }
+
+    [[nodiscard]] inline BITBOARD get_opp_pieces() const {
+        return get_pieces(~side);
+    }
+
+    [[nodiscard]] inline BITBOARD get_all_pieces() const {
+        return our_pieces | opp_pieces;
+    }
+
+    [[nodiscard]] inline BITBOARD get_empty_squares() const {
+        return ~all_pieces;
+    }
 
     [[nodiscard]] BITBOARD get_attacked_squares(Color color) const;
 
@@ -91,26 +115,23 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Position& position);
 
-    void get_pawn_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
-    void get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+    void get_pawn_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
+    void get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
 
-    void get_knight_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
-    void get_knight_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+    void get_knight_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
+    void get_knight_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
 
-    void get_bishop_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
-    void get_bishop_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+    void get_bishop_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
+    void get_bishop_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
 
-    void get_rook_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
-    void get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+    void get_rook_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
+    void get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
 
-    void get_queen_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
-    void get_queen_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
+    void get_queen_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
+    void get_queen_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
 
-    void get_king_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
-    void get_king_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, Square square) const;
-
-    void get_piece_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, PieceType piece, Square square) const;
-    void get_piece_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, PieceType piece, Square square) const;
+    void get_king_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
+    void get_king_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
 
     void get_pseudo_legal_captures(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
 
