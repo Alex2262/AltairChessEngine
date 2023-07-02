@@ -1209,11 +1209,13 @@ void get_capture_scores(const Thread_State& thread_state, Position& position, st
 
 
 void sort_next_move(std::vector<Move_Struct>& moves, int current_count) {
-    for (int next_count = current_count; next_count < static_cast<int>(moves.size()); next_count++) {
-        if (moves[current_count].score < moves[next_count].score) {
-            Move_Struct current_move_struct = moves[current_count];
-            moves[current_count] = moves[next_count];
-            moves[next_count] = current_move_struct;
+    auto best_score = moves[current_count].score;
+    auto best_idx = current_count;
+    for (auto next_count = current_count + 1; next_count < moves.size(); next_count++) {
+        if (best_score < moves[next_count].score) {
+            best_score = moves[next_count].score;
+            best_idx = next_count;
         }
     }
+    std::swap(moves[current_count], moves[best_idx]);
 }
