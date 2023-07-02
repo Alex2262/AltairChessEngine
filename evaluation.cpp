@@ -170,14 +170,19 @@ SCORE_TYPE evaluate_pieces(Position& position, EvaluationInformation& evaluation
 
     score += evaluate_pawns(position, WHITE, evaluation_information);
     score -= evaluate_pawns(position, BLACK, evaluation_information);
+
 	score += evaluate_piece<KNIGHT>(position, WHITE, evaluation_information);
 	score -= evaluate_piece<KNIGHT>(position, BLACK, evaluation_information);
+
 	score += evaluate_piece<BISHOP>(position, WHITE, evaluation_information);
 	score -= evaluate_piece<BISHOP>(position, BLACK, evaluation_information);
+
 	score += evaluate_piece<ROOK>(position, WHITE, evaluation_information);
 	score -= evaluate_piece<ROOK>(position, BLACK, evaluation_information);
+
 	score += evaluate_piece<QUEEN>(position, WHITE, evaluation_information);
 	score -= evaluate_piece<QUEEN>(position, BLACK, evaluation_information);
+
 	score += evaluate_piece<KING>(position, WHITE, evaluation_information);
 	score -= evaluate_piece<KING>(position, BLACK, evaluation_information);
 
