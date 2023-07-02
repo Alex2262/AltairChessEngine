@@ -33,6 +33,22 @@ Square get_black_relative_square(Square square, Color color) {
     return static_cast<Square>(square ^ (~color * 56));
 }
 
+SCORE_TYPE evaluate_king_pawn(const Position& position, File file, Color color, EvaluationInformation& evaluation_information) {
+    SCORE_TYPE score = 0;
+
+    BITBOARD file_pawns = evaluation_information.pawns[color] & MASK_FILE[file];
+    Square square = file_pawns == 0 ? NO_SQUARE :
+                    color == WHITE ? lsb(file_pawns) : msb(file_pawns);
+
+    Rank relative_rank = rank_of(get_white_relative_square(square, color));
+
+    int index = square == NO_SQUARE ? 4 : std::min(static_cast<int>(relative_rank) - 1, 3);
+
+    score += KING_PAWN_SHIELD[index][file];
+
+    return score;
+}
+
 SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation& evaluation_information) {
     SCORE_TYPE score = 0;
     BITBOARD our_pawns = evaluation_information.pawns[color];
@@ -152,6 +168,21 @@ SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation
                 else {
                     score += SEMI_OPEN_FILE_VALUES[piece_type];
                 }
+            }
+        }
+
+        if constexpr (piece_type == KING) {
+            File file = file_of(square);
+            if (file <= 2) {  // Queen side: Files A, B, C  (0, 1, 2)
+                score += evaluate_king_pawn(position, 0, color, evaluation_information);
+                score += evaluate_king_pawn(position, 1, color, evaluation_information);
+                score += evaluate_king_pawn(position, 2, color, evaluation_information);
+            }
+
+            else if (file >= 5) {  // King side: Files F, G, H  (5, 6, 7)
+                score += evaluate_king_pawn(position, 5, color, evaluation_information);
+                score += evaluate_king_pawn(position, 6, color, evaluation_information);
+                score += evaluate_king_pawn(position, 7, color, evaluation_information);
             }
         }
 
