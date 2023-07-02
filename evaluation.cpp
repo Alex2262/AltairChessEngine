@@ -61,15 +61,9 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
         // evaluation_information.game_phase += GAME_PHASE_SCORES[PAWN];
 
         Direction up = color == WHITE ? NORTH : SOUTH;
-        auto down = static_cast<Direction>(-static_cast<int>(up));
-
         // PASSED PAWN
         if (!(passed_pawn_masks[color][square] & opp_pawns)) {
-            int protectors = 0;
-            if (!(bb_square & MASK_FILE[FILE_A]) &&
-                position.board[square + down + WEST] == get_piece(PAWN, color)) protectors++;
-            if (!(bb_square & MASK_FILE[FILE_H]) &&
-                position.board[square + down + EAST] == get_piece(PAWN, color)) protectors++;
+			auto protectors = popcount(evaluation_information.pawns[color] & get_piece_attacks(get_piece(PAWN, ~color), square, 0));
 
             score += PASSED_PAWN_BONUSES[protectors][relative_rank];
 
