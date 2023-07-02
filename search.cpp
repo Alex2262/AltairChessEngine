@@ -307,8 +307,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     for (int move_index = 0; move_index < static_cast<int>(position.scored_moves[thread_state.search_ply].size()); move_index++) {
 
         // Sort and choose the next move to be searched
-        sort_next_move(position.scored_moves[thread_state.search_ply], move_index);
-        Move move = position.scored_moves[thread_state.search_ply][move_index].move;
+        Move move = sort_next_move(position.scored_moves[thread_state.search_ply], move_index);
 
         // Delta / Futility pruning
         // If the piece we capture plus a margin cannot even improve our score then
