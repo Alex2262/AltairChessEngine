@@ -9,6 +9,9 @@
 void initialize_evaluation_information(Position& position, EvaluationInformation& evaluation_information) {
     evaluation_information.game_phase = 0;
 
+    evaluation_information.king_squares[WHITE] = position.get_king_pos(WHITE);
+    evaluation_information.king_squares[BLACK] = position.get_king_pos(BLACK);
+
     evaluation_information.pawns[WHITE] = position.get_pieces(PAWN, WHITE);
     evaluation_information.pawns[BLACK] = position.get_pieces(PAWN, BLACK);
 
@@ -34,6 +37,16 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
     BITBOARD phalanx_pawns = our_pawns & shift<WEST>(our_pawns);
     BITBOARD pawn_threats = evaluation_information.pawn_attacks[color] & evaluation_information.pieces[~color];
 
+    // KING RING ATTACKS
+    BITBOARD king_ring_attacks_1 = evaluation_information.pawn_attacks[color] &
+                                   king_ring_zone.masks[0][evaluation_information.king_squares[~color]];
+    BITBOARD king_ring_attacks_2 = evaluation_information.pawn_attacks[color] &
+                                   king_ring_zone.masks[1][evaluation_information.king_squares[~color]];
+
+    score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_1)) * KING_RING_ATTACKS[0][PAWN];
+    score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_2)) * KING_RING_ATTACKS[1][PAWN];
+
+    // MAIN PAWN EVAL
     while (our_pawns) {
         Square square = poplsb(our_pawns);
         BITBOARD bb_square = from_square(square);
@@ -113,11 +126,19 @@ SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color,
         BITBOARD piece_attacks = get_piece_attacks(get_piece(piece_type, color), square, position.all_pieces);
 
         if (piece_type != KING) {
+            // MOBILITY
             BITBOARD mobility = piece_attacks &
                                 (~evaluation_information.pieces[color]) &
                                 (~evaluation_information.pawn_attacks[~color]);
 
             score += static_cast<SCORE_TYPE>(popcount(mobility)) * MOBILITY_VALUES[piece_type];
+
+            // KING RING ATTACKS
+            BITBOARD king_ring_attacks_1 = piece_attacks & king_ring_zone.masks[0][evaluation_information.king_squares[~color]];
+            BITBOARD king_ring_attacks_2 = piece_attacks & king_ring_zone.masks[1][evaluation_information.king_squares[~color]];
+
+            score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_1)) * KING_RING_ATTACKS[0][piece_type];
+            score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_2)) * KING_RING_ATTACKS[1][piece_type];
         }
 
         if (piece_type == KING || piece_type == QUEEN || piece_type == ROOK) {
