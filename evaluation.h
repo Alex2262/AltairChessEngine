@@ -12,6 +12,8 @@
 struct EvaluationInformation {
     int game_phase = 0;
 
+    int total_king_ring_attacks[2]{};
+
     Square king_squares[2]{};
 
     BITBOARD pawns[2]{};

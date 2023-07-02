@@ -9,6 +9,9 @@
 void initialize_evaluation_information(Position& position, EvaluationInformation& evaluation_information) {
     evaluation_information.game_phase = 0;
 
+    evaluation_information.total_king_ring_attacks[WHITE] = 0;
+    evaluation_information.total_king_ring_attacks[BLACK] = 0;
+
     evaluation_information.king_squares[WHITE] = position.get_king_pos(WHITE);
     evaluation_information.king_squares[BLACK] = position.get_king_pos(BLACK);
 
@@ -45,6 +48,8 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
 
     score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_1)) * KING_RING_ATTACKS[0][PAWN];
     score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_2)) * KING_RING_ATTACKS[1][PAWN];
+
+    evaluation_information.total_king_ring_attacks[color] += static_cast<int>(popcount(king_ring_attacks_1 | king_ring_attacks_2));
 
     // MAIN PAWN EVAL
     while (our_pawns) {
@@ -139,6 +144,8 @@ SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color,
 
             score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_1)) * KING_RING_ATTACKS[0][piece_type];
             score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_2)) * KING_RING_ATTACKS[1][piece_type];
+
+            evaluation_information.total_king_ring_attacks[color] += static_cast<int>(popcount(king_ring_attacks_1 | king_ring_attacks_2));
         }
 
         if (piece_type == KING || piece_type == QUEEN || piece_type == ROOK) {
@@ -184,6 +191,12 @@ SCORE_TYPE evaluate(Position& position) {
     SCORE_TYPE score = 0;
 
     score += evaluate_pieces(position, evaluation_information);
+
+    evaluation_information.total_king_ring_attacks[WHITE] = std::min<int>(evaluation_information.total_king_ring_attacks[WHITE], 29);
+    evaluation_information.total_king_ring_attacks[BLACK] = std::min<int>(evaluation_information.total_king_ring_attacks[BLACK], 29);
+
+    score += TOTAL_KING_RING_ATTACKS[evaluation_information.total_king_ring_attacks[WHITE]];
+    score -= TOTAL_KING_RING_ATTACKS[evaluation_information.total_king_ring_attacks[BLACK]];
 
     score += (position.side * -2 + 1) * TEMPO_BONUS;
 
