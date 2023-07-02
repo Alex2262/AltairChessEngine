@@ -22,6 +22,6 @@ void get_move_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOV
 void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                         Move tt_move);
 
-void sort_next_move(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, int current_count);
+Move sort_next_move(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, int current_count);
 
 #endif //ALTAIRCHESSENGINE_MOVE_ORDERING_H

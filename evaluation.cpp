@@ -66,15 +66,9 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
         // evaluation_information.game_phase += GAME_PHASE_SCORES[PAWN];
 
         Direction up = color == WHITE ? NORTH : SOUTH;
-        auto down = static_cast<Direction>(-static_cast<int>(up));
-
         // PASSED PAWN
         if (!(passed_pawn_masks[color][square] & opp_pawns)) {
-            int protectors = 0;
-            if (!(bb_square & MASK_FILE[FILE_A]) &&
-                position.board[square + down + WEST] == get_piece(PAWN, color)) protectors++;
-            if (!(bb_square & MASK_FILE[FILE_H]) &&
-                position.board[square + down + EAST] == get_piece(PAWN, color)) protectors++;
+			auto protectors = popcount(evaluation_information.pawns[color] & get_piece_attacks(get_piece(PAWN, ~color), square, 0));
 
             score += PASSED_PAWN_BONUSES[protectors][relative_rank];
 
@@ -112,13 +106,15 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
     return score;
 }
 
-SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color, EvaluationInformation& evaluation_information) {
+template<PieceType piece_type>
+SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation& evaluation_information) {
     SCORE_TYPE score = 0;
     BITBOARD pieces = position.get_pieces(piece_type, color);
 
-    if (piece_type == BISHOP && popcount(pieces) >= 2) {
-        score += BISHOP_PAIR_BONUS;
-    }
+    if constexpr (piece_type == BISHOP) {
+		if (popcount(pieces) >= 2)
+			score += BISHOP_PAIR_BONUS;
+	}
 
     while (pieces) {
         Square square = poplsb(pieces);
@@ -130,7 +126,7 @@ SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color,
 
         BITBOARD piece_attacks = get_piece_attacks(get_piece(piece_type, color), square, position.all_pieces);
 
-        if (piece_type != KING) {
+        if constexpr (piece_type != KING) {
             // MOBILITY
             BITBOARD mobility = piece_attacks &
                                 (~evaluation_information.pieces[color]) &
@@ -148,7 +144,7 @@ SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color,
             evaluation_information.total_king_ring_attacks[color] += static_cast<int>(popcount(king_ring_attacks_1 | king_ring_attacks_2));
         }
 
-        if (piece_type == KING || piece_type == QUEEN || piece_type == ROOK) {
+        if constexpr (piece_type == KING || piece_type == QUEEN || piece_type == ROOK) {
             if (!(MASK_FILE[file_of(square)] & evaluation_information.pawns[color])) {
                 if (!(MASK_FILE[file_of(square)] & evaluation_information.pawns[~color])) {
                     score += OPEN_FILE_VALUES[piece_type];
@@ -174,11 +170,16 @@ SCORE_TYPE evaluate_pieces(Position& position, EvaluationInformation& evaluation
 
     score += evaluate_pawns(position, WHITE, evaluation_information);
     score -= evaluate_pawns(position, BLACK, evaluation_information);
-
-    for (int piece = 1; piece < 6; piece++) {
-        score += evaluate_piece(position, static_cast<PieceType>(piece), WHITE, evaluation_information);
-        score -= evaluate_piece(position, static_cast<PieceType>(piece), BLACK, evaluation_information);
-    }
+	score += evaluate_piece<KNIGHT>(position, WHITE, evaluation_information);
+	score -= evaluate_piece<KNIGHT>(position, BLACK, evaluation_information);
+	score += evaluate_piece<BISHOP>(position, WHITE, evaluation_information);
+	score -= evaluate_piece<BISHOP>(position, BLACK, evaluation_information);
+	score += evaluate_piece<ROOK>(position, WHITE, evaluation_information);
+	score -= evaluate_piece<ROOK>(position, BLACK, evaluation_information);
+	score += evaluate_piece<QUEEN>(position, WHITE, evaluation_information);
+	score -= evaluate_piece<QUEEN>(position, BLACK, evaluation_information);
+	score += evaluate_piece<KING>(position, WHITE, evaluation_information);
+	score -= evaluate_piece<KING>(position, BLACK, evaluation_information);
 
     return score;
 }
