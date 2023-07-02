@@ -214,7 +214,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,  bool do_null, int thread_id);
 
 void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int thread_id);
-SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, MOVE_TYPE& best_move, int thread_id);
+SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id);
 void iterative_search(Engine& engine, int thread_id);
 void lazy_smp_search(Engine& engine);
 

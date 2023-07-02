@@ -1005,7 +1005,7 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
 }
 
 
-SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, MOVE_TYPE& best_move, int thread_id) {
+SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id) {
 
     Thread_State& thread_state = engine.thread_states[thread_id];
 
