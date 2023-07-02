@@ -1058,7 +1058,7 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
             asp_depth--;
             asp_depth = std::max<PLY_TYPE>(6, asp_depth);
 
-            best_move = engine.pv_table[0][0];  // Safe to update the best move on fail highs.
+            if (thread_id == 0) best_move = engine.pv_table[0][0];  // Safe to update the best move on fail highs.
 
             if (depth >= 18 && thread_id == 0) print_thinking(engine, Upper_Node, return_eval, thread_id);
         }
