@@ -12,6 +12,8 @@
 struct EvaluationInformation {
     int game_phase = 0;
 
+    Square king_squares[2]{};
+
     BITBOARD pawns[2]{};
     BITBOARD pieces[2]{};
     BITBOARD pawn_attacks[2]{};
@@ -47,5 +49,31 @@ inline int mg_score(SCORE_TYPE s) {
 
     return static_cast<int>(v);
 }
+
+template<int n>
+struct KingRing {
+    constexpr KingRing() : masks() {
+        for (int rings = 1; rings <= n; rings++) {
+            for (int i = 0; i < 8; i++) {
+                for (int j = 0; j < 8; j++) {
+                    masks[rings-1][i * 8 + j] = 0ULL;
+                    for (int y = i - rings; y <= i + rings; y++){
+                        for (int x = j - rings; x <= j + rings; x++) {
+                            if (y < 0 || y >= 8 || x < 0 || x >= 8) continue;
+                            if (y == i - rings || y == i + rings || x == j - rings || x == j + rings) {
+                                masks[rings-1][i * 8 + j] |= 1ULL << (y * 8 + x);
+                            }
+                        }
+                    }
+                    //std::cout << i * 8 + j << " " << masks[rings-1][i * 8 + j] << std::endl;
+                }
+            }
+        }
+    }
+
+    uint64_t masks[n][64]{};
+};
+
+constexpr KingRing king_ring_zone = KingRing<2>();
 
 #endif //ALTAIRCHESSENGINE_EVALUATION_H
