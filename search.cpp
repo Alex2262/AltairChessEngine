@@ -1007,7 +1007,7 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
 }
 
 
-SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, int thread_id) {
+SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, MOVE_TYPE& best_move, int thread_id) {
 
     Thread_State& thread_state = engine.thread_states[thread_id];
 
@@ -1058,6 +1058,8 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
             asp_depth--;
             asp_depth = std::max<PLY_TYPE>(6, asp_depth);
 
+            best_move = engine.pv_table[0][0];  // Safe to update the best move on fail highs.
+
             if (depth >= 18 && thread_id == 0) print_thinking(engine, Upper_Node, return_eval, thread_id);
         }
 
@@ -1106,7 +1108,7 @@ void iterative_search(Engine& engine, int thread_id) {
         position.clear_state_stack();
 
         // Run a search with aspiration window bounds
-        previous_score = aspiration_window(engine, previous_score, asp_depth, thread_id);
+        previous_score = aspiration_window(engine, previous_score, asp_depth, best_move, thread_id);
 
         // Store the best move when the engine has finished a search (it hasn't stopped in the middle of a search)
         if (thread_id == 0 && !engine.stopped) best_move = engine.pv_table[0][0];
