@@ -22,7 +22,7 @@ public:
 
     std::vector<std::thread> search_threads;
 
-    void initialize_uci();
+    void initialize_uci() const;
     void parse_position();
     void parse_go();
     void uci_loop();
