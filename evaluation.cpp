@@ -1077,22 +1077,21 @@ SCORE_TYPE score_move(const Thread_State& thread_state, Position& position, MOVE
                     thread_state.move_ordering_parameters.first_killer_margin;
             else if (thread_state.killer_moves[1][thread_state.search_ply] == move) score +=
                     thread_state.move_ordering_parameters.second_killer_margin;
-            else {
-                score += thread_state.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
-                if (last_move_one != NO_MOVE) {
-                    score += thread_state.continuation_history[get_selected(last_move_one)]
-                                                        [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
-                                                        [selected]
-                                                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
-                }
+            score += thread_state.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
-                if (last_move_two != NO_MOVE) {
-                    score += thread_state.continuation_history[get_selected(last_move_two)]
-                                                        [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
-                                                        [selected]
-                                                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
-                }
+            if (last_move_one != NO_MOVE) {
+                score += thread_state.continuation_history[get_selected(last_move_one)]
+                        [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
+                        [selected]
+                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
+            }
+
+            if (last_move_two != NO_MOVE) {
+                score += thread_state.continuation_history[get_selected(last_move_two)]
+                        [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
+                        [selected]
+                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
             }
             if (move_type == MOVE_TYPE_PROMOTION) {
                 PIECE_TYPE promotion_piece = get_promotion_piece(move);
@@ -1129,22 +1128,21 @@ SCORE_TYPE score_move(const Thread_State& thread_state, Position& position, MOVE
                     thread_state.move_ordering_parameters.first_killer_margin;
             else if (thread_state.killer_moves[1][thread_state.search_ply] == move) score +=
                     thread_state.move_ordering_parameters.second_killer_margin;
-            else {
-                score += thread_state.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
-                if (last_move_one != NO_MOVE) {
-                    score += thread_state.continuation_history[get_selected(last_move_one)]
-                                                        [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
-                                                        [selected]
-                                                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
-                }
+            score += thread_state.history_moves[selected][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
-                if (last_move_two != NO_MOVE) {
-                    score += thread_state.continuation_history[get_selected(last_move_two)]
-                                                        [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
-                                                        [selected]
-                                                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
-                }
+            if (last_move_one != NO_MOVE) {
+                score += thread_state.continuation_history[get_selected(last_move_one)]
+                        [MAILBOX_TO_STANDARD[get_target_square(last_move_one)]]
+                        [selected]
+                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
+            }
+
+            if (last_move_two != NO_MOVE) {
+                score += thread_state.continuation_history[get_selected(last_move_two)]
+                        [MAILBOX_TO_STANDARD[get_target_square(last_move_two)]]
+                        [selected]
+                        [MAILBOX_TO_STANDARD[get_target_square(move)]];
             }
 
             if (move_type == MOVE_TYPE_PROMOTION) {
