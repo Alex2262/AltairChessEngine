@@ -195,8 +195,6 @@ void UCI::parse_go() {
 void UCI::uci_loop() {
 
     std::cout << std::string(ENGINE_NAME) + " " + std::string(ENGINE_VERSION) + " by " + std::string(ENGINE_AUTHOR) << std::endl;
-
-    msg = "";
     while (getline(std::cin, msg)) {
         tokens.clear();
 
@@ -325,7 +323,6 @@ void UCI::uci_loop() {
 
         else if (tokens[0] == "position") {
             parse_position();
-            // engine->thread_states[0].position.print_board();
         }
 
         else if (tokens[0] == "go") {
