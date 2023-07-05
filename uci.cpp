@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 #include "uci.h"
 #include "useful.h"
 #include "move.h"
