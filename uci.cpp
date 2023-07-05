@@ -4,7 +4,6 @@
 
 #include <iostream>
 #include <algorithm>
-#include <cmath>
 #include "uci.h"
 #include "useful.h"
 #include "move.h"
@@ -14,7 +13,7 @@
 #include "bench.h"
 #include "see.h"
 
-void UCI::initialize_uci() {
+void UCI::initialize_uci() const {
     engine->transposition_table.resize(MAX_TT_SIZE);
 
     engine->initialize_lmr_reductions();
@@ -24,8 +23,7 @@ void UCI::initialize_uci() {
     Position& position = engine->thread_states[0].position;
     position.set_fen(START_FEN);
 
-    // std::cout << sizeof(engine) << " " << sizeof(engine->thread_states[0]) << std::endl;
-    std::cout << engine->transposition_table.size() << " number of hash entries" << std::endl;
+    // std::cout << engine->transposition_table.size() << " number of hash entries initialized" << std::endl;
 }
 
 
@@ -79,7 +77,7 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
         engine->hard_time_limit = static_cast<uint64_t>(time_amt);
     }
 
-    std::cout << time_amt << " " << engine->hard_time_limit << " " << engine->soft_time_limit << std::endl;
+    // std::cout << time_amt << " " << engine->hard_time_limit << " " << engine->soft_time_limit << std::endl;
 }
 
 
@@ -196,6 +194,9 @@ void UCI::parse_go() {
 
 void UCI::uci_loop() {
 
+    std::cout << std::string(ENGINE_NAME) + " " + std::string(ENGINE_VERSION) + " by " + std::string(ENGINE_AUTHOR) << std::endl;
+
+    msg = "";
     while (getline(std::cin, msg)) {
         tokens.clear();
 
@@ -216,7 +217,7 @@ void UCI::uci_loop() {
         }
 
         else if (msg == "uci") {
-            std::cout << "id name Altair" << std::endl;
+            std::cout << "id name " + std::string(ENGINE_NAME) + " " + std::string(ENGINE_VERSION) << std::endl;
             std::cout << "id author Alexander Tian" << std::endl;
 
             std::cout << "option name Hash type spin default " << 64 << " min " << 1 << " max " << 1024
@@ -267,7 +268,7 @@ void UCI::uci_loop() {
                 int mb = std::stoi(tokens[4]);
                 mb = std::min(1024, std::max(1, mb));
                 engine->transposition_table.resize(mb * (1000000 / 24));
-                std::cout << engine->transposition_table.size() << " number of hash entries" << std::endl;
+                std::cout << engine->transposition_table.size() << " number of hash entries initialized" << std::endl;
             }
 
             else if (tokens[2] == "Threads") {
@@ -324,6 +325,7 @@ void UCI::uci_loop() {
 
         else if (tokens[0] == "position") {
             parse_position();
+            // engine->thread_states[0].position.print_board();
         }
 
         else if (tokens[0] == "go") {
