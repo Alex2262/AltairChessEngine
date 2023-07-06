@@ -46,7 +46,7 @@ struct P {
 };
 
 struct Evaluation_Traits {
-    P aggressive_trait = P{"Aggressive", 0, 100, 100, 50};
+    P aggressive_trait = P{"Aggressive", 0, 100, 50, 50};
     P positional_trait = P{"Positional", 0, 100, 50, 50};
 };
 
