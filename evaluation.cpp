@@ -47,6 +47,20 @@ SCORE_TYPE evaluate_king_pawn(const Position& position, File file, Color color, 
     score += multiply_score(position.evaluation_traits.aggressive_trait.positive_scaling_value,
                             KING_PAWN_SHIELD[index][file]);
 
+    // PAWN STORM
+    BITBOARD opp_file_pawns = evaluation_information.pawns[~color] & MASK_FILE[file];
+    square = opp_file_pawns == 0 ? NO_SQUARE :
+             color == WHITE ? lsb(opp_file_pawns) : msb(opp_file_pawns);
+
+    relative_rank = rank_of(get_white_relative_square(square, color));
+
+    // Uses the relative ranks 3-7 (ranks 6 & 7 are combined into one index)
+    index = square == NO_SQUARE ? 4 : std::min(static_cast<int>(relative_rank) - 2, 3);
+    if (index < 0) return score;
+
+    score += multiply_score(position.evaluation_traits.aggressive_trait.positive_scaling_value,
+                            KING_PAWN_STORM[index][file]);
+
     return score;
 }
 
