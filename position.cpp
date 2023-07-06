@@ -822,3 +822,36 @@ void Position::undo_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move) 
     opp_pieces = temp_our_pieces;
 }
 
+void Position::calculate_trait_scaling_values() {
+    double aggressive_trait_value = evaluation_traits.aggressive_trait.value +
+                                    ((evaluation_traits.positional_trait.value - 50) / 6.0);
+
+    double positional_trait_value = evaluation_traits.positional_trait.value +
+                                    ((evaluation_traits.aggressive_trait.value - 50) / 3.0);
+
+    double scaling_value = aggressive_trait_value /
+                           evaluation_traits.aggressive_trait.starting_value;
+
+    scaling_value += (aggressive_trait_value -
+                      evaluation_traits.aggressive_trait.starting_value) / 30;
+
+    evaluation_traits.aggressive_trait.positive_scaling_value = scaling_value;
+    evaluation_traits.aggressive_trait.negative_scaling_value = 1 - ((1 - 1.0 / scaling_value) / 2);
+
+    std::cout << evaluation_traits.aggressive_trait.positive_scaling_value << " "
+    << evaluation_traits.aggressive_trait.negative_scaling_value << std::endl;
+
+    scaling_value = positional_trait_value /
+                    evaluation_traits.positional_trait.starting_value;
+
+    scaling_value += (positional_trait_value -
+                      evaluation_traits.positional_trait.starting_value) / 50;
+
+    evaluation_traits.positional_trait.positive_scaling_value = scaling_value;
+    evaluation_traits.positional_trait.negative_scaling_value = 1 - ((1 - 1.0 / scaling_value) / 2.5);
+
+    std::cout << evaluation_traits.positional_trait.positive_scaling_value << " "
+              << evaluation_traits.positional_trait.negative_scaling_value << std::endl;
+
+}
+

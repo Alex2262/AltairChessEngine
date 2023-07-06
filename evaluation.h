@@ -53,6 +53,16 @@ inline int mg_score(SCORE_TYPE s) {
     return static_cast<int>(v);
 }
 
+inline SCORE_TYPE multiply_score(const SCORE_TYPE& score, double x) {
+    return S(static_cast<SCORE_TYPE>(x * static_cast<double>(mg_score(score))),
+             static_cast<SCORE_TYPE>(x * static_cast<double>(eg_score(score))));
+}
+
+inline SCORE_TYPE multiply_score(double x, const SCORE_TYPE& score) {
+    return S(static_cast<SCORE_TYPE>(x * static_cast<double>(mg_score(score))),
+             static_cast<SCORE_TYPE>(x * static_cast<double>(eg_score(score))));
+}
+
 template<int n>
 struct KingRing {
     constexpr KingRing() : masks() {

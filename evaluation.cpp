@@ -44,7 +44,8 @@ SCORE_TYPE evaluate_king_pawn(const Position& position, File file, Color color, 
 
     int index = square == NO_SQUARE ? 4 : std::min(static_cast<int>(relative_rank) - 1, 3);
 
-    score += KING_PAWN_SHIELD[index][file];
+    score += multiply_score(position.evaluation_traits.aggressive_trait.positive_scaling_value,
+                            KING_PAWN_SHIELD[index][file]);
 
     return score;
 }
@@ -75,7 +76,8 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
         Square black_relative_square = get_black_relative_square(square, color);
         Rank relative_rank = rank_of(get_white_relative_square(square, color));
 
-        score += PIECE_VALUES[PAWN];
+        score += multiply_score(position.evaluation_traits.aggressive_trait.negative_scaling_value,
+                                PIECE_VALUES[PAWN]);
 
         score += PIECE_SQUARE_TABLES[PAWN][black_relative_square];
 
@@ -86,7 +88,8 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
         if (!(passed_pawn_masks[color][square] & opp_pawns)) {
 			auto protectors = popcount(evaluation_information.pawns[color] & get_piece_attacks(get_piece(PAWN, ~color), square, 0));
 
-            score += PASSED_PAWN_BONUSES[protectors][relative_rank];
+            score += multiply_score(position.evaluation_traits.positional_trait.positive_scaling_value,
+                                    PASSED_PAWN_BONUSES[protectors][relative_rank]);
 
             // BLOCKERS
             auto blocker_square = square + up;
@@ -105,18 +108,18 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
         // ISOLATED PAWN
         BITBOARD isolated_pawn_mask = fill<SOUTH>(fill<NORTH>(shift<WEST>(bb_square) | shift<EAST>(bb_square)));
         if (!(isolated_pawn_mask & our_pawns)) {
-            score += ISOLATED_PAWN_PENALTY;
+            score += multiply_score(position.evaluation_traits.positional_trait.positive_scaling_value, ISOLATED_PAWN_PENALTY);
         }
     }
 
     // Phalanx Pawns
     while (phalanx_pawns) {
         Rank relative_rank = rank_of(get_white_relative_square(poplsb(phalanx_pawns), color));
-        score += PHALANX_PAWN_BONUSES[relative_rank];
+        score += multiply_score(position.evaluation_traits.positional_trait.positive_scaling_value, PHALANX_PAWN_BONUSES[relative_rank]);
     }
 
     while (pawn_threats) {
-        score += PIECE_THREATS[PAWN][get_piece_type(position.board[poplsb(pawn_threats)], ~color)];
+        score += multiply_score(position.evaluation_traits.positional_trait.positive_scaling_value, PIECE_THREATS[PAWN][get_piece_type(position.board[poplsb(pawn_threats)], ~color)]);
     }
 
     return score;
@@ -134,7 +137,8 @@ SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation
 
     while (pieces) {
         Square square = poplsb(pieces);
-        score += PIECE_VALUES[piece_type];
+
+        score += multiply_score(position.evaluation_traits.aggressive_trait.negative_scaling_value, PIECE_VALUES[piece_type]);
 
         score += PIECE_SQUARE_TABLES[piece_type][get_black_relative_square(square, color)];
 
@@ -148,14 +152,20 @@ SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation
                                 (~evaluation_information.pieces[color]) &
                                 (~evaluation_information.pawn_attacks[~color]);
 
-            score += static_cast<SCORE_TYPE>(popcount(mobility)) * MOBILITY_VALUES[piece_type];
+            score += multiply_score(position.evaluation_traits.positional_trait.positive_scaling_value,
+                                    popcount(mobility) *
+                                    MOBILITY_VALUES[piece_type]);
 
             // KING RING ATTACKS
             BITBOARD king_ring_attacks_1 = piece_attacks & king_ring_zone.masks[0][evaluation_information.king_squares[~color]];
             BITBOARD king_ring_attacks_2 = piece_attacks & king_ring_zone.masks[1][evaluation_information.king_squares[~color]];
 
-            score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_1)) * KING_RING_ATTACKS[0][piece_type];
-            score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_2)) * KING_RING_ATTACKS[1][piece_type];
+            score += multiply_score(position.evaluation_traits.aggressive_trait.positive_scaling_value,
+                                    popcount(king_ring_attacks_1) *
+                                    KING_RING_ATTACKS[0][piece_type]);
+            score += multiply_score(position.evaluation_traits.aggressive_trait.positive_scaling_value,
+                                    popcount(king_ring_attacks_2) *
+                                    KING_RING_ATTACKS[1][piece_type]);
 
             evaluation_information.total_king_ring_attacks[color] += static_cast<int>(popcount(king_ring_attacks_1 | king_ring_attacks_2));
         }
@@ -187,9 +197,9 @@ SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation
         }
 
         for (int opp_piece = 0; opp_piece < 6; opp_piece++) {
-            score += static_cast<SCORE_TYPE>(popcount(
-                    piece_attacks & position.get_pieces(static_cast<PieceType>(opp_piece), ~color))) *
-                     PIECE_THREATS[piece_type][opp_piece];
+            score += multiply_score(position.evaluation_traits.positional_trait.positive_scaling_value,
+                                    popcount(piece_attacks & position.get_pieces(static_cast<PieceType>(opp_piece), ~color)) *
+                                    PIECE_THREATS[piece_type][opp_piece]);
         }
     }
 
@@ -232,8 +242,11 @@ SCORE_TYPE evaluate(Position& position) {
     evaluation_information.total_king_ring_attacks[WHITE] = std::min<int>(evaluation_information.total_king_ring_attacks[WHITE], 29);
     evaluation_information.total_king_ring_attacks[BLACK] = std::min<int>(evaluation_information.total_king_ring_attacks[BLACK], 29);
 
-    score += TOTAL_KING_RING_ATTACKS[evaluation_information.total_king_ring_attacks[WHITE]];
-    score -= TOTAL_KING_RING_ATTACKS[evaluation_information.total_king_ring_attacks[BLACK]];
+    score += multiply_score(position.evaluation_traits.aggressive_trait.positive_scaling_value,
+                            TOTAL_KING_RING_ATTACKS[evaluation_information.total_king_ring_attacks[WHITE]]);
+
+    score -= multiply_score(position.evaluation_traits.aggressive_trait.positive_scaling_value,
+                            TOTAL_KING_RING_ATTACKS[evaluation_information.total_king_ring_attacks[BLACK]]);
 
     score += (position.side * -2 + 1) * TEMPO_BONUS;
 

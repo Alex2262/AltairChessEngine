@@ -23,6 +23,7 @@ void UCI::initialize_uci() const {
 
     Position& position = engine->thread_states[0].position;
     position.set_fen(START_FEN);
+    position.calculate_trait_scaling_values();
 
     // std::cout << engine->transposition_table.size() << " number of hash entries initialized" << std::endl;
 }
@@ -259,6 +260,18 @@ void UCI::uci_loop() {
                 }
             }
 
+            std::cout << "option name " << engine->thread_states[0].position.evaluation_traits.aggressive_trait.name
+                      << " type spin default " << engine->thread_states[0].position.evaluation_traits.aggressive_trait.starting_value
+                      << " min " << engine->thread_states[0].position.evaluation_traits.aggressive_trait.min
+                      << " max " << engine->thread_states[0].position.evaluation_traits.aggressive_trait.max
+                      << std::endl;
+
+            std::cout << "option name " << engine->thread_states[0].position.evaluation_traits.positional_trait.name
+                      << " type spin default " << engine->thread_states[0].position.evaluation_traits.positional_trait.starting_value
+                      << " min " << engine->thread_states[0].position.evaluation_traits.positional_trait.min
+                      << " max " << engine->thread_states[0].position.evaluation_traits.positional_trait.max
+                      << std::endl;
+
             std::cout << "uciok" << std::endl;
         }
 
@@ -308,6 +321,16 @@ void UCI::uci_loop() {
                             i.value = std::stoi(tokens[4]);
                         }
                     }
+                }
+
+                if (tokens[2] == engine->thread_states[0].position.evaluation_traits.aggressive_trait.name) {
+                    engine->thread_states[0].position.evaluation_traits.aggressive_trait.value = std::stoi(tokens[4]);
+                    engine->thread_states[0].position.calculate_trait_scaling_values();
+                }
+
+                if (tokens[2] == engine->thread_states[0].position.evaluation_traits.positional_trait.name) {
+                    engine->thread_states[0].position.evaluation_traits.positional_trait.value = std::stoi(tokens[4]);
+                    engine->thread_states[0].position.calculate_trait_scaling_values();
                 }
             }
         }

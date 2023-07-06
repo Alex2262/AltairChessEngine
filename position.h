@@ -35,6 +35,22 @@ struct State_Struct {
 };
 
 
+struct P {
+    std::string name;
+    int min = 0;
+    int max = 0;
+    int value = 0;
+    int starting_value = 0;
+    double positive_scaling_value = 1;
+    double negative_scaling_value = 1;
+};
+
+struct Evaluation_Traits {
+    P aggressive_trait = P{"Aggressive", 0, 100, 100, 50};
+    P positional_trait = P{"Positional", 0, 100, 50, 50};
+};
+
+
 class Position {
 
 public:
@@ -57,6 +73,8 @@ public:
     uint8_t castle_ability_bits = 0;
     Square ep_square = NO_SQUARE;
     HASH_TYPE hash_key = 0;
+
+    Evaluation_Traits evaluation_traits{};
 
     std::array<State_Struct, TOTAL_MAX_DEPTH> state_stack{};
 
@@ -142,6 +160,8 @@ public:
 
     void make_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move);
     void undo_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move);
+
+    void calculate_trait_scaling_values();
 
 };
 
