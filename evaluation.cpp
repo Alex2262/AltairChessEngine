@@ -1133,12 +1133,8 @@ SCORE_TYPE score_capture(const Thread_State& thread_state, Position& position,  
             score += thread_state.move_ordering_parameters.winning_capture_margin;
     }
 
-    if (selected < BLACK_PAWN) {
-        score += MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected];
-    }
-    else {
-        score += MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN];
-    }
+    if (selected < BLACK_PAWN) score += MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected];
+    else score += MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN];
 
     return score;
 }
