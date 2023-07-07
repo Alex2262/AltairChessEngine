@@ -1047,7 +1047,7 @@ SCORE_TYPE evaluate(Position& position) {
 SCORE_TYPE score_move(const Thread_State& thread_state, Position& position, MOVE_TYPE move, MOVE_TYPE tt_move,
                       MOVE_TYPE last_move_one, MOVE_TYPE last_move_two) {
 
-    if (move == tt_move) return 100000;
+    if (move == tt_move) return 500000;
 
     SCORE_TYPE score = 0;
 
@@ -1058,12 +1058,22 @@ SCORE_TYPE score_move(const Thread_State& thread_state, Position& position, MOVE
 
     short move_type = get_move_type(move);
 
+    if (move_type == MOVE_TYPE_PROMOTION) {
+        PIECE_TYPE promotion_piece = get_promotion_piece(move) - 6 * position.side;
+        if (promotion_piece == WHITE_QUEEN) {
+            score += thread_state.move_ordering_parameters.queen_promotion_margin;
+        } else {
+            score += score + thread_state.move_ordering_parameters.other_promotion_margin +
+                     MVV_LVA_VALUES[promotion_piece];
+        }
+    }
+
     if (get_is_capture(move)) {
         PIECE_TYPE occupied_type = occupied - 6 * !position.side;
 
         score += thread_state.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
-        score += thread_state.move_ordering_parameters.capture_scale
-                * (MVV_LVA_VALUES[occupied_type] - MVV_LVA_VALUES[selected_type]);
+        score += thread_state.move_ordering_parameters.capture_scale * MVV_LVA_VALUES[occupied_type]
+                - MVV_LVA_VALUES[selected_type];
 
         // Only Use SEE under certain conditions since it is expensive
         if (score >= -3000) {
@@ -1097,16 +1107,7 @@ SCORE_TYPE score_move(const Thread_State& thread_state, Position& position, MOVE
                     [selected]
                     [MAILBOX_TO_STANDARD[get_target_square(move)]];
         }
-        if (move_type == MOVE_TYPE_PROMOTION) {
-            PIECE_TYPE promotion_piece = get_promotion_piece(move) - 6 * position.side;
-            if (promotion_piece == WHITE_QUEEN) {
-                score += thread_state.move_ordering_parameters.queen_promotion_margin;
-            } else {
-                score = score + thread_state.move_ordering_parameters.other_promotion_margin +
-                        MVV_LVA_VALUES[promotion_piece];
-            }
-        }
-        else if (move_type == MOVE_TYPE_EP) score += thread_state.move_ordering_parameters.winning_capture_margin +
+        if (move_type == MOVE_TYPE_EP) score += thread_state.move_ordering_parameters.winning_capture_margin +
                 thread_state.move_ordering_parameters.capture_scale * (MVV_LVA_VALUES[WHITE_PAWN] / 2);
         else if (move_type == MOVE_TYPE_CASTLE) score += thread_state.move_ordering_parameters.castle_margin;
     }
