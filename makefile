@@ -1,3 +1,5 @@
+
+# engine name
 EXE      = Altair
 
 SOURCES      := evaluation.cpp main.cpp move.cpp perft.cpp position.cpp search.cpp useful.cpp uci.cpp bench.cpp see.cpp nnue.cpp
@@ -8,9 +10,6 @@ CXXFLAGS     := -O3 -std=c++20 -Wall -Wextra -pedantic -DNDEBUG
 CXX          := g++
 SUFFIX       :=
 
-# engine name
-NAME         := Altair
-
 # Detect Windows
 ifeq ($(OS), Windows_NT)
     SUFFIX   := .exe
@@ -20,7 +19,7 @@ else
 
 endif
 
-OUT := $(NAME)$(SUFFIX)
+OUT := $(EXE)$(SUFFIX)
 
 all: $(EXE)
 

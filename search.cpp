@@ -20,7 +20,7 @@
 
 // Initialize a table for Late Move Reductions, and the base reductions to be applied
 void Engine::initialize_lmr_reductions() {
-    for (PLY_TYPE depth = 0; depth <= MAX_AB_DEPTH; depth++) {
+    for (PLY_TYPE depth = 0; depth < MAX_AB_DEPTH; depth++) {
         for (int moves = 0; moves < 64; moves++) {
             LMR_REDUCTIONS_QUIET[depth][moves] =
                     std::max(0.0,
@@ -48,9 +48,10 @@ void Engine::clear_tt() {
 }
 
 
-// Resets the Engine object for a new iterative deepening search
+// Resets the Engine object for a new search
 void Engine::reset() {
     node_count = 0;
+    primary_thread_node_count = 0;
     std::memset(node_table, 0, sizeof(node_table));
 
     for (Thread_State& thread_state : thread_states) {
@@ -143,14 +144,16 @@ short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha
 
 // Records an entry to the transposition table
 void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
-                             SCORE_TYPE static_eval) {
+                             SCORE_TYPE static_eval, bool pv_node) {
 
     TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
 
     if (score < -MATE_BOUND) score -= thread_states[thread_id].search_ply;
     else if (score > MATE_BOUND) score += thread_states[thread_id].search_ply;
 
-    if (tt_entry.key != hash_key || depth + 2 > tt_entry.depth || tt_flag == HASH_FLAG_EXACT) {
+    PLY_TYPE artificial_depth = depth + 3 + 2 * pv_node;
+
+    if (tt_entry.key != hash_key || artificial_depth >= tt_entry.depth || tt_flag == HASH_FLAG_EXACT) {
         tt_entry.key = hash_key;
         tt_entry.depth = depth;
         tt_entry.flag = tt_flag;
@@ -414,7 +417,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     if (!root) {
 
         // Depth guard
-        if (thread_state.search_ply >= MAX_AB_DEPTH - 1) return position.nnue_state.evaluate(position.side);
+        if (thread_state.search_ply >= MAX_AB_DEPTH - 2) return position.nnue_state.evaluate(position.side);
 
         // Detect repetitions and fifty move rule
         if (thread_state.fifty_move >= 100 || thread_state.detect_repetition()) return 3 - static_cast<int>(engine.node_count & 8);
@@ -594,23 +597,23 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         bool quiet = !get_is_capture(move) && get_move_type(move) != MOVE_TYPE_EP;
 
         // Pruning
-        if (!pv_node && legal_moves >= 1 && abs(best_score) < MATE_BOUND) {
+        if (!root && legal_moves >= 1 && abs(best_score) < MATE_BOUND) {
             // Late Move Pruning
-            if (depth <= engine.tuning_parameters.LMP_depth &&
+            if (!pv_node && depth <= engine.tuning_parameters.LMP_depth &&
                 legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;
 
             // Quiet Late Move Pruning
-            if (quiet && legal_moves >= 2 + depth * depth / (1 + !improving + failing)) continue;
+            if (!pv_node && quiet && legal_moves >= 2 + depth * depth / (1 + !improving + failing)) break;
 
             // Futility Pruning
-            if (quiet && depth <= 5 && static_eval + (depth - !improving) * 140 + 70 <= alpha) break;
+            if (!pv_node && quiet && depth <= 5 && static_eval + (depth - !improving) * 140 + 70 <= alpha) break;
 
             // History Pruning
-            if (depth <= engine.tuning_parameters.history_pruning_depth &&
+            if (!pv_node && depth <= engine.tuning_parameters.history_pruning_depth &&
                 move_history_score <= (depth + improving) * -engine.tuning_parameters.history_pruning_divisor) continue;
 
             // SEE Pruning
-            if (depth <= (3 + 3 * !quiet) && legal_moves >= 3 &&
+            if (depth <= (3 + 3 * !quiet + 5 * pv_node) && legal_moves >= 3 &&
                  -MATE_BOUND < alpha && alpha < MATE_BOUND &&
                  move_history_score <= 5000 &&
                  !get_static_exchange_evaluation(position, move, (quiet ? -50 : -90) * depth))
@@ -684,7 +687,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             position.make_move(move, thread_state.search_ply, thread_state.fifty_move);
         }
 
-        extension = std::min<PLY_TYPE>(extension, 2);
+        extension = std::min<PLY_TYPE>(extension, std::min<PLY_TYPE>(2, MAX_AB_DEPTH - 1 - depth));
 
         int double_extensions = root ? 0 : position.state_stack[thread_state.search_ply].double_extensions;
 
@@ -714,7 +717,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         SCORE_TYPE return_eval = -SCORE_INF;
 
-        uint64_t current_nodes = engine.primary_thread_node_count++;
+        uint64_t current_nodes = engine.primary_thread_node_count;
 
         double reduction;
         bool full_depth_zero_window;
@@ -723,16 +726,15 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Late Move Reductions (LMR)
         // The idea that if moves are ordered well, then moves that are searched
         // later shouldn't be as good, and therefore we don't need to search them to a very high depth
-        if (legal_moves >= 2
-            && ((thread_state.search_ply && !pv_node) || legal_moves >= 4)
+        if (legal_moves >= 2 + 2 * root + pv_node
             && depth >= 3
             && (quiet || bad_capture)
             ){
 
             // Get the base reduction based on depth and moves searched
             reduction = quiet ?
-                    engine.LMR_REDUCTIONS_QUIET[std::min<PLY_TYPE>(depth, MAX_AB_DEPTH - 1)][std::min(legal_moves, 63)] :
-                    engine.LMR_REDUCTIONS_NOISY[std::min<PLY_TYPE>(depth, MAX_AB_DEPTH - 1)][std::min(legal_moves, 63)];
+                    engine.LMR_REDUCTIONS_QUIET[depth][std::min(legal_moves, 63)] :
+                    engine.LMR_REDUCTIONS_NOISY[depth][std::min(legal_moves, 63)];
 
             // Fewer reductions if we are in a pv node, since moves are likely to be better and more important
             reduction -= pv_node;
@@ -817,7 +819,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             // Write moves into the PV table
             if (thread_id == 0) {
                 engine.pv_table[thread_state.search_ply][thread_state.search_ply] = move;
-                for (int next_ply = thread_state.search_ply+1; next_ply < engine.pv_length[thread_state.search_ply+1]; next_ply++) {
+
+                for (int next_ply = thread_state.search_ply + 1; next_ply < engine.pv_length[thread_state.search_ply + 1]; next_ply++) {
                     engine.pv_table[thread_state.search_ply][next_ply] = engine.pv_table[thread_state.search_ply + 1][next_ply];
                 }
 
@@ -938,7 +941,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         else return -MATE_SCORE + thread_state.search_ply;
     }
 
-    engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval);
+    engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval, pv_node);
 
     return best_score;
 }
@@ -1004,7 +1007,7 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
 }
 
 
-SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, int thread_id) {
+SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, MOVE_TYPE& best_move, int thread_id) {
 
     Thread_State& thread_state = engine.thread_states[thread_id];
 
@@ -1055,6 +1058,8 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
             asp_depth--;
             asp_depth = std::max<PLY_TYPE>(6, asp_depth);
 
+            if (thread_id == 0) best_move = engine.pv_table[0][0];  // Safe to update the best move on fail highs.
+
             if (depth >= 18 && thread_id == 0) print_thinking(engine, Upper_Node, return_eval, thread_id);
         }
 
@@ -1098,17 +1103,21 @@ void iterative_search(Engine& engine, int thread_id) {
     uint64_t original_soft_time_limit = engine.soft_time_limit;
     MOVE_TYPE best_move = NO_MOVE;
 
+    SCORE_TYPE low_depth_score = 0;
+
     while (running_depth <= engine.max_depth) {
         thread_state.current_search_depth = running_depth;
         position.clear_state_stack();
 
         // Run a search with aspiration window bounds
-        previous_score = aspiration_window(engine, previous_score, asp_depth, thread_id);
+        previous_score = aspiration_window(engine, previous_score, asp_depth, best_move, thread_id);
 
         // Store the best move when the engine has finished a search (it hasn't stopped in the middle of a search)
         if (thread_id == 0 && !engine.stopped) best_move = engine.pv_table[0][0];
 
         if (thread_id == 0) {
+            if (running_depth <= 4) low_depth_score = previous_score;
+
             if (running_depth >= 8) {
                 auto best_node_percentage =
                         static_cast<double>(engine.node_table[get_selected(best_move)]
@@ -1117,8 +1126,16 @@ void iterative_search(Engine& engine, int thread_id) {
 
                 double node_scaling_factor = (1.5 - best_node_percentage) * 1.35;
 
-                engine.soft_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit) * node_scaling_factor);
-                // std::cout << best_node_percentage << " " << node_scaling_factor << std::endl;
+                SCORE_TYPE score_difference = previous_score - low_depth_score;
+                score_difference = std::clamp(score_difference, -120, 120);
+
+                double score_scaling_factor = 1.05 - (score_difference / 270.0);
+                //std::cout << previous_score - low_depth_score << " " << score_difference << std::endl;
+                //std::cout << score_scaling_factor << std::endl;
+
+                engine.soft_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit)
+                        * node_scaling_factor
+                        * score_scaling_factor);
 
                 // std::cout << "Soft Time Limit changed to: " << engine.soft_time_limit << std::endl;
             }
@@ -1173,7 +1190,6 @@ void lazy_smp_search(Engine& engine) {
     for (int thread_id = 1; thread_id < engine.num_threads; thread_id++) {
         // std::cout << "Creating Helper Thread #" << thread_id << std::endl;
         engine.thread_states[thread_id] = engine.thread_states[0];
-        // engine.thread_states[thread_id].position.print_board();
         search_threads.emplace_back(iterative_search, std::ref(engine), thread_id);
     }
 

@@ -18,6 +18,7 @@ Altair is a strong UCI-protocol chess engine that succeeds my old python engine 
 |:-------:|:----------:|:----------:|:-----:|
 |  1.0.0  |    ----    |    2409    | ----  |
 |  2.0.0  |    2875    |    2808    | 2639  |
+|  3.0.0  |    3010    |    3004    | ----  |
 
 
 ## Download
@@ -28,7 +29,8 @@ Altair can also be built from the source code with cmake, using the CMakeLists.t
 Altair can be played by connecting it to GUIs such as Arena, Cutechess, Banksia, and other UCI-protocol supporting 
 chess GUIs.
 
-You can also play against Altair on lichess [here](https://lichess.org/@/Altair_Engine), but it is not always online.
+You can also play against Altair on lichess [here](https://lichess.org/@/Altair_Engine), but it is not always online. 
+Note: Lichess BOT ratings are deflated compared to their actual human-relative-strength.
 
 ## Board Representation
 Altair uses a 10x12 mailbox array. This board representation gives padding around the 8x8 board for faster move generation. Altair also features piece lists.
