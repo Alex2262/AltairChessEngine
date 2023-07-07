@@ -231,7 +231,7 @@ bool Engine::check_time() {
     uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(time).time_since_epoch()).count();
 
-    if (current_time - start_time >= hard_time_limit) {
+    if (current_time - start_time >= hard_time_limit && current_time - start_time >= min_time) {
         stopped = true;
         return true;
     }
@@ -244,145 +244,6 @@ bool Engine::check_time() {
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
     score -= (score * abs(bonus)) / 324;
     score += bonus * 32;
-}
-
-
-// The Quiescence Search function
-// This is used to counter the horizon effect in which negamax is unable to resolve
-// noisy moves after a certain depth has been reached. The qsearch function will look at remaining captures
-// until it reaches a quiet position.
-SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id) {
-
-    // Initialize Variables
-    Thread_State& thread_state = engine.thread_states[thread_id];
-    Position& position = thread_state.position;
-
-    engine.tt_prefetch_read(position.hash_key);  // Prefetch the TT for cache
-
-    // Check the remaining time
-    if (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
-        (engine.node_count & 2047) == 0 && engine.check_time()) {
-        return 0;
-    }
-
-    // Check remaining nodes to be searched
-    if (engine.max_nodes && engine.node_count >= engine.max_nodes) engine.stopped = true;
-
-    // Probe the transposition table
-    SCORE_TYPE tt_value = 0;
-    Move tt_move = NO_MOVE;
-    short tt_return_type = engine.probe_tt_entry_q(thread_id, position.hash_key, alpha, beta, tt_value, tt_move);
-
-    if (tt_return_type == RETURN_HASH_SCORE) {
-        return tt_value;
-    }
-
-    // Get the static evaluation of the position
-    SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
-
-    // Return the evaluation if we have reached a stand-pat, or we have reached the maximum depth
-    if (depth == 0 || static_eval >= beta) return static_eval;
-
-    // Set alpha to the greatest of either alpha or the evaluation
-    alpha = (static_eval > alpha) ? static_eval : alpha;
-
-    // Variable to record the hash flag
-    short tt_hash_flag = HASH_FLAG_ALPHA;
-
-    // Set values for State
-    position.set_state(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
-    position.state_stack[thread_state.search_ply].evaluation = static_eval;
-
-    // Get the moves and score them
-    position.get_pseudo_legal_captures(position.scored_moves[thread_state.search_ply]);
-    get_capture_scores(thread_state, position.scored_moves[thread_state.search_ply], tt_move);
-
-    // Variables for getting information about the best score / best move
-    SCORE_TYPE best_score = static_eval;
-    Move best_move = NO_MOVE;
-
-    // Search loop
-    int legal_moves = 0;
-    for (int move_index = 0; move_index < static_cast<int>(position.scored_moves[thread_state.search_ply].size()); move_index++) {
-
-        // Sort and choose the next move to be searched
-        Move move = sort_next_move(position.scored_moves[thread_state.search_ply], move_index);
-
-        // Delta / Futility pruning
-        // If the piece we capture plus a margin cannot even improve our score then
-        // there is no point in searching it
-        if (static_eval + MVV_LVA_VALUES[position.board[move.target()] % BLACK_PAWN] +
-            engine.tuning_parameters.delta_margin < alpha) {
-            continue;
-        }
-
-        // SEE pruning
-        if (static_eval + 60 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
-            best_score = std::max(best_score, static_eval + 60);
-            continue;
-        }
-
-        // Attempt the current pseudo-legal move
-        bool attempt = position.make_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
-
-        if (!attempt) {
-            position.undo_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
-            continue;
-        }
-
-        engine.node_count++;
-        if (thread_id == 0) engine.primary_thread_node_count++;
-
-        // Recursively search
-        thread_state.search_ply++;
-
-        SCORE_TYPE return_eval = -qsearch(engine, -beta, -alpha, depth - 1, thread_id);
-
-        thread_state.search_ply--;
-
-        // Undo the move
-        position.undo_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
-
-        if (engine.stopped) return 0;
-
-        legal_moves++;
-
-        // Update information
-        if (return_eval > best_score) {
-            best_score = return_eval;
-            best_move = move;
-
-            if (return_eval > alpha) {
-                alpha = return_eval;
-                tt_hash_flag = HASH_FLAG_EXACT;
-
-                // Captures History Heuristic for move ordering
-                SCORE_TYPE bonus = 2;
-                update_history_entry(thread_state.capture_history[position.board[move.origin()]]
-                                     [position.board[move.target()]][move.target()],
-                                     bonus);
-
-                if (return_eval >= beta) {
-                    if (engine.show_stats) {
-                        if (legal_moves <= FAIL_HIGH_STATS_COUNT) {
-                            engine.search_results.qsearch_fail_highs[legal_moves - 1]++;
-                        }
-                    }
-
-                    engine.record_tt_entry_q(thread_id, position.hash_key, best_score, HASH_FLAG_BETA, best_move, static_eval);
-                    return best_score;
-                }
-            }
-        }
-
-    }
-
-    // Save to the transposition table
-    engine.tt_prefetch_write(position.hash_key);
-    engine.record_tt_entry_q(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, static_eval);
-
-    return best_score;
 }
 
 
@@ -437,7 +298,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Start quiescence search at the start of regular negamax search to counter the horizon effect.
     if (depth <= 0) {
-        return qsearch(engine, alpha, beta, engine.max_q_depth, thread_id);
+        return evaluate(position);
     }
 
     // Information about the current node
@@ -602,10 +463,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;
 
             // Quiet Late Move Pruning
-            if (quiet && legal_moves >= 2 + depth * depth / (1 + !improving + failing)) break;
+            if (quiet && legal_moves >= depth * depth / (1 + !improving + failing)) break;
 
             // Futility Pruning
-            if (quiet && depth <= 5 && static_eval + (depth - !improving) * 140 + 70 <= alpha) break;
+            if (quiet && depth <= 5 && static_eval + (depth - !improving) * 100 + 50 <= alpha) break;
 
             // History Pruning
             if (depth <= engine.tuning_parameters.history_pruning_depth &&
@@ -739,14 +600,14 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             reduction -= pv_node;
 
             // Fewer reductions when improving, since the current node and moves searched in it are more important
-            reduction -= improving * 0.9;
-            reduction += failing;
+            reduction -= improving;
+            reduction += 2 * failing;
 
             // Fewer reductions for interesting moves which we define above
-            reduction -= interesting;
+            reduction -= 2 * interesting;
 
             // Do not reduce moves as much if we are in check, because the position is possibly volatile
-            reduction -= in_check;
+            reduction -= 2 * in_check;
 
             // Scale the reduction based on the move's history score
             reduction -= move_history_score > 0 ? move_history_score / 7200.0 : move_history_score / 16000.0;
@@ -756,13 +617,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             reduction += !recapture && recapture_found && quiet && !move_gives_check && move_history_score <= 0;
 
             // Scale reductions based on how many moves have already raised alpha
-            reduction += static_cast<double>(alpha_raised_count) * (0.3 + 0.5 * tt_move.is_capture(position));
+            reduction += static_cast<double>(alpha_raised_count) * (0.8 + 0.5 * tt_move.is_capture(position));
 
             // My idea that in a null move search you can be more aggressive with LMR
-            reduction += null_search;
+            reduction += 2 * null_search;
 
             // Idea from Weiss, where you reduce more if the TT move is a capture
-            reduction += tt_move.is_capture(position) * 0.3;
+            reduction += tt_move.is_capture(position);
 
             // Clamp the LMR depth
             auto lmr_depth = std::clamp<PLY_TYPE>(new_depth - static_cast<PLY_TYPE>(reduction), 1, new_depth);
@@ -1096,6 +957,8 @@ void iterative_search(Engine& engine, int thread_id) {
     PLY_TYPE asp_depth = 6;
 
     uint64_t original_soft_time_limit = engine.soft_time_limit;
+    uint64_t original_hard_time_limit = engine.hard_time_limit;
+
     Move best_move = NO_MOVE;
 
     SCORE_TYPE low_depth_score = 0;
@@ -1119,19 +982,25 @@ void iterative_search(Engine& engine, int thread_id) {
                         static_cast<double>(engine.primary_thread_node_count);
 
                 double node_scaling_factor = (1.5 - best_node_percentage) * 1.35;
-
-                SCORE_TYPE score_difference = previous_score - low_depth_score;
-                score_difference = std::clamp(score_difference, -120, 120);
-
-                double score_scaling_factor = 1.05 - (score_difference / 270.0);
                 //std::cout << previous_score - low_depth_score << " " << score_difference << std::endl;
                 //std::cout << score_scaling_factor << std::endl;
 
-                engine.soft_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit)
-                        * node_scaling_factor
-                        * score_scaling_factor);
+                double soft_scaling_factor = node_scaling_factor;
+                double hard_scaling_factor = (soft_scaling_factor - 1) * 1.5 + 1.0;
 
-                // std::cout << "Soft Time Limit changed to: " << engine.soft_time_limit << std::endl;
+                soft_scaling_factor = (soft_scaling_factor - 1) * 5 + 1.0;
+                hard_scaling_factor = std::clamp(hard_scaling_factor, 0.3, 3.0);
+                soft_scaling_factor = std::clamp(soft_scaling_factor, 0.01, 8.0);
+
+                engine.soft_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit)
+                                                               * soft_scaling_factor);
+
+                engine.hard_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit)
+                                                               * hard_scaling_factor);
+
+
+
+                std::cout << "Soft Time Limit changed to: " << engine.soft_time_limit << std::endl;
             }
 
 
@@ -1144,7 +1013,7 @@ void iterative_search(Engine& engine, int thread_id) {
 
             // Stop the engine when we have exceeded the soft time limit
             if (running_depth >= engine.min_depth && thread_id == 0) {
-                if (elapsed_time >= engine.soft_time_limit) engine.stopped = true;
+                if (elapsed_time >= engine.soft_time_limit && elapsed_time >= engine.min_time) engine.stopped = true;
             }
         }
 

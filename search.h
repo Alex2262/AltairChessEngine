@@ -43,24 +43,24 @@ struct T {
 struct Tuning_Parameters {
 
     T tuning_parameter_array[N_TUNING_PARAMETERS] = {
-            T{"LMR_divisor_quiet", 150, 230, 185, 20},
-            T{"LMR_base_quiet", 100, 170, 155, 20},
+            T{"LMR_divisor_quiet", 150, 230, 160, 20},
+            T{"LMR_base_quiet", 100, 170, 200, 20},
             T{"delta_margin", 100, 400, 175, 40},
-            T{"RFP_depth", 5, 11, 9, 2},
-            T{"RFP_margin", 50, 200, 126, 30},
-            T{"LMP_depth", 2, 4, 3, 1},
-            T{"LMP_margin", 6, 15, 10, 1},
+            T{"RFP_depth", 5, 11, 11, 2},
+            T{"RFP_margin", 50, 200, 50, 30},
+            T{"LMP_depth", 2, 5, 5, 1},
+            T{"LMP_margin", 6, 15, 9, 1},
             T{"quiet_LMP_depth", 3, 10, 7, 1},
             T{"quiet_LMP_margin", 5, 12, 5, 1},
             T{"quiet_LMP_improving_margin", -1, 2, 2, 1},
             T{"history_pruning_depth", 4, 20, 12, 2},
-            T{"history_pruning_divisor", 4000, 20000, 12062, 1000},
+            T{"history_pruning_divisor", 4000, 20000, 6000, 1000},
             T{"NMP_depth", 0, 4, 2, 1},
             T{"NMP_base", 1, 5, 3, 1},
             T{"NMP_depth_divisor", 2, 6, 4, 1},
             T{"NMP_eval_divisor", 100, 350, 297, 40},
-            T{"LMR_divisor_noisy", 180, 400, 270, 50},
-            T{"LMR_base_noisy", 0, 150, 80, 20}
+            T{"LMR_divisor_noisy", 180, 400, 230, 50},
+            T{"LMR_base_noisy", 0, 150, 165, 20}
     };
 
     int LMR_divisor_quiet = tuning_parameter_array[0].value;
@@ -163,7 +163,9 @@ public:
     PLY_TYPE max_q_depth = TOTAL_MAX_DEPTH - MAX_AB_DEPTH;
     PLY_TYPE min_depth = 1;
 
-    int move_overhead = 10;
+    int move_overhead = 1066;
+
+    uint64_t min_time = 100;
     uint64_t hard_time_limit = 60000;
     uint64_t soft_time_limit = 60000;
     uint64_t start_time = 0;
@@ -210,7 +212,6 @@ public:
 
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus);
 
-SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id);
 SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,  bool do_null, int thread_id);
 
 void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int thread_id);
