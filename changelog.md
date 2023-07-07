@@ -5461,3 +5461,28 @@ https://chess.swehosting.se/test/1885/
 ```
 
 (Kept the patch because it is interesting)
+
+### 3.2.0
+Let quiet-LMP break out of the move loop
+
+```
+ELO   | 12.97 +- 7.52 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 4448 W: 1291 L: 1125 D: 2032
+https://chess.swehosting.se/test/1943/
+```
+
+### 3.2.1
+Save the best move on fail highs in aspiration window searches
+
+```
+ELO   | 4.43 +- 3.54 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 19944 W: 5525 L: 5271 D: 9148
+https://chess.swehosting.se/test/2189/
+```
+
+### 3.2.2
+Speedup of around a factor of 15% based a PR by @archishou to Altair bitboards-rewrite branch for move picking

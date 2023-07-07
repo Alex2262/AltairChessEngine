@@ -23,12 +23,22 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
     MoveType move_type = move.type();
     InformativeMove informative_move = InformativeMove(move, selected, occupied);
 
+    if (move_type == MOVE_TYPE_PROMOTION) {
+        auto promotion_piece_type = static_cast<PieceType>(move.promotion_type() + 1);
+        if (promotion_piece_type == QUEEN) {
+            score += thread_state.move_ordering_parameters.queen_promotion_margin;
+        } else {
+            score = score + thread_state.move_ordering_parameters.other_promotion_margin +
+                    MVV_LVA_VALUES[promotion_piece_type];
+        }
+    }
+
     if (move.is_capture(position)) {
         auto occupied_type = get_piece_type(occupied, ~position.side);
         
         score += thread_state.capture_history[selected][occupied][move.target()];
-        score += thread_state.move_ordering_parameters.capture_scale
-                * (MVV_LVA_VALUES[occupied_type] - MVV_LVA_VALUES[selected_type]);
+        score += thread_state.move_ordering_parameters.capture_scale * MVV_LVA_VALUES[occupied_type]
+                - MVV_LVA_VALUES[selected_type];
 
         // Only Use SEE under certain conditions since it is expensive
         if (score >= -3000) {
@@ -46,31 +56,20 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
                 thread_state.move_ordering_parameters.first_killer_margin;
         else if (thread_state.killer_moves[1][thread_state.search_ply] == informative_move) score +=
                 thread_state.move_ordering_parameters.second_killer_margin;
-        else {
-            score += thread_state.history_moves[selected][move.target()];
 
-            if (last_move_one != NO_INFORMATIVE_MOVE) {
-                score += thread_state.continuation_history[last_move_one.selected()]
-                [last_move_one.target()][selected][move.target()];
-            }
+        score += thread_state.history_moves[selected][move.target()];
 
-            if (last_move_two != NO_INFORMATIVE_MOVE) {
-                score += thread_state.continuation_history[last_move_two.selected()]
-                [last_move_two.target()][selected][move.target()];
-            }
-
+        if (last_move_one != NO_INFORMATIVE_MOVE) {
+            score += thread_state.continuation_history[last_move_one.selected()]
+            [last_move_one.target()][selected][move.target()];
         }
 
-        if (move_type == MOVE_TYPE_PROMOTION) {
-            auto promotion_piece_type = static_cast<PieceType>(move.promotion_type() + 1);
-            if (promotion_piece_type == QUEEN) {
-                score += thread_state.move_ordering_parameters.queen_promotion_margin;
-            } else {
-                score = score + thread_state.move_ordering_parameters.other_promotion_margin +
-                        MVV_LVA_VALUES[promotion_piece_type];
-            }
+        if (last_move_two != NO_INFORMATIVE_MOVE) {
+            score += thread_state.continuation_history[last_move_two.selected()]
+            [last_move_two.target()][selected][move.target()];
         }
-        else if (move_type == MOVE_TYPE_EP) score += thread_state.move_ordering_parameters.winning_capture_margin +
+
+        if (move_type == MOVE_TYPE_EP) score += thread_state.move_ordering_parameters.winning_capture_margin +
                 thread_state.move_ordering_parameters.capture_scale * (MVV_LVA_VALUES[PAWN] / 2);
         else if (move_type == MOVE_TYPE_CASTLE) score += thread_state.move_ordering_parameters.castle_margin;
     }

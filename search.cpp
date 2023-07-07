@@ -596,23 +596,23 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         bool quiet = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
 
         // Pruning
-        if (!pv_node && legal_moves >= 1 && abs(best_score) < MATE_BOUND) {
+        if (!root && legal_moves >= 1 && abs(best_score) < MATE_BOUND) {
             // Late Move Pruning
-            if (depth <= engine.tuning_parameters.LMP_depth &&
+            if (!pv_node && depth <= engine.tuning_parameters.LMP_depth &&
                 legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;
 
             // Quiet Late Move Pruning
-            if (quiet && legal_moves >= 2 + depth * depth / (1 + !improving + failing)) break;
+            if (!pv_node && quiet && legal_moves >= 2 + depth * depth / (1 + !improving + failing)) break;
 
             // Futility Pruning
-            if (quiet && depth <= 5 && static_eval + (depth - !improving) * 140 + 70 <= alpha) break;
+            if (!pv_node && quiet && depth <= 5 && static_eval + (depth - !improving) * 140 + 70 <= alpha) break;
 
             // History Pruning
-            if (depth <= engine.tuning_parameters.history_pruning_depth &&
+            if (!pv_node && depth <= engine.tuning_parameters.history_pruning_depth &&
                 move_history_score <= (depth + improving) * -engine.tuning_parameters.history_pruning_divisor) continue;
 
             // SEE Pruning
-            if (depth <= (3 + 3 * !quiet) && legal_moves >= 3 &&
+            if (depth <= (3 + 3 * !quiet + 5 * pv_node) && legal_moves >= 3 &&
                  -MATE_BOUND < alpha && alpha < MATE_BOUND &&
                  move_history_score <= 5000 &&
                  !get_static_exchange_evaluation(position, move, (quiet ? -50 : -90) * depth))
@@ -1098,6 +1098,8 @@ void iterative_search(Engine& engine, int thread_id) {
     uint64_t original_soft_time_limit = engine.soft_time_limit;
     Move best_move = NO_MOVE;
 
+    SCORE_TYPE low_depth_score = 0;
+
     while (running_depth <= engine.max_depth) {
         thread_state.current_search_depth = running_depth;
         position.clear_state_stack();
@@ -1109,6 +1111,8 @@ void iterative_search(Engine& engine, int thread_id) {
         if (thread_id == 0 && !engine.stopped) best_move = engine.pv_table[0][0];
 
         if (thread_id == 0) {
+            if (running_depth <= 4) low_depth_score = previous_score;
+
             if (running_depth >= 8) {
                 auto best_node_percentage =
                         static_cast<double>(engine.node_table[position.board[best_move.origin()]] [best_move.target()]) /
@@ -1116,7 +1120,16 @@ void iterative_search(Engine& engine, int thread_id) {
 
                 double node_scaling_factor = (1.5 - best_node_percentage) * 1.35;
 
-                engine.soft_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit) * node_scaling_factor);
+                SCORE_TYPE score_difference = previous_score - low_depth_score;
+                score_difference = std::clamp(score_difference, -120, 120);
+
+                double score_scaling_factor = 1.05 - (score_difference / 270.0);
+                //std::cout << previous_score - low_depth_score << " " << score_difference << std::endl;
+                //std::cout << score_scaling_factor << std::endl;
+
+                engine.soft_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit)
+                        * node_scaling_factor
+                        * score_scaling_factor);
 
                 // std::cout << "Soft Time Limit changed to: " << engine.soft_time_limit << std::endl;
             }
