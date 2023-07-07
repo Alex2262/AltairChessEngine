@@ -55,8 +55,7 @@ SCORE_TYPE evaluate_king_pawn(const Position& position, File file, Color color, 
     relative_rank = rank_of(get_white_relative_square(square, color));
 
     // Uses the relative ranks 3-7 (ranks 6 & 7 are combined into one index)
-    index = square == NO_SQUARE ? 4 : std::min(static_cast<int>(relative_rank) - 2, 3);
-    if (index < 0) return score;
+    index = square == NO_SQUARE ? 5 : std::min(static_cast<int>(relative_rank) - 1, 4);
 
     score += KING_PAWN_STORM[index][file];
 
