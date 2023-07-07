@@ -1125,7 +1125,13 @@ SCORE_TYPE score_capture(const Thread_State& thread_state, Position& position,  
     PIECE_TYPE selected = get_selected(move);
     PIECE_TYPE occupied = get_occupied(move);
 
-    score += 20000 * get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
+    score += thread_state.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
+
+    if (score >= -3000) {
+        if (score >= 3000 ||
+            get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD))
+            score += thread_state.move_ordering_parameters.winning_capture_margin;
+    }
 
     if (selected < BLACK_PAWN) {
         score += MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected];
@@ -1133,8 +1139,6 @@ SCORE_TYPE score_capture(const Thread_State& thread_state, Position& position,  
     else {
         score += MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN];
     }
-
-    score += thread_state.capture_history[selected][occupied][MAILBOX_TO_STANDARD[get_target_square(move)]];
 
     return score;
 }
