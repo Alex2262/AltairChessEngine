@@ -266,13 +266,16 @@ double evaluate_drawishness(EvaluationInformation& evaluation_information) {
     // There is a queen on the board
     if (evaluation_information.piece_counts[WHITE][QUEEN] + evaluation_information.piece_counts[BLACK][QUEEN] >= 1) {
         // Guard clause
-        if (more_material > 2 * CANONICAL_PIECE_VALUES[ROOK]) return 1.0;
+        if (more_material > CANONICAL_PIECE_VALUES[QUEEN]) return 1.0;
 
         // Queen vs rook + knight, queen vs rook + bishop, etc.
         if (less_material >= CANONICAL_PIECE_VALUES[ROOK] + MIN_MINOR_PIECE_VALUE) return 0.03;
 
         // Queen vs two bishops, queen vs two knights, queen vs bishop + knight, etc.
-        if (less_material >= 2 * MIN_MINOR_PIECE_VALUE) return 0.14;
+        if (less_material >= 2 * MIN_MINOR_PIECE_VALUE) return 0.25;
+
+        // Queen vs rook + pawn, possible fortress
+        if (less_material >= CANONICAL_PIECE_VALUES[ROOK] + CANONICAL_PIECE_VALUES[PAWN]) return 0.6;
 
         return 1.0;
     }
