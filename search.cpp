@@ -259,8 +259,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     engine.tt_prefetch_read(position.hash_key);  // Prefetch the TT for cache
 
     // Check the remaining time
-    if (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
-        (engine.node_count & 2047) == 0 && engine.check_time()) {
+    if (engine.stopped || (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
+        (engine.node_count & 2047) == 0 && engine.check_time())) {
         return 0;
     }
 
@@ -406,8 +406,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     // Check the remaining time
-    if (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
-        (engine.node_count & 2047) == 0 && engine.check_time()) {
+    if (engine.stopped || (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
+        (engine.node_count & 2047) == 0 && engine.check_time())) {
         return 0;
     }
 
