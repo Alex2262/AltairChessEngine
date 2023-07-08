@@ -171,6 +171,10 @@ SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation
             score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_2)) * KING_RING_ATTACKS[1][piece_type];
 
             evaluation_information.total_king_ring_attacks[color] += static_cast<int>(popcount(king_ring_attacks_1 | king_ring_attacks_2));
+
+            // OPPONENT KING TROPISM
+            int distance_to_opp_king = get_manhattan_distance(square, evaluation_information.king_squares[~color]);
+            score += OPP_KING_TROPISM[piece_type] * distance_to_opp_king;
         }
 
         if constexpr (piece_type == KING || piece_type == QUEEN || piece_type == ROOK) {

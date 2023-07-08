@@ -53,6 +53,11 @@ inline int mg_score(SCORE_TYPE s) {
     return static_cast<int>(v);
 }
 
+inline int get_manhattan_distance(Square square_1, Square square_2) {
+    return abs(static_cast<int>(rank_of(square_1)) - static_cast<int>(rank_of(square_2))) +
+           abs(static_cast<int>(file_of(square_1)) - static_cast<int>(file_of(square_2)));
+}
+
 template<int n>
 struct KingRing {
     constexpr KingRing() : masks() {
