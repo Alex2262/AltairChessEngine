@@ -12,6 +12,8 @@
 struct EvaluationInformation {
     int game_phase = 0;
 
+    int piece_counts[2][6]{};
+
     int total_king_ring_attacks[2]{};
 
     Square king_squares[2]{};
@@ -26,10 +28,16 @@ void initialize_evaluation_information(Position& position, EvaluationInformation
 Square get_white_relative_square(Square square, Color color);
 Square get_black_relative_square(Square square, Color color);
 
+
 SCORE_TYPE evaluate_king_pawn(const Position& position, File file, Color color, EvaluationInformation& evaluation_information);
+
 SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color, int& game_phase);
 SCORE_TYPE evaluate_pieces(Position& position, int& game_phase);
+
+double evaluate_drawishness(EvaluationInformation& evaluation_information);
+
 SCORE_TYPE evaluate(Position& position);
+
 
 constexpr SCORE_TYPE S(int mg, int eg) {
     return static_cast<SCORE_TYPE>(static_cast<unsigned int>(eg) << 16) + mg;
