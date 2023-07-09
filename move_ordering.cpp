@@ -117,7 +117,7 @@ void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_
 Move sort_next_move(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, int current_count) {
 	auto best_score = current_scored_moves[current_count].score;
 	auto best_idx = current_count;
-    for (auto next_count = current_count + 1; next_count < current_scored_moves.size(); next_count++) {
+    for (auto next_count = current_count + 1; next_count < static_cast<int>(current_scored_moves.size()); next_count++) {
         if (best_score < current_scored_moves[next_count].score) {
 			best_score = current_scored_moves[next_count].score;
 			best_idx = next_count;

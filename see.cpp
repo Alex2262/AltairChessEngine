@@ -76,7 +76,7 @@ SCORE_TYPE get_static_exchange_evaluation(Position& position, Move move, SCORE_T
         if (!our_attackers) break; // No attacking piece was found
 
         PieceType cheapest_attacker = KING;
-        for (int piece = PAWN; piece < KING; piece++) {
+        for (int piece = PAWN; piece < static_cast<int>(KING); piece++) {
             if (our_attackers & position.get_pieces(static_cast<PieceType>(piece), position.side)) {
                 cheapest_attacker = static_cast<PieceType>(piece);
                 break;

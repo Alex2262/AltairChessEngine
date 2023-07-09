@@ -35,7 +35,7 @@ enum Piece : uint32_t {
 
 constexpr int COLOR_OFFSET = 6;
 
-constexpr uint32_t N_SQUARES = 64;
+constexpr int N_SQUARES = 64;
 enum Square : uint32_t {
     a1, b1, c1, d1, e1, f1, g1, h1,
     a2, b2, c2, d2, e2, f2, g2, h2,

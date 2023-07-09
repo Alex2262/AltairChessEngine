@@ -105,7 +105,7 @@ void Position::place_piece(Piece piece, Square square) {
 void Position::compute_hash_key() {
     hash_key = 0;
 
-    for (int piece = 0; piece < EMPTY; piece++) {
+    for (int piece = 0; piece < static_cast<int>(EMPTY); piece++) {
         BITBOARD piece_bitboard = get_pieces(static_cast<Piece>(piece));
         while (piece_bitboard) {
             Square square = poplsb(piece_bitboard);
@@ -139,7 +139,7 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
 
     side = (player == "w") ? WHITE : BLACK;
 
-    for (int piece = WHITE_PAWN; piece < EMPTY; piece++) {
+    for (int piece = WHITE_PAWN; piece < static_cast<int>(EMPTY); piece++) {
         pieces[piece] = 0ULL;
     }
 
@@ -676,11 +676,11 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
         // We need to check all the squares in between the king's destination square and original square, excluding
         // the original square since we already checked that earlier.
         if (target_square == c1 || target_square == c8) {  // Queen side castling
-            for (int temp_pos = static_cast<int>(origin_square) - 1; temp_pos > target_square; temp_pos--) {
+            for (int temp_pos = static_cast<int>(origin_square) - 1; temp_pos > static_cast<int>(target_square); temp_pos--) {
                 if (is_attacked(static_cast<Square>(temp_pos), side)) return false;
             }
         } else {                                           // King side castling
-            for (int temp_pos = static_cast<int>(origin_square) + 1; temp_pos < target_square; temp_pos++) {
+            for (int temp_pos = static_cast<int>(origin_square) + 1; temp_pos < static_cast<int>(target_square); temp_pos++) {
                 if (is_attacked(static_cast<Square>(temp_pos), side)) return false;
             }
         }

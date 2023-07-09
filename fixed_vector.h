@@ -37,7 +37,7 @@ public:
         current_index++;
     }
 
-    inline T pop(size_t index) {
+    inline T pop() {
         current_index--;
         return fixed_vector[current_index];
     }

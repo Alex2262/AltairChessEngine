@@ -33,7 +33,7 @@ Square get_black_relative_square(Square square, Color color) {
     return static_cast<Square>(square ^ (~color * 56));
 }
 
-SCORE_TYPE evaluate_king_pawn(const Position& position, File file, Color color, EvaluationInformation& evaluation_information) {
+SCORE_TYPE evaluate_king_pawn(File file, Color color, EvaluationInformation& evaluation_information) {
     SCORE_TYPE score = 0;
 
     // PAWN SHIELD
@@ -194,15 +194,15 @@ SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation
         if constexpr (piece_type == KING) {
             File file = file_of(square);
             if (file <= 2) {  // Queen side: Files A, B, C  (0, 1, 2)
-                score += evaluate_king_pawn(position, 0, color, evaluation_information);
-                score += evaluate_king_pawn(position, 1, color, evaluation_information);
-                score += evaluate_king_pawn(position, 2, color, evaluation_information);
+                score += evaluate_king_pawn(0, color, evaluation_information);
+                score += evaluate_king_pawn(1, color, evaluation_information);
+                score += evaluate_king_pawn(2, color, evaluation_information);
             }
 
             else if (file >= 5) {  // King side: Files F, G, H  (5, 6, 7)
-                score += evaluate_king_pawn(position, 5, color, evaluation_information);
-                score += evaluate_king_pawn(position, 6, color, evaluation_information);
-                score += evaluate_king_pawn(position, 7, color, evaluation_information);
+                score += evaluate_king_pawn(5, color, evaluation_information);
+                score += evaluate_king_pawn(6, color, evaluation_information);
+                score += evaluate_king_pawn(7, color, evaluation_information);
             }
         }
 
@@ -355,7 +355,7 @@ double evaluate_drawishness(Position& position, EvaluationInformation& evaluatio
             if (less_material == CANONICAL_PIECE_VALUES[PAWN] && more_material <= MAX_MINOR_PIECE_VALUE) return 0.02;
 
             // Pawn + minor vs minor
-            if (more_material <= PAWN + MAX_MINOR_PIECE_VALUE && less_material >= MIN_MINOR_PIECE_VALUE) return 0.21;
+            if (more_material <= static_cast<SCORE_TYPE>(PAWN) + MAX_MINOR_PIECE_VALUE && less_material >= MIN_MINOR_PIECE_VALUE) return 0.21;
         }
 
         // if (evaluation_information.piece_counts[WHITE][KNIGHT] + evaluation_information.piece_counts[WHITE][ROOK] +
