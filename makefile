@@ -6,7 +6,7 @@ SOURCES      := evaluation.cpp main.cpp move.cpp perft.cpp position.cpp search.c
 				move_ordering.cpp
 
 TEMPDIR      := tmp/
-CXXFLAGS     := -O3 -std=c++20 -Wall -Wextra -pedantic -DNDEBUG
+CXXFLAGS     := -O3 -std=c++20 -Wall -Wextra -pedantic -DNDEBUG -flto
 
 CXX          := g++
 SUFFIX       :=
