@@ -12,6 +12,8 @@
 struct EvaluationInformation {
     int game_phase = 0;
 
+    int passed_pawn_count[2]{};
+
     int piece_counts[2][6]{};
 
     int total_king_ring_attacks[2]{};
@@ -34,7 +36,7 @@ SCORE_TYPE evaluate_king_pawn(const Position& position, File file, Color color, 
 SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color, int& game_phase);
 SCORE_TYPE evaluate_pieces(Position& position, int& game_phase);
 
-double evaluate_drawishness(EvaluationInformation& evaluation_information);
+double evaluate_drawishness(Position& position, EvaluationInformation& evaluation_information);
 
 SCORE_TYPE evaluate(Position& position);
 
@@ -64,6 +66,10 @@ inline int mg_score(SCORE_TYPE s) {
 inline int get_manhattan_distance(Square square_1, Square square_2) {
     return abs(static_cast<int>(rank_of(square_1)) - static_cast<int>(rank_of(square_2))) +
            abs(static_cast<int>(file_of(square_1)) - static_cast<int>(file_of(square_2)));
+}
+
+inline bool same_color (Square square_1, Square square_2) {
+    return (( 9 * (square_1 ^ square_2)) & 8) == 0;
 }
 
 template<int n>
