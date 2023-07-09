@@ -8,7 +8,7 @@
 #include <array>
 #include "bitboard.h"
 
-// A lot of code in here is influenced by Archishmaan Peyyety & Conor Anstey (Ciekce)
+// A lot of code in here is influenced by Archishmaan Peyyety (Archi) & Conor Anstey (Ciekce)
 
 constexpr size_t ROOK_TABLE_SIZE = 4096;
 constexpr size_t BISHOP_TABLE_SIZE = 512;
