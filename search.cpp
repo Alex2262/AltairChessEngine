@@ -42,7 +42,7 @@ void Engine::clear_tt() {
         tt_entry.key = 0;
         tt_entry.score = 0;
         tt_entry.evaluation = NO_EVALUATION;
-            tt_entry.move = NO_MOVE;
+        tt_entry.move = NO_MOVE;
         tt_entry.depth = 0;
         tt_entry.flag = 0;
     }
