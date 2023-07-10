@@ -916,7 +916,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                         if (move == tt_move) engine.search_results.search_fail_high_types[0]++;
                         else if (move == thread_state.killer_moves[0][thread_state.search_ply]) engine.search_results.search_fail_high_types[1]++;
                         else if (move == thread_state.killer_moves[1][thread_state.search_ply]) engine.search_results.search_fail_high_types[2]++;
-                        else if (quiet) engine.search_results.search_fail_high_types[4]++;
+                        else if (quiet) engine.search_results.search_fail_high_types[3]++;
+                        else if (bad_capture) engine.search_results.search_fail_high_types[4]++;
                         else engine.search_results.search_fail_high_types[5]++;
                     }
 
@@ -1265,11 +1266,11 @@ void print_statistics(Search_Results& res) {
               double(res.search_fail_high_types[1]) / double(total_fail_highs) * 100 << "%\n";
     std::cout << "Killer move 2 fail highs: " << res.search_fail_high_types[2] << " percentage: " <<
               double(res.search_fail_high_types[2]) / double(total_fail_highs) * 100 << "%\n";
-    std::cout << "Counter move fail highs: " << res.search_fail_high_types[3] << " percentage: " <<
+    std::cout << "Quiet move fail highs: " << res.search_fail_high_types[3] << " percentage: " <<
               double(res.search_fail_high_types[3]) / double(total_fail_highs) * 100 << "%\n";
-    std::cout << "Quiet move fail highs: " << res.search_fail_high_types[4] << " percentage: " <<
+    std::cout << "Bad Noisy move fail highs: " << res.search_fail_high_types[4] << " percentage: " <<
               double(res.search_fail_high_types[4]) / double(total_fail_highs) * 100 << "%\n";
-    std::cout << "Noisy move fail highs: " << res.search_fail_high_types[5] << " percentage: " <<
+    std::cout << "Good Noisy move fail highs: " << res.search_fail_high_types[5] << " percentage: " <<
               double(res.search_fail_high_types[5]) / double(total_fail_highs) * 100 << "%\n";
 
     std::cout << "\n\n---------------------------------------------------------" << std::endl;
