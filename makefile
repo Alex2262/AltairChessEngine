@@ -8,13 +8,14 @@ SOURCES      := evaluation.cpp main.cpp move.cpp perft.cpp position.cpp search.c
 TEMPDIR      := tmp/
 CXXFLAGS     := -O3 -std=c++20 -Wall -Wextra -pedantic -DNDEBUG -flto
 
-CXX          := g++
+CXX          := clang++
 SUFFIX       :=
 
 # Detect Windows
 ifeq ($(OS), Windows_NT)
     SUFFIX   := .exe
     CXXFLAGS += -static
+    CXXFLAGS += -fuse-ld=lld
 else
 	CXXFLAGS += -pthread
 

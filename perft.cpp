@@ -86,7 +86,7 @@ long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
             continue;
         }
 
-        amt += fast_perft(position, depth - 1, ply + 1);
+        amt += depth == 1 ? 1 : fast_perft(position, depth - 1, ply + 1);
 
         position.undo_move(move, position.state_stack[ply], fifty);
     }
