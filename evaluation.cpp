@@ -1161,7 +1161,7 @@ void get_capture_scores(const Thread_State& thread_state, Position& position, st
 void sort_next_move(std::vector<Move_Struct>& moves, int current_count) {
     auto best_score = moves[current_count].score;
     auto best_idx = current_count;
-    for (auto next_count = current_count + 1; next_count < moves.size(); next_count++) {
+    for (auto next_count = current_count + 1; next_count < static_cast<int>(moves.size()); next_count++) {
         if (best_score < moves[next_count].score) {
             best_score = moves[next_count].score;
             best_idx = next_count;
