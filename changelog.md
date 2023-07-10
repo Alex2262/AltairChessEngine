@@ -5486,3 +5486,58 @@ https://chess.swehosting.se/test/2189/
 
 ### 3.2.2
 Speedup of around a factor of 15% based a PR by @archishou to Altair bitboards-rewrite branch for move picking
+
+### 3.2.3
+Move ordering Changes
+
+```
+ELO   | 3.37 +- 2.66 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.97 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 35552 W: 9874 L: 9529 D: 16149
+https://chess.swehosting.se/test/2244/
+```
+
+### 3.2.4
+TM scaling by score changes throughout search
+
+```
+ELO   | 5.45 +- 4.21 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.97 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 14080 W: 3911 L: 3690 D: 6479
+https://chess.swehosting.se/test/2279/
+```
+
+### 3.2.5
+SEE pruning on PV nodes
+
+```
+ELO   | 3.35 +- 2.64 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.99 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 35368 W: 9610 L: 9269 D: 16489
+https://chess.swehosting.se/test/2304/
+```
+
+### 3.2.6
+Move ordering changes
+
+```
+ELO   | 4.80 +- 3.83 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 17792 W: 5130 L: 4884 D: 7778
+https://chess.swehosting.se/test/2372/
+```
+
+### 3.2.7
+Skip SEE in qsearch under certain conditions
+
+```
+ELO   | 4.32 +- 3.46 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 20672 W: 5672 L: 5415 D: 9585
+https://chess.swehosting.se/test/2389/
+```
