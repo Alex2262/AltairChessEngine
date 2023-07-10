@@ -231,7 +231,7 @@ void UCI::uci_loop() {
             std::cout << "option name UCI_Chess960 type check default " << false
                       << std::endl;
 
-            std::cout << "option name Statistic type check default " << false
+            std::cout << "option name Statistics type check default " << false
                       << std::endl;
 
             std::cout << "option name Move Overhead type spin default " << 10 << " min " << 0 << " max " << 1000
