@@ -5,13 +5,14 @@
 #ifndef ANTARESCHESSENGINE_SEARCH_H
 #define ANTARESCHESSENGINE_SEARCH_H
 
+#include <vector>
 #include "position.h"
 
 struct TT_Entry {
     HASH_TYPE key = 0;
     SCORE_TYPE score = 0;
     SCORE_TYPE evaluation = NO_EVALUATION;
-    MOVE_TYPE move = NO_MOVE;
+    Move move = NO_MOVE;
     PLY_TYPE depth = 0;
     short flag = 0;
 };
@@ -119,14 +120,14 @@ public:
 
     Thread_State() = default;
 
-    Position position;
+    Position position{};
 
     PLY_TYPE current_search_depth = 0;
     PLY_TYPE search_ply = 0;
     PLY_TYPE game_ply = 0;
     PLY_TYPE fifty_move = 0;
 
-    MOVE_TYPE killer_moves[2][MAX_AB_DEPTH]{};  // killer moves (2) | max_depth (64)
+    InformativeMove killer_moves[2][MAX_AB_DEPTH]{};  // killer moves (2) | max_depth (64)
     SCORE_TYPE history_moves[12][64]{}; // piece | target_square
     SCORE_TYPE capture_history[12][12][64]{};
     SCORE_TYPE continuation_history[12][64][12][64]{};
@@ -172,7 +173,7 @@ public:
     uint64_t node_count = 0;
     uint64_t node_table[12][64]{};
 
-    MOVE_TYPE pv_table[MAX_AB_DEPTH + 1][MAX_AB_DEPTH + 1]{};
+    Move pv_table[MAX_AB_DEPTH + 1][MAX_AB_DEPTH + 1]{};
     PLY_TYPE pv_length[MAX_AB_DEPTH + 1] = {0};
 
     // TT_Entry transposition_table[MAX_TT_SIZE]{};
@@ -193,11 +194,11 @@ public:
 
     short probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
                          TT_Entry& return_entry);
-    void record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move, PLY_TYPE depth,
+    void record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move, PLY_TYPE depth,
                          SCORE_TYPE static_eval, bool pv_node);
     short probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
-                           SCORE_TYPE& return_score, MOVE_TYPE& tt_move);
-    void record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, MOVE_TYPE move,
+                           SCORE_TYPE& return_score, Move& tt_move);
+    void record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move,
                            SCORE_TYPE static_eval);
     SCORE_TYPE probe_tt_evaluation(HASH_TYPE hash_key);
 
@@ -213,7 +214,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,  bool do_null, int thread_id);
 
 void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int thread_id);
-SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, MOVE_TYPE& best_move, int thread_id);
+SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id);
 void iterative_search(Engine& engine, int thread_id);
 void lazy_smp_search(Engine& engine);
 

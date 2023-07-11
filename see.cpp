@@ -7,124 +7,47 @@
 #include <iostream>
 #include "see.h"
 
-SQUARE_TYPE get_cheapest_attacker(Position& position, SQUARE_TYPE pos) {
-    SQUARE_TYPE cheapest_piece_square = 0;
+BITBOARD get_all_attackers(Position& position, Square square) {
 
-    if (!position.side) {
-        // Check if pawns are attacking you
-        if (position.board[pos - 11] == BLACK_PAWN) return pos - 11;
-        if (position.board[pos -  9] == BLACK_PAWN) return pos - 9;
+    // Treat square like a pawn
+    BITBOARD pawn_attackers = (WHITE_PAWN_ATTACKS[square] & position.get_pieces(PAWN, BLACK)) |
+            (BLACK_PAWN_ATTACKS[square] & position.get_pieces(PAWN, WHITE));
 
-        // Search with the increments of a knight to see if any opponent knights are attacking you
-        for (int increment : BLACK_ATK_INCREMENTS[WHITE_KNIGHT]) {
-            SQUARE_TYPE new_pos = pos + increment;
-            PIECE_TYPE occupied = position.board[new_pos];
+    // Treat square like a knight
+    BITBOARD knight_attackers = KNIGHT_ATTACKS[square] &
+            (position.get_pieces(WHITE_KNIGHT) | position.get_pieces(BLACK_KNIGHT));
 
-            if (occupied == BLACK_KNIGHT) return new_pos;
-        }
+    // Treat square like a bishop
+    BITBOARD bishop_attacks = get_bishop_attacks(square, position.all_pieces);
+    BITBOARD bishop_attackers = bishop_attacks &
+            (position.get_pieces(WHITE_BISHOP) | position.get_pieces(BLACK_BISHOP));
 
-        // Search with the increments of a queen to see if any opponent queens, bishops, or rooks are attacking you.
-        for (int increment : BLACK_ATK_INCREMENTS[WHITE_QUEEN]) {
-            SQUARE_TYPE new_pos = pos;
+    // Treat square like a rook
+    BITBOARD rook_attacks = get_rook_attacks(square, position.all_pieces);
+    BITBOARD rook_attackers = rook_attacks &
+            (position.get_pieces(WHITE_ROOK) | position.get_pieces(BLACK_ROOK));
 
-            while (true) {
-                new_pos += increment;
-                PIECE_TYPE occupied = position.board[new_pos];
+    BITBOARD queen_attackers = (bishop_attacks | rook_attacks) &
+            (position.get_pieces(WHITE_QUEEN) | position.get_pieces(BLACK_QUEEN));
 
-                // Break if you hit your own piece or if you are out of bounds
-                if (occupied == PADDING || occupied < BLACK_PAWN) break;
-                if (occupied == EMPTY) continue;  // Continue if there is no piece on this square
+    BITBOARD king_attackers = KING_ATTACKS[square] &
+            (position.get_pieces(WHITE_KING) | position.get_pieces(BLACK_KING));
 
-                // Can return immediately since the Bishop is the cheapest out of the sliding pieces
-                if (occupied == BLACK_BISHOP) {
-                    if (increment == -11 || increment == 11 || increment == 9 || increment == -9) return new_pos;
-                }
-
-                    // Can return immediately since the horizontal/vertical increments are searched after
-                    // diagonal increments, and thus if a rook is found no bishop will be found after meaning it will be
-                    // the cheapest piece.
-                else if (occupied == BLACK_ROOK) {
-                    if (increment == -10 || increment == 1 || increment == 10 || increment == -1) return new_pos;
-                }
-
-                else if (occupied == BLACK_QUEEN && (cheapest_piece_square == 0 ||
-                                                     BLACK_QUEEN < position.board[cheapest_piece_square])) cheapest_piece_square = new_pos;
-
-                else if (occupied == BLACK_KING && cheapest_piece_square == 0) {
-                    if (new_pos == pos + increment) cheapest_piece_square = new_pos;
-                }
-
-                break;
-
-            }
-        }
-    }
-
-    else {
-
-        // Check if pawns are attacking you
-        if (position.board[pos + 11] == WHITE_PAWN) return pos + 11;
-        if (position.board[pos +  9] == WHITE_PAWN) return pos + 9;
-
-        // Search with the increments of a knight to see if any opponent knights are attacking you
-        for (int increment : WHITE_ATK_INCREMENTS[WHITE_KNIGHT]) {
-            SQUARE_TYPE new_pos = pos + increment;
-            PIECE_TYPE occupied = position.board[new_pos];
-
-            if (occupied == WHITE_KNIGHT) return new_pos;
-        }
-
-        // Search with the increments of a queen to see if any opponent queens, bishops, or rooks are attacking you.
-        for (int increment : WHITE_ATK_INCREMENTS[WHITE_QUEEN]) {
-            SQUARE_TYPE new_pos = pos;
-
-            while (true) {
-                new_pos += increment;
-                PIECE_TYPE occupied = position.board[new_pos];
-
-                // Break if you hit your own piece or if you are out of bounds
-                if (occupied != EMPTY && occupied > WHITE_KING) break;
-                if (occupied == EMPTY) continue;  // Continue if there is no piece on this square
-
-                // Can return immediately since the Bishop is the cheapest out of the sliding pieces
-                if (occupied == WHITE_BISHOP) {
-                    if (increment == -11 || increment == 11 || increment == 9 || increment == -9) return new_pos;
-                }
-
-                    // Can return immediately since the horizontal/vertical increments are searched after
-                    // diagonal increments, and thus if a rook is found no bishop will be found after meaning it will be
-                    // the cheapest piece.
-                else if (occupied == WHITE_ROOK) {
-                    if (increment == -10 || increment == 1 || increment == 10 || increment == -1) return new_pos;
-                }
-
-                else if (occupied == WHITE_QUEEN && (cheapest_piece_square == 0 ||
-                                                     WHITE_QUEEN < position.board[cheapest_piece_square])) cheapest_piece_square = new_pos;
-
-                else if (occupied == WHITE_KING && cheapest_piece_square == 0) {
-                    if (new_pos == pos + increment) return new_pos;
-                }
-
-                break;
-
-            }
-        }
-    }
-
-    return cheapest_piece_square;
+    return pawn_attackers | knight_attackers | bishop_attackers | rook_attackers | queen_attackers | king_attackers;
 }
 
 
-SCORE_TYPE get_static_exchange_evaluation(Position& position, MOVE_TYPE move, SCORE_TYPE threshold) {
-    uint16_t move_type = get_move_type(move);
+SCORE_TYPE get_static_exchange_evaluation(Position& position, Move move, SCORE_TYPE threshold) {
+    MoveType move_type = move.type();
     if (move_type == MOVE_TYPE_CASTLE) return true;
     if (move_type == MOVE_TYPE_PROMOTION) return true;
     if (move_type == MOVE_TYPE_EP) return true;
 
-    SQUARE_TYPE target_square = get_target_square(move);
+    Square origin_square = move.origin();
+    Square target_square = move.target();
 
-    PIECE_TYPE selected = get_selected(move);
-    PIECE_TYPE occupied = get_occupied(move);
+    Piece selected = position.board[origin_square];
+    Piece occupied = position.board[target_square];
 
     SCORE_TYPE exchange_value = SEE_values[occupied] - threshold;
     if (exchange_value < 0) return false; // If taking the opponent's piece without any risk is still negative
@@ -132,35 +55,54 @@ SCORE_TYPE get_static_exchange_evaluation(Position& position, MOVE_TYPE move, SC
     exchange_value -= SEE_values[selected];
     if (exchange_value >= 0) return true; // If we risk our piece being fully lost and the exchange value is still >= 0
 
-    std::vector<std::pair<SQUARE_TYPE, PIECE_TYPE>> removed_pieces;
+    BITBOARD occupancy = position.all_pieces ^ from_square(origin_square);
+    BITBOARD attackers = get_all_attackers(position, target_square);
 
-    position.board[target_square] = EMPTY;
-    removed_pieces.emplace_back(target_square, occupied);
+    BITBOARD diagonal_attackers = position.get_pieces(WHITE_BISHOP) | position.get_pieces(BLACK_BISHOP) |
+                                  position.get_pieces(WHITE_QUEEN) | position.get_pieces(BLACK_QUEEN);
 
-    SQUARE_TYPE original_side = position.side;
+    BITBOARD horizontal_attackers = position.get_pieces(WHITE_ROOK) | position.get_pieces(BLACK_ROOK) |
+                                    position.get_pieces(WHITE_QUEEN) | position.get_pieces(BLACK_QUEEN);
+
+    Color original_side = position.side;
+    position.side = ~position.side;
 
     while (true) {
-        SQUARE_TYPE cheapest_attacker_square = get_cheapest_attacker(position, target_square);
-        if (cheapest_attacker_square == 0) break; // No attacking piece was found
 
-        position.side ^= 1;
+        // Removed used pieces from attackers
+        attackers &= occupancy;
 
-        PIECE_TYPE cheapest_attacker = position.board[cheapest_attacker_square];
+        BITBOARD our_attackers = attackers & position.get_our_pieces();
+        if (!our_attackers) break; // No attacking piece was found
+
+        PieceType cheapest_attacker = KING;
+        for (int piece = PAWN; piece < static_cast<int>(KING); piece++) {
+            if (our_attackers & position.get_pieces(static_cast<PieceType>(piece), position.side)) {
+                cheapest_attacker = static_cast<PieceType>(piece);
+                break;
+            }
+        }
+
+        position.side = ~position.side;
 
         exchange_value = -exchange_value - 1 - SEE_values[cheapest_attacker];
         if (exchange_value >= 0) {
+            if (cheapest_attacker == KING && (attackers & position.get_our_pieces())) position.side = ~position.side;
             break;
         }
 
-        position.board[cheapest_attacker_square] = EMPTY;
-        removed_pieces.emplace_back(cheapest_attacker_square, cheapest_attacker);
+        occupancy ^= from_square(lsb(our_attackers & position.get_pieces(cheapest_attacker, ~position.side)));
+
+        if (cheapest_attacker == PAWN || cheapest_attacker == BISHOP || cheapest_attacker == QUEEN) {
+            attackers |= get_bishop_attacks(target_square, occupancy) & diagonal_attackers;
+        }
+        if (cheapest_attacker == ROOK || cheapest_attacker == QUEEN) {
+            attackers |= get_rook_attacks(target_square, occupancy) & horizontal_attackers;
+        }
     }
 
-    for (auto removed : removed_pieces) {
-        position.board[removed.first] = removed.second;
-    }
 
-    bool exchange_flag = position.side == original_side;
+    bool exchange_flag = position.side != original_side;
 
     position.side = original_side;
 

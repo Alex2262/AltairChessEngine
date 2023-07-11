@@ -1,57 +1,76 @@
 //
-// Created by Alex Tian on 9/29/2022.
+// Created by Alexander Tian on 6/26/23.
 //
 
-#ifndef ANTARESCHESSENGINE_EVALUATION_H
-#define ANTARESCHESSENGINE_EVALUATION_H
+#ifndef ALTAIRCHESSENGINE_EVALUATION_H
+#define ALTAIRCHESSENGINE_EVALUATION_H
 
-#include <iostream>
-#include "constants.h"
 #include "position.h"
-#include "search.h"
-#include "cmath"
+#include "constants.h"
+#include "types.h"
 
-struct Score_Struct {
-    SCORE_TYPE mid;
-    SCORE_TYPE end;
+struct EvaluationInformation {
+    int game_phase = 0;
+
+    int passed_pawn_count[2]{};
+
+    int piece_counts[2][6]{};
+
+    int total_king_ring_attacks[2]{};
+
+    Square king_squares[2]{};
+
+    BITBOARD pawns[2]{};
+    BITBOARD pieces[2]{};
+    BITBOARD pawn_attacks[2]{};
 };
 
-inline SCORE_TYPE get_manhattan_distance(SQUARE_TYPE square_1, SQUARE_TYPE square_2) {
-    SQUARE_TYPE row_1 = 8 - square_1 / 8, col_1 = square_1 % 8;
-    SQUARE_TYPE row_2 = 8 - square_2 / 8, col_2 = square_2 % 8;
+void initialize_evaluation_information(Position& position, EvaluationInformation& evaluation_information);
 
-    return abs(row_1 - row_2) + abs(col_1 - col_2);
-}
+Square get_white_relative_square(Square square, Color color);
+Square get_black_relative_square(Square square, Color color);
 
 
-inline SCORE_TYPE get_chebyshev_distance(SQUARE_TYPE square_1, SQUARE_TYPE square_2) {
-    SQUARE_TYPE row_1 = 8 - square_1 / 8, col_1 = square_1 % 8;
-    SQUARE_TYPE row_2 = 8 - square_2 / 8, col_2 = square_2 % 8;
+SCORE_TYPE evaluate_king_pawn(File file, Color color, EvaluationInformation& evaluation_information);
 
-    return std::max(abs(row_1 - row_2), abs(col_1 - col_2));
-}
+SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color, int& game_phase);
+SCORE_TYPE evaluate_pieces(Position& position, int& game_phase);
 
+double evaluate_drawishness(Position& position, EvaluationInformation& evaluation_information);
 
-void evaluate_king_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE file, bool is_white);
-void evaluate_pawn(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white);
-void evaluate_knight(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white);
-void evaluate_bishop(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white);
-void evaluate_rook(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white);
-void evaluate_queen(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white);
-void evaluate_king(const Position& position, Score_Struct& scores, SQUARE_TYPE pos, bool is_white);
-
-double evaluate_drawishness(const int white_piece_amounts[6], const int black_piece_amounts[6],
-                            SCORE_TYPE white_material, SCORE_TYPE black_material, bool opp_colored_bishops);
 SCORE_TYPE evaluate(Position& position);
 
-SCORE_TYPE score_move(const Thread_State& thread_state, Position& position, MOVE_TYPE move, MOVE_TYPE tt_move, MOVE_TYPE last_move_one, MOVE_TYPE last_move_two);
-SCORE_TYPE score_capture(const Thread_State& thread_state, Position& position, MOVE_TYPE move, MOVE_TYPE tt_move);
 
-void get_move_scores(const Thread_State& thread_state, Position& position, std::vector<Move_Struct>& moves,
-                     MOVE_TYPE tt_move, MOVE_TYPE last_move_one, MOVE_TYPE last_move_two);
-void get_capture_scores(const Thread_State& thread_state, Position& position, std::vector<Move_Struct>& moves,
-                        MOVE_TYPE tt_move);
-void sort_next_move(std::vector<Move_Struct>& moves, int current_count);
+constexpr SCORE_TYPE S(int mg, int eg) {
+    return static_cast<SCORE_TYPE>(static_cast<unsigned int>(eg) << 16) + mg;
+}
+
+inline int eg_score(SCORE_TYPE s) {
+    const auto eg = static_cast<uint16_t>(static_cast<uint32_t>(s + 0x8000) >> 16);
+
+    int16_t v;
+    std::memcpy(&v, &eg, sizeof(eg));
+
+    return static_cast<int>(v);
+}
+
+inline int mg_score(SCORE_TYPE s) {
+    const auto mg = static_cast<uint16_t>(s);
+
+    int16_t v;
+    std::memcpy(&v, &mg, sizeof(mg));
+
+    return static_cast<int>(v);
+}
+
+inline int get_manhattan_distance(Square square_1, Square square_2) {
+    return abs(static_cast<int>(rank_of(square_1)) - static_cast<int>(rank_of(square_2))) +
+           abs(static_cast<int>(file_of(square_1)) - static_cast<int>(file_of(square_2)));
+}
+
+inline bool same_color (Square square_1, Square square_2) {
+    return (( 9 * (square_1 ^ square_2)) & 8) == 0;
+}
 
 template<int n>
 struct KingRing {
@@ -79,4 +98,4 @@ struct KingRing {
 
 constexpr KingRing king_ring_zone = KingRing<2>();
 
-#endif //ANTARESCHESSENGINE_EVALUATION_H
+#endif //ALTAIRCHESSENGINE_EVALUATION_H

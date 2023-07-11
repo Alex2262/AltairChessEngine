@@ -1,105 +1,68 @@
 
-#include <iostream>
+#include "position.h"
 #include "move.h"
 
+bool Move::is_capture(const Position& position) const {
+    return position.board[target()] < EMPTY;
+}
 
-std::string get_uci_from_move(const Position& position, MOVE_TYPE move) {
+std::string Move::get_uci(const Position& position) const {
 
     std::string uci_move;
 
-    SQUARE_TYPE origin_square = MAILBOX_TO_STANDARD[get_origin_square(move)];
-    SQUARE_TYPE target_square = MAILBOX_TO_STANDARD[get_target_square(move)];
+    Square origin_square = origin();
+    Square target_square = target();
 
-    uint16_t move_type = get_move_type(move);
+    MoveType move_type = type();
 
     if (move_type == MOVE_TYPE_CASTLE && position.fischer_random_chess) {
-        if (target_square == MAILBOX_TO_STANDARD[C1] || target_square == MAILBOX_TO_STANDARD[C8]) {
-            target_square = MAILBOX_TO_STANDARD[position.starting_rook_pos[position.side][1]];
-        } else {
-            target_square = MAILBOX_TO_STANDARD[position.starting_rook_pos[position.side][0]];
-        }
+        if (target_square == b1) target_square = a1;
+        else if (target_square == b8) target_square = a8;
+        else if (target_square == g1) target_square = h1;
+        else if (target_square == g8) target_square = h8;
     }
 
     uci_move += char(origin_square % 8 + 'a');
-    uci_move += char((8 - origin_square / 8) + '0');
+    uci_move += char(origin_square / 8 + '1');
 
     uci_move += char(target_square % 8 + 'a');
-    uci_move += char((8 - target_square / 8) + '0');
+    uci_move += char(target_square / 8 + '1');
 
     if (move_type == MOVE_TYPE_PROMOTION) {
-        PIECE_TYPE promotion_piece = get_promotion_piece(move);
-        if (promotion_piece % BLACK_PAWN == WHITE_QUEEN) uci_move += 'q';
-        else if (promotion_piece % BLACK_PAWN == WHITE_ROOK) uci_move += 'r';
-        else if (promotion_piece % BLACK_PAWN == WHITE_BISHOP) uci_move += 'b';
-        else if (promotion_piece % BLACK_PAWN == WHITE_KNIGHT) uci_move += 'n';
+        PromotionType promotion_type = this->promotion_type();
+        if (promotion_type == PROMOTION_QUEEN) uci_move += 'q';
+        else if (promotion_type == PROMOTION_ROOK) uci_move += 'r';
+        else if (promotion_type == PROMOTION_BISHOP) uci_move += 'b';
+        else if (promotion_type == PROMOTION_KNIGHT) uci_move += 'n';
     }
 
     return uci_move;
 }
 
 
-MOVE_TYPE get_move_from_uci(const Position& position, std::string uci) {
+Move::Move(const Position& position, std::string uci) {
+    MoveType move_type = MOVE_TYPE_NORMAL;
+    PromotionType promotion_type;
 
-    PIECE_TYPE promotion_piece = 0;
     if (uci.length() == 5) {
-
-        if (uci[4] == 'q') promotion_piece = 4;
-        else if (uci[4] == 'r') promotion_piece = 3;
-        else if (uci[4] == 'b') promotion_piece = 2;
-        else if (uci[4] == 'n') promotion_piece = 1;
-
-        promotion_piece += position.side * BLACK_PAWN;
-
+        move_type = MOVE_TYPE_PROMOTION;
+        if (uci[4] == 'q') promotion_type = PROMOTION_QUEEN;
+        else if (uci[4] == 'r') promotion_type = PROMOTION_ROOK;
+        else if (uci[4] == 'b') promotion_type = PROMOTION_BISHOP;
+        else if (uci[4] == 'n') promotion_type = PROMOTION_KNIGHT;
     }
 
-    SQUARE_TYPE origin_square = STANDARD_TO_MAILBOX[(8 - (uci[1] - '0')) * 8 + (uci[0] - 'a')];
-    SQUARE_TYPE target_square = STANDARD_TO_MAILBOX[(8 - (uci[3] - '0')) * 8 + (uci[2] - 'a')];
+    auto origin_square = static_cast<Square>((uci[1] - '1') * 8 + (uci[0] - 'a'));
+    auto target_square = static_cast<Square>((uci[3] - '1') * 8 + (uci[2] - 'a'));
 
-    PIECE_TYPE selected = position.board[origin_square];
-    PIECE_TYPE occupied = position.board[target_square];
+    auto selected = static_cast<PieceType>(position.board[origin_square] % COLOR_OFFSET);
 
-    bool castle_move = false;
-    if (position.fischer_random_chess) {
-        if (!position.side) {
-            if (selected == WHITE_KING && occupied == WHITE_ROOK) {
-                castle_move = true;
-                if (target_square == position.starting_rook_pos[WHITE_COLOR][0]) {
-                    target_square = G1;
-                } else if (target_square == position.starting_rook_pos[WHITE_COLOR][1]) {
-                    target_square = C1;
-                }
+    if (selected == PAWN && target_square == position.ep_square) move_type = MOVE_TYPE_EP;
+    else if (selected == KING && (abs(static_cast<int>(target_square - origin_square)) == 2))
+        move_type = MOVE_TYPE_CASTLE;
 
-                occupied = EMPTY;
-            }
-        } else {
-            if (selected == BLACK_KING && occupied == BLACK_ROOK) {
-                castle_move = true;
-                if (target_square == position.starting_rook_pos[BLACK_COLOR][0]) {
-                    target_square = G8;
-                } else if (target_square == position.starting_rook_pos[BLACK_COLOR][1]) {
-                    target_square = C8;
-                }
+    move = (move_type << 12) | (origin_square << 6) | target_square;
+    if (move_type == MOVE_TYPE_PROMOTION) move |= promotion_type << 14;
 
-                occupied = EMPTY;
-            }
-        }
-    }
-
-    uint16_t move_type = 0;
-
-    if (selected % BLACK_PAWN == WHITE_PAWN) {
-        if ((21 <= target_square && target_square <= 28) ||
-            (91 <= target_square && target_square <= 98)) move_type = 3;
-        else if (target_square == position.ep_square) move_type = 1;
-    }
-
-    else if (selected % BLACK_PAWN == WHITE_KING) {
-        if (castle_move || abs(target_square - origin_square) == 2) move_type = 2;
-    }
-
-    bool is_capture = occupied < EMPTY;
-    MOVE_TYPE move = encode_move(origin_square, target_square, selected, occupied,
-                                 move_type, promotion_piece, is_capture);
-
-    return move;
 }
+

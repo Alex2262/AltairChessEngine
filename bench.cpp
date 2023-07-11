@@ -74,8 +74,6 @@ void run_bench(Engine& engine, PLY_TYPE depth) {
 
     // Set variables
     engine.max_depth = depth;
-    engine.soft_time_limit = TIME_INF;
-    engine.hard_time_limit = TIME_INF;
 
     // Calculate the starting time
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -94,6 +92,9 @@ void run_bench(Engine& engine, PLY_TYPE depth) {
 
         engine.new_game();
         position.set_fen(fen);
+
+        engine.soft_time_limit = TIME_INF;
+        engine.hard_time_limit = TIME_INF;
 
         lazy_smp_search(engine);
         total_nodes += engine.node_count;
