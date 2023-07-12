@@ -63,11 +63,18 @@ SCORE_TYPE evaluate_king_pawn(File file, Color color, EvaluationInformation& eva
 }
 
 SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation& evaluation_information) {
+
+    Direction up = color == WHITE ? NORTH : SOUTH;
+
     SCORE_TYPE score = 0;
     BITBOARD our_pawns = evaluation_information.pawns[color];
     BITBOARD opp_pawns = evaluation_information.pawns[~color];
     BITBOARD phalanx_pawns = our_pawns & shift<WEST>(our_pawns);
     BITBOARD pawn_threats = evaluation_information.pawn_attacks[color] & evaluation_information.pieces[~color];
+
+    // Doubled Pawns
+    BITBOARD doubled_pawns = our_pawns & shift<NORTH>(our_pawns);
+    score += static_cast<SCORE_TYPE>(popcount(doubled_pawns)) * DOUBLED_PAWN_PENALTY;
 
     // KING RING ATTACKS
     BITBOARD king_ring_attacks_1 = evaluation_information.pawn_attacks[color] &
@@ -95,7 +102,6 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
         // evaluation_information.game_phase += GAME_PHASE_SCORES[PAWN];
         evaluation_information.piece_counts[color][PAWN]++;
 
-        Direction up = color == WHITE ? NORTH : SOUTH;
         // PASSED PAWN
         if (!(passed_pawn_masks[color][square] & opp_pawns)) {
 			auto protectors = popcount(evaluation_information.pawns[color] & get_piece_attacks(get_piece(PAWN, ~color), square, 0));
