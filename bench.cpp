@@ -6,57 +6,51 @@
 #include <chrono>
 #include "bench.h"
 
-constexpr std::array fens { // fens stolen from polaris, which were from alexandria, and ultimately from bit-genie
-        "r3k2r/2pb1ppp/2pp1q2/p7/1nP1B3/1P2P3/P2N1PPP/R2QK2R w KQkq a6 0 14",
-        "4rrk1/2p1b1p1/p1p3q1/4p3/2P2n1p/1P1NR2P/PB3PP1/3R1QK1 b - - 2 24",
-        "r3qbrk/6p1/2b2pPp/p3pP1Q/PpPpP2P/3P1B2/2PB3K/R5R1 w - - 16 42",
-        "6k1/1R3p2/6p1/2Bp3p/3P2q1/P7/1P2rQ1K/5R2 b - - 4 44",
-        "8/8/1p2k1p1/3p3p/1p1P1P1P/1P2PK2/8/8 w - - 3 54",
-        "7r/2p3k1/1p1p1qp1/1P1Bp3/p1P2r1P/P7/4R3/Q4RK1 w - - 0 36",
-        "r1bq1rk1/pp2b1pp/n1pp1n2/3P1p2/2P1p3/2N1P2N/PP2BPPP/R1BQ1RK1 b - - 2 10",
-        "3r3k/2r4p/1p1b3q/p4P2/P2Pp3/1B2P3/3BQ1RP/6K1 w - - 3 87",
-        "2r4r/1p4k1/1Pnp4/3Qb1pq/8/4BpPp/5P2/2RR1BK1 w - - 0 42",
-        "4q1bk/6b1/7p/p1p4p/PNPpP2P/KN4P1/3Q4/4R3 b - - 0 37",
-        "2q3r1/1r2pk2/pp3pp1/2pP3p/P1Pb1BbP/1P4Q1/R3NPP1/4R1K1 w - - 2 34",
-        "1r2r2k/1b4q1/pp5p/2pPp1p1/P3Pn2/1P1B1Q1P/2R3P1/4BR1K b - - 1 37",
-        "r3kbbr/pp1n1p1P/3ppnp1/q5N1/1P1pP3/P1N1B3/2P1QP2/R3KB1R b KQkq b3 0 17",
-        "8/6pk/2b1Rp2/3r4/1R1B2PP/P5K1/8/2r5 b - - 16 42",
-        "1r4k1/4ppb1/2n1b1qp/pB4p1/1n1BP1P1/7P/2PNQPK1/3RN3 w - - 8 29",
-        "8/p2B4/PkP5/4p1pK/4Pb1p/5P2/8/8 w - - 29 68",
-        "3r4/ppq1ppkp/4bnp1/2pN4/2P1P3/1P4P1/PQ3PBP/R4K2 b - - 2 20",
-        "5rr1/4n2k/4q2P/P1P2n2/3B1p2/4pP2/2N1P3/1RR1K2Q w - - 1 49",
-        "1r5k/2pq2p1/3p3p/p1pP4/4QP2/PP1R3P/6PK/8 w - - 1 51",
-        "q5k1/5ppp/1r3bn1/1B6/P1N2P2/BQ2P1P1/5K1P/8 b - - 2 34",
-        "r1b2k1r/5n2/p4q2/1ppn1Pp1/3pp1p1/NP2P3/P1PPBK2/1RQN2R1 w - - 0 22",
-        "r1bqk2r/pppp1ppp/5n2/4b3/4P3/P1N5/1PP2PPP/R1BQKB1R w KQkq - 0 5",
-        "r1bqr1k1/pp1p1ppp/2p5/8/3N1Q2/P2BB3/1PP2PPP/R3K2n b Q - 1 12",
-        "r1bq2k1/p4r1p/1pp2pp1/3p4/1P1B3Q/P2B1N2/2P3PP/4R1K1 b - - 2 19",
-        "r4qk1/6r1/1p4p1/2ppBbN1/1p5Q/P7/2P3PP/5RK1 w - - 2 25",
-        "r7/6k1/1p6/2pp1p2/7Q/8/p1P2K1P/8 w - - 0 32",
-        "r3k2r/ppp1pp1p/2nqb1pn/3p4/4P3/2PP4/PP1NBPPP/R2QK1NR w KQkq - 1 5",
-        "3r1rk1/1pp1pn1p/p1n1q1p1/3p4/Q3P3/2P5/PP1NBPPP/4RRK1 w - - 0 12",
-        "5rk1/1pp1pn1p/p3Brp1/8/1n6/5N2/PP3PPP/2R2RK1 w - - 2 20",
-        "8/1p2pk1p/p1p1r1p1/3n4/8/5R2/PP3PPP/4R1K1 b - - 3 27",
-        "8/4pk2/1p1r2p1/p1p4p/Pn5P/3R4/1P3PP1/4RK2 w - - 1 33",
-        "8/5k2/1pnrp1p1/p1p4p/P6P/4R1PK/1P3P2/4R3 b - - 1 38",
-        "8/8/1p1kp1p1/p1pr1n1p/P6P/1R4P1/1P3PK1/1R6 b - - 15 45",
-        "8/8/1p1k2p1/p1prp2p/P2n3P/6P1/1P1R1PK1/4R3 b - - 5 49",
-        "8/8/1p4p1/p1p2k1p/P2npP1P/4K1P1/1P6/3R4 w - - 6 54",
-        "8/8/1p4p1/p1p2k1p/P2n1P1P/4K1P1/1P6/6R1 b - - 6 59",
-        "8/5k2/1p4p1/p1pK3p/P2n1P1P/6P1/1P6/4R3 b - - 14 63",
-        "8/1R6/1p1K1kp1/p6p/P1p2P1P/6P1/1Pn5/8 w - - 0 67",
-        "1rb1rn1k/p3q1bp/2p3p1/2p1p3/2P1P2N/PP1RQNP1/1B3P2/4R1K1 b - - 4 23",
-        "4rrk1/pp1n1pp1/q5p1/P1pP4/2n3P1/7P/1P3PB1/R1BQ1RK1 w - - 3 22",
-        "r2qr1k1/pb1nbppp/1pn1p3/2ppP3/3P4/2PB1NN1/PP3PPP/R1BQR1K1 w - - 4 12",
-        "2r2k2/8/4P1R1/1p6/8/P4K1N/7b/2B5 b - - 0 55",
-        "6k1/5pp1/8/2bKP2P/2P5/p4PNb/B7/8 b - - 1 44",
-        "2rqr1k1/1p3p1p/p2p2p1/P1nPb3/2B1P3/5P2/1PQ2NPP/R1R4K w - - 3 25",
-        "r1b2rk1/p1q1ppbp/6p1/2Q5/8/4BP2/PPP3PP/2KR1B1R b - - 2 14",
-        "6r1/5k2/p1b1r2p/1pB1p1p1/1Pp3PP/2P1R1K1/2P2P2/3R4 w - - 1 36",
-        "rnbqkb1r/pppppppp/5n2/8/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2",
-        "2rr2k1/1p4bp/p1q1p1p1/4Pp1n/2PB4/1PN3P1/P3Q2P/2RR2K1 w - f6 0 20",
-        "3br1k1/p1pn3p/1p3n2/5pNq/2P1p3/1PN3PP/P2Q1PB1/4R1K1 w - - 0 23",
-        "2r2b2/5p2/5k2/p1r1pP2/P2pB3/1P3P2/K1P3R1/7R w - - 23 93"
+// A list of many fens that include famous positions from notable games, some of my personal games,
+// and other chess studies.
+constexpr std::array fens {
+
+        // Positions from my own games
+        "r1r3k1/pb1nbppp/4p3/1p1pP2P/3p1B2/3P2P1/qPP1QPBN/2R1R1K1 w - - 0 18",
+        "r1b2rk1/1pqnbppp/p2ppn2/8/3NPP2/2NBBQ2/PPP3PP/3R1RK1 b - - 3 11",
+        "5rk1/5ppp/p3p3/1pqp4/2n2P2/P1NB1N2/1PP3PP/2BR3K b - - 6 20",
+        "r1b3k1/pp2b1pp/1q2prn1/2p4Q/2PpBP2/1N1P2PP/PP6/R1B1R1K1 w - - 5 18", // Nd2 was best, I played f5
+        "r1br2k1/pp3pbp/1qn1p1pn/3pP3/3P2P1/2N2N1P/PP3PB1/R1BQR1K1 w - - 0 14",
+        "3rb3/p1R4p/1p1qPkp1/3B1p2/3P4/1P5P/P2Q1P2/2R3K1 w - - 2 34", // Mate in 8
+        "r1bq1rk1/pp1n1pp1/2pb1n1p/6B1/2BP4/2NQ1N1P/PP3PP1/R4RK1 w - - 0 14", // Bxh6 sacrifice
+        "r2q1rk1/1b3p2/p1p2p2/1p3Np1/3P4/1Q5P/PP3PP1/R4RK1 w - - 8 27",
+        "r1br2k1/ppq1bppp/4p3/4P3/1nP5/P4N2/4QPPP/R1B1RNK1 b - - 0 16",
+        "r1b3k1/ppq2ppp/4p3/4P3/2P5/b4N2/4QPPP/3R1NK1 w - - 2 21",
+        "r2q1rk1/pb2bppp/2n2n2/2pp4/8/1PN1PN2/PBB2PPP/R2Q1RK1 b - - 2 12",
+        "r2q1rk1/pb3ppp/8/2Pp4/8/1P2PN2/2Q2PPP/Rn3RK1 b - - 0 18",
+        "r6k/1p1bb1pq/p1nppr2/5p2/1PPN1P2/P3B2P/2Q1B1P1/3R1RK1 w - - 4 23",
+        "r4rk1/pb3ppp/8/2Pq4/3N4/1P2P3/2Q2PPP/Rn3RK1 w - - 1 20",
+        "r4rk1/3qbppp/b1n1p3/pp1pP3/3P1PP1/PP3N2/1B2NQ1P/2R1R1K1 b - - 1 21", // a4, b4 then Nxb4
+        "2rn1rk1/bp1nq1p1/p3p2p/2ppP2N/3P4/4BN2/PP1Q1PPP/2R1R1K1 w - - 0 19", // Nxg7
+        "1r2k2r/2qpbppp/p1b1pn2/8/3QP1P1/4BP2/NPP4P/2KR1B1R b k g3 0 15", // Nxg4
+        "1r4k1/5ppp/pB1pp3/8/4b1P1/2Q5/q6P/2KR3R b - - 5 28", // h6
+        "3r3k/2p1qp1p/1pnr1np1/p3p3/4P3/2P2NPP/PP2QP2/R2R1NK1 b - - 6 24", // Nxe4
+        "4r1k1/pp3ppp/3q1n2/3pn3/3Q1N2/1NP4P/PP3PP1/R5K1 b - - 2 19",
+        "r2nr1k1/1pp1qppp/p2pbn2/4p1N1/PPBPP3/1QP1P3/3N2PP/R4RK1 b - - 0 14",
+        "rn2k2r/1p2bppp/1q2p3/pB1pP1B1/P2P4/5b2/1PP3PP/R2Q1RK1 b kq - 1 13",
+
+        // Studies
+        "r4bk1/pp4p1/2p5/4P1p1/4B3/2P1P2P/PP3K2/R7 w - - 0 1", // Bg6
+        "r4rk1/1pq1bppp/p1bppn2/8/P3PP2/2NBB3/1PPQ2PP/R4R1K b - - 0 1", // b5
+        "1B6/8/7P/4p3/3b3k/8/8/2K5 w - - 0 1", // Ba7
+
+        // GM Games
+        "3N4/5pk1/1p1Qpnpp/p1n5/5P2/3qP1PP/6BK/8 w - - 2 38", // Nxe6, Carlsen v Karjakin, 2016 WCC
+        "r3k2r/1b1nqp1p/p1npp1p1/1p6/3NPP2/P1N1Q3/1PP1B2P/1K1R2R1 w kq - 0 1",
+        "r1b2r1k/4qp1p/p2ppb1Q/4nP2/1p1NP3/2N5/PPP4P/2KR1BR1 w - - 4 18", // Nc6, Kholmov v Bronstein, Kiev 1964
+        "8/pR4pk/1b2p3/2p3p1/N1p5/7P/PP1r2P1/6K1 b - - 2 31", // Rxb2, Sanz - Endgame Sacrifice
+        "rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - 6 11", // Qxh7, Lasker v Thomas - King Hunt
+        "r4rk1/pp2pp1p/3p2p1/6B1/3Q3P/1P6/1RPKnPP1/q6R w - - 0 1", // Qh8+, Bura -  Desperado
+        "8/7p/5kp1/4p3/p3rPRP/3K2P1/8/8 b - - 1 43", // Kg7, Flohr v Geller, Moscow 1949
+        "r4k1r/1b2bPR1/p4n2/3p4/4P2P/1q2B2B/PpP5/1K4R1 w - - 0 26", // Bh6, Vladimirov v Epishin
+        "5rk1/pp4pp/4p3/2R3Q1/3n4/2q4r/P1P2PPP/5RK1 b - - 1 23", // Qg3, Levitsky v Marshall - Gold Coin Game
+        "8/8/4kpp1/3p1b2/p6P/2B5/6P1/6K1 b - - 0 47", // Bh3, Topalov v Shirov, 1998
+
 };
 
 // A function for a 'bench' metric that calculates nps and nodes over
