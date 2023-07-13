@@ -121,6 +121,15 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
                 score += PASSED_PAWN_BLOCKERS_2[get_piece_type(position.board[blocker_square_2], ~color)][rank_of(
                         get_white_relative_square(blocker_square_2, color))];
             }
+
+            // Square of the Pawn
+            auto promotion_square = get_black_relative_square(static_cast<Square>(square % 8), color);
+            int our_distance = get_chebyshev_distance(square, promotion_square);
+            int king_distance = get_chebyshev_distance(evaluation_information.king_squares[~color], promotion_square);
+
+            if (std::min(our_distance, 5) < king_distance - (position.side != color)) {
+                score += SQUARE_OF_THE_PAWN;
+            }
         }
 
         // ISOLATED PAWN

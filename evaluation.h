@@ -68,6 +68,11 @@ inline int get_manhattan_distance(Square square_1, Square square_2) {
            abs(static_cast<int>(file_of(square_1)) - static_cast<int>(file_of(square_2)));
 }
 
+inline int get_chebyshev_distance(Square square_1, Square square_2) {
+    return std::max(abs(static_cast<int>(rank_of(square_1)) - static_cast<int>(rank_of(square_2))),
+                    abs(static_cast<int>(file_of(square_1)) - static_cast<int>(file_of(square_2))));
+}
+
 inline bool same_color (Square square_1, Square square_2) {
     return (( 9 * (square_1 ^ square_2)) & 8) == 0;
 }
