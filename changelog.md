@@ -4653,7 +4653,7 @@ SPRT: llr 0.823 (28.0%), lbound -2.94, ubound 2.94
 ```
 
 
-### 1.5.6
+### 1.5.6 (2.0.0)
 My idea for threats and supporting eval to be extended to all pieces
 
 
@@ -5531,7 +5531,7 @@ GAMES | N: 17792 W: 5130 L: 4884 D: 7778
 https://chess.swehosting.se/test/2372/
 ```
 
-### 3.2.7
+### 3.2.7 (4.0.0)
 Skip SEE in qsearch under certain conditions
 
 ```
@@ -5540,4 +5540,289 @@ SPRT  | 8.0+0.08s Threads=1 Hash=32MB
 LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
 GAMES | N: 20672 W: 5672 L: 5415 D: 9585
 https://chess.swehosting.se/test/2389/
+```
+
+## --- Bitboards Rewrite ---
+Altair is now rewritten using bitboards as the internal board representation with magic bitboards
+for generating sliding attacks. Altair now has the same search, but the evaluation has been completely removed for
+the purpose of rewriting it. 
+
+Starting off with a material only evaluation function, Altair is at around a 2050 Elo level.
+
+### 4.0.1
+PSTs (Piece Square Tables)
+
+```
+ELO   | 620.44 +- 870.23 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.96 (-2.94, 2.94) [0.00, 8.00]
+GAMES | N: 128 W: 124 L: 3 D: 1
+https://chess.swehosting.se/test/2031/
+```
+
+### 4.0.2
+Fixed SEE under a bitboards representation
+
+```
+ELO   | 36.13 +- 13.62 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.97 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 1496 W: 521 L: 366 D: 609
+https://chess.swehosting.se/test/2049/
+```
+
+### 4.0.3
+Passed Pawns Evaluation
+
+```
+ELO   | 19.20 +- 9.92 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 3152 W: 1138 L: 964 D: 1050
+https://chess.swehosting.se/test/2052/
+```
+
+### 4.0.4
+Blocker Evaluation
+
+```
+ELO   | 38.03 +- 14.23 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 1440 W: 526 L: 369 D: 545
+https://chess.swehosting.se/test/2054/
+```
+
+### 4.0.5
+Protected Passed Pawn Evaluation
+
+```
+ELO   | 3.74 +- 2.99 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.96 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 31480 W: 9719 L: 9380 D: 12381
+https://chess.swehosting.se/test/2060/
+```
+
+### 4.0.6
+Phalanx Pawn Evaluation
+
+```
+ELO   | 15.85 +- 8.67 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.96 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 3728 W: 1210 L: 1040 D: 1478
+https://chess.swehosting.se/test/2069/
+```
+
+### 4.0.7
+Isolated Pawn Evaluation
+
+```
+ELO   | 1.96 +- 3.32 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | -0.30 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 26560 W: 8471 L: 8321 D: 9768
+https://chess.swehosting.se/test/2096/
+```
+
+### 4.0.8
+Fix Extensions due to a bitboards bug
+
+```
+ELO   | 35.28 +- 17.09 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 3.07 (-2.94, 2.94) [-7.00, 0.00]
+GAMES | N: 1008 W: 367 L: 265 D: 376
+https://chess.swehosting.se/test/2101/
+```
+
+### 4.0.9
+Bishop Pair Evaluation
+
+```
+ELO   | 38.31 +- 14.41 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 1448 W: 543 L: 384 D: 521
+https://chess.swehosting.se/test/2117/
+```
+
+### 4.1.0
+Second Blockers Evaluation
+
+```
+ELO   | 3.38 +- 4.79 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 0.90 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 12016 W: 3632 L: 3515 D: 4869
+https://chess.swehosting.se/test/2119/
+```
+
+### 4.1.1
+Tempo Evaluation
+
+```
+ELO   | 14.27 +- 8.07 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 3.02 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 4288 W: 1380 L: 1204 D: 1704
+https://chess.swehosting.se/test/2123/
+```
+
+### 4.1.2
+Mobility Evaluation
+
+```
+ELO   | 77.00 +- 21.12 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.99 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 720 W: 316 L: 159 D: 245
+https://chess.swehosting.se/test/2143/
+```
+
+### 4.1.3
+Semi-open + Open file Evaluation
+
+```
+ELO   | 39.45 +- 14.59 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.98 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 1424 W: 540 L: 379 D: 505
+https://chess.swehosting.se/test/2147/
+```
+
+### 4.1.4
+Piece Threat Evaluation
+
+```
+ELO   | 43.11 +- 15.34 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 1280 W: 488 L: 330 D: 462
+https://chess.swehosting.se/test/2149/
+```
+
+### 4.1.5
+Speedup Refactors
+
+```
+ELO   | 22.86 +- 11.61 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [-5.00, 0.00]
+GAMES | N: 2024 W: 660 L: 527 D: 837
+https://chess.swehosting.se/test/2175/
+```
+
+### 4.1.6
+King Ring Attack Evaluation
+
+```
+ELO   | 24.79 +- 11.27 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 2288 W: 795 L: 632 D: 861
+https://chess.swehosting.se/test/2192/
+```
+
+### 4.1.7
+Total King Ring Attack Evaluation
+
+```
+ELO   | 11.52 +- 7.03 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 3.01 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 5400 W: 1647 L: 1468 D: 2285
+https://chess.swehosting.se/test/2193/
+```
+
+### 4.1.8
+@archishou Speedup Pull Request
+
+### 4.1.9
+King Pawn Shield Evaluation
+
+```
+ELO   | 24.71 +- 11.22 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.96 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 2296 W: 794 L: 631 D: 871
+https://chess.swehosting.se/test/2228/
+```
+
+### 4.2.0
+King Pawn Storm Evaluation (merged as it leads to interesting play-styles)
+
+```
+ELO   | 0.12 +- 6.70 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | -0.66 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 5840 W: 1655 L: 1653 D: 2532
+https://chess.swehosting.se/test/2393/
+```
+
+### 4.2.1
+King Tropism
+
+```
+ELO   | 4.44 +- 3.57 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 20640 W: 6001 L: 5737 D: 8902
+https://chess.swehosting.se/test/2394/
+```
+
+### 4.2.2
+Hand-tuned, original drawishness evaluation
+
+```
+ELO   | 11.71 +- 6.84 (95%)
+SPRT  | 40.0+0.40s Threads=1 Hash=128MB
+LLR   | 2.96 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 4748 W: 1220 L: 1060 D: 2468
+https://chess.swehosting.se/test/2443/
+```
+
+### 4.2.3
+Opposite Colored Bishops Evaluation
+
+```
+ELO   | 1.66 +- 5.75 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | -0.12 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 7328 W: 1937 L: 1902 D: 3489
+https://chess.swehosting.se/test/2462/
+```
+
+### 4.2.4
+Add -flto Compiler Flag
+
+```
+ELO   | 56.21 +- 16.66 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.99 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 904 W: 313 L: 168 D: 423
+https://chess.swehosting.se/test/2465/
+```
+
+### 4.2.5
+Doubled Pawns Evaluation
+
+```
+ELO   | 6.17 +- 4.63 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 11544 W: 3188 L: 2983 D: 5373
+https://chess.swehosting.se/test/2539/
+```
+
+### 4.2.6
+Square of the Pawn Rule Evaluation
+
+```
+ELO   | 1.95 +- 2.01 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | -0.05 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 61864 W: 16821 L: 16473 D: 28570
+https://chess.swehosting.se/test/2545/
 ```
