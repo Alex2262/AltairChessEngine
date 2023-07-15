@@ -373,7 +373,8 @@ double evaluate_drawishness(Position& position, EvaluationInformation& evaluatio
             if (less_material >= MIN_MINOR_PIECE_VALUE && more_material <= CANONICAL_PIECE_VALUES[PAWN] + MAX_MINOR_PIECE_VALUE) return 0.19;
 
             // Pawn + minor vs rook or Pawn + minor vs 2 minor pieces
-            if (less_material >= CANONICAL_PIECE_VALUES[PAWN] + MIN_MINOR_PIECE_VALUE && more_material <= 2 * MAX_MINOR_PIECE_VALUE) return 0.1;
+            if (less_material >= CANONICAL_PIECE_VALUES[PAWN] + MIN_MINOR_PIECE_VALUE && more_material <= 2 * MAX_MINOR_PIECE_VALUE &&
+                evaluation_information.piece_counts[less_material_side][PAWN] == 1) return 0.1;
 
             // Pawn + rook vs rook + minor
             if (less_material >= CANONICAL_PIECE_VALUES[PAWN] + CANONICAL_PIECE_VALUES[ROOK] &&
