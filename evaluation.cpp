@@ -23,6 +23,14 @@ void initialize_evaluation_information(Position& position, EvaluationInformation
 
     evaluation_information.pawn_attacks[WHITE] = get_pawn_bitboard_attacks(evaluation_information.pawns[WHITE], WHITE);
     evaluation_information.pawn_attacks[BLACK] = get_pawn_bitboard_attacks(evaluation_information.pawns[BLACK], BLACK);
+
+    for (int color = 0; color < 2; color++) {
+        for (int piece_type = 0; piece_type < 6; piece_type++) {
+            evaluation_information.piece_counts[color][piece_type] = static_cast<int>(popcount(
+                    position.get_pieces(static_cast<PieceType>(piece_type), static_cast<Color>(color))
+                    ));
+        }
+    }
 }
 
 Square get_white_relative_square(Square square, Color color) {
@@ -99,9 +107,6 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
 
         score += PIECE_SQUARE_TABLES[PAWN][black_relative_square];
 
-        // evaluation_information.game_phase += GAME_PHASE_SCORES[PAWN];
-        evaluation_information.piece_counts[color][PAWN]++;
-
         // PASSED PAWN
         if (!(passed_pawn_masks[color][square] & opp_pawns)) {
 			auto protectors = popcount(evaluation_information.pawns[color] & get_piece_attacks(get_piece(PAWN, ~color), square, 0));
@@ -169,7 +174,6 @@ SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation
         score += PIECE_SQUARE_TABLES[piece_type][get_black_relative_square(square, color)];
 
         evaluation_information.game_phase += GAME_PHASE_SCORES[piece_type];
-        evaluation_information.piece_counts[color][piece_type]++;
 
         BITBOARD piece_attacks = get_piece_attacks(get_piece(piece_type, color), square, position.all_pieces);
 
@@ -302,58 +306,6 @@ double evaluate_drawishness(Position& position, EvaluationInformation& evaluatio
     // There are pawns on the board
     if (evaluation_information.piece_counts[WHITE][PAWN] + evaluation_information.piece_counts[BLACK][PAWN] >= 1) {
 
-        // OCB endgames
-        bool opposite_colored_bishops = evaluation_information.piece_counts[WHITE][BISHOP] == 1 &&
-                                        evaluation_information.piece_counts[BLACK][BISHOP] == 1 &&
-                                        !same_color(static_cast<Square>(lsb(position.get_pieces(BISHOP, WHITE))),
-                                                    static_cast<Square>(lsb(position.get_pieces(BISHOP, BLACK))));
-
-        if (opposite_colored_bishops &&
-            evaluation_information.piece_counts[WHITE][KNIGHT] + evaluation_information.piece_counts[WHITE][ROOK] +
-            evaluation_information.piece_counts[BLACK][KNIGHT] + evaluation_information.piece_counts[BLACK][ROOK] == 0) {
-
-            Color more_pawns_side = (evaluation_information.piece_counts[WHITE][PAWN] >
-                                     evaluation_information.piece_counts[BLACK][PAWN]) ? WHITE : BLACK;
-
-            int pawn_difference = evaluation_information.piece_counts[more_pawns_side][PAWN] -
-                                  evaluation_information.piece_counts[~more_pawns_side][PAWN];
-
-            if (pawn_difference <= 1) return std::min(0.13 +
-                                                      evaluation_information.passed_pawn_count[more_pawns_side] *
-                                                      evaluation_information.passed_pawn_count[more_pawns_side] * 0.14, 1.0);
-
-            if (pawn_difference >= 3) return std::min(evaluation_information.passed_pawn_count[more_pawns_side] * 0.38
-                                                      + pawn_difference * 0.04, 1.0);
-
-            // Pawn Difference must equal two here
-            if (evaluation_information.passed_pawn_count[more_pawns_side] >= 3) return 1.0;
-
-            if (evaluation_information.piece_counts[more_pawns_side][PAWN] > 2)
-                return std::min(0.2 + evaluation_information.passed_pawn_count[more_pawns_side] *
-                                evaluation_information.passed_pawn_count[more_pawns_side] * 0.14, 1.0);
-
-            BITBOARD more_pawns_bitboard = position.get_pieces(PAWN, more_pawns_side);
-
-            // There are only two pawns here, and they must be passed
-            auto pawn_1 = static_cast<Square>(lsb(more_pawns_bitboard));
-            auto pawn_2 = static_cast<Square>(msb(more_pawns_bitboard));
-
-            int file_difference = abs(static_cast<int>(file_of(pawn_1)) - static_cast<int>(file_of(pawn_2))) - 1;
-            if (file_difference > 2) return 0.85;
-
-            if (file_difference == 1) return 0.1;
-            if (file_difference == 2) {
-                if (more_pawns_bitboard & (MASK_FILE[FILE_A] | MASK_FILE[FILE_H])) return 0.05;
-                if (more_pawns_bitboard & (MASK_FILE[FILE_B] | MASK_FILE[FILE_G])) return 0.15;
-                return 0.7;
-            }
-
-            // Pawns must be connected here
-            if (more_pawns_bitboard & (MASK_FILE[FILE_A] | MASK_FILE[FILE_H])) return 0.05;
-
-            return 0.15;
-        }
-
         // Single pawn imbalance drawish endgames
         if (evaluation_information.piece_counts[WHITE][PAWN] + evaluation_information.piece_counts[BLACK][PAWN] == 1) {
 
@@ -457,10 +409,72 @@ double evaluate_drawishness(Position& position, EvaluationInformation& evaluatio
 }
 
 
+double evaluate_opposite_colored_bishop_endgames(Position& position, EvaluationInformation& evaluation_information) {
+
+    bool opposite_colored_bishops = evaluation_information.piece_counts[WHITE][BISHOP] == 1 &&
+                                    evaluation_information.piece_counts[BLACK][BISHOP] == 1 &&
+                                    !same_color(static_cast<Square>(lsb(position.get_pieces(BISHOP, WHITE))),
+                                                static_cast<Square>(lsb(position.get_pieces(BISHOP, BLACK))));
+
+    if (opposite_colored_bishops &&
+        evaluation_information.piece_counts[WHITE][QUEEN] + evaluation_information.piece_counts[BLACK][QUEEN] +
+        evaluation_information.piece_counts[WHITE][KNIGHT] + evaluation_information.piece_counts[BLACK][KNIGHT] +
+        evaluation_information.piece_counts[WHITE][ROOK] + evaluation_information.piece_counts[BLACK][ROOK] == 0 &&
+        evaluation_information.piece_counts[WHITE][PAWN] + evaluation_information.piece_counts[BLACK][PAWN] >= 1) {
+
+        Color more_pawns_side = (evaluation_information.piece_counts[WHITE][PAWN] >
+                                 evaluation_information.piece_counts[BLACK][PAWN]) ? WHITE : BLACK;
+
+        int pawn_difference = evaluation_information.piece_counts[more_pawns_side][PAWN] -
+                              evaluation_information.piece_counts[~more_pawns_side][PAWN];
+
+        if (pawn_difference <= 1) return std::min(0.13 +
+                                                  evaluation_information.passed_pawn_count[more_pawns_side] *
+                                                  evaluation_information.passed_pawn_count[more_pawns_side] * 0.14, 1.0);
+
+        if (pawn_difference >= 3) return std::min(evaluation_information.passed_pawn_count[more_pawns_side] * 0.38
+                                                  + pawn_difference * 0.04, 1.0);
+
+        // Pawn Difference must equal two here
+        if (evaluation_information.passed_pawn_count[more_pawns_side] >= 3) return 1.0;
+
+        if (evaluation_information.piece_counts[more_pawns_side][PAWN] > 2)
+            return std::min(0.2 + evaluation_information.passed_pawn_count[more_pawns_side] *
+                                  evaluation_information.passed_pawn_count[more_pawns_side] * 0.14, 1.0);
+
+        BITBOARD more_pawns_bitboard = position.get_pieces(PAWN, more_pawns_side);
+
+        // There are only two pawns here, and they must be passed
+        auto pawn_1 = static_cast<Square>(lsb(more_pawns_bitboard));
+        auto pawn_2 = static_cast<Square>(msb(more_pawns_bitboard));
+
+        int file_difference = abs(static_cast<int>(file_of(pawn_1)) - static_cast<int>(file_of(pawn_2))) - 1;
+        if (file_difference > 2) return 0.85;
+
+        if (file_difference == 1) return 0.1;
+        if (file_difference == 2) {
+            if (more_pawns_bitboard & (MASK_FILE[FILE_A] | MASK_FILE[FILE_H])) return 0.05;
+            if (more_pawns_bitboard & (MASK_FILE[FILE_B] | MASK_FILE[FILE_G])) return 0.15;
+            return 0.7;
+        }
+
+        // Pawns must be connected here
+        if (more_pawns_bitboard & (MASK_FILE[FILE_A] | MASK_FILE[FILE_H])) return 0.05;
+
+        return 0.15;
+    }
+
+    return 1.0;
+}
+
+
 SCORE_TYPE evaluate(Position& position) {
 
     EvaluationInformation evaluation_information{};
     initialize_evaluation_information(position, evaluation_information);
+
+    double drawishness = evaluate_drawishness(position, evaluation_information);
+    if (drawishness == 0.0) return 0;
 
     SCORE_TYPE score = 0;
 
@@ -479,8 +493,9 @@ SCORE_TYPE evaluate(Position& position) {
     SCORE_TYPE evaluation = (mg_score(score) * evaluation_information.game_phase +
             eg_score(score) * (24 - evaluation_information.game_phase)) / 24;
 
-    double drawishness = evaluate_drawishness(position, evaluation_information);
-    evaluation = static_cast<SCORE_TYPE>(evaluation * drawishness);
+    double opposite_colored_bishop_scale_factor = evaluate_opposite_colored_bishop_endgames(position, evaluation_information);
+
+    evaluation = static_cast<SCORE_TYPE>(evaluation * drawishness * opposite_colored_bishop_scale_factor);
 
     return (position.side * -2 + 1) * evaluation;
 
