@@ -93,7 +93,8 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
     score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_1)) * KING_RING_ATTACKS[0][PAWN];
     score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_2)) * KING_RING_ATTACKS[1][PAWN];
 
-    evaluation_information.total_king_ring_attacks[color] += static_cast<int>(popcount(king_ring_attacks_1 | king_ring_attacks_2));
+    evaluation_information.total_king_ring_attacks[color] +=
+            static_cast<int>(2 * popcount(king_ring_attacks_1) + popcount(king_ring_attacks_2));
 
     // MAIN PAWN EVAL
     while (our_pawns) {
@@ -192,7 +193,8 @@ SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation
             score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_1)) * KING_RING_ATTACKS[0][piece_type];
             score += static_cast<SCORE_TYPE>(popcount(king_ring_attacks_2)) * KING_RING_ATTACKS[1][piece_type];
 
-            evaluation_information.total_king_ring_attacks[color] += static_cast<int>(popcount(king_ring_attacks_1 | king_ring_attacks_2));
+            evaluation_information.total_king_ring_attacks[color] +=
+                    static_cast<int>(2 * popcount(king_ring_attacks_1) + popcount(king_ring_attacks_2));
 
             // OPPONENT KING TROPISM
             int distance_to_opp_king = get_manhattan_distance(square, evaluation_information.king_squares[~color]);
@@ -480,8 +482,8 @@ SCORE_TYPE evaluate(Position& position) {
 
     score += evaluate_pieces(position, evaluation_information);
 
-    evaluation_information.total_king_ring_attacks[WHITE] = std::min<int>(evaluation_information.total_king_ring_attacks[WHITE], 29);
-    evaluation_information.total_king_ring_attacks[BLACK] = std::min<int>(evaluation_information.total_king_ring_attacks[BLACK], 29);
+    evaluation_information.total_king_ring_attacks[WHITE] = std::min<int>(evaluation_information.total_king_ring_attacks[WHITE], 39);
+    evaluation_information.total_king_ring_attacks[BLACK] = std::min<int>(evaluation_information.total_king_ring_attacks[BLACK], 39);
 
     score += TOTAL_KING_RING_ATTACKS[evaluation_information.total_king_ring_attacks[WHITE]];
     score -= TOTAL_KING_RING_ATTACKS[evaluation_information.total_king_ring_attacks[BLACK]];
