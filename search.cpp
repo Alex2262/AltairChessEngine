@@ -919,7 +919,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                     }
 
                     // Killer Heuristic for move ordering
-                    if (quiet) {
+                    if (quiet && !null_search) {
                         thread_state.killer_moves[1][thread_state.search_ply] = thread_state.killer_moves[0][thread_state.search_ply];
                         thread_state.killer_moves[0][thread_state.search_ply] = informative_move;
                     }
