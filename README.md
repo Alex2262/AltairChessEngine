@@ -14,11 +14,12 @@ Altair is a strong UCI-protocol chess engine that succeeds my old python engine 
 [CCRL Rating List](http://ccrl.chessdom.com/ccrl/) \
 [MCERL Rating list](https://www.chessengeria.com/mcerl)
 
-| Version | CCRL Blitz | CCRL Rapid | MCERL |
-|:-------:|:----------:|:----------:|:-----:|
-|  1.0.0  |    ----    |    2409    | ----  |
-|  2.0.0  |    2875    |    2808    | 2639  |
-|  3.0.0  |    3010    |    3004    | ----  |
+| Version | CCRL Blitz | CCRL 40/15 | CCRL FRC | MCERL |
+|:-------:|:----------:|:----------:|:--------:|:-----:|
+|  1.0.0  |    ----    |    2406    |   ----   | ----  |
+|  2.0.0  |    2879    |    2808    |   ----   | 2639  |
+|  3.0.0  |    3012    |    3002    |   ----   | ----  |
+|  4.0.0  |    ----    |    ----    |   3082   | ----  |
 
 
 ## Download
