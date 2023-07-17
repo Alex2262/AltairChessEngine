@@ -919,9 +919,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                     }
 
                     // Killer Heuristic for move ordering
-                    if (quiet && !null_search) {
-                        thread_state.killer_moves[1][thread_state.search_ply] = thread_state.killer_moves[0][thread_state.search_ply];
-                        thread_state.killer_moves[0][thread_state.search_ply] = informative_move;
+                    if (quiet) {
+                        if (!null_search || thread_state.killer_moves[0][thread_state.search_ply] == NO_INFORMATIVE_MOVE) {
+                            thread_state.killer_moves[1][thread_state.search_ply] = thread_state.killer_moves[0][thread_state.search_ply];
+                            thread_state.killer_moves[0][thread_state.search_ply] = informative_move;
+                        } else {
+                            thread_state.killer_moves[1][thread_state.search_ply] = informative_move;
+                        }
                     }
 
                     tt_hash_flag = HASH_FLAG_BETA;
