@@ -5,12 +5,19 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -flto")
 
+# Default build type
+if(NOT CMAKE_BUILD_TYPE)
+        set(CMAKE_BUILD_TYPE Release)
+endif()
+
+find_package(Threads REQUIRED)
+
 #set(GCC_COVERAGE_LINK_FLAGS "-static")
 
 #set(CMAKE_EXE_LINKER_FLAGS "${GCC_COVERAGE_LINK_FLAGS}")
 include_directories(.)
 
-add_executable(AltairChess
+add_executable(Altair
         constants.h
         main.cpp
         move.cpp
@@ -40,3 +47,5 @@ add_executable(AltairChess
         evaluation_constants.h
         move_ordering.cpp
         move_ordering.h)
+
+target_link_libraries(Altair Threads::Threads)
