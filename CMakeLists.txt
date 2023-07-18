@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -flto")
 
+find_package(Threads REQUIRED)
+
 #set(GCC_COVERAGE_LINK_FLAGS "-static")
 
 #set(CMAKE_EXE_LINKER_FLAGS "${GCC_COVERAGE_LINK_FLAGS}")
@@ -40,3 +42,5 @@ add_executable(AltairChess
         evaluation_constants.h
         move_ordering.cpp
         move_ordering.h)
+
+target_link_libraries(AltairChess Threads::Threads)
