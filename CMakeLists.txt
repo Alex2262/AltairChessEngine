@@ -12,7 +12,7 @@ find_package(Threads REQUIRED)
 #set(CMAKE_EXE_LINKER_FLAGS "${GCC_COVERAGE_LINK_FLAGS}")
 include_directories(.)
 
-add_executable(AltairChess
+add_executable(Altair
         constants.h
         main.cpp
         move.cpp
@@ -43,4 +43,4 @@ add_executable(AltairChess
         move_ordering.cpp
         move_ordering.h)
 
-target_link_libraries(AltairChess Threads::Threads)
+target_link_libraries(Altair Threads::Threads)
