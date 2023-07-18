@@ -5,6 +5,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -flto")
 
+# Default build type
+if(NOT CMAKE_BUILD_TYPE)
+        set(CMAKE_BUILD_TYPE Release)
+endif()
+
 find_package(Threads REQUIRED)
 
 #set(GCC_COVERAGE_LINK_FLAGS "-static")
