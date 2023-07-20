@@ -79,17 +79,8 @@ bool Position::is_attacked(Square square, Color color) const {
 }
 
 uint32_t Position::get_non_pawn_material_count() const {
-    uint32_t non_pawn_material_count = 0;
-
-    for (int piece = 1; piece < 5; piece++) {
-        BITBOARD white_pieces = get_pieces(static_cast<PieceType>(piece), WHITE);
-        BITBOARD black_pieces = get_pieces(static_cast<PieceType>(piece), BLACK);
-
-        non_pawn_material_count += popcount(white_pieces);
-        non_pawn_material_count += popcount(black_pieces);
-    }
-
-    return non_pawn_material_count;
+    return popcount(all_pieces ^
+        (get_pieces(PAWN, WHITE) | get_pieces(PAWN, BLACK) | get_pieces(KING, WHITE) | get_pieces(KING, BLACK)));
 }
 
 void Position::remove_piece(Piece piece, Square square) {
