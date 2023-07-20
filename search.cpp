@@ -160,7 +160,10 @@ void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score
         tt_entry.flag = tt_flag;
         tt_entry.score = score;
         tt_entry.evaluation = static_eval;
-        tt_entry.move = move;
+
+        if (tt_flag != HASH_FLAG_ALPHA || tt_entry.key != hash_key || tt_entry.move == NO_MOVE) {
+            tt_entry.move = move;
+        }
     }
 }
 
@@ -203,7 +206,10 @@ void Engine::record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE sco
         tt_entry.flag = tt_flag;
         tt_entry.score = score;
         tt_entry.evaluation = static_eval;
-        tt_entry.move = move;
+
+        if (tt_flag != HASH_FLAG_ALPHA || tt_entry.key != hash_key || tt_entry.move == NO_MOVE) {
+            tt_entry.move = move;
+        }
     }
 }
 
