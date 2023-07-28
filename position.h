@@ -59,6 +59,8 @@ public:
 
     bool fischer_random_chess = false;
 
+    PLY_TYPE full_move_counter = 0;
+
     BITBOARD all_pieces{};
     BITBOARD our_pieces{};
     BITBOARD opp_pieces{};

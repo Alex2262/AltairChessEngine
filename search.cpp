@@ -279,19 +279,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         // Detect repetitions and fifty move rule
         if (thread_state.fifty_move >= 100 || thread_state.detect_repetition()) return 3 - static_cast<int>(engine.node_count & 8);
-
-        // Mate Distance Pruning from CPW
-        SCORE_TYPE mating_value = MATE_SCORE - thread_state.search_ply;
-        if (mating_value < beta) {
-            beta = mating_value;
-            if (alpha >= mating_value) return mating_value;
-        }
-        mating_value = -MATE_SCORE + thread_state.search_ply;
-        if (mating_value > alpha) {
-            alpha = mating_value;
-            if (beta <= mating_value) return mating_value;
-        }
-
     }
 
     engine.selective_depth = std::max(thread_state.search_ply, engine.selective_depth);
@@ -374,7 +361,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     // Forward Pruning Methods
-    if (!pv_node && !in_check && !singular_search && abs(beta) < MATE_BOUND) {
+    if (!pv_node && !in_check && !singular_search) {
 
         // Reverse Futility Pruning
         // If the last move was very bad, such that the static evaluation - a margin is still greater
@@ -457,20 +444,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         bool quiet = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
 
         // Pruning
-        if (!pv_node && legal_moves >= 1 && abs(best_score) < MATE_BOUND) {
-            // Late Move Pruning
-            if (depth <= engine.tuning_parameters.LMP_depth &&
-                legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;
+        if (legal_moves >= 1) {
 
             // Quiet Late Move Pruning
-            if (quiet && legal_moves >= depth * depth / (1 + !improving + failing)) break;
+            if (quiet && legal_moves >= 2 + depth * depth / (1 + !improving + failing)) break;
 
             // Futility Pruning
             if (quiet && depth <= 5 && static_eval + (depth - !improving) * 100 + 50 <= alpha) break;
-
-            // History Pruning
-            if (depth <= engine.tuning_parameters.history_pruning_depth &&
-                move_history_score <= (depth + improving) * -engine.tuning_parameters.history_pruning_divisor) continue;
 
             // SEE Pruning
             if (depth <= (3 + 3 * !quiet) && legal_moves >= 3 &&
@@ -871,7 +851,7 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
 
     SCORE_TYPE alpha = -SCORE_INF;
     SCORE_TYPE beta = SCORE_INF;
-    SCORE_TYPE delta = std::max(6 + static_cast<int>(85 / (asp_depth - 2)), 10);
+    SCORE_TYPE delta = std::max(6 + static_cast<int>(85 / (asp_depth - 2)) + 15, 20);
 
     PLY_TYPE depth = thread_state.current_search_depth;
 
@@ -963,6 +943,8 @@ void iterative_search(Engine& engine, int thread_id) {
 
     SCORE_TYPE low_depth_score = 0;
 
+    double random_scaling;
+
     while (running_depth <= engine.max_depth) {
         thread_state.current_search_depth = running_depth;
         position.clear_state_stack();
@@ -974,7 +956,12 @@ void iterative_search(Engine& engine, int thread_id) {
         if (thread_id == 0 && !engine.stopped) best_move = engine.pv_table[0][0];
 
         if (thread_id == 0) {
-            if (running_depth <= 4) low_depth_score = previous_score;
+            if (running_depth <= 4) {
+                low_depth_score = previous_score;
+                random_scaling = (static_cast<double>(engine.node_count % 10) + 1.0) / 10.0 + 0.6;
+                random_scaling = (random_scaling - 1.0) * 2.8 + 1.0;
+                random_scaling = std::clamp(random_scaling, 0.2, 4.0);
+            }
 
             if (running_depth >= 8) {
                 auto best_node_percentage =
@@ -986,9 +973,9 @@ void iterative_search(Engine& engine, int thread_id) {
                 //std::cout << score_scaling_factor << std::endl;
 
                 double soft_scaling_factor = node_scaling_factor;
-                double hard_scaling_factor = (soft_scaling_factor - 1) * 1.5 + 1.0;
+                double hard_scaling_factor = (soft_scaling_factor - 1.0) * 1.5 + 1.0;
 
-                soft_scaling_factor = (soft_scaling_factor - 1) * 5 + 1.0;
+                soft_scaling_factor = (soft_scaling_factor - 1.0) * 7 + 1.0;
                 hard_scaling_factor = std::clamp(hard_scaling_factor, 0.3, 3.0);
                 soft_scaling_factor = std::clamp(soft_scaling_factor, 0.01, 8.0);
 
@@ -996,11 +983,11 @@ void iterative_search(Engine& engine, int thread_id) {
                                                                * soft_scaling_factor);
 
                 engine.hard_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit)
-                                                               * hard_scaling_factor);
+                                                               * hard_scaling_factor * random_scaling);
 
 
 
-                std::cout << "Soft Time Limit changed to: " << engine.soft_time_limit << std::endl;
+                //std::cout << "Soft Time Limit changed to: " << engine.soft_time_limit << std::endl;
             }
 
 

@@ -43,7 +43,7 @@ struct T {
 struct Tuning_Parameters {
 
     T tuning_parameter_array[N_TUNING_PARAMETERS] = {
-            T{"LMR_divisor_quiet", 150, 230, 160, 20},
+            T{"LMR_divisor_quiet", 150, 230, 140, 20},
             T{"LMR_base_quiet", 100, 170, 200, 20},
             T{"delta_margin", 100, 400, 175, 40},
             T{"RFP_depth", 5, 11, 11, 2},
@@ -59,8 +59,8 @@ struct Tuning_Parameters {
             T{"NMP_base", 1, 5, 3, 1},
             T{"NMP_depth_divisor", 2, 6, 4, 1},
             T{"NMP_eval_divisor", 100, 350, 297, 40},
-            T{"LMR_divisor_noisy", 180, 400, 230, 50},
-            T{"LMR_base_noisy", 0, 150, 165, 20}
+            T{"LMR_divisor_noisy", 180, 400, 200, 50},
+            T{"LMR_base_noisy", 0, 150, 175, 20}
     };
 
     int LMR_divisor_quiet = tuning_parameter_array[0].value;
@@ -163,7 +163,7 @@ public:
     PLY_TYPE max_q_depth = TOTAL_MAX_DEPTH - MAX_AB_DEPTH;
     PLY_TYPE min_depth = 1;
 
-    int move_overhead = 1066;
+    int move_overhead = 2262;
 
     uint64_t min_time = 100;
     uint64_t hard_time_limit = 60000;

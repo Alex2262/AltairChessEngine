@@ -35,6 +35,8 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
 
     Position& position = engine->thread_states[0].position;
 
+    if (position.full_move_counter <= 8) rate += 3 * (10 - position.full_move_counter);
+
     if (position.is_attacked(position.get_king_pos(position.side), position.side)) rate -= 3;
     if (last_move.is_capture(position)) rate -= 1.5;
 
@@ -65,13 +67,13 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
     else if (self_time > 0) time_amt = self_time / (rate + 6);
     else time_amt = static_cast<double>(engine->hard_time_limit);
 
-    engine->hard_time_limit = static_cast<uint64_t>(time_amt * 2.22);
+    engine->hard_time_limit = static_cast<uint64_t>(time_amt * 3.5);
     engine->soft_time_limit = static_cast<uint64_t>(time_amt * 0.66);
 
-    if (engine->hard_time_limit > static_cast<uint64_t>(self_time * 0.7)) {
-        for (int multiplier = 18; multiplier >= 10; multiplier -= 1) {
+    if (engine->hard_time_limit > static_cast<uint64_t>(self_time * 0.8)) {
+        for (int multiplier = 31; multiplier >= 10; multiplier -= 1) {
             engine->hard_time_limit = static_cast<uint64_t>(time_amt * (multiplier / 10.0));
-            if (engine->hard_time_limit <= static_cast<uint64_t>(self_time * 0.7)) break;
+            if (engine->hard_time_limit <= static_cast<uint64_t>(self_time * 0.8)) break;
         }
     }
 

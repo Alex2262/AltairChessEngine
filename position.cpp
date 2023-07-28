@@ -135,7 +135,7 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
     const std::string en_passant = fen_tokens[3];
 
     const std::string half_move_clock = fen_tokens.size() >= 5 ? fen_tokens[4] : "0";
-    const std::string full_move_counter = fen_tokens.size() >= 6 ? fen_tokens[5] : "1";
+    const std::string full_move_counter_token = fen_tokens.size() >= 6 ? fen_tokens[5] : "1";
 
     side = (player == "w") ? WHITE : BLACK;
 
@@ -195,6 +195,8 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
     empty_squares = get_empty_squares();
 
     compute_hash_key();
+
+    full_move_counter = static_cast<PLY_TYPE>(std::stoi(full_move_counter_token));
 
     return static_cast<PLY_TYPE>(std::stoi(half_move_clock));
 }
