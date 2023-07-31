@@ -956,11 +956,14 @@ void iterative_search(Engine& engine, int thread_id) {
         if (thread_id == 0 && !engine.stopped) best_move = engine.pv_table[0][0];
 
         if (thread_id == 0) {
-            if (running_depth <= 4) {
+            if (running_depth <= 1) {
                 low_depth_score = previous_score;
+            }
+
+            if (running_depth <= 6) {
                 random_scaling = (static_cast<double>(engine.node_count % 10) + 1.0) / 10.0 + 0.6;
-                random_scaling = (random_scaling - 1.0) * 2.8 + 1.0;
-                random_scaling = std::clamp(random_scaling, 0.2, 4.0);
+                random_scaling = (random_scaling - 1.0) * 5.4 + 1.0;
+                random_scaling = std::clamp(random_scaling, 0.1, 8.0);
             }
 
             if (running_depth >= 8) {
@@ -968,26 +971,32 @@ void iterative_search(Engine& engine, int thread_id) {
                         static_cast<double>(engine.node_table[position.board[best_move.origin()]] [best_move.target()]) /
                         static_cast<double>(engine.primary_thread_node_count);
 
-                double node_scaling_factor = (1.5 - best_node_percentage) * 1.35;
-                //std::cout << previous_score - low_depth_score << " " << score_difference << std::endl;
-                //std::cout << score_scaling_factor << std::endl;
+                double node_scaling_factor = (1.6 - best_node_percentage) * 1.35;
+
+                double score_scaling_factor = 1.0;
+                if (abs(previous_score - low_depth_score) >= 60) {
+                    random_scaling = 1.3;
+                    score_scaling_factor =
+                            std::clamp(0.8 + static_cast<double>(abs(previous_score - low_depth_score)) / 60.0, 1.5, 5.0);
+                }
 
                 double soft_scaling_factor = node_scaling_factor;
-                double hard_scaling_factor = (soft_scaling_factor - 1.0) * 1.5 + 1.0;
+                double hard_scaling_factor = (soft_scaling_factor - 1.0) * 1.2 + 1.0;
 
-                soft_scaling_factor = (soft_scaling_factor - 1.0) * 7 + 1.0;
-                hard_scaling_factor = std::clamp(hard_scaling_factor, 0.3, 3.0);
-                soft_scaling_factor = std::clamp(soft_scaling_factor, 0.01, 8.0);
+                soft_scaling_factor = (soft_scaling_factor - 1.0) * 8 + 1.0;
+                hard_scaling_factor = std::clamp(hard_scaling_factor, 0.7, 1.4);
+                soft_scaling_factor = std::clamp(soft_scaling_factor, 0.01, 10.0);
 
-                engine.soft_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit)
-                                                               * soft_scaling_factor);
+                if (score_scaling_factor >= 2.0) {
+                    engine.soft_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit)
+                                                                   * score_scaling_factor);
+                } else {
+                    engine.soft_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit)
+                                                                   * soft_scaling_factor  * random_scaling);
+                }
 
                 engine.hard_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit)
-                                                               * hard_scaling_factor * random_scaling);
-
-
-
-                //std::cout << "Soft Time Limit changed to: " << engine.soft_time_limit << std::endl;
+                                                               * hard_scaling_factor);
             }
 
 
