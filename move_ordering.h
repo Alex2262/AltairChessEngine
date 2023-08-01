@@ -11,6 +11,7 @@
 
 constexpr SCORE_TYPE SEE_MOVE_ORDERING_THRESHOLD = -108;
 
+/*
 SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
                       InformativeMove last_move_one, InformativeMove last_move_two);
 
@@ -21,6 +22,7 @@ void get_move_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOV
 
 void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                         Move tt_move);
+                        */
 
 Move sort_next_move(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, int current_count);
 

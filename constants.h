@@ -9,6 +9,14 @@
 #define ENGINE_VERSION              "4.0.0"
 #define ENGINE_AUTHOR               "Alexander Tian"
 
+constexpr double EXPLORATION_CONSTANT = 0.5;
+constexpr uint64_t MAX_TIME = 5000;
+constexpr uint64_t MAX_ITERATIONS = 10'000'000;
+constexpr int DRAW_RESULT = 2;
+constexpr int NO_RESULT = 3;
+
+constexpr double CP_SCALE = 600.0;
+
 #define N_TUNING_PARAMETERS         18
 #define FAIL_HIGH_STATS_COUNT       5
 #define ALPHA_RAISE_STATS_COUNT     5

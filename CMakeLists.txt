@@ -26,15 +26,11 @@ add_executable(Altair
         perft.h
         position.cpp
         position.h
-        search.cpp
-        search.h
         useful.cpp
         useful.h
         uci.cpp
         uci.h
         zobrist.h
-        bench.cpp
-        bench.h
         see.cpp
         see.h
         types.h
@@ -46,6 +42,6 @@ add_executable(Altair
         evaluation.h
         evaluation_constants.h
         move_ordering.cpp
-        move_ordering.h)
+        move_ordering.h mcts.cpp mcts.h)
 
 target_link_libraries(Altair Threads::Threads)

@@ -587,6 +587,13 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
     Piece occupied = board[target_square];
     MoveType move_type = move.type();
 
+    if (occupied == WHITE_KING || occupied == BLACK_KING) {
+        std::cout << *this << std::endl;
+        std::cout << move.get_uci(*this) << std::endl;
+        std::cout << selected << " " << occupied << std::endl;
+    }
+    assert(occupied != WHITE_KING && occupied != BLACK_KING);
+
     state_struct.move = InformativeMove(move, selected, occupied);
 
     bool legal = true;

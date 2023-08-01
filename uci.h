@@ -8,7 +8,7 @@
 #include <thread>
 #include <vector>
 #include "position.h"
-#include "search.h"
+#include "mcts.h"
 
 class UCI {
 
@@ -19,8 +19,10 @@ public:
     std::string msg{};
     std::vector<std::string> tokens{};
 
-    std::unique_ptr<Engine> engine = std::make_unique<Engine>();
+    std::unique_ptr<MCTS> mcts_engine = std::make_unique<MCTS>();
     Move last_move = NO_MOVE;
+
+    int current_move_idx = 0;
 
     std::vector<std::thread> search_threads{};
 

@@ -8,21 +8,16 @@
 #include "uci.h"
 #include "useful.h"
 #include "move.h"
-#include "search.h"
 #include "evaluation.h"
 #include "perft.h"
-#include "bench.h"
 #include "see.h"
+#include "mcts.h"
 
 void UCI::initialize_uci() const {
-    engine->transposition_table.resize(MAX_TT_SIZE);
 
-    engine->initialize_lmr_reductions();
-
-    engine->thread_states.emplace_back();
-
-    Position& position = engine->thread_states[0].position;
+    Position& position = mcts_engine->position;
     position.set_fen(START_FEN);
+    mcts_engine->new_game();
 
     // std::cout << engine->transposition_table.size() << " number of hash entries initialized" << std::endl;
 }
@@ -32,7 +27,7 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
     double rate = 20;
     double time_amt;
 
-    Position& position = engine->thread_states[0].position;
+    Position& position = mcts_engine->position;
 
     if (position.is_attacked(position.get_king_pos(position.side), position.side)) rate -= 3;
     if (last_move.is_capture(position)) rate -= 1.5;
@@ -62,21 +57,9 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
         if (time_amt > self_time * 0.9) time_amt = self_time * 0.95;
     }
     else if (self_time > 0) time_amt = self_time / (rate + 6);
-    else time_amt = static_cast<double>(engine->hard_time_limit);
+    else time_amt = static_cast<double>(mcts_engine->max_time);
 
-    engine->hard_time_limit = static_cast<uint64_t>(time_amt * 2.22);
-    engine->soft_time_limit = static_cast<uint64_t>(time_amt * 0.66);
-
-    if (engine->hard_time_limit > static_cast<uint64_t>(self_time * 0.7)) {
-        for (int multiplier = 18; multiplier >= 10; multiplier -= 1) {
-            engine->hard_time_limit = static_cast<uint64_t>(time_amt * (multiplier / 10.0));
-            if (engine->hard_time_limit <= static_cast<uint64_t>(self_time * 0.7)) break;
-        }
-    }
-
-    if (engine->hard_time_limit > static_cast<uint64_t>(movetime) && movetime != 0.0) {
-        engine->hard_time_limit = static_cast<uint64_t>(time_amt);
-    }
+    mcts_engine->max_time = static_cast<uint64_t>(time_amt);
 
     // std::cout << time_amt << " " << engine->hard_time_limit << " " << engine->soft_time_limit << std::endl;
 }
@@ -85,13 +68,12 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
 void UCI::parse_position() {
     if (tokens.size() < 2) return;
 
-    Position& position = engine->thread_states[0].position;
+    Position& position = mcts_engine->position;
 
     int next_idx;
-    engine->thread_states[0].game_ply = 0;
 
     if (tokens[1] == "startpos") {
-        engine->thread_states[0].fifty_move = position.set_fen(START_FEN);
+        mcts_engine->temp_fifty_move = position.set_fen(START_FEN);
         next_idx = 2;
     }
 
@@ -102,7 +84,7 @@ void UCI::parse_position() {
             fen += " ";
         }
 
-        engine->thread_states[0].fifty_move = position.set_fen(fen);
+        mcts_engine->temp_fifty_move = position.set_fen(fen);
         next_idx = 8;
     }
 
@@ -111,25 +93,23 @@ void UCI::parse_position() {
     if (static_cast<int>(tokens.size()) <= next_idx || tokens[next_idx] != "moves") return;
 
     for (int i = next_idx + 1; i < static_cast<int>(tokens.size()); i++) {
-        // std::cout << tokens[i] << std::endl;
         Move move = Move(position, tokens[i]);
+
+        position.make_move(move, position.state_stack[0], mcts_engine->temp_fifty_move);
         last_move = move;
-        // std::cout << move << " " << get_uci_from_move(move) << std::endl;
-        position.make_move(move, position.state_stack[0], engine->thread_states[0].fifty_move);
 
-        engine->thread_states[0].game_ply++;
-        engine->thread_states[0].repetition_table[engine->thread_states[0].game_ply] = position.hash_key;
+        if (i - (next_idx + 1) >= current_move_idx) {
+            std::cout << tokens[i] << std::endl;
+            mcts_engine->update_tree(move);
+            current_move_idx++;
+        }
     }
-
-    // std::cout << engine.detect_repetition() << std::endl;
-
-    // position.print_board();
 }
 
 
 void UCI::parse_go() {
 
-    Position& position = engine->thread_states[0].position;
+    Position& position = mcts_engine->position;
 
     PLY_TYPE d = 0, perft_depth = 0;
     double wtime = 0, btime = 0, winc = 0, binc = 0, movetime = 0;
@@ -146,8 +126,6 @@ void UCI::parse_go() {
         if (type == "depth") d = static_cast<PLY_TYPE>(value);
 
         else if (type == "perft") perft_depth = static_cast<PLY_TYPE>(value);
-
-        else if (type == "nodes") engine->max_nodes = value;
 
         else if (type == "movetime") movetime = static_cast<double>(value);
 
@@ -167,27 +145,16 @@ void UCI::parse_go() {
         return;
     }
     if (infinite || (d && tokens.size() == 3)) {
-        engine->hard_time_limit = TIME_INF;
-        engine->soft_time_limit = TIME_INF;
+        mcts_engine->max_time = TIME_INF;
     }
     else {
         double self_time = (position.side == 0) ? wtime : btime;
         double inc = (position.side == 0) ? winc : binc;
 
-        time_handler(std::max<double>(self_time - engine->move_overhead, 0.0), inc, movetime, movestogo);
+        time_handler(std::max<double>(self_time - 10, 0.0), inc, movetime, movestogo);
     }
 
-    if (d) engine->max_depth = d;
-
-    engine->stopped = true;
-    if (!search_threads.empty()) {
-        search_threads[0].join();
-
-        while (!engine->thread_states[0].terminated);  // to prevent some stupid exceptions
-        if (engine->thread_states[0].terminated) search_threads.erase(search_threads.end() - 1);
-    }
-
-    search_threads.emplace_back(lazy_smp_search, std::ref(*engine));
+    mcts_engine->search();
 
     //iterative_search(engine, position);
 }
@@ -206,110 +173,18 @@ void UCI::uci_loop() {
         }
 
         if (msg == "stop") {
-            engine->stopped = true;
-            if (!search_threads.empty()) {
-                search_threads[0].join();
 
-                while (!engine->thread_states[0].terminated);  // to prevent some stupid exceptions
-                if (engine->thread_states[0].terminated) search_threads.erase(search_threads.end() - 1);
-            }
         }
 
         else if (msg == "uci") {
             std::cout << "id name " + std::string(ENGINE_NAME) + " " + std::string(ENGINE_VERSION) << std::endl;
             std::cout << "id author Alexander Tian" << std::endl;
 
-            std::cout << "option name Hash type spin default " << 64 << " min " << 1 << " max " << 1024
-                      << std::endl;
-
-            std::cout << "option name nodes type spin default " << 0 << " min " << 0 << " max " << 2147483647
-                      << std::endl;
-
-            std::cout << "option name Threads type spin default " << 1 << " min " << 1 << " max " << 1024
-                      << std::endl;
-
-            std::cout << "option name UCI_Chess960 type check default " << false
-                      << std::endl;
-
-            std::cout << "option name Statistics type check default " << false
-                      << std::endl;
-
-            std::cout << "option name Move Overhead type spin default " << 10 << " min " << 0 << " max " << 1000
-                      << std::endl;
-
-            if (engine->do_tuning) {
-                for (auto & i : engine->tuning_parameters.tuning_parameter_array) {
-                    std::cout << "option name " << i.name
-                              << " type spin default " << i.value
-                              << " min " << i.min
-                              << " max " << i.max
-                              << std::endl;
-
-                }
-            }
-
-            if (engine->thread_states[0].do_move_ordering_tuning) {
-                for (auto & i : engine->thread_states[0].move_ordering_parameters.tuning_parameter_array) {
-                    std::cout << "option name " << i.name
-                              << " type spin default " << i.value
-                              << " min " << i.min
-                              << " max " << i.max
-                              << std::endl;
-
-                }
-            }
-
             std::cout << "uciok" << std::endl;
         }
 
         else if (tokens[0] == "setoption" && tokens.size() >= 5) {
-            if (tokens[2] == "Hash") {
-                int mb = std::stoi(tokens[4]);
-                mb = std::min(1024, std::max(1, mb));
-                engine->transposition_table.resize(mb * (1000000 / 24));
-                std::cout << engine->transposition_table.size() << " number of hash entries initialized" << std::endl;
-            }
 
-            else if (tokens[2] == "Threads") {
-                engine->num_threads = std::clamp(std::stoi(tokens[4]), 1, 1024);
-                engine->thread_states.resize(engine->num_threads);
-            }
-
-            else if (tokens[2] == "nodes") {
-                uint64_t max_nodes = std::stoi(tokens[4]);
-                engine->max_nodes = max_nodes;
-                std::cout << "max nodes set to " << engine->max_nodes << std::endl;
-            }
-
-            else if (tokens[2] == "UCI_Chess960") {
-                engine->thread_states[0].position.fischer_random_chess = tokens[4] == "true";
-            }
-
-            else if (tokens[2] == "Statistics") {
-                engine->show_stats = tokens[4] == "true";
-            }
-
-            else if (tokens[2] == "Move" && tokens[3] == "Overhead") {
-                engine->move_overhead = std::stoi(tokens[5]);
-            }
-
-            else {
-                if (engine->do_tuning) {
-                    for (auto & i : engine->tuning_parameters.tuning_parameter_array) {
-                        if (tokens[2] == i.name) {
-                            i.value = std::stoi(tokens[4]);
-                        }
-                    }
-                }
-
-                if (engine->thread_states[0].do_move_ordering_tuning) {
-                    for (auto & i : engine->thread_states[0].move_ordering_parameters.tuning_parameter_array) {
-                        if (tokens[2] == i.name) {
-                            i.value = std::stoi(tokens[4]);
-                        }
-                    }
-                }
-            }
         }
 
         else if (msg == "isready") {
@@ -317,9 +192,10 @@ void UCI::uci_loop() {
         }
 
         else if (msg == "ucinewgame") {
-            Position& position = engine->thread_states[0].position;
+            current_move_idx = 0;
+            Position& position = mcts_engine->position;
             position.set_fen(START_FEN);
-            engine->new_game();
+            mcts_engine->new_game();
         }
 
         else if (tokens[0] == "position") {
@@ -328,37 +204,6 @@ void UCI::uci_loop() {
 
         else if (tokens[0] == "go") {
             parse_go();
-        }
-
-        else if (tokens[0] == "bench") {
-            run_bench(*engine, BENCH_DEPTH);
-        }
-
-        else if (tokens[0] == "stats") {
-            if (!engine->show_stats) {
-                std::cout << "Statistics UCI option has not been enabled" << std::endl;
-                continue;
-            }
-
-            print_statistics(engine->search_results);
-        }
-
-        else if (tokens[0] == "search_tune_wf" && engine->do_tuning) {
-            print_search_tuning_config(engine->tuning_parameters);
-        }
-
-        else if (tokens[0] == "move_ordering_tune_wf" && engine->thread_states[0].do_move_ordering_tuning) {
-            print_move_ordering_tuning_config(engine->thread_states[0].move_ordering_parameters);
-        }
-
-        else if (tokens[0] == "evaluate") {
-            Position& position = engine->thread_states[0].position;
-            std::cout << evaluate(position) << std::endl;
-        }
-
-        else if (tokens[0] == "see") {
-            Position& position = engine->thread_states[0].position;
-            std::cout << get_static_exchange_evaluation(position, Move(position, tokens[1]), 1);
         }
     }
 }
