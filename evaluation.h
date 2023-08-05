@@ -23,6 +23,8 @@ struct EvaluationInformation {
     BITBOARD pawns[2]{};
     BITBOARD pieces[2]{};
     BITBOARD pawn_attacks[2]{};
+
+    BITBOARD piece_relative_occupancies[2][6]{};
 };
 
 void initialize_evaluation_information(Position& position, EvaluationInformation& evaluation_information);

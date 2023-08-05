@@ -29,8 +29,21 @@ void initialize_evaluation_information(Position& position, EvaluationInformation
             evaluation_information.piece_counts[color][piece_type] = static_cast<int>(popcount(
                     position.get_pieces(static_cast<PieceType>(piece_type), static_cast<Color>(color))
                     ));
+
+            evaluation_information.piece_relative_occupancies[color][piece_type] = position.all_pieces;
         }
     }
+
+    evaluation_information.piece_relative_occupancies[WHITE][BISHOP] ^= position.get_pieces(BISHOP, WHITE);
+    evaluation_information.piece_relative_occupancies[BLACK][BISHOP] ^= position.get_pieces(BISHOP, BLACK);
+
+    evaluation_information.piece_relative_occupancies[WHITE][ROOK] ^= position.get_pieces(ROOK, WHITE);
+    evaluation_information.piece_relative_occupancies[BLACK][ROOK] ^= position.get_pieces(ROOK, BLACK);
+
+    evaluation_information.piece_relative_occupancies[WHITE][QUEEN] ^=
+            position.get_pieces(BISHOP, WHITE) | position.get_pieces(ROOK, WHITE) | position.get_pieces(QUEEN, WHITE);
+    evaluation_information.piece_relative_occupancies[BLACK][QUEEN] ^=
+            position.get_pieces(BISHOP, BLACK) | position.get_pieces(ROOK, BLACK) | position.get_pieces(QUEEN, BLACK);
 }
 
 Square get_white_relative_square(Square square, Color color) {
@@ -183,7 +196,8 @@ SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation
 
         evaluation_information.game_phase += GAME_PHASE_SCORES[piece_type];
 
-        BITBOARD piece_attacks = get_piece_attacks(get_piece(piece_type, color), square, position.all_pieces);
+        BITBOARD piece_attacks = get_piece_attacks(get_piece(piece_type, color), square,
+                                                   evaluation_information.piece_relative_occupancies[color][piece_type]);
 
         if constexpr (piece_type != KING) {
             // MOBILITY
