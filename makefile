@@ -17,8 +17,9 @@ ifeq ($(OS), Windows_NT)
     CXXFLAGS += -static
     CXXFLAGS += -fuse-ld=lld
 else
+    DETECTED_OS := $(shell uname -s)
     ifneq (,$(findstring clang,$(shell $(CXX) --version)))
-        ifneq ($(OS),Darwin)
+        ifneq ($(DETECTED_OS),Darwin)
             CXXFLAGS += -fuse-ld=lld
         endif
     endif
