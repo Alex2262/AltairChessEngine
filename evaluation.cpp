@@ -34,16 +34,22 @@ void initialize_evaluation_information(Position& position, EvaluationInformation
         }
     }
 
-    evaluation_information.piece_relative_occupancies[WHITE][BISHOP] ^= position.get_pieces(BISHOP, WHITE);
-    evaluation_information.piece_relative_occupancies[BLACK][BISHOP] ^= position.get_pieces(BISHOP, BLACK);
+    BITBOARD white_diagonal_sliders = position.get_pieces(BISHOP, WHITE) | position.get_pieces(QUEEN, WHITE);
+    BITBOARD black_diagonal_sliders = position.get_pieces(BISHOP, BLACK) | position.get_pieces(QUEEN, BLACK);
 
-    evaluation_information.piece_relative_occupancies[WHITE][ROOK] ^= position.get_pieces(ROOK, WHITE);
-    evaluation_information.piece_relative_occupancies[BLACK][ROOK] ^= position.get_pieces(ROOK, BLACK);
+    BITBOARD white_orthogonal_sliders = position.get_pieces(ROOK, WHITE) | position.get_pieces(QUEEN, WHITE);
+    BITBOARD black_orthogonal_sliders = position.get_pieces(ROOK, BLACK) | position.get_pieces(QUEEN, BLACK);
+
+    evaluation_information.piece_relative_occupancies[WHITE][BISHOP] ^= white_diagonal_sliders;
+    evaluation_information.piece_relative_occupancies[BLACK][BISHOP] ^= black_diagonal_sliders;
+
+    evaluation_information.piece_relative_occupancies[WHITE][ROOK] ^= white_orthogonal_sliders;
+    evaluation_information.piece_relative_occupancies[BLACK][ROOK] ^= black_orthogonal_sliders;
 
     evaluation_information.piece_relative_occupancies[WHITE][QUEEN] ^=
-            position.get_pieces(BISHOP, WHITE) | position.get_pieces(ROOK, WHITE) | position.get_pieces(QUEEN, WHITE);
+            white_diagonal_sliders | white_orthogonal_sliders;
     evaluation_information.piece_relative_occupancies[BLACK][QUEEN] ^=
-            position.get_pieces(BISHOP, BLACK) | position.get_pieces(ROOK, BLACK) | position.get_pieces(QUEEN, BLACK);
+            black_diagonal_sliders | black_orthogonal_sliders;
 }
 
 Square get_white_relative_square(Square square, Color color) {
