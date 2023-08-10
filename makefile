@@ -17,6 +17,11 @@ ifeq ($(OS), Windows_NT)
     CXXFLAGS += -static
     CXXFLAGS += -fuse-ld=lld
 else
+    ifneq (,$(findstring clang,$(shell $(CXX) --version)))
+        ifneq ($(OS),Darwin)
+            CXXFLAGS += -fuse-ld=lld
+        endif
+    endif
 	CXXFLAGS += -pthread
 
 endif
