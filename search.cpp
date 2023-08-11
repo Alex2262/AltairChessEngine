@@ -596,13 +596,15 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Skip the excluded move since we are in a singular search
         if (move == position.state_stack[thread_state.search_ply].excluded_move) continue;
 
-        SCORE_TYPE move_history_score = thread_state.history_moves
-            [position.board[move.origin()]][move.target()];
+        SCORE_TYPE move_history_score = move.is_capture(position) ?
+                thread_state.capture_history[position.board[move.origin()]]
+                [position.board[move.target()]][move.target()] :
+                thread_state.history_moves[position.board[move.origin()]][move.target()];
 
         bool quiet = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
 
         // Pruning
-        if (!root && legal_moves >= 1 && abs(best_score) < MATE_BOUND) {
+        if (!root && legal_moves >= 1 && abs(best_score) < MATE_BOUND && move_history_score <= 4000) {
             // Late Move Pruning
             if (!pv_node && depth <= engine.tuning_parameters.LMP_depth &&
                 legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;
@@ -619,7 +621,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // SEE Pruning
             if (depth <= (3 + 3 * !quiet + 5 * pv_node) && legal_moves >= 3 &&
-                 move_history_score <= 5000 &&
                  !get_static_exchange_evaluation(position, move, (quiet ? -50 : -90) * depth))
                 continue;
 
