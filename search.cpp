@@ -619,7 +619,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // SEE Pruning
             if (depth <= (3 + 3 * !quiet + 5 * pv_node) && legal_moves >= 3 &&
-                 -MATE_BOUND < alpha && alpha < MATE_BOUND &&
                  move_history_score <= 5000 &&
                  !get_static_exchange_evaluation(position, move, (quiet ? -50 : -90) * depth))
                 continue;
