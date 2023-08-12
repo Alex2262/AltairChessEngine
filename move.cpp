@@ -56,11 +56,26 @@ Move::Move(const Position& position, std::string uci) {
     auto origin_square = static_cast<Square>((uci[1] - '1') * 8 + (uci[0] - 'a'));
     auto target_square = static_cast<Square>((uci[3] - '1') * 8 + (uci[2] - 'a'));
 
-    auto selected = static_cast<PieceType>(position.board[origin_square] % COLOR_OFFSET);
+    auto selected = static_cast<Piece>(position.board[origin_square]);
+    auto occupied = static_cast<Piece>(position.board[target_square]);
 
-    if (selected == PAWN && target_square == position.ep_square) move_type = MOVE_TYPE_EP;
-    else if (selected == KING && (abs(static_cast<int>(target_square - origin_square)) == 2))
-        move_type = MOVE_TYPE_CASTLE;
+    auto selected_type = static_cast<PieceType>(selected % COLOR_OFFSET);
+    auto occupied_type = static_cast<PieceType>(occupied % COLOR_OFFSET);
+
+    bool castle_move = selected_type == KING && (abs(static_cast<int>(target_square - origin_square)) == 2);
+    if (position.fischer_random_chess) {
+        if (selected_type == KING && occupied_type == ROOK && get_color(selected) == get_color(occupied)) {
+            castle_move = true;
+
+            if (target_square == position.starting_rook_pos[WHITE][0]) target_square = g1;
+            else if (target_square == position.starting_rook_pos[WHITE][1]) target_square = c1;
+            else if (target_square == position.starting_rook_pos[BLACK][0]) target_square = g8;
+            else if (target_square == position.starting_rook_pos[BLACK][1]) target_square = c8;
+        }
+    }
+
+    if (selected_type == PAWN && target_square == position.ep_square) move_type = MOVE_TYPE_EP;
+    else if (castle_move) move_type = MOVE_TYPE_CASTLE;
 
     move = (move_type << 12) | (origin_square << 6) | target_square;
     if (move_type == MOVE_TYPE_PROMOTION) move |= promotion_type << 14;
