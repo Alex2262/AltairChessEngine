@@ -65,6 +65,10 @@ constexpr inline Piece get_piece(PieceType piece_type, Color color) {
     return static_cast<Piece>(static_cast<int>(piece_type) + static_cast<int>(color * COLOR_OFFSET));
 }
 
+constexpr inline Color get_color(Piece piece) {
+    return static_cast<Color>(piece >= COLOR_OFFSET);
+}
+
 constexpr uint32_t N_DIRS = 8;
 enum Direction : int32_t {
     NORTH = 8, NORTH_EAST = 9, EAST = 1, SOUTH_EAST = -7,

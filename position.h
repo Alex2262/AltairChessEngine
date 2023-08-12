@@ -55,6 +55,8 @@ public:
     Color side = WHITE;
 
     uint8_t castle_ability_bits = 0;
+    Square starting_rook_pos[2][2]{};
+
     Square ep_square = NO_SQUARE;
     HASH_TYPE hash_key = 0;
 

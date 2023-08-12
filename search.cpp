@@ -564,6 +564,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         tt_move = engine.transposition_table[position.hash_key % engine.transposition_table.size()].move;
     }
 
+    bool tt_move_capture = tt_move != NO_MOVE && tt_move.is_capture(position);
+
     // Used for the continuation history heuristic
     InformativeMove last_move_one = thread_state.search_ply >= 1 ? position.state_stack[thread_state.search_ply - 1].move : NO_INFORMATIVE_MOVE;
     InformativeMove last_move_two = thread_state.search_ply >= 2 ? position.state_stack[thread_state.search_ply - 2].move : NO_INFORMATIVE_MOVE;
@@ -761,13 +763,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             reduction += !recapture && recapture_found && quiet && !move_gives_check && move_history_score <= 0;
 
             // Scale reductions based on how many moves have already raised alpha
-            reduction += static_cast<double>(alpha_raised_count) * (0.3 + 0.5 * tt_move.is_capture(position));
+            reduction += static_cast<double>(alpha_raised_count) * (0.3 + 0.5 * tt_move_capture);
 
             // My idea that in a null move search you can be more aggressive with LMR
             reduction += null_search;
 
             // Idea from Weiss, where you reduce more if the TT move is a capture
-            reduction += tt_move.is_capture(position) * 0.3;
+            reduction += tt_move_capture * 0.3;
 
             // Clamp the LMR depth
             auto lmr_depth = std::clamp<PLY_TYPE>(new_depth - static_cast<PLY_TYPE>(reduction), 1, new_depth);
