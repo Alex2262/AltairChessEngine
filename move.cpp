@@ -16,10 +16,8 @@ std::string Move::get_uci(const Position& position) const {
     MoveType move_type = type();
 
     if (move_type == MOVE_TYPE_CASTLE && position.fischer_random_chess) {
-        if (target_square == b1) target_square = a1;
-        else if (target_square == b8) target_square = a8;
-        else if (target_square == g1) target_square = h1;
-        else if (target_square == g8) target_square = h8;
+        if (target_square == b1 || target_square == b8) target_square = position.starting_rook_pos[position.side][1];
+        else if (target_square == g1 || target_square == g8) target_square = position.starting_rook_pos[position.side][0];
     }
 
     uci_move += char(origin_square % 8 + 'a');

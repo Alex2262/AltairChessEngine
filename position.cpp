@@ -168,7 +168,7 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
     starting_rook_pos[BLACK][0] = h8;
     starting_rook_pos[BLACK][1] = a8;
 
-    for (char c : fen_tokens[2]) {
+    for (char c : castling) {
         if (fischer_random_chess) {
 
             Color castle_flag_color = isupper(c) ? WHITE : BLACK;
@@ -179,22 +179,22 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
                 castle_ability_bits |= castle_flag_color == WHITE ? 1 : 4;
             }
 
-            else if (c == 'q') {
+            else if (castle_flag == 'q') {
                 starting_rook_pos[castle_flag_color][1] = lsb(get_pieces(ROOK, castle_flag_color));
                 castle_ability_bits |= castle_flag_color == WHITE ? 2 : 8;
             }
 
             else {
                 int rook_file = castle_flag - 'a';
-                int king_file = get_king_pos(castle_flag_color);
+                int king_file = static_cast<int>(file_of(get_king_pos(castle_flag_color)));
 
                 if (rook_file > king_file) {
                     starting_rook_pos[castle_flag_color][0] = static_cast<Square>(rook_file + 56 * castle_flag_color);
-                    castle_ability_bits |= castle_flag_color == WHITE ? 1 : 4;
+                    castle_ability_bits |= (castle_flag_color == WHITE) ? 1 : 4;
                 }
                 else {
                     starting_rook_pos[castle_flag_color][1] = static_cast<Square>(rook_file + 56 * castle_flag_color);
-                    castle_ability_bits |= castle_flag_color == WHITE ? 2 : 8;
+                    castle_ability_bits |= (castle_flag_color == WHITE) ? 2 : 8;
                 }
             }
         }
@@ -206,9 +206,6 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
             else if (c == 'q') castle_ability_bits |= 8;
         }
     }
-
-    std::cout << starting_rook_pos[WHITE][0] << " " << starting_rook_pos[WHITE][1] << " "
-              << starting_rook_pos[BLACK][0] << " " << starting_rook_pos[BLACK][1] << std::endl;
 
     if (en_passant.size() > 1) {
         auto square = static_cast<Square>((en_passant[1] - '1') * 8 + en_passant[0] - 'a');
@@ -517,31 +514,32 @@ void Position::get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
         Square target_pos_q = side == WHITE ? c1 : c8;
 
         Square important_pos_k = target_pos_k + WEST;  // F1 square for FRC (the square the rook will go to)
-        Square important_pos_q = target_pos_k + EAST;  // D1 square for FRC (the square the rook will go to)
+        Square important_pos_q = target_pos_q + EAST;  // D1 square for FRC (the square the rook will go to)
 
         // King side Castling
+
         if (((side == WHITE && (castle_ability_bits & 1) == 1) || (side == BLACK && (castle_ability_bits & 4) == 4))
             && square == starting_rook_pos_k) {
             if (fischer_random_chess) {
                 // The rook is to the right of the F1 square
                 if (king_pos > important_pos_k) {
                     // Ensure that the rook can go to the F1 square
-                    if (board[important_pos_k] != EMPTY) break;
+                    if (board[important_pos_k] != EMPTY) continue;
                 }
 
                 // The rook is to the left of the F1 square
                 else if (king_pos < important_pos_k) {
                     // Ensure that all the squares between the rook's square,
                     // and its current square are empty
-                    bool flag = true;
+                    bool flag = false;
                     for (int temp_square = target_pos_k; temp_square > square; temp_square--) {
                         if (board[temp_square] != EMPTY) {
-                            flag = false;
+                            flag = true;
                             break;
                         }
                     }
 
-                    if (!flag) continue;
+                    if (flag) continue;
                 }
             }
             current_scored_moves.push_back({
@@ -560,23 +558,23 @@ void Position::get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
                 // The rook is to the left of the D1 square
                 if (king_pos < important_pos_q) {
                     // Guard certain cases
-                    if (board[target_pos_q] != EMPTY && board[target_pos_q] != WHITE_KING) break;
-                    if (board[important_pos_q] != EMPTY) break;
+                    if (board[target_pos_q] != EMPTY && board[target_pos_q] != WHITE_KING) continue;
+                    if (board[important_pos_q] != EMPTY) continue;
                 }
 
                 // The rook is to the right of the D1 square
                 else if (king_pos > important_pos_q){
                     // Ensure that all the squares between the rook's square,
                     // and its current square are empty
-                    bool flag = true;
+                    bool flag = false;
                     for (int temp_square = target_pos_q; temp_square < square; temp_square++) {
                         if (board[temp_square] != EMPTY) {
-                            flag = false;
+                            flag = true;
                             break;
                         }
                     }
 
-                    if (!flag) break;
+                    if (flag) continue;
                 }
             }
 
@@ -684,7 +682,8 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
     fifty_move++;
 
     // Handle captures
-    if (move.is_capture(*this)) {
+    // (Do not treat castles as a capture because of edge cases such as king and rook swapping in FRC castling)
+    if (move.is_capture(*this) && move_type != MOVE_TYPE_CASTLE) {
         remove_piece(occupied, target_square);
         hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
         fifty_move = 0;
@@ -721,8 +720,8 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
         // Move the Rook and hash it
         hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[0]];
         hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[1]];
-        place_piece(board[castled_pos[0]], castled_pos[1]);
         remove_piece(board[castled_pos[0]], castled_pos[0]);
+        place_piece(get_piece(ROOK, side), castled_pos[1]);
 
         // Move the king now (after moving the rook due to FRC edge-cases where the king and rook swap places)
         place_piece(selected, target_square);
@@ -802,14 +801,14 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
     }
 
     // Rook moves or is captured
-    if (origin_square == h1 ||
-        target_square == h1) castle_ability_bits &= ~(1 << 0);
-    else if (origin_square == a1 ||
-             target_square == a1) castle_ability_bits &= ~(1 << 1);
-    else if (origin_square == h8 ||
-             target_square == h8) castle_ability_bits &= ~(1 << 2);
-    else if (origin_square == a8 ||
-             target_square == a8) castle_ability_bits &= ~(1 << 3);
+    if (origin_square == starting_rook_pos[WHITE][0] ||
+        target_square == starting_rook_pos[WHITE][0]) castle_ability_bits &= ~(1 << 0);
+    else if (origin_square == starting_rook_pos[WHITE][1] ||
+             target_square == starting_rook_pos[WHITE][1]) castle_ability_bits &= ~(1 << 1);
+    else if (origin_square == starting_rook_pos[BLACK][0] ||
+             target_square == starting_rook_pos[BLACK][0]) castle_ability_bits &= ~(1 << 2);
+    else if (origin_square == starting_rook_pos[BLACK][1] ||
+             target_square == starting_rook_pos[BLACK][1]) castle_ability_bits &= ~(1 << 3);
 
     // Hash it back
     hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
@@ -859,12 +858,16 @@ void Position::undo_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
         }
 
         // Move the Rook back
-        place_piece(board[castled_pos[1]], castled_pos[0]);
         remove_piece(board[castled_pos[1]], castled_pos[1]);
+        place_piece(get_piece(ROOK, side), castled_pos[0]);
     }
 
     // Set the occupied piece back except in FRC edge cases
-    if (castled_pos[0] != target_square) {
+    if (castled_pos[0] == target_square) {
+        // The rook and king have swapped in FRC, and the rook has been placed in this square; however,
+        // the king in the bitboard hasn't been removed yet and must be removed.
+        pieces[selected] &= ~(1ULL << target_square);
+    } else {
         remove_piece(board[target_square], target_square);
         if (occupied < EMPTY) place_piece(occupied, target_square);
     }

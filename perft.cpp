@@ -61,12 +61,14 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
 
 long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 
-    // std::cout << position.state_stack[ply - 1].move.get_uci(position) << std::endl;
+    // std::cout << position.state_stack[ply - 1].move.normal_move().get_uci(position) << std::endl;
     // std::cout << position;
 
+    /*
     if (depth == 0) {
         return 1;
     }
+    */
 
     PLY_TYPE fifty = 0;
 
@@ -87,6 +89,7 @@ long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
         }
 
         amt += depth == 1 ? 1 : fast_perft(position, depth - 1, ply + 1);
+        // amt += fast_perft(position, depth - 1, ply + 1);
 
         position.undo_move(move, position.state_stack[ply], fifty);
     }
@@ -122,7 +125,7 @@ long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
             continue;
         }
 
-        long long amt = fast_perft(position, depth - 1, ply + 1);
+        long long amt = depth == 1 ? 1 : fast_perft(position, depth - 1, ply + 1);
         total_amt += amt;
 
         position.undo_move(move, position.state_stack[ply], fifty);
