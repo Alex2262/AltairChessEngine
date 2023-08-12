@@ -226,6 +226,11 @@ SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation
             // OPPONENT KING TROPISM
             int distance_to_opp_king = get_manhattan_distance(square, evaluation_information.king_squares[~color]);
             score += OPP_KING_TROPISM[piece_type] * distance_to_opp_king;
+
+
+            // OUR KING TROPISM
+            int distance_to_our_king = get_manhattan_distance(square, evaluation_information.king_squares[color]);
+            score += OUR_KING_TROPISM[piece_type] * distance_to_our_king;
         }
 
         if constexpr (piece_type == KING || piece_type == QUEEN || piece_type == ROOK) {
