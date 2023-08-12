@@ -114,14 +114,12 @@ void UCI::parse_position() {
         // std::cout << tokens[i] << std::endl;
         Move move = Move(position, tokens[i]);
         last_move = move;
-        // std::cout << move << " " << get_uci_from_move(move) << std::endl;
+
         position.make_move(move, position.state_stack[0], engine->thread_states[0].fifty_move);
 
         engine->thread_states[0].game_ply++;
         engine->thread_states[0].repetition_table[engine->thread_states[0].game_ply] = position.hash_key;
     }
-
-    // std::cout << engine.detect_repetition() << std::endl;
 
     // position.print_board();
 }

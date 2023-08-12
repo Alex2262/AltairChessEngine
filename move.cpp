@@ -19,7 +19,7 @@ std::string Move::get_uci(const Position& position) const {
     MoveType move_type = type();
 
     if (move_type == MOVE_TYPE_CASTLE && position.fischer_random_chess) {
-        if (target_square == b1 || target_square == b8) target_square = position.starting_rook_pos[position.side][1];
+        if (target_square == c1 || target_square == c8) target_square = position.starting_rook_pos[position.side][1];
         else if (target_square == g1 || target_square == g8) target_square = position.starting_rook_pos[position.side][0];
     }
 
@@ -59,8 +59,8 @@ Move::Move(const Position& position, std::string uci) {
     auto selected = static_cast<Piece>(position.board[origin_square]);
     auto occupied = static_cast<Piece>(position.board[target_square]);
 
-    auto selected_type = static_cast<PieceType>(selected % COLOR_OFFSET);
-    auto occupied_type = static_cast<PieceType>(occupied % COLOR_OFFSET);
+    auto selected_type = static_cast<PieceType>(static_cast<int>(selected) % COLOR_OFFSET);
+    auto occupied_type = static_cast<PieceType>(static_cast<int>(occupied) % COLOR_OFFSET);
 
     bool castle_move = selected_type == KING && (abs(static_cast<int>(target_square - origin_square)) == 2);
     if (position.fischer_random_chess) {
