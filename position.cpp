@@ -117,7 +117,7 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
     std::vector<std::string> fen_tokens = split(reduced_fen_string, ' ');
 
     if (fen_tokens.size() < 4) {
-        throw std::invalid_argument( "Fen is incorrect" );
+        throw std::invalid_argument("Fen is incorrect");
     }
 
     const std::string position = fen_tokens[0];
@@ -134,8 +134,8 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
         pieces[piece] = 0ULL;
     }
 
-    for (int square = 0; square < N_SQUARES; square++) {
-        board[square] = EMPTY;
+    for (auto & square : board) {
+        square = EMPTY;
     }
 
     auto pos = static_cast<Square>(56);
@@ -163,14 +163,52 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
     }
 
     castle_ability_bits = 0;
-    for (char c : castling) {
+    starting_rook_pos[WHITE][0] = h1;
+    starting_rook_pos[WHITE][1] = a1;
+    starting_rook_pos[BLACK][0] = h8;
+    starting_rook_pos[BLACK][1] = a8;
 
-        if (c == 'K') castle_ability_bits |= 1;
-        else if (c == 'Q') castle_ability_bits |= 2;
-        else if (c == 'k') castle_ability_bits |= 4;
-        else if (c == 'q') castle_ability_bits |= 8;
+    for (char c : fen_tokens[2]) {
+        if (fischer_random_chess) {
 
+            Color castle_flag_color = isupper(c) ? WHITE : BLACK;
+            char castle_flag = static_cast<char>(tolower(static_cast<char>(c)));
+
+            if (castle_flag == 'k') {
+                starting_rook_pos[castle_flag_color][0] = msb(get_pieces(ROOK, castle_flag_color));
+                castle_ability_bits |= castle_flag_color == WHITE ? 1 : 4;
+            }
+
+            else if (c == 'q') {
+                starting_rook_pos[castle_flag_color][1] = lsb(get_pieces(ROOK, castle_flag_color));
+                castle_ability_bits |= castle_flag_color == WHITE ? 2 : 8;
+            }
+
+            else {
+                int rook_file = castle_flag - 'a';
+                int king_file = get_king_pos(castle_flag_color);
+
+                if (rook_file > king_file) {
+                    starting_rook_pos[castle_flag_color][0] = static_cast<Square>(rook_file + 56 * castle_flag_color);
+                    castle_ability_bits |= castle_flag_color == WHITE ? 1 : 4;
+                }
+                else {
+                    starting_rook_pos[castle_flag_color][1] = static_cast<Square>(rook_file + 56 * castle_flag_color);
+                    castle_ability_bits |= castle_flag_color == WHITE ? 2 : 8;
+                }
+            }
+        }
+
+        else {
+            if (c == 'K') castle_ability_bits |= 1;
+            else if (c == 'Q') castle_ability_bits |= 2;
+            else if (c == 'k') castle_ability_bits |= 4;
+            else if (c == 'q') castle_ability_bits |= 8;
+        }
     }
+
+    std::cout << starting_rook_pos[WHITE][0] << " " << starting_rook_pos[WHITE][1] << " "
+              << starting_rook_pos[BLACK][0] << " " << starting_rook_pos[BLACK][1] << std::endl;
 
     if (en_passant.size() > 1) {
         auto square = static_cast<Square>((en_passant[1] - '1') * 8 + en_passant[0] - 'a');
@@ -453,6 +491,8 @@ void Position::get_rook_captures(FixedVector<ScoredMove, MAX_MOVES>& current_sco
 
 void Position::get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const {
     BITBOARD rooks = get_pieces(ROOK, side);
+    Square king_pos = get_king_pos(side);
+
     while (rooks) {
         Square square = poplsb(rooks);
 
@@ -470,17 +510,40 @@ void Position::get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
         // -- Generate Castling moves --
         if (!(rook_attacks & get_pieces(KING, side))) continue;  // Guard clause
 
-        Square king_pos = get_king_pos(side);
-
-        Square starting_rook_pos_k = side == WHITE ? h1 : h8;
-        Square starting_rook_pos_q = side == WHITE ? a1 : a8;
+        Square starting_rook_pos_k = starting_rook_pos[side][0];
+        Square starting_rook_pos_q = starting_rook_pos[side][1];
 
         Square target_pos_k = side == WHITE ? g1 : g8;
         Square target_pos_q = side == WHITE ? c1 : c8;
 
+        Square important_pos_k = target_pos_k + WEST;  // F1 square for FRC (the square the rook will go to)
+        Square important_pos_q = target_pos_k + EAST;  // D1 square for FRC (the square the rook will go to)
+
         // King side Castling
         if (((side == WHITE && (castle_ability_bits & 1) == 1) || (side == BLACK && (castle_ability_bits & 4) == 4))
             && square == starting_rook_pos_k) {
+            if (fischer_random_chess) {
+                // The rook is to the right of the F1 square
+                if (king_pos > important_pos_k) {
+                    // Ensure that the rook can go to the F1 square
+                    if (board[important_pos_k] != EMPTY) break;
+                }
+
+                // The rook is to the left of the F1 square
+                else if (king_pos < important_pos_k) {
+                    // Ensure that all the squares between the rook's square,
+                    // and its current square are empty
+                    bool flag = true;
+                    for (int temp_square = target_pos_k; temp_square > square; temp_square--) {
+                        if (board[temp_square] != EMPTY) {
+                            flag = false;
+                            break;
+                        }
+                    }
+
+                    if (!flag) continue;
+                }
+            }
             current_scored_moves.push_back({
                                                    Move(king_pos, target_pos_k, MOVE_TYPE_CASTLE),
                                                    0
@@ -490,6 +553,33 @@ void Position::get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
         // Queen side Castling
         else if (((side == WHITE && (castle_ability_bits & 2) == 2) || (side == BLACK && (castle_ability_bits & 8) == 8))
                  && square == starting_rook_pos_q) {
+
+            // FRC Castling Cases
+            if (fischer_random_chess) {
+
+                // The rook is to the left of the D1 square
+                if (king_pos < important_pos_q) {
+                    // Guard certain cases
+                    if (board[target_pos_q] != EMPTY && board[target_pos_q] != WHITE_KING) break;
+                    if (board[important_pos_q] != EMPTY) break;
+                }
+
+                // The rook is to the right of the D1 square
+                else if (king_pos > important_pos_q){
+                    // Ensure that all the squares between the rook's square,
+                    // and its current square are empty
+                    bool flag = true;
+                    for (int temp_square = target_pos_q; temp_square < square; temp_square++) {
+                        if (board[temp_square] != EMPTY) {
+                            flag = false;
+                            break;
+                        }
+                    }
+
+                    if (!flag) break;
+                }
+            }
+
             current_scored_moves.push_back({
                                                    Move(king_pos, target_pos_q, MOVE_TYPE_CASTLE),
                                                    0
@@ -620,12 +710,12 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
         legal = !is_attacked(get_king_pos(side), side);
 
         // Get rook locations
-        if (target_square == c1 || target_square == c8) { // Queen side
-            castled_pos[0] = static_cast<Square>(target_square - 2);  // Rook origin square
-            castled_pos[1] = static_cast<Square>(target_square + 1);  // Rook target square
-        } else {                                          // King side
-            castled_pos[0] = static_cast<Square>(target_square + 1);  // Rook origin square
-            castled_pos[1] = static_cast<Square>(target_square - 1);  // Rook target square
+        if (target_square == c1 || target_square == c8) {   // Queen side
+            castled_pos[0] = starting_rook_pos[side][1];                // Rook origin square
+            castled_pos[1] = static_cast<Square>(target_square + 1);    // Rook target square
+        } else {                                            // King side
+            castled_pos[0] = starting_rook_pos[side][0];                // Rook origin square
+            castled_pos[1] = static_cast<Square>(target_square - 1);    // Rook target square
         }
 
         // Move the Rook and hash it
@@ -646,8 +736,10 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
     }
 
     // Remove the piece from the source square except for some FRC edge cases
-    if (target_square != origin_square && castled_pos[1] != origin_square) {
-        remove_piece(selected, origin_square);
+    // (If the king goes is castling to the same location then no need to change anything)
+    if (target_square != origin_square) {
+        // If the king and rook swapped places, do not remove any piece (swapped rook), but hash the king away.
+        if (castled_pos[1] != origin_square) remove_piece(selected, origin_square);
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
     }
 
@@ -758,12 +850,12 @@ void Position::undo_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
 
     else if (move_type == MOVE_TYPE_CASTLE) {
         // Get rook locations
-        if (target_square == c1 || target_square == c8) { // Queen side
-            castled_pos[0] = static_cast<Square>(target_square - 2);  // Rook origin square
-            castled_pos[1] = static_cast<Square>(target_square + 1);  // Rook target square
-        } else {                                          // King side
-            castled_pos[0] = static_cast<Square>(target_square + 1);  // Rook origin square
-            castled_pos[1] = static_cast<Square>(target_square - 1);  // Rook target square
+        if (target_square == c1 || target_square == c8) {   // Queen side
+            castled_pos[0] = starting_rook_pos[side][1];                // Rook origin square
+            castled_pos[1] = static_cast<Square>(target_square + 1);    // Rook target square
+        } else {                                            // King side
+            castled_pos[0] = starting_rook_pos[side][0];                // Rook origin square
+            castled_pos[1] = static_cast<Square>(target_square - 1);    // Rook target square
         }
 
         // Move the Rook back
