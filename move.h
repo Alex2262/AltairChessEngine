@@ -93,8 +93,6 @@ public:
     [[nodiscard]] inline Piece selected() const { return Piece((move >> 20) & 0xf); }
     [[nodiscard]] inline Move normal_move() const { return Move(move & 0xffff); }
 
-    [[nodiscard]] inline bool is_capture() const { return occupied() < EMPTY; }
-
     bool operator==(InformativeMove a) const { return move == a.move; }
     bool operator!=(InformativeMove a) const { return move != a.move; }
 };

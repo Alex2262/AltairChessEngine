@@ -682,8 +682,7 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
     fifty_move++;
 
     // Handle captures
-    // (Do not treat castles as a capture because of edge cases such as king and rook swapping in FRC castling)
-    if (move.is_capture(*this) && move_type != MOVE_TYPE_CASTLE) {
+    if (move.is_capture(*this)) {
         remove_piece(occupied, target_square);
         hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
         fifty_move = 0;
@@ -737,8 +736,12 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
     // Remove the piece from the source square except for some FRC edge cases
     // (If the king goes is castling to the same location then no need to change anything)
     if (target_square != origin_square) {
-        // If the king and rook swapped places, do not remove any piece (swapped rook), but hash the king away.
-        if (castled_pos[1] != origin_square) remove_piece(selected, origin_square);
+
+        // The rook and king have swapped in FRC, and the rook has been placed in this square; however,
+        // the king in the bitboard hasn't been removed yet and must be removed.
+        if (castled_pos[1] == origin_square) pieces[selected] &= ~(1ULL << origin_square);
+        else remove_piece(selected, origin_square);
+
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
     }
 
