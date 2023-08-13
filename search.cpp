@@ -602,6 +602,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             [position.board[move.origin()]][move.target()];
 
         bool quiet = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
+        bool bad_capture = move.is_capture(position) && move_score < 10000;
 
         // Pruning
         if (!root && legal_moves >= 1 && abs(best_score) < MATE_BOUND) {
@@ -727,7 +728,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         double reduction;
         bool full_depth_zero_window;
-        bool bad_capture = move_score < 10000;
 
         // Late Move Reductions (LMR)
         // The idea that if moves are ordered well, then moves that are searched
@@ -760,7 +760,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // Scale reductions if the move is a recapture, or if we have already found a recapture
             reduction -= recapture * 0.5;
-            reduction += !recapture && recapture_found && quiet && !move_gives_check && move_history_score <= 0;
+            reduction += !recapture && recapture_found && !interesting;
 
             // Scale reductions based on how many moves have already raised alpha
             reduction += static_cast<double>(alpha_raised_count) * (0.3 + 0.5 * tt_move_capture);
