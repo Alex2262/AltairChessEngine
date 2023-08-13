@@ -643,7 +643,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         // Calculate if the current move is a recapture
         bool recapture = false;
-        if (last_move_one != NO_INFORMATIVE_MOVE && last_move_one.target() == move.target()) {
+        if (legal_moves == 0 && last_move_one != NO_INFORMATIVE_MOVE && last_move_one.target() == move.target()) {
             recapture_found = true;
             recapture = true;
         }
