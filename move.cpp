@@ -5,8 +5,8 @@
 
 bool Move::is_capture(const Position& position) const {
     Color side_to_move = get_color(position.board[origin()]);
-    return ~side_to_move * 6        <= position.board[target()] &&
-           ~side_to_move * 6 + 6     > position.board[target()];
+    return ~side_to_move * 6        <= static_cast<int>(position.board[target()]) &&
+           ~side_to_move * 6 + 6     > static_cast<int>(position.board[target()]);
 }
 
 std::string Move::get_uci(const Position& position) const {
