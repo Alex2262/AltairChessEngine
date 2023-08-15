@@ -772,7 +772,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             reduction += tt_move_capture * 0.3;
 
             // Clamp the LMR depth
-            auto lmr_depth = std::clamp<PLY_TYPE>(new_depth - static_cast<PLY_TYPE>(reduction), 1, new_depth);
+            reduction = std::clamp<PLY_TYPE>(reduction, 0, new_depth - 1);
+            auto lmr_depth = new_depth - reduction;
 
             // Recursively search
             return_eval = -negamax(engine, -alpha - 1, -alpha, lmr_depth, true, thread_id);
@@ -840,7 +841,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 tt_hash_flag = HASH_FLAG_EXACT;
 
                 // History Heuristic for move ordering
-                SCORE_TYPE bonus = depth * (depth + 1 + null_search + pv_node + improving) - 1;
+                SCORE_TYPE bonus = depth * (depth + 1 + null_search + pv_node + improving +
+                        static_cast<int>(reduction)) - 1;
 
                 if (quiet) {
                     update_history_entry(thread_state.history_moves
