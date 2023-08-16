@@ -202,8 +202,8 @@ SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation
 
         evaluation_information.game_phase += GAME_PHASE_SCORES[piece_type];
 
-        BITBOARD piece_attacks = get_piece_attacks(get_piece(piece_type, color), square,
-                                                   evaluation_information.piece_relative_occupancies[color][piece_type]);
+        BITBOARD piece_attacks = get_regular_piece_type_attacks<piece_type>(square,
+                                    evaluation_information.piece_relative_occupancies[color][piece_type]);
 
         if constexpr (piece_type != KING) {
             // MOBILITY

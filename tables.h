@@ -301,6 +301,16 @@ constexpr BITBOARD get_piece_attacks(Piece piece, Square square, BITBOARD occupa
     else return KING_ATTACKS[square];
 }
 
+template<PieceType piece_type>
+constexpr BITBOARD get_regular_piece_type_attacks(Square square, BITBOARD occupancy) {
+
+    if constexpr (piece_type == KNIGHT) return KNIGHT_ATTACKS[square];
+    else if constexpr (piece_type == BISHOP) return get_bishop_attacks(square, occupancy);
+    else if constexpr (piece_type == ROOK) return get_rook_attacks(square, occupancy);
+    else if constexpr (piece_type == QUEEN) return get_queen_attacks(square, occupancy);
+    return KING_ATTACKS[square];
+}
+
 
 consteval std::array<std::array<BITBOARD, 64>, 2> generate_passed_pawn_masks() {
     std::array<std::array<BITBOARD, 64>, 2> masks{};
