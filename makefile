@@ -11,6 +11,10 @@ CXXFLAGS     := -O3 -std=c++20 -Wall -Wextra -pedantic -DNDEBUG -flto
 CXX          := clang++
 SUFFIX       :=
 
+ifeq ($(native),1)
+    CXXFLAGS += -march=native
+endif
+
 # Detect Windows
 ifeq ($(OS), Windows_NT)
     SUFFIX   := .exe
