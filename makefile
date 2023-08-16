@@ -2,10 +2,9 @@
 # engine name
 EXE      = Altair
 
-SOURCES      := evaluation.cpp main.cpp move.cpp perft.cpp position.cpp search.cpp useful.cpp uci.cpp bench.cpp see.cpp bitboard.cpp \
-				move_ordering.cpp
+SOURCES      := src/evaluation.cpp src/main.cpp src/move.cpp src/perft.cpp src/position.cpp src/search.cpp \
+				src/useful.cpp src/uci.cpp src/bench.cpp src/see.cpp src/bitboard.cpp src/move_ordering.cpp
 
-TEMPDIR      := tmp/
 CXXFLAGS     := -O3 -std=c++20 -Wall -Wextra -pedantic -DNDEBUG -flto
 
 CXX          := clang++
