@@ -532,7 +532,7 @@ void Position::get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
                     // Ensure that all the squares between the rook's square,
                     // and its current square are empty
                     bool flag = false;
-                    for (int temp_square = target_pos_k; temp_square > square; temp_square--) {
+                    for (int temp_square = target_pos_k; temp_square > static_cast<int>(square); temp_square--) {
                         if (board[temp_square] != EMPTY) {
                             flag = true;
                             break;
@@ -567,7 +567,7 @@ void Position::get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
                     // Ensure that all the squares between the rook's square,
                     // and its current square are empty
                     bool flag = false;
-                    for (int temp_square = target_pos_q; temp_square < square; temp_square++) {
+                    for (int temp_square = target_pos_q; temp_square < static_cast<int>(square); temp_square++) {
                         if (board[temp_square] != EMPTY) {
                             flag = true;
                             break;
