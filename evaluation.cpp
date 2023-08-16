@@ -233,18 +233,8 @@ SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation
             score += OUR_KING_TROPISM[piece_type] * distance_to_our_king;
         }
 
-        if constexpr (piece_type == KING || piece_type == QUEEN || piece_type == ROOK) {
-            if (!(MASK_FILE[file_of(square)] & evaluation_information.pawns[color])) {
-                if (!(MASK_FILE[file_of(square)] & evaluation_information.pawns[~color])) {
-                    score += OPEN_FILE_VALUES[piece_type];
-                }
-                else {
-                    score += SEMI_OPEN_FILE_VALUES[piece_type];
-                }
-            }
-        }
-
-        if constexpr (piece_type == KING) {
+        // Only King
+        else {
             File file = file_of(square);
             if (file <= 2) {  // Queen side: Files A, B, C  (0, 1, 2)
                 score += evaluate_king_pawn(0, color, evaluation_information);
@@ -256,6 +246,17 @@ SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation
                 score += evaluate_king_pawn(5, color, evaluation_information);
                 score += evaluate_king_pawn(6, color, evaluation_information);
                 score += evaluate_king_pawn(7, color, evaluation_information);
+            }
+        }
+
+        if constexpr (piece_type == KING || piece_type == QUEEN || piece_type == ROOK) {
+            if (!(MASK_FILE[file_of(square)] & evaluation_information.pawns[color])) {
+                if (!(MASK_FILE[file_of(square)] & evaluation_information.pawns[~color])) {
+                    score += OPEN_FILE_VALUES[piece_type];
+                }
+                else {
+                    score += SEMI_OPEN_FILE_VALUES[piece_type];
+                }
             }
         }
 
