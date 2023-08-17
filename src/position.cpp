@@ -225,6 +225,52 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
     return static_cast<PLY_TYPE>(std::stoi(half_move_clock));
 }
 
+std::string Position::get_fen(PLY_TYPE fifty_move) {
+    std::string fen;
+
+    int empty = 0;
+    for (int i = 0; i < 64; i++) {
+        int square = i ^ 56;
+        if (i != 0 && i % 8 == 0) {
+            if (empty) fen += std::to_string(empty);
+            empty = 0;
+            fen += "/";
+        }
+
+        Piece piece = board[square];
+        if (piece == EMPTY) empty++;
+        else {
+            if (empty) fen += std::to_string(empty);
+            empty = 0;
+
+            fen += PIECE_MATCHER[piece];
+        }
+    }
+
+    fen += " ";
+    fen += side == WHITE ? "w" : "b";
+
+    fen += " ";
+
+    if (castle_ability_bits == 0) fen += "-";
+    if ((castle_ability_bits & 1) == 1) fen += "K";
+    if ((castle_ability_bits & 2) == 2) fen += "Q";
+    if ((castle_ability_bits & 4) == 4) fen += "k";
+    if ((castle_ability_bits & 8) == 8) fen += "q";
+
+    fen += " ";
+    if (ep_square == NO_SQUARE) fen += "-";
+    else {
+        fen += char(ep_square % 8 + 'a');
+        fen += char(ep_square / 8 + '1');
+    }
+
+    fen += " ";
+    fen += std::to_string(fifty_move);
+
+    return fen;
+}
+
 std::ostream& operator << (std::ostream& os, const Position& position) {
     std::string new_board;
 

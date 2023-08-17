@@ -30,6 +30,9 @@ struct Search_Results {
     uint64_t search_alpha_raises[ALPHA_RAISE_STATS_COUNT]{};
 
     PLY_TYPE depth_reached = 0;
+
+    Move best_move = NO_MOVE;
+    SCORE_TYPE score = 0;
 };
 
 struct T {
@@ -140,6 +143,7 @@ public:
     bool terminated = true;
 
     bool detect_repetition();
+    bool detect_repetition_3();
 };
 
 
@@ -153,6 +157,7 @@ public:
     std::vector<Thread_State> thread_states;
 
     bool stopped = true;
+    bool print_thinking = true;
 
     double LMR_REDUCTIONS_QUIET[MAX_AB_DEPTH][64]{};
     double LMR_REDUCTIONS_NOISY[MAX_AB_DEPTH][64]{};

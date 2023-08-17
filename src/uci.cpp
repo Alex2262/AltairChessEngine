@@ -356,7 +356,12 @@ void UCI::uci_loop() {
 
         else if (tokens[0] == "see") {
             Position& position = engine->thread_states[0].position;
-            std::cout << get_static_exchange_evaluation(position, Move(position, tokens[1]), 1);
+            std::cout << get_static_exchange_evaluation(position, Move(position, tokens[1]), 1) << std::endl;
+        }
+
+        else if (tokens[0] == "fen") {
+            Position& position = engine->thread_states[0].position;
+            std::cout << position.get_fen(engine->thread_states[0].fifty_move) << std::endl;
         }
     }
 }

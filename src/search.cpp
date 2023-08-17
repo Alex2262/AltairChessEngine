@@ -112,6 +112,20 @@ bool Thread_State::detect_repetition() {
     return false;
 }
 
+// Detects a repetition (Checks for 3 repetitions)
+bool Thread_State::detect_repetition_3() {
+
+    int count = 0;
+    for (PLY_TYPE i = game_ply - 2; i >= std::max<PLY_TYPE>(game_ply - fifty_move, 0); i--) {
+        if (repetition_table[i] == repetition_table[game_ply]) {
+            count++;
+            if (count >= 2) return true;
+        }
+    }
+
+    return false;
+}
+
 
 // Probes the transposition table for a matching entry based on the position's hash key and other factors.
 short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
@@ -270,9 +284,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         (engine.node_count & 2047) == 0 && engine.check_time())) {
         return 0;
     }
-
-    // Check remaining nodes to be searched
-    if (engine.max_nodes && engine.node_count >= engine.max_nodes) engine.stopped = true;
 
     // Probe the transposition table
     SCORE_TYPE tt_value = 0;
@@ -962,6 +973,8 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
 
+    if (!engine.print_thinking) return;
+
     PLY_TYPE depth = thread_state.current_search_depth;
 
     // Calculate the elapsed time and NPS
@@ -1121,7 +1134,10 @@ void iterative_search(Engine& engine, int thread_id) {
         previous_score = aspiration_window(engine, previous_score, asp_depth, best_move, thread_id);
 
         // Store the best move when the engine has finished a search (it hasn't stopped in the middle of a search)
-        if (thread_id == 0 && !engine.stopped) best_move = engine.pv_table[0][0];
+        if (thread_id == 0 && !engine.stopped) {
+            best_move = engine.pv_table[0][0];
+            engine.search_results.score = previous_score;
+        }
 
         if (thread_id == 0) {
             if (running_depth <= 4) low_depth_score = previous_score;
@@ -1159,6 +1175,9 @@ void iterative_search(Engine& engine, int thread_id) {
             if (running_depth >= engine.min_depth && thread_id == 0) {
                 if (elapsed_time >= engine.soft_time_limit) engine.stopped = true;
             }
+
+            // Check remaining nodes to be searched
+            if (engine.max_nodes && engine.node_count >= engine.max_nodes) engine.stopped = true;
         }
 
         // End the search when the engine has stopped running
@@ -1177,10 +1196,11 @@ void iterative_search(Engine& engine, int thread_id) {
 
     engine.search_results.depth_reached = running_depth;
     engine.search_results.node_count = engine.node_count;
+    engine.search_results.best_move = best_move;
 
     if (thread_id == 0) {
         std::string best_move_str = best_move.get_uci(position);
-        std::cout << "bestmove " << best_move_str << std::endl;
+        if (engine.print_thinking) std::cout << "bestmove " << best_move_str << std::endl;
     }
 
     thread_state.terminated = true;

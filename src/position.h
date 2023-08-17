@@ -114,6 +114,7 @@ public:
     void compute_hash_key();
 
     PLY_TYPE set_fen(const std::string& fen);
+    std::string get_fen(PLY_TYPE fifty_move);
 
     friend std::ostream& operator<<(std::ostream& os, const Position& position);
 
