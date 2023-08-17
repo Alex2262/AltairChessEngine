@@ -15,12 +15,17 @@ class Datagen {
     const int threads = 8;
 
     const int initial_random_moves = 8;
+    const int opening_max_score = 400;
+    const int opening_chance = 20;  // Out of 100
+
     const int adjudication_score = 1500;
     const int adjudication_length = 5;
 
     const int minimum_game_length = 20;
 
     const std::string WDL_scores[3] = {"1.0", "0.5", "0.0"};
+
+    std::vector<std::string> opening_fens{};
 
 public:
     bool stopped = false;

@@ -15,6 +15,10 @@ void Datagen::start_datagen() {
     std::vector<std::thread> search_threads;
     search_threads.resize(threads);
 
+    if (opening_chance > 0) {
+        opening_fens = get_file_fens("/Users/alexandertian/Documents/UHO_XXL_+0.90_+1.19.epd");
+    }
+
     std::cout << "Starting " << threads << " threads" << std::endl;
 
     for (int thread_id = 0; thread_id < threads; thread_id++) {
@@ -76,37 +80,59 @@ void Datagen::datagen(int thread_id) {
         engine->new_game();
         position.set_fen(START_FEN);
 
-        bool random_success = true;
+        bool opening_success = true;
         int game_length = 0;
 
-        for (int random_move_count = 0; random_move_count < initial_random_moves + (total_fens % 2); random_move_count++) {
-            position.set_state(position.state_stack[0], engine->thread_states[0].fifty_move);
-            position.get_pseudo_legal_moves(position.scored_moves[0]);
-
-            legal_moves.clear();
-
-            for (ScoredMove& scored_move : position.scored_moves[0]) {
-                Move move = scored_move.move;
-                bool attempt = position.make_move(move, position.state_stack[0], engine->thread_states[0].fifty_move);
-
-                if (attempt) legal_moves.push_back(move);
-
-                position.undo_move(move, position.state_stack[0], engine->thread_states[0].fifty_move);
-            }
-
-            if (legal_moves.empty()) {
-                random_success = false;
-                break;
-            }
-
-            Move random_move = legal_moves[rand() % legal_moves.size()];
-
-            position.make_move(random_move, position.state_stack[0], engine->thread_states[0].fifty_move);
-            game_length++;
+        if (rand() % 100 < opening_chance) {
+            std::string opening_fen = opening_fens[rand() % opening_fens.size()];
+            engine->thread_states[0].fifty_move = position.set_fen(opening_fen);
+            game_length = 9;
         }
 
-        if (!random_success) continue;
+        else {
+            for (int random_move_count = 0;
+                 random_move_count < initial_random_moves + (total_fens % 2); random_move_count++) {
+                position.set_state(position.state_stack[0], engine->thread_states[0].fifty_move);
+                position.get_pseudo_legal_moves(position.scored_moves[0]);
 
+                legal_moves.clear();
+
+                for (ScoredMove &scored_move: position.scored_moves[0]) {
+                    Move move = scored_move.move;
+                    bool attempt = position.make_move(move, position.state_stack[0],
+                                                      engine->thread_states[0].fifty_move);
+
+                    if (attempt) legal_moves.push_back(move);
+
+                    position.undo_move(move, position.state_stack[0], engine->thread_states[0].fifty_move);
+                }
+
+                if (legal_moves.empty()) {
+                    opening_success = false;
+                    break;
+                }
+
+                Move random_move = legal_moves[rand() % legal_moves.size()];
+
+                position.make_move(random_move, position.state_stack[0], engine->thread_states[0].fifty_move);
+                game_length++;
+            }
+        }
+
+        if (!opening_success) continue;
+
+        // Verification Search
+        engine->hard_time_limit = max_time_per_move;
+        engine->soft_time_limit = TIME_INF;
+        engine->max_nodes = 0;
+        engine->max_depth = 12;
+
+        lazy_smp_search(*engine);
+
+        if (abs(engine->search_results.score) >= opening_max_score) continue;
+
+        engine->max_nodes = nodes_per_move;
+        engine->max_depth = MAX_AB_DEPTH - 1;
 
         double game_result = -1.0;  // No result
         int adjudication_count = 0;
@@ -143,7 +169,7 @@ void Datagen::datagen(int thread_id) {
                 adjudication_count = 0;
             }
 
-            if (engine->thread_states[0].fifty_move >= 100 || engine->thread_states[0].detect_repetition_3()) {
+            if (engine->thread_states[0].fifty_move >= 100 || engine->thread_states[0].detect_repetition()) {
                 game_result = 0.5;
                 break;
             }
