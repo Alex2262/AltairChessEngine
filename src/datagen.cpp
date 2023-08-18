@@ -5,6 +5,8 @@
 #include <iostream>
 #include <fstream>
 #include <thread>
+#include <vector>
+#include <cmath>
 #include "datagen.h"
 #include "search.h"
 #include "evaluation.h"

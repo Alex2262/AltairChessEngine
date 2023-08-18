@@ -5,6 +5,8 @@
 #ifndef ALTAIRCHESSENGINE_DATAGEN_H
 #define ALTAIRCHESSENGINE_DATAGEN_H
 
+#include <vector>
+
 constexpr int MAX_GAME_LENGTH = 500;
 
 class Datagen {
