@@ -544,13 +544,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // We give the opponent an extra move and if they are not able to make their position
         // any better, then our position is too good, and we don't need to search any deeper.
         if (depth >= engine.tuning_parameters.NMP_depth && do_null &&
-            static_eval >= beta + 108 - ((12 + improving * 7) * depth) &&
+            static_eval >= beta + 108 - (12 + improving * 7) * depth &&
             position.get_non_pawn_material_count() >= 1 + (depth >= 10)) {
 
             // Adaptive NMP
             int reduction = engine.tuning_parameters.NMP_base +
                             depth / engine.tuning_parameters.NMP_depth_divisor +
-                            std::min(3, (static_eval - beta) / engine.tuning_parameters.NMP_eval_divisor);
+                            std::clamp((static_eval - beta) / engine.tuning_parameters.NMP_eval_divisor, -1, 3);
 
             position.make_null_move(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
