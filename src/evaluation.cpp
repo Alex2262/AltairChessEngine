@@ -218,7 +218,7 @@ SCORE_TYPE evaluate_piece(Position& position, Color color, EvaluationInformation
                                 (~evaluation_information.pieces[color]) &
                                 (~evaluation_information.pawn_attacks[~color]);
 
-            score += static_cast<SCORE_TYPE>(popcount(mobility)) * MOBILITY_VALUES[piece_type];
+            score += MOBILITY_VALUES[piece_type - 1][popcount(mobility)];
 
             // KING RING ATTACKS
             BITBOARD king_ring_attacks_1 = piece_attacks & king_ring_zone.masks[0][evaluation_information.king_squares[~color]];
