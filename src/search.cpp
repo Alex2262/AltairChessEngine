@@ -51,7 +51,7 @@ void Engine::clear_tt() {
 
 // Resets the Engine object for a new search
 void Engine::reset() {
-
+    stopped = true;
     std::memset(node_table, 0, sizeof(node_table));
 
     for (Thread_State& thread_state : thread_states) {
@@ -1111,13 +1111,8 @@ void iterative_search(Engine& engine, int thread_id) {
     Position& position = thread_state.position;
 
     // Reset certain information
-    engine.stopped = false;
-    thread_state.terminated = false;
 
-    // Initialize the start time
-    auto start_time = std::chrono::high_resolution_clock::now();
-    engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
-            (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
+    thread_state.terminated = false;
 
     // Initialize variables
     SCORE_TYPE previous_score = 0;
@@ -1169,9 +1164,10 @@ void iterative_search(Engine& engine, int thread_id) {
 
             // Calculate the elapsed time
             auto end_time = std::chrono::high_resolution_clock::now();
-            auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
-                                                                                - start_time);
-            uint64_t elapsed_time = ms_int.count();
+            uint64_t elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>
+                     (std::chrono::time_point_cast<std::chrono::milliseconds>(end_time).time_since_epoch()).count()
+                     - engine.start_time;
+
             elapsed_time = std::max<uint64_t>(elapsed_time, 1);
 
             // Stop the engine when we have exceeded the soft time limit
@@ -1222,6 +1218,11 @@ void iterative_search(Engine& engine, int thread_id) {
 void lazy_smp_search(Engine& engine) {
 
     engine.reset();
+    engine.stopped = false;
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+    engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
 
     std::vector<std::thread> search_threads;
     //std::vector<Position> new_positions;
