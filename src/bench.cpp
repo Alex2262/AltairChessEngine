@@ -91,7 +91,10 @@ void run_bench(Engine& engine, PLY_TYPE depth) {
         engine.hard_time_limit = TIME_INF;
 
         lazy_smp_search(engine);
-        total_nodes += engine.node_count;
+
+        for (Thread_State& thread_state_i : engine.thread_states) {
+            total_nodes += thread_state_i.node_count;
+        }
 
         if (engine.show_stats) {
             for (int i = 0; i < FAIL_HIGH_STATS_COUNT; i++) {

@@ -51,18 +51,17 @@ void Engine::clear_tt() {
 
 // Resets the Engine object for a new search
 void Engine::reset() {
-    node_count = 0;
-    primary_thread_node_count = 0;
+
     std::memset(node_table, 0, sizeof(node_table));
 
     for (Thread_State& thread_state : thread_states) {
         thread_state.current_search_depth = 1;
         thread_state.search_ply = 0;
+        thread_state.selective_depth = 0;
 
+        thread_state.node_count = 0;
         std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
     }
-
-    selective_depth = 0;
 
     std::memset(pv_length, 0, sizeof(pv_length));
     std::memset(pv_table, 0, sizeof(pv_table));
@@ -281,7 +280,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Check the remaining time
     if (engine.stopped || (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
-        (engine.node_count & 2047) == 0 && engine.check_time())) {
+        (thread_state.node_count & 2047) == 0 && engine.check_time())) {
         return 0;
     }
 
@@ -348,8 +347,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             continue;
         }
 
-        engine.node_count++;
-        if (thread_id == 0) engine.primary_thread_node_count++;
+        thread_state.node_count++;
 
         // Recursively search
         thread_state.search_ply++;
@@ -421,7 +419,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Check the remaining time
     if (engine.stopped || (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
-        (engine.node_count & 2047) == 0 && engine.check_time())) {
+        (thread_state.node_count & 2047) == 0 && engine.check_time())) {
         return 0;
     }
 
@@ -434,7 +432,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (thread_state.search_ply >= MAX_AB_DEPTH - 2) return evaluate(position);
 
         // Detect repetitions and fifty move rule
-        if (thread_state.fifty_move >= 100 || thread_state.detect_repetition()) return 3 - static_cast<int>(engine.node_count & 8);
+        if (thread_state.fifty_move >= 100 || thread_state.detect_repetition()) return 3 - static_cast<int>(thread_state.node_count & 8);
 
         // Mate Distance Pruning from CPW
         SCORE_TYPE mating_value = MATE_SCORE - thread_state.search_ply;
@@ -450,7 +448,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     }
 
-    engine.selective_depth = std::max(thread_state.search_ply, engine.selective_depth);
+    thread_state.selective_depth = std::max(thread_state.search_ply, thread_state.selective_depth);
 
     // Start quiescence search at the start of regular negamax search to counter the horizon effect.
     if (depth <= 0) {
@@ -649,8 +647,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         }
 
         // Increase node count
-        engine.node_count++;
-        if (thread_id == 0) engine.primary_thread_node_count++;
+        thread_state.node_count++;
 
         // Calculate if the current move is a recapture
         bool recapture = false;
@@ -735,7 +732,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         SCORE_TYPE return_eval = -SCORE_INF;
 
-        uint64_t current_nodes = engine.primary_thread_node_count;
+        uint64_t current_nodes = thread_state.node_count;
 
         double reduction;
         bool full_depth_zero_window;
@@ -830,7 +827,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             // Calculate nodes for each move for time management scaling
             if (root && thread_id == 0) {
                 engine.node_table[position.board[best_move.origin()]]
-                    [best_move.target()] += engine.primary_thread_node_count - current_nodes;
+                    [best_move.target()] += thread_state.node_count - current_nodes;
             }
 
             // Write moves into the PV table
@@ -986,7 +983,12 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
     uint64_t elapsed_time = end_int - engine.start_time;
     elapsed_time = std::max<uint64_t>(elapsed_time, 1);
 
-    auto nps = static_cast<uint64_t>(static_cast<double>(engine.node_count) /
+    uint64_t total_nodes = 0;
+    for (Thread_State& thread_state_i : engine.thread_states) {
+        total_nodes += thread_state_i.node_count;
+    }
+
+    auto nps = static_cast<uint64_t>(static_cast<double>(total_nodes) /
                                      (static_cast<double>(elapsed_time) / 1000.0));
 
     // Format the scores for printing to UCI
@@ -1023,9 +1025,9 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
     position.side = original_side;
 
     // Print the UCI search information
-    std::cout << "info multipv 1 depth " << depth << " seldepth " << engine.selective_depth
+    std::cout << "info multipv 1 depth " << depth << " seldepth " << thread_state.selective_depth
               << " score " << result_type << " time " << elapsed_time
-              << " nodes " << engine.node_count << " nps " << nps
+              << " nodes " << total_nodes << " nps " << nps
               << " pv " << pv_line << std::endl;
 
 }
@@ -1146,7 +1148,7 @@ void iterative_search(Engine& engine, int thread_id) {
             if (running_depth >= 8) {
                 auto best_node_percentage =
                         static_cast<double>(engine.node_table[position.board[best_move.origin()]] [best_move.target()]) /
-                        static_cast<double>(engine.primary_thread_node_count);
+                        static_cast<double>(thread_state.node_count);
 
                 double node_scaling_factor = (1.5 - best_node_percentage) * 1.35;
 
@@ -1178,7 +1180,11 @@ void iterative_search(Engine& engine, int thread_id) {
             }
 
             // Check remaining nodes to be searched
-            if (engine.max_nodes && engine.node_count >= engine.max_nodes) engine.stopped = true;
+            uint64_t total_nodes = 0;
+            for (Thread_State& thread_state_i : engine.thread_states) {
+                total_nodes += thread_state_i.node_count;
+            }
+            if (engine.max_nodes && total_nodes >= engine.max_nodes) engine.stopped = true;
         }
 
         // End the search when the engine has stopped running
@@ -1195,8 +1201,13 @@ void iterative_search(Engine& engine, int thread_id) {
         running_depth++;
     }
 
+    uint64_t total_nodes = 0;
+    for (Thread_State& thread_state_i : engine.thread_states) {
+        total_nodes += thread_state_i.node_count;
+    }
+
     engine.search_results.depth_reached = running_depth;
-    engine.search_results.node_count = engine.node_count;
+    engine.search_results.node_count = total_nodes;
     engine.search_results.best_move = best_move;
 
     if (thread_id == 0) {

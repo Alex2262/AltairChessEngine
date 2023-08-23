@@ -123,12 +123,16 @@ public:
 
     Thread_State() = default;
 
+    PLY_TYPE selective_depth = 0;
+
     Position position{};
 
     PLY_TYPE current_search_depth = 0;
     PLY_TYPE search_ply = 0;
     PLY_TYPE game_ply = 0;
     PLY_TYPE fifty_move = 0;
+
+    uint64_t node_count = 0;
 
     InformativeMove killer_moves[2][MAX_AB_DEPTH]{};  // killer moves (2) | max_depth (64)
     SCORE_TYPE history_moves[12][64]{}; // piece | target_square
@@ -162,8 +166,6 @@ public:
     double LMR_REDUCTIONS_QUIET[MAX_AB_DEPTH][64]{};
     double LMR_REDUCTIONS_NOISY[MAX_AB_DEPTH][64]{};
 
-    PLY_TYPE selective_depth = 0;
-
     PLY_TYPE max_depth = MAX_AB_DEPTH - 1;
     PLY_TYPE max_q_depth = TOTAL_MAX_DEPTH - MAX_AB_DEPTH;
     PLY_TYPE min_depth = 1;
@@ -174,8 +176,7 @@ public:
     uint64_t start_time = 0;
 
     uint64_t max_nodes = 0;
-    uint64_t primary_thread_node_count = 0;
-    uint64_t node_count = 0;
+
     uint64_t node_table[12][64]{};
 
     Move pv_table[MAX_AB_DEPTH + 1][MAX_AB_DEPTH + 1]{};
