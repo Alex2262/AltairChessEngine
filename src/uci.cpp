@@ -217,7 +217,7 @@ void UCI::uci_loop() {
             std::cout << "id name " + std::string(ENGINE_NAME) + " " + std::string(ENGINE_VERSION) << std::endl;
             std::cout << "id author Alexander Tian" << std::endl;
 
-            std::cout << "option name Hash type spin default " << 64 << " min " << 1 << " max " << 1024
+            std::cout << "option name Hash type spin default " << 64 << " min " << 1 << " max " << 24576
                       << std::endl;
 
             std::cout << "option name nodes type spin default " << 0 << " min " << 0 << " max " << 2147483647
