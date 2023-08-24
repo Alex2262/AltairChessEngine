@@ -319,19 +319,34 @@ double evaluate_drawishness(Position& position, EvaluationInformation& evaluatio
                                       evaluation_information.piece_counts[BLACK][ROOK] * CANONICAL_PIECE_VALUES[ROOK] +
                                       evaluation_information.piece_counts[BLACK][QUEEN] * CANONICAL_PIECE_VALUES[QUEEN];
 
+    const SCORE_TYPE white_material_non_pawns = white_material - evaluation_information.piece_counts[WHITE][PAWN] * CANONICAL_PIECE_VALUES[PAWN];
+    const SCORE_TYPE black_material_non_pawns = black_material - evaluation_information.piece_counts[BLACK][PAWN] * CANONICAL_PIECE_VALUES[PAWN];
+
     Color more_material_side = white_material >= black_material ? WHITE : BLACK;
     Color less_material_side = ~more_material_side;
 
     SCORE_TYPE more_material = std::max(white_material, black_material);
     SCORE_TYPE less_material = std::min(white_material, black_material);
 
-    // If there are too many rooks, don't evaluate for a draw
-    if (evaluation_information.piece_counts[WHITE][ROOK] + evaluation_information.piece_counts[BLACK][ROOK] >= 3) return 1.0;
+    SCORE_TYPE more_material_non_pawns = more_material_side == WHITE ? white_material_non_pawns : black_material_non_pawns;
+    SCORE_TYPE less_material_non_pawns = less_material_side == WHITE ? white_material_non_pawns : black_material_non_pawns;
+
+    BITBOARD strong_side_pawns = position.get_pieces(PAWN, more_material_side);
+    BITBOARD weak_side_pawns   = position.get_pieces(PAWN, less_material_side);
+
+    double base = 1.0;
+
+    // Low material difference scaling
+    if (!strong_side_pawns && more_material - less_material <= MAX_MINOR_PIECE_VALUE)
+        base = std::clamp((more_material - less_material) / 780.0 + popcount(weak_side_pawns) * 0.12, 0.1, 1.0);
+
+    // If there are too many rooks, don't evaluate for a special draw case
+    if (evaluation_information.piece_counts[WHITE][ROOK] + evaluation_information.piece_counts[BLACK][ROOK] >= 3) return base;
 
     // There is a queen on the board
     if (evaluation_information.piece_counts[WHITE][QUEEN] + evaluation_information.piece_counts[BLACK][QUEEN] >= 1) {
         // Guard clause
-        if (more_material > CANONICAL_PIECE_VALUES[QUEEN]) return 1.0;
+        if (more_material > CANONICAL_PIECE_VALUES[QUEEN]) return base;
 
         // Queen vs rook + knight, queen vs rook + bishop, etc.
         if (less_material >= CANONICAL_PIECE_VALUES[ROOK] + MIN_MINOR_PIECE_VALUE) return 0.03;
@@ -342,7 +357,7 @@ double evaluate_drawishness(Position& position, EvaluationInformation& evaluatio
         // Queen vs rook + pawn, possible fortress
         if (less_material >= CANONICAL_PIECE_VALUES[ROOK] + CANONICAL_PIECE_VALUES[PAWN]) return 0.6;
 
-        return 1.0;
+        return base;
     }
 
     // There are pawns on the board
@@ -410,7 +425,7 @@ double evaluate_drawishness(Position& position, EvaluationInformation& evaluatio
         // if (evaluation_information.piece_counts[WHITE][KNIGHT] + evaluation_information.piece_counts[WHITE][ROOK] +
         //     evaluation_information.piece_counts[BLACK][KNIGHT] + evaluation_information.piece_counts[BLACK][ROOK] >= 1) return 1.0;
 
-        return 1.0;
+        return base;
     }
 
     // At this point, we know there are no queens on the board, no pawns on the board,
@@ -437,7 +452,7 @@ double evaluate_drawishness(Position& position, EvaluationInformation& evaluatio
         // Here we know they both do not have 0 material, and they cannot have pawns or queens,
         // this means they either have a rook, and the other player has a minor piece,
         // or this means one player has two minor pieces, and the other players has one minor piece.
-        return 0.13;
+        return 0.1 + (more_material - less_material) / 1800.0;
     }
 
     // Rook + Minor piece imbalances
@@ -446,7 +461,7 @@ double evaluate_drawishness(Position& position, EvaluationInformation& evaluatio
         if (less_material == CANONICAL_PIECE_VALUES[ROOK]) return 0.14;
     }
 
-    return 1.0;
+    return base;
 
 }
 
@@ -502,6 +517,7 @@ double evaluate_opposite_colored_bishop_endgames(Position& position, EvaluationI
 
         // Pawns must be connected here
         if (more_pawns_bitboard & (MASK_FILE[FILE_A] | MASK_FILE[FILE_H])) return 0.05;
+        if (more_pawns_bitboard & (more_pawns_side == WHITE ? MASK_RANK[RANK_6] : MASK_RANK[RANK_3])) return 0.95;
 
         return 0.15;
     }
