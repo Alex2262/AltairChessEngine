@@ -8,7 +8,8 @@
   
 </div>
 
-Altair is a strong UCI-protocol chess engine that succeeds my old python engine Antares.
+Altair is a strong UCI-protocol chess engine.
+The engine is named after the star Altair, and is the successor to my previous python engine Antares.
 
 ## Ratings
 [CCRL Rating List](http://ccrl.chessdom.com/ccrl/) \
