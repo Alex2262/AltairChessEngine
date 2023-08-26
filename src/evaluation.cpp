@@ -164,17 +164,25 @@ SCORE_TYPE evaluate_pawns(Position& position, Color color, EvaluationInformation
             score += opp_king_distance * PASSED_OPP_DISTANCE[relative_rank];
         }
 
-        // BACKWARDS PAWN (We can use the passed pawn mask for the opposite color including the two squares next to it)
+        BITBOARD isolated_pawn_mask = fill<SOUTH>(fill<NORTH>(shift<WEST>(bb_square) | shift<EAST>(bb_square)));
+
+        // We can use the passed pawn mask for the opposite color including the two squares next to it
         BITBOARD backwards_pawn_mask = passed_pawn_masks[~color][square]
                                        | (shift<WEST>(bb_square)) | (shift<EAST>(bb_square));
-        if (!(backwards_pawn_mask & evaluation_information.pawns[color])) {
-            score += BACKWARDS_PAWN_PENALTY;
-        }
 
         // ISOLATED PAWN
-        BITBOARD isolated_pawn_mask = fill<SOUTH>(fill<NORTH>(shift<WEST>(bb_square) | shift<EAST>(bb_square)));
-        if (!(isolated_pawn_mask & our_pawns)) {
+        if (!(isolated_pawn_mask & evaluation_information.pawns[color])) {
             score += ISOLATED_PAWN_PENALTY;
+        }
+
+            // BACKWARDS PAWN
+            // We don't count this as an isolated pawn, and we ensure that the backwards pawn is prevented from
+            // advancing by an opposing pawn
+        else if (!(backwards_pawn_mask & evaluation_information.pawns[color]) &&
+                 (from_square(square + up) & evaluation_information.pawn_attacks[~color])) {
+
+            bool open = !(fill(up, bb_square) & evaluation_information.pawns[~color]);
+            score += BACKWARDS_PAWN_PENALTY[open];
         }
     }
 
