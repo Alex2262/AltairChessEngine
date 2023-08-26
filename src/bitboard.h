@@ -91,6 +91,20 @@ constexpr BITBOARD fill(BITBOARD b) {
     }
 }
 
+constexpr inline BITBOARD fill(Direction D, BITBOARD b) {
+    if (D == NORTH) {
+        b |= (b << 8);
+        b |= (b << 16);
+        return b | (b << 32);
+    } else if (D == SOUTH) {
+        b |= (b >> 8);
+        b |= (b >> 16);
+        return b | (b >> 32);
+    }
+
+    return b;
+}
+
 constexpr Square operator+(Square s, Direction d) {
     return Square(static_cast<int32_t>(s) + static_cast<int32_t>(d));
 }
