@@ -272,11 +272,11 @@ void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
 // until it reaches a quiet position.
 SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id) {
 
+    engine.tt_prefetch_read(engine.thread_states[thread_id].position.hash_key);  // Prefetch the TT for cache
+
     // Initialize Variables
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
-
-    engine.tt_prefetch_read(position.hash_key);  // Prefetch the TT for cache
 
     // Check the remaining time
     if (engine.stopped || (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
@@ -301,7 +301,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     if (depth == 0 || static_eval >= beta) return static_eval;
 
     // Set alpha to the greatest of either alpha or the evaluation
-    alpha = (static_eval > alpha) ? static_eval : alpha;
+    alpha = std::max(alpha, static_eval);
 
     // Variable to record the hash flag
     short tt_hash_flag = HASH_FLAG_ALPHA;
@@ -406,14 +406,14 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 // among other heuristics.
 SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, int thread_id) {
 
+    engine.tt_prefetch_read(engine.thread_states[thread_id].position.hash_key);  // Prefetch the TT for cache
+
     // Initialize Variables
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
 
-    engine.tt_prefetch_read(position.hash_key);  // Prefetch
-
     // Initialize PV length
-    if (thread_id == 0 && thread_state.search_ply <= MAX_AB_DEPTH) {
+    if (thread_id == 0) {
         engine.pv_length[thread_state.search_ply] = thread_state.search_ply;
     }
 
@@ -429,7 +429,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     if (!root) {
 
         // Depth guard
-        if (thread_state.search_ply >= MAX_AB_DEPTH - 2) return evaluate(position);
+        if (thread_state.search_ply >= MAX_AB_DEPTH - 2 || depth >= MAX_AB_DEPTH) return evaluate(position);
 
         // Detect repetitions and fifty move rule
         if (thread_state.fifty_move >= 100 || thread_state.detect_repetition()) return 3 - static_cast<int>(thread_state.node_count & 8);
@@ -468,16 +468,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // TT probing
     TT_Entry tt_entry{};
     short tt_return_type = engine.probe_tt_entry(thread_id, position.hash_key, alpha, beta, depth, tt_entry);
-
-    if (singular_search) tt_return_type = USE_HASH_MOVE;
-
     SCORE_TYPE tt_value = tt_entry.score;
     Move tt_move = tt_entry.move;
 
-    // We are allowed to return the hash score
-    if (tt_return_type == RETURN_HASH_SCORE && !pv_node) {
-        return tt_value;
-    }
+    // TT cutoffs
+    if (tt_return_type == RETURN_HASH_SCORE && !pv_node && !singular_search) return tt_value;
 
     // Variable to record the hash flag
     short tt_hash_flag = HASH_FLAG_ALPHA;
@@ -488,11 +483,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Check if we are currently in check.
     bool in_check;
 
-    if (position.state_stack[thread_state.search_ply].in_check != -1) {
+    if (position.state_stack[thread_state.search_ply].in_check != -1)
         in_check = static_cast<bool>(position.state_stack[thread_state.search_ply].in_check);
-    } else {
-        in_check = position.is_attacked(position.get_king_pos(position.side), position.side);
-    }
+    else in_check = position.is_attacked(position.get_king_pos(position.side), position.side);
+
 
     // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
     // from a full-move or two plies ago. When this is true, we can be more aggressive with
