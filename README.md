@@ -1,15 +1,17 @@
-# Altair
 
 <div align="center">
+  
+# Altair
   
   [![License][license-badge]][license-link]
   [![Release][release-badge]][release-link]
   [![Commits][commits-badge]][commits-link]
-  
+
+
+  Altair is a strong UCI-protocol chess engine named after the star Altair.
+
 </div>
 
-Altair is a strong UCI-protocol chess engine.
-The engine is named after the star Altair, and is the successor to my previous python engine Antares.
 
 ## Ratings
 [CCRL Rating List](http://ccrl.chessdom.com/ccrl/) \
@@ -17,14 +19,14 @@ The engine is named after the star Altair, and is the successor to my previous p
 
 | Version | CCRL Blitz | CCRL 40/15 | CCRL FRC | MCERL |
 |:-------:|:----------:|:----------:|:--------:|:-----:|
-|  1.0.0  |    ----    |    2406    |   ----   | ----  |
-|  2.0.0  |    2879    |    2808    |   ----   | 2639  |
-|  3.0.0  |    3012    |    3002    |   ----   | ----  |
-|  4.0.0  |    ----    |    ----    |   3082   | ----  |
+|  1.0.0  |    ----    |    2405    |   ----   | ----  |
+|  2.0.0  |    2880    |    2808    |   ----   | 2639  |
+|  3.0.0  |    3013    |    3002    |   ----   | ----  |
+|  **4.0.0**  |    **3083**    |    **3041**    |   **3079**   | **----**  |
 
 
 ## Download
-The release provides different binaries. \
+The release page provides different binaries. \
 Altair can also be built from the source code with cmake, using the CMakeLists.txt, and make, using the makefile.
 
 ## Play
@@ -114,7 +116,7 @@ Mentions:
 - [The Chess Programming Wiki](https://www.chessprogramming.org/Main_Page) contains invaluable resources that I have used.
 - [The Bitboard Chess Engine in C Playlist](https://www.youtube.com/playlist?list=PLmN0neTso3Jxh8ZIylk74JpwfiWNI76Cs) is a nice video series that contains implementations for different ideas and features.
 - [@archishou](https://github.com/archishou) has helped and supported me a lot in the development and improvement of my engine.
-- [@GediminasMasaitis](https://github.com/GediminasMasaitis) has also helped me a lot in the development of my engine. His engine [Chessdotcpp](https://github.com/GediminasMasaitis/chess-dot-cpp) has inspired me with many ideas. Since version 1.3.6 and beyond, I have also used his [Texel Tuner](https://github.com/GediminasMasaitis/texel-tuner/tree/main/src) for tuning evaluation parameters.
+- [@GediminasMasaitis](https://github.com/GediminasMasaitis) has also helped me a lot in the development of my engine. His engine [Chessdotcpp](https://github.com/GediminasMasaitis/chess-dot-cpp) has inspired me with many ideas. Since version 1.3.6 and beyond, I have also used his [Texel Tuner](https://github.com/GediminasMasaitis/texel-tuner/tree/main/src) for tuning HCE parameters.
 - [Weiss](https://github.com/TerjeKir/weiss) is another great inspiration and resource.
 - The Engine Programming Discord Server for answering many of my questions.
 - Everyone in this [OpenBench Testing Instance](https://chess.swehosting.se/users/) for their support and 
