@@ -7,6 +7,7 @@
 
 #include "constants.h"
 #include "position.h"
+#include "search.h"
 
 class Node {
 public:
@@ -47,6 +48,8 @@ public:
     uint32_t root_node_index = 0;
 
     PLY_TYPE temp_fifty_move = 0;
+
+    std::unique_ptr<Engine> engine = std::make_unique<Engine>();
 
     Tree tree{};
 

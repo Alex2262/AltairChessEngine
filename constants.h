@@ -9,7 +9,7 @@
 #define ENGINE_VERSION              "4.0.0"
 #define ENGINE_AUTHOR               "Alexander Tian"
 
-constexpr double EXPLORATION_CONSTANT = 4;
+constexpr double EXPLORATION_CONSTANT = 1.2;
 constexpr uint64_t MAX_TIME = 5000;
 constexpr uint64_t MAX_ITERATIONS = 10'000'000;
 constexpr int DRAW_RESULT = 2;

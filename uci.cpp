@@ -19,6 +19,16 @@ void UCI::initialize_uci() const {
     position.set_fen(START_FEN);
     mcts_engine->new_game();
 
+    mcts_engine->engine->transposition_table.resize(MAX_TT_SIZE);
+
+    mcts_engine->engine->initialize_lmr_reductions();
+
+    mcts_engine->engine->thread_states.emplace_back();
+    mcts_engine->engine->max_depth = 2;
+    mcts_engine->engine->hard_time_limit = TIME_INF;
+    mcts_engine->engine->soft_time_limit = TIME_INF;
+    mcts_engine->engine->print_thinking = false;
+
     // std::cout << engine->transposition_table.size() << " number of hash entries initialized" << std::endl;
 }
 

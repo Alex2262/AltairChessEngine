@@ -42,6 +42,6 @@ add_executable(Altair
         evaluation.h
         evaluation_constants.h
         move_ordering.cpp
-        move_ordering.h mcts.cpp mcts.h)
+        move_ordering.h mcts.cpp mcts.h search.cpp search.h)
 
 target_link_libraries(Altair Threads::Threads)

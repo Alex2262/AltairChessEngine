@@ -79,6 +79,9 @@ uint32_t MCTS::select_best_child(uint32_t node_index) {
     std::vector<double> policies(n_children);
 
     double policy_sum = 0;
+    double lowest = SCORE_INF;
+    test_position.set_state(test_position.state_stack[0], temp_fifty_move);
+
     for (int i = 0; i < n_children; i++) {
         uint32_t child_node_index = tree.graph[node_index].children_start + i;
         Node child_node = tree.graph[child_node_index];
@@ -86,6 +89,7 @@ uint32_t MCTS::select_best_child(uint32_t node_index) {
         double policy = 1.0;
 
         Move last_move = child_node.last_move;
+        /*
         Piece selected = test_position.board[last_move.origin()];
         Piece occupied = test_position.board[last_move.target()];
 
@@ -102,12 +106,36 @@ uint32_t MCTS::select_best_child(uint32_t node_index) {
                 policy += 1;
             } else policy -= 0.2;
         }
+         */
 
+        test_position.make_move(last_move, test_position.state_stack[0], temp_fifty_move);
+        engine->thread_states[0].position = test_position;
+
+        // std::cout << test_position << std::endl;
+
+        lazy_smp_search(*engine);
+
+        test_position.undo_move(last_move, test_position.state_stack[0], temp_fifty_move);
+
+        int sign = engine->search_results.score > 0 ? 1 : -1;
+        policy = -engine->search_results.score;
         policies[i] = policy;
-        policy_sum += policy;
+
+        lowest = std::min(lowest, policy);
+
+        // std::cout << policies[i] << std::endl;
+        // policy_sum += policy;
     }
 
     // Normalize policies
+    for (double& policy : policies) {
+        policy -= lowest - 1;
+        assert(policy >= 1);
+        policy = std::log(policy);
+
+        policy_sum += policy;
+    }
+
     for (double& policy : policies) {
         policy /= policy_sum;
     }
@@ -273,7 +301,7 @@ void MCTS::search() {
             }
         }
 
-        if ((iteration % 10000) == 0 && iteration != 0) {
+        if ((iteration % 100) == 0 && iteration != 0) {
             print_info();
         }
     }

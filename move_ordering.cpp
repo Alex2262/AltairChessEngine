@@ -7,7 +7,7 @@
 #include "move_ordering.h"
 #include "see.h"
 
-/*
+
 SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
                       InformativeMove last_move_one, InformativeMove last_move_two) {
     if (move == tt_move) return 100000;
@@ -114,7 +114,7 @@ void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_
         scored_move.score = score_capture(thread_state, scored_move.move, tt_move);
     }
 }
-*/
+
 
 Move sort_next_move(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, int current_count) {
 	auto best_score = current_scored_moves[current_count].score;
