@@ -7,6 +7,8 @@
 #include <queue>
 #include "mcts.h"
 #include "evaluation.h"
+#include "evaluation_constants.h"
+#include "see.h"
 
 
 void MCTS::new_game() {
@@ -62,7 +64,7 @@ void MCTS::print_info() {
     uint32_t best_node_index = get_best_node();
 
     auto score = static_cast<int>(tree.graph[best_node_index].win_count /
-                                  static_cast<double>(tree.graph[best_node_index].total_nodes)
+                                  static_cast<double>(tree.graph[best_node_index].visits)
                                   * CP_SCALE);
 
     std::cout << "info iteration " << iterations << " depth " << seldepth << " score cp " << score << " pv "
@@ -70,40 +72,79 @@ void MCTS::print_info() {
 }
 
 
+uint32_t MCTS::select_best_child(uint32_t node_index) {
+    Node node = tree.graph[node_index];
+
+    uint32_t n_children = tree.graph[node_index].children_end - tree.graph[node_index].children_start;
+    std::vector<double> policies(n_children);
+
+    double policy_sum = 0;
+    for (int i = 0; i < n_children; i++) {
+        uint32_t child_node_index = tree.graph[node_index].children_start + i;
+        Node child_node = tree.graph[child_node_index];
+
+        double policy = 1.0;
+
+        Move last_move = child_node.last_move;
+        Piece selected = test_position.board[last_move.origin()];
+        Piece occupied = test_position.board[last_move.target()];
+
+        auto selected_type = get_piece_type(selected, test_position.side);
+
+        if (last_move.is_capture(test_position)) {
+
+            auto occupied_type = get_piece_type(occupied, ~test_position.side);
+
+            policy += (MVV_LVA_VALUES[occupied_type] - MVV_LVA_VALUES[selected_type]) / 1200.0;
+
+            // Only Use SEE under certain conditions since it is expensive
+            if (get_static_exchange_evaluation(position, last_move, -108)) {
+                policy += 1;
+            } else policy -= 0.2;
+        }
+
+        policies[i] = policy;
+        policy_sum += policy;
+    }
+
+    // Normalize policies
+    for (double& policy : policies) {
+        policy /= policy_sum;
+    }
+
+    uint32_t best_node_index = 0;
+    double best_puct = -1000000;
+
+    for (int i = 0; i < n_children; i++) {
+        uint32_t child_node_index = tree.graph[node_index].children_start + i;
+        Node child_node = tree.graph[child_node_index];
+
+        double prior_score = EXPLORATION_CONSTANT * (std::sqrt(node.visits) / (1 + child_node.visits)) * policies[i];
+        double value_score = static_cast<double>(child_node.win_count) / static_cast<double>(child_node.visits);
+
+        double puct = prior_score + value_score;
+
+        if (puct > best_puct) {
+            best_puct = puct;
+            best_node_index = child_node_index;
+        }
+    }
+
+    return best_node_index;
+}
+
 uint32_t MCTS::selection() {
     uint32_t leaf_node_index = root_node_index;
     test_position = position;
 
     int depth = 0;
     while (true) {
-        // std::cout << "selecting: " << leaf_node_index << std::endl;
-        uint32_t current_node_index = leaf_node_index;
-        uint32_t n_children = tree.graph[current_node_index].children_end - tree.graph[current_node_index].children_start;
 
-        // std::cout << n_children << std::endl;
-        if (n_children == 0) {
-            break;
-        }
+        uint32_t n_children = tree.graph[leaf_node_index].children_end - tree.graph[leaf_node_index].children_start;
 
-        double best_uct = -1000000;
+        if (n_children == 0) break;
 
-        for (int i = 0; i < n_children; i++) {
-            uint32_t child_node_index = tree.graph[current_node_index].children_start + i;
-            // assert(tree.graph[child_node_index].own_index == child_node_index);
-            Node child_node = tree.graph[child_node_index];
-
-            double exploitation_value = double(child_node.win_count) / child_node.total_nodes;
-            double exploration_value = sqrt(std::log(tree.graph[current_node_index].total_nodes)
-                                            / child_node.total_nodes);
-
-            double uct_value = exploitation_value + EXPLORATION_CONSTANT * exploration_value;
-
-            if (uct_value > best_uct) {
-
-                leaf_node_index = child_node_index;
-                best_uct = uct_value;
-            }
-        }
+        leaf_node_index = select_best_child(leaf_node_index);
 
         test_position.set_state(test_position.state_stack[0], temp_fifty_move);
         test_position.make_move(tree.graph[leaf_node_index].last_move, test_position.state_stack[0], temp_fifty_move);
@@ -147,7 +188,7 @@ void MCTS::back_propagation(uint32_t node_index, double evaluation, int result) 
     while (true) {
         Node& current_node = tree.graph[current_node_index];
 
-        current_node.total_nodes++;
+        current_node.visits++;
         if (current_side == result) current_node.win_count += 5;
         else if ((current_side ^ 1) == result) current_node.win_count -= 5;
         else if (result != DRAW_RESULT) {
@@ -167,8 +208,8 @@ uint32_t MCTS::get_best_node() {
     uint32_t best_index = 0;
     for (int i = 0; i < tree.graph[root_node_index].children_end - tree.graph[root_node_index].children_start; i++) {
         Node& node = tree.graph[tree.graph[root_node_index].children_start + i];
-        if (node.total_nodes >= best) {
-            best = node.total_nodes;
+        if (node.visits >= best) {
+            best = node.visits;
             best_index = tree.graph[root_node_index].children_start + i;
         }
     }
@@ -195,7 +236,7 @@ void MCTS::search() {
         // std::cout << "selection" << std::endl;
         uint32_t selected_node_index = selection();
 
-        tree.graph[selected_node_index].visits++;
+        // tree.graph[selected_node_index].visits++;
 
         int node_result = NO_RESULT;
 
@@ -222,7 +263,7 @@ void MCTS::search() {
         // std::cout << "back propagation" << std::endl;
         back_propagation(selected_node_index, evaluation, node_result);
 
-        if ((iteration & 1023) == 0) {
+        if ((iteration & 255) == 0) {
             auto time = std::chrono::high_resolution_clock::now();
             uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>
                     (std::chrono::time_point_cast<std::chrono::milliseconds>(time).time_since_epoch()).count();

@@ -59,7 +59,7 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
     else if (self_time > 0) time_amt = self_time / (rate + 6);
     else time_amt = static_cast<double>(mcts_engine->max_time);
 
-    mcts_engine->max_time = static_cast<uint64_t>(time_amt);
+    mcts_engine->max_time = static_cast<uint64_t>(time_amt * 0.9);
 
     // std::cout << time_amt << " " << engine->hard_time_limit << " " << engine->soft_time_limit << std::endl;
 }
