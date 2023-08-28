@@ -327,8 +327,8 @@ double evaluate_drawishness(Position& position, EvaluationInformation& evaluatio
                                       evaluation_information.piece_counts[BLACK][ROOK] * CANONICAL_PIECE_VALUES[ROOK] +
                                       evaluation_information.piece_counts[BLACK][QUEEN] * CANONICAL_PIECE_VALUES[QUEEN];
 
-    const SCORE_TYPE white_material_non_pawns = white_material - evaluation_information.piece_counts[WHITE][PAWN] * CANONICAL_PIECE_VALUES[PAWN];
-    const SCORE_TYPE black_material_non_pawns = black_material - evaluation_information.piece_counts[BLACK][PAWN] * CANONICAL_PIECE_VALUES[PAWN];
+    // const SCORE_TYPE white_material_non_pawns = white_material - evaluation_information.piece_counts[WHITE][PAWN] * CANONICAL_PIECE_VALUES[PAWN];
+    // const SCORE_TYPE black_material_non_pawns = black_material - evaluation_information.piece_counts[BLACK][PAWN] * CANONICAL_PIECE_VALUES[PAWN];
 
     Color more_material_side = white_material >= black_material ? WHITE : BLACK;
     Color less_material_side = ~more_material_side;
@@ -336,8 +336,8 @@ double evaluate_drawishness(Position& position, EvaluationInformation& evaluatio
     SCORE_TYPE more_material = std::max(white_material, black_material);
     SCORE_TYPE less_material = std::min(white_material, black_material);
 
-    SCORE_TYPE more_material_non_pawns = more_material_side == WHITE ? white_material_non_pawns : black_material_non_pawns;
-    SCORE_TYPE less_material_non_pawns = less_material_side == WHITE ? white_material_non_pawns : black_material_non_pawns;
+    // SCORE_TYPE more_material_non_pawns = more_material_side == WHITE ? white_material_non_pawns : black_material_non_pawns;
+    // SCORE_TYPE less_material_non_pawns = less_material_side == WHITE ? white_material_non_pawns : black_material_non_pawns;
 
     BITBOARD strong_side_pawns = position.get_pieces(PAWN, more_material_side);
     BITBOARD weak_side_pawns   = position.get_pieces(PAWN, less_material_side);

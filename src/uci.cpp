@@ -23,8 +23,6 @@ void UCI::initialize_uci() const {
 
     Position& position = engine->thread_states[0].position;
     position.set_fen(START_FEN);
-
-    // std::cout << engine->transposition_table.size() << " number of hash entries initialized" << std::endl;
 }
 
 
@@ -263,8 +261,10 @@ void UCI::uci_loop() {
         else if (tokens[0] == "setoption" && tokens.size() >= 5) {
             if (tokens[2] == "Hash") {
                 int mb = std::stoi(tokens[4]);
-                mb = std::min(1024, std::max(1, mb));
-                engine->transposition_table.resize(mb * (1000000 / 24));
+                mb = std::clamp<int>(mb, 1, 24576);
+
+                size_t entries = static_cast<size_t>(mb) * 1048576 / 24;
+                engine->transposition_table.resize(entries);
                 std::cout << engine->transposition_table.size() << " number of hash entries initialized" << std::endl;
             }
 
