@@ -6,7 +6,7 @@
 #include "types.h"
 
 #define ENGINE_NAME                 "Altair"
-#define ENGINE_VERSION              "4.0.0"
+#define ENGINE_VERSION              "4.3.8"
 #define ENGINE_AUTHOR               "Alexander Tian"
 
 #define N_TUNING_PARAMETERS         18

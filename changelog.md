@@ -5826,3 +5826,128 @@ LLR   | -0.05 (-2.94, 2.94) [0.00, 5.00]
 GAMES | N: 61864 W: 16821 L: 16473 D: 28570
 https://chess.swehosting.se/test/2545/
 ```
+
+### 4.2.7
+Drawishness calculations improved
+
+```
+ELO   | 2.62 +- 4.04 (95%)
+SPRT  | 40.0+0.40s Threads=1 Hash=128MB
+LLR   | 0.68 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 13656 W: 3345 L: 3242 D: 7069
+https://chess.swehosting.se/test/2569/
+```
+
+### 4.2.8
+Total King Ring layer 1 weight doubled
+
+```
+ELO   | 5.17 +- 4.04 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.98 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 15720 W: 4479 L: 4245 D: 6996
+https://chess.swehosting.se/test/2627/
+```
+
+### 4.2.9
+No saving killers under certain conditions in a null search
+
+```
+ELO   | 4.07 +- 3.28 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 22696 W: 6120 L: 5854 D: 10722
+https://chess.swehosting.se/test/2639/
+```
+
+### 4.3.0
+TT fail low best move saving
+
+```
+ELO   | 10.44 +- 6.45 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 3.00 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 5728 W: 1561 L: 1389 D: 2778
+https://chess.swehosting.se/test/2722/
+```
+
+### 4.3.1
+Backward Pawns fix
+
+```
+ELO   | 6.06 +- 4.55 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.97 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 11992 W: 3328 L: 3119 D: 5545
+https://chess.swehosting.se/test/3049/
+```
+
+### 4.3.2
+Piece relative occupancies for evaluating terms such as mobility and king safety
+
+```
+ELO   | 2.98 +- 3.76 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 1.08 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 17840 W: 4930 L: 4777 D: 8133
+https://chess.swehosting.se/test/3225/
+```
+
+### 4.3.3
+Our king tropism
+
+```
+ELO   | 6.73 +- 4.95 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.96 (-2.94, 2.94) [0.00, 5.00]
+GAMES | N: 10488 W: 3011 L: 2808 D: 4669
+https://chess.swehosting.se/test/3282/
+```
+
+### 4.3.4
+Fischer Random Chess implemented for bitboards
+
+
+### 4.3.5
+Null Move Pruning improving heuristic
+
+```
+ELO   | 11.82 +- 7.07 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.94 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 4880 W: 1368 L: 1202 D: 2310
+https://chess.swehosting.se/test/3452/
+```
+
+### 4.3.6
+Passed pawn king distance evaluation
+
+```
+ELO   | 10.96 +- 6.72 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.97 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 5392 W: 1504 L: 1334 D: 2554
+https://chess.swehosting.se/test/3481/
+```
+
+### 4.3.7
+Mobility Arrays
+
+```
+ELO   | 21.18 +- 9.89 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.91 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 2464 W: 714 L: 564 D: 1186
+https://chess.swehosting.se/test/3493/
+```
+
+### 4.3.8
+Backward Pawns 2
+
+```
+ELO   | 5.94 +- 4.52 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.89 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 11696 W: 3123 L: 2923 D: 5650
+https://chess.swehosting.se/test/3545/
+```
