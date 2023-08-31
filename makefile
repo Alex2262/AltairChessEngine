@@ -19,7 +19,7 @@ endif
 ifeq ($(OS), Windows_NT)
     SUFFIX   := .exe
     CXXFLAGS += -static
-    CXXFLAGS += -fuse-ld=lld
+
 else
     DETECTED_OS := $(shell uname -s)
     ifneq (,$(findstring clang,$(shell $(CXX) --version)))
