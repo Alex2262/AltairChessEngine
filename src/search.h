@@ -97,7 +97,7 @@ struct Tuning_Parameters {
 struct Move_Ordering_Parameters {
     T tuning_parameter_array[8] = {
             T{"winning_capture_margin", 5000, 50000, 50000, 1750},
-            T{"base_capture_margin", -10000, 8000, -500, 2000},
+            T{"base_capture_margin", -10000, 8000, -5000, 2000},
             T{"capture_scale", 1, 20, 3, 2},
             T{"queen_promotion_margin", 20000, 200000, 100000, 1500},
             T{"other_promotion_margin", -20000, 10000, -30000, 2000},
