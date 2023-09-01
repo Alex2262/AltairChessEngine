@@ -222,6 +222,8 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
 
     compute_hash_key();
 
+    nnue_state.reset_nnue(*this);
+
     return static_cast<PLY_TYPE>(std::stoi(half_move_clock));
 }
 
@@ -727,9 +729,12 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
 
     fifty_move++;
 
+    nnue_state.push();
+
     // Handle captures
     if (move.is_capture(*this)) {
         remove_piece(occupied, target_square);
+        nnue_state.update_feature<false>(occupied, target_square);
         hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
         fifty_move = 0;
     }
@@ -737,15 +742,18 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
     // -- Make the actual pseudo-legal move --
     if (move_type == MOVE_TYPE_NORMAL) {
         place_piece(selected, target_square);
+        nnue_state.update_feature<true>(selected, target_square);
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
     }
 
     else if (move_type == MOVE_TYPE_EP) {
         place_piece(selected, target_square);
+        nnue_state.update_feature<true>(selected, target_square);
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
 
         // Find and remove the captured EP pawn
         auto captured_square = static_cast<Square>(target_square + static_cast<Square>(side == WHITE ? SOUTH : NORTH));
+        nnue_state.update_feature<false>(board[captured_square], captured_square);
         hash_key ^= ZobristHashKeys.piece_hash_keys[board[captured_square]][captured_square];
         remove_piece(board[captured_square], captured_square);
     }
@@ -762,7 +770,9 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
             castled_pos[1] = static_cast<Square>(target_square - 1);    // Rook target square
         }
 
-        // Move the Rook and hash it
+        // Move the Rook
+        nnue_state.update_feature<false>(board[castled_pos[0]], castled_pos[0]);
+        nnue_state.update_feature<true>(board[castled_pos[0]], castled_pos[1]);
         hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[0]];
         hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[1]];
         remove_piece(board[castled_pos[0]], castled_pos[0]);
@@ -770,12 +780,14 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
 
         // Move the king now (after moving the rook due to FRC edge-cases where the king and rook swap places)
         place_piece(selected, target_square);
+        nnue_state.update_feature<true>(selected, target_square);
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
     }
 
     else if (move_type == MOVE_TYPE_PROMOTION) {
         auto promotion_piece = static_cast<Piece>(move.promotion_type() + 1 + side * COLOR_OFFSET);
         place_piece(promotion_piece, target_square);
+        nnue_state.update_feature<true>(promotion_piece, target_square);
         hash_key ^= ZobristHashKeys.piece_hash_keys[promotion_piece][target_square];
     }
 
@@ -788,6 +800,7 @@ bool Position::make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
         if (castled_pos[1] == origin_square) pieces[selected] &= ~(1ULL << origin_square);
         else remove_piece(selected, origin_square);
 
+        nnue_state.update_feature<false>(selected, origin_square);
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
     }
 
@@ -882,6 +895,8 @@ void Position::undo_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_
     Piece selected = state_struct.move.selected();
     Piece occupied = state_struct.move.occupied();
     MoveType move_type = move.type();
+
+    nnue_state.pop();
 
     // Reset certain information
     side = static_cast<Color>(selected >= BLACK_PAWN);

@@ -351,7 +351,7 @@ void UCI::uci_loop() {
 
         else if (tokens[0] == "evaluate") {
             Position& position = engine->thread_states[0].position;
-            std::cout << evaluate(position) << std::endl;
+            std::cout << position.nnue_state.evaluate(position.side) << std::endl;
         }
 
         else if (tokens[0] == "see") {

@@ -12,6 +12,7 @@
 #include "bitboard.h"
 #include "tables.h"
 #include "move.h"
+#include "nnue.h"
 
 
 struct ScoredMove {
@@ -40,6 +41,8 @@ class Position {
 public:
 
     Position() = default;
+
+    NNUE_State nnue_state{};
 
     bool fischer_random_chess = false;
 
