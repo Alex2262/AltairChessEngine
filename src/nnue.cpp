@@ -6,7 +6,7 @@
 #include "incbin.h"
 #include "position.h"
 
-INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/gemstone.nnue");
+INCBIN(nnue, "src/gemstone.nnue");
 const NNUE_Params &nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 
 void NNUE_State::push() {
