@@ -2,13 +2,14 @@
 // Created by Alexander Tian on 6/16/23.
 //
 
+#include "nnue.h"
+#include "position.h"
+
 #ifdef _MSC_VER
 #undef _MSC_VER
 #endif
 
-#include "nnue.h"
 #include "incbin.h"
-#include "position.h"
 
 INCBIN(nnue, "src/gemstone.nnue");
 const NNUE_Params &nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
