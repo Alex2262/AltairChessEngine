@@ -12,6 +12,7 @@
 #include "incbin.h"
 
 INCBIN(nnue, "src/gemstone.nnue");
+// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/gemstone.nnue");
 const NNUE_Params &nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 
 void NNUE_State::push() {
