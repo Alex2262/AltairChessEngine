@@ -280,7 +280,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Check the remaining time
     if (engine.stopped || (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
-        (thread_state.node_count & 2047) == 0 && engine.check_time())) {
+        (thread_state.node_count & 2047) == 0 &&
+        ((engine.hard_node_limit && thread_state.node_count >= engine.hard_node_limit) || engine.check_time()))) {
         return 0;
     }
 
@@ -419,7 +420,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Check the remaining time
     if (engine.stopped || (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
-        (thread_state.node_count & 2047) == 0 && engine.check_time())) {
+        (thread_state.node_count & 2047) == 0 &&
+        ((engine.hard_node_limit && thread_state.node_count >= engine.hard_node_limit) || engine.check_time()))) {
         return 0;
     }
 
@@ -1174,7 +1176,7 @@ void iterative_search(Engine& engine, int thread_id) {
             for (Thread_State& thread_state_i : engine.thread_states) {
                 total_nodes += thread_state_i.node_count;
             }
-            if (engine.max_nodes && total_nodes >= engine.max_nodes) engine.stopped = true;
+            if (engine.soft_node_limit && total_nodes >= engine.soft_node_limit) engine.stopped = true;
         }
 
         // End the search when the engine has stopped running

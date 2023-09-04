@@ -175,7 +175,8 @@ public:
     uint64_t soft_time_limit = 60000;
     uint64_t start_time = 0;
 
-    uint64_t max_nodes = 0;
+    uint64_t soft_node_limit = 0;
+    uint64_t hard_node_limit = 0;
 
     uint64_t node_table[12][64]{};
 

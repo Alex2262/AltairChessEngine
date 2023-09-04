@@ -52,7 +52,7 @@ void Datagen::datagen(int thread_id) {
     engine->transposition_table.resize(MAX_TT_SIZE);
     engine->initialize_lmr_reductions();
     engine->thread_states.emplace_back();
-    engine->max_nodes = nodes_per_move;
+    engine->soft_node_limit = nodes_per_move;
     engine->print_thinking = false;
 
     Position& position = engine->thread_states[0].position;
@@ -126,14 +126,14 @@ void Datagen::datagen(int thread_id) {
         // Verification Search
         engine->hard_time_limit = max_time_per_move;
         engine->soft_time_limit = TIME_INF;
-        engine->max_nodes = 0;
+        engine->soft_node_limit = 0;
         engine->max_depth = 12;
 
         lazy_smp_search(*engine);
 
         if (abs(engine->search_results.score) >= opening_max_score) continue;
 
-        engine->max_nodes = nodes_per_move;
+        engine->soft_node_limit = nodes_per_move;
         engine->max_depth = MAX_AB_DEPTH - 1;
 
         double game_result = -1.0;  // No result

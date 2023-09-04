@@ -143,7 +143,10 @@ void UCI::parse_go() {
 
         else if (type == "perft") perft_depth = static_cast<PLY_TYPE>(value);
 
-        else if (type == "nodes") engine->max_nodes = value;
+        else if (type == "nodes") {
+            engine->hard_node_limit = value;
+            engine->soft_node_limit = value;
+        }
 
         else if (type == "movetime") movetime = static_cast<double>(value);
 
@@ -275,8 +278,9 @@ void UCI::uci_loop() {
 
             else if (tokens[2] == "nodes") {
                 uint64_t max_nodes = std::stoi(tokens[4]);
-                engine->max_nodes = max_nodes;
-                std::cout << "max nodes set to " << engine->max_nodes << std::endl;
+                engine->hard_node_limit = max_nodes;
+                engine->soft_node_limit = max_nodes;
+                std::cout << "max nodes set to " << max_nodes << std::endl;
             }
 
             else if (tokens[2] == "UCI_Chess960") {
