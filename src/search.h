@@ -216,6 +216,8 @@ public:
 };
 
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus);
+void update_histories(Thread_State& thread_state, InformativeMove informative_move,
+                      InformativeMove last_move_one, InformativeMove last_move_two, bool quiet, int move_index, int bonus);
 
 SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id);
 SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,  bool do_null, int thread_id);

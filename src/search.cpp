@@ -266,6 +266,77 @@ void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
 }
 
 
+void update_histories(Thread_State& thread_state, InformativeMove informative_move,
+                      InformativeMove last_move_one, InformativeMove last_move_two, bool quiet, int move_index, int bonus) {
+
+    Position& position = thread_state.position;
+    Move move = informative_move.normal_move();
+
+    if (quiet) {
+        update_history_entry(thread_state.history_moves
+                             [position.board[move.origin()]][move.target()],
+                             bonus);
+
+        if (last_move_one != NO_INFORMATIVE_MOVE) {
+            update_history_entry(thread_state.continuation_history
+                                 [last_move_one.selected()]
+                                 [last_move_one.target()]
+                                 [informative_move.selected()]
+                                 [informative_move.target()],
+                                 bonus);
+        }
+
+        if (last_move_two != NO_INFORMATIVE_MOVE) {
+            update_history_entry(thread_state.continuation_history
+                                 [last_move_two.selected()]
+                                 [last_move_two.target()]
+                                 [informative_move.selected()]
+                                 [informative_move.target()],
+                                 bonus);
+        }
+
+    } else {
+        update_history_entry(thread_state.capture_history[position.board[move.origin()]]
+                             [position.board[move.target()]][move.target()],
+                             bonus);
+    }
+
+    // Deduct bonus for moves that don't raise alpha
+    for (int failed_move_index = 0; failed_move_index < move_index; failed_move_index++) {
+        Move temp_move = position.scored_moves[thread_state.search_ply][failed_move_index].move;
+        if (!temp_move.is_capture(position) && move.type() != MOVE_TYPE_EP) {
+            update_history_entry(thread_state.history_moves
+                                 [position.board[temp_move.origin()]]
+                                 [temp_move.target()],
+                                 -bonus);
+
+            if (last_move_one != NO_INFORMATIVE_MOVE) {
+                update_history_entry(thread_state.continuation_history
+                                     [last_move_one.selected()]
+                                     [last_move_one.target()]
+                                     [position.board[temp_move.origin()]]
+                                     [temp_move.target()],
+                                     -bonus);
+            }
+
+            if (last_move_two != NO_INFORMATIVE_MOVE) {
+                update_history_entry(thread_state.continuation_history
+                                     [last_move_two.selected()]
+                                     [last_move_two.target()]
+                                     [position.board[temp_move.origin()]]
+                                     [temp_move.target()],
+                                     -bonus);
+            }
+
+        } else {
+            update_history_entry(thread_state.capture_history[position.board[temp_move.origin()]]
+                                 [position.board[temp_move.target()]]
+                                 [temp_move.target()],
+                                 -bonus);
+        }
+    }
+}
+
 // The Quiescence Search function
 // This is used to counter the horizon effect in which negamax is unable to resolve
 // noisy moves after a certain depth has been reached. The qsearch function will look at remaining captures
@@ -848,69 +919,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 // History Heuristic for move ordering
                 SCORE_TYPE bonus = depth * (depth + 1 + null_search + pv_node + improving) - 1;
 
-                if (quiet) {
-                    update_history_entry(thread_state.history_moves
-                                         [position.board[move.origin()]][move.target()],
-                                         bonus);
-
-                    if (last_move_one != NO_INFORMATIVE_MOVE) {
-                        update_history_entry(thread_state.continuation_history
-                                             [last_move_one.selected()]
-                                             [last_move_one.target()]
-                                             [informative_move.selected()]
-                                             [informative_move.target()],
-                                             bonus);
-                    }
-
-                    if (last_move_two != NO_INFORMATIVE_MOVE) {
-                        update_history_entry(thread_state.continuation_history
-                                             [last_move_two.selected()]
-                                             [last_move_two.target()]
-                                             [informative_move.selected()]
-                                             [informative_move.target()],
-                                             bonus);
-                    }
-
-                } else {
-                    update_history_entry(thread_state.capture_history[position.board[move.origin()]]
-                                         [position.board[move.target()]][move.target()],
-                                         bonus);
-                }
-
-                // Deduct bonus for moves that don't raise alpha
-                for (int failed_move_index = 0; failed_move_index < move_index; failed_move_index++) {
-                    Move temp_move = position.scored_moves[thread_state.search_ply][failed_move_index].move;
-                    if (!temp_move.is_capture(position) && move.type() != MOVE_TYPE_EP) {
-                        update_history_entry(thread_state.history_moves
-                                             [position.board[temp_move.origin()]]
-                                             [temp_move.target()],
-                                             -bonus);
-
-                        if (last_move_one != NO_INFORMATIVE_MOVE) {
-                            update_history_entry(thread_state.continuation_history
-                                                 [last_move_one.selected()]
-                                                 [last_move_one.target()]
-                                                 [position.board[temp_move.origin()]]
-                                                 [temp_move.target()],
-                                                 -bonus);
-                        }
-
-                        if (last_move_two != NO_INFORMATIVE_MOVE) {
-                            update_history_entry(thread_state.continuation_history
-                                                 [last_move_two.selected()]
-                                                 [last_move_two.target()]
-                                                 [position.board[temp_move.origin()]]
-                                                 [temp_move.target()],
-                                                 -bonus);
-                        }
-
-                    } else {
-                        update_history_entry(thread_state.capture_history[position.board[temp_move.origin()]]
-                                             [position.board[temp_move.target()]]
-                                             [temp_move.target()],
-                                             -bonus);
-                    }
-                }
+                update_histories(thread_state, informative_move, last_move_one, last_move_two, quiet, move_index, bonus);
 
                 if (engine.show_stats) {
                     engine.search_results.alpha_raised_count++;
