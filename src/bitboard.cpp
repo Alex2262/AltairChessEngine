@@ -1,6 +1,3 @@
-//
-// Created by Alexander Tian on 6/23/23.
-//
 
 #include <stdexcept>
 #include <iostream>
@@ -8,8 +5,6 @@
 #include <algorithm>
 #include "types.h"
 #include "bitboard.h"
-
-// Major contributions by Archishmaan Peyyety as a pull request to Alex2262/BitboardEngine
 
 void print_bitboard(BITBOARD bitboard) {
     std::bitset<64> b(bitboard);

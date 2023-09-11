@@ -1,6 +1,3 @@
-//
-// Created by Alex Tian on 9/18/2022.
-//
 
 #include <iostream>
 #include <chrono>

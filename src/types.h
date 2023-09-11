@@ -1,6 +1,4 @@
-//
-// Created by Alexander Tian on 6/23/23.
-//
+
 
 #ifndef ALTAIRCHESSENGINE_TYPES_H
 #define ALTAIRCHESSENGINE_TYPES_H

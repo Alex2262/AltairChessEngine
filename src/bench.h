@@ -1,6 +1,3 @@
-//
-// Created by Alexander Tian on 4/12/23.
-//
 
 #ifndef ALTAIRCHESSENGINE_BENCH_H
 #define ALTAIRCHESSENGINE_BENCH_H

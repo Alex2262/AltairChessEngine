@@ -1,6 +1,4 @@
-//
-// Created by Alexander Tian on 5/4/23.
-//
+
 
 #ifndef ALTAIRCHESSENGINE_SEE_H
 #define ALTAIRCHESSENGINE_SEE_H

@@ -2,8 +2,6 @@
 #ifndef ANTARESCHESSENGINE_MOVE_H
 #define ANTARESCHESSENGINE_MOVE_H
 
-// Major contributions by Archishmaan Peyyety as a pull request to Alex2262/BitboardEngine
-
 #include <cstdint>
 #include "types.h"
 #include "string"

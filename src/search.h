@@ -1,6 +1,4 @@
-//
-// Created by Alex Tian on 9/22/2022.
-//
+
 
 #ifndef ANTARESCHESSENGINE_SEARCH_H
 #define ANTARESCHESSENGINE_SEARCH_H

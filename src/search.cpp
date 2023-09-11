@@ -1,7 +1,4 @@
 
-//
-// Created by Alex Tian on 9/22/2022.
-//
 
 #include <thread>
 #include <chrono>

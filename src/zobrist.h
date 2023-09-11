@@ -1,6 +1,3 @@
-//
-// Created by Alex Tian on 10/4/2022.
-//
 
 #ifndef ANTARESCHESSENGINE_ZOBRIST_H
 #define ANTARESCHESSENGINE_ZOBRIST_H
@@ -10,8 +7,7 @@
 #include "types.h"
 
 
-//A psuedorandom number generator
-//Source: Stockfish
+//A pseudorandom number generator inspired from Stockfish
 class PRNG {
 
 public:

@@ -1,6 +1,4 @@
-//
-// Created by Alexander Tian on 8/16/23.
-//
+
 
 #ifndef ALTAIRCHESSENGINE_DATAGEN_H
 #define ALTAIRCHESSENGINE_DATAGEN_H

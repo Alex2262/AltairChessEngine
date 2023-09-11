@@ -1,6 +1,3 @@
-//
-// Created by Alex Tian on 8/24/2022.
-//
 
 #ifndef ANTARESCHESSENGINE_POSITION_H
 #define ANTARESCHESSENGINE_POSITION_H

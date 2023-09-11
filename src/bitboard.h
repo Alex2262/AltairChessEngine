@@ -1,6 +1,3 @@
-//
-// Created by Alexander Tian on 6/23/23.
-//
 
 #ifndef ALTAIRCHESSENGINE_BITBOARD_H
 #define ALTAIRCHESSENGINE_BITBOARD_H
@@ -9,8 +6,6 @@
 #include <cassert>
 #include <array>
 #include "types.h"
-
-// Major contributions by Archishmaan Peyyety as a pull request to Alex2262/BitboardEngine
 
 using BITBOARD = uint64_t;
 

@@ -1,6 +1,3 @@
-//
-// Created by Alexander Tian on 4/12/23.
-//
 
 #include <iostream>
 #include <chrono>

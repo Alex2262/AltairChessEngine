@@ -1,6 +1,4 @@
-//
-// Created by Alexander Tian on 6/24/23.
-//
+
 
 #ifndef ALTAIRCHESSENGINE_FIXED_VECTOR_H
 #define ALTAIRCHESSENGINE_FIXED_VECTOR_H

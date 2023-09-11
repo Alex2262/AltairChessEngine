@@ -1,6 +1,4 @@
-//
-// Created by Alexander Tian on 6/26/23.
-//
+
 
 #ifndef ALTAIRCHESSENGINE_MOVE_ORDERING_H
 #define ALTAIRCHESSENGINE_MOVE_ORDERING_H

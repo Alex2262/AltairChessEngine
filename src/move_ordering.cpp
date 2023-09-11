@@ -1,6 +1,3 @@
-//
-// Created by Alexander Tian on 6/26/23.
-//
 
 #include <iostream>
 #include "evaluation_constants.h"

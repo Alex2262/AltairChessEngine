@@ -1,6 +1,3 @@
-//
-// Created by Alex Tian on 8/24/2022.
-//
 
 #include <stdexcept>
 #include <iostream>

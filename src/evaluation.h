@@ -1,6 +1,4 @@
-//
-// Created by Alexander Tian on 6/26/23.
-//
+
 
 #ifndef ALTAIRCHESSENGINE_EVALUATION_H
 #define ALTAIRCHESSENGINE_EVALUATION_H
