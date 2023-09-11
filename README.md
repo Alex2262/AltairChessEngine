@@ -87,7 +87,7 @@ Altair's Move Ordering is structured like so:
 - Castling
 
 ## Evaluation
-These are some of the evaluation features present in Altair:
+These are some evaluation features present in Altair:
 
 - Material
 - Piece Square Tables
@@ -116,6 +116,7 @@ Mentions:
 - [The Chess Programming Wiki](https://www.chessprogramming.org/Main_Page) contains invaluable resources that I have used.
 - [The Bitboard Chess Engine in C Playlist](https://www.youtube.com/playlist?list=PLmN0neTso3Jxh8ZIylk74JpwfiWNI76Cs) is a nice video series that contains implementations for different ideas and features.
 - [@archishou](https://github.com/archishou) has helped and supported me a lot in the development and improvement of my engine.
+- [@Ciekce](https://github.com/Ciekce) has helped with many programming details and issues.
 - [@GediminasMasaitis](https://github.com/GediminasMasaitis) has also helped me a lot in the development of my engine. His engine [Chessdotcpp](https://github.com/GediminasMasaitis/chess-dot-cpp) has inspired me with many ideas. Since version 1.3.6 and beyond, I have also used his [Texel Tuner](https://github.com/GediminasMasaitis/texel-tuner/tree/main/src) for tuning HCE parameters.
 - [Weiss](https://github.com/TerjeKir/weiss) is another great inspiration and resource.
 - The Engine Programming Discord Server for answering many of my questions.
