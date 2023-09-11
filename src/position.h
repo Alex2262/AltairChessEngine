@@ -29,6 +29,7 @@ struct State_Struct {
 
     int double_extensions = 0;
     int in_check = -1;
+    int cutoffs = 0;
 };
 
 

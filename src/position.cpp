@@ -20,6 +20,7 @@ void Position::clear_state_stack() {
         state.current_castle_ability_bits = 0;
         state.current_fifty_move = 0;
         state.excluded_move = NO_MOVE;
+        state.cutoffs = 0;
     }
 }
 

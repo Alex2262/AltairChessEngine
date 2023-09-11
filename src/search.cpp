@@ -780,17 +780,12 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         PLY_TYPE new_depth = depth + extension - 1;
 
-        // Prepare for recursive searching
-        thread_state.search_ply++;
-        thread_state.game_ply++;
-        thread_state.repetition_table[thread_state.game_ply] = position.hash_key;
-
         bool move_gives_check = position.is_attacked(position.get_king_pos(position.side), position.side);
-        position.state_stack[thread_state.search_ply].in_check = static_cast<int>(move_gives_check);
+        position.state_stack[thread_state.search_ply + 1].in_check = static_cast<int>(move_gives_check);
+        position.state_stack[thread_state.search_ply + 1].cutoffs  = 0;
 
-
-        bool is_killer_move = informative_move == thread_state.killer_moves[0][thread_state.search_ply - 1] ||
-                              informative_move == thread_state.killer_moves[1][thread_state.search_ply - 1];
+        bool is_killer_move = informative_move == thread_state.killer_moves[0][thread_state.search_ply] ||
+                              informative_move == thread_state.killer_moves[1][thread_state.search_ply];
 
         bool interesting = passed_pawn || queen_promotion || move_gives_check || is_killer_move;
 
@@ -801,6 +796,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         double reduction;
         bool full_depth_zero_window;
         bool bad_capture = move_score < 10000;
+
+        // Prepare for recursive searching
+        thread_state.search_ply++;
+        thread_state.game_ply++;
+        thread_state.repetition_table[thread_state.game_ply] = position.hash_key;
 
         // Late Move Reductions (LMR)
         // The idea that if moves are ordered well, then moves that are searched
@@ -837,6 +837,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // Scale reductions based on how many moves have already raised alpha
             reduction += static_cast<double>(alpha_raised_count) * (0.3 + 0.5 * tt_move_capture);
+
+            // Reduce if the child node has more cutoffs
+            reduction += position.state_stack[thread_state.search_ply - 1].cutoffs >= 4;
 
             // My idea that in a null move search you can be more aggressive with LMR
             reduction += null_search;
@@ -927,6 +930,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
                 // Alpha - Beta cutoff. We have failed high here.
                 if (return_eval >= beta) {
+
+                    position.state_stack[thread_state.search_ply].cutoffs++;
+
                     if (engine.show_stats) {
                         if (legal_moves <= FAIL_HIGH_STATS_COUNT) engine.search_results.search_fail_highs[legal_moves-1]++;
                         if (move == tt_move) engine.search_results.search_fail_high_types[0]++;
