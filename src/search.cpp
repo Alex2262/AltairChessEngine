@@ -813,6 +813,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             // Get the base reduction based on depth and moves searched
             reduction = engine.LMR_REDUCTIONS_QUIET[depth][std::min(legal_moves, 63)];
 
+            reduction -= !quiet;
+
             // Fewer reductions if we are in a pv node, since moves are likely to be better and more important
             reduction -= pv_node;
 
