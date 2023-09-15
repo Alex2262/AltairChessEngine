@@ -35,6 +35,15 @@ public:
         current_index++;
     }
 
+    inline void pop(size_t index) {
+        current_index--;
+        if (index == current_index) return;
+
+        for (size_t i = index + 1; i <= current_index; i++) {
+            fixed_vector[i - 1] = fixed_vector[i];
+        }
+    }
+
     inline T pop() {
         current_index--;
         return fixed_vector[current_index];

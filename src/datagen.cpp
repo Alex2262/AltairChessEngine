@@ -1,3 +1,6 @@
+//
+// Created by Alexander Tian on 8/16/23.
+//
 
 #include <iostream>
 #include <fstream>
@@ -12,17 +15,18 @@
 void Datagen::start_datagen() {
     stopped = false;
     std::vector<std::thread> search_threads;
-    search_threads.resize(threads);
+    search_threads.reserve(threads);
 
     if (opening_chance > 0) {
-        opening_fens = get_file_fens("/Users/alexandertian/Documents/UHO_XXL_+0.90_+1.19.epd");
+        // opening_fens = get_file_fens("/Users/alexandertian/Documents/UHO_XXL_+0.90_+1.19.epd");
+        opening_fens = get_file_fens("/Users/alexandertian/Documents/noob_4moves.epd");
     }
 
     std::cout << "Starting " << threads << " threads" << std::endl;
 
     for (int thread_id = 0; thread_id < threads; thread_id++) {
         search_threads.emplace_back([this, thread_id]() {
-            this->datagen(thread_id);
+            this->datagen(Datagen_Thread(thread_id));
         });
     }
 
@@ -43,213 +47,218 @@ void Datagen::start_datagen() {
     merge();
 }
 
-void Datagen::datagen(int thread_id) {
-    std::unique_ptr<Engine> engine = std::make_unique<Engine>();
+std::string Datagen::write_fen(Datagen_Thread& datagen_thread, std::string& fen, double game_result) {
+    std::string resulting_fen = fen;
+    resulting_fen += " [";
+    resulting_fen += WDL_scores[static_cast<int>(2.0 * game_result)];
+    resulting_fen += "]";
 
-    engine->transposition_table.resize(MAX_TT_SIZE);
-    engine->initialize_lmr_reductions();
-    engine->thread_states.emplace_back();
-    engine->soft_node_limit = nodes_per_move;
-    engine->print_thinking = false;
+    datagen_thread.total_fens++;
 
-    Position& position = engine->thread_states[0].position;
+    if (datagen_thread.total_fens % 1000 == 0) {
+        auto end_time_point = std::chrono::high_resolution_clock::now();
+        auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time_point
+                                                                            - datagen_thread.start_time_point);
+
+        uint64_t elapsed_time = ms_int.count();
+        elapsed_time = std::max<uint64_t>(elapsed_time, 1);
+        auto fps = static_cast<uint64_t>(static_cast<double>(datagen_thread.total_fens) / static_cast<double>(elapsed_time) * 1000);
+
+        std::cout << "Thread "  << datagen_thread.thread_id
+                  << " games: " << datagen_thread.total_games
+                  << " fens: "  << datagen_thread.total_fens
+                  << " fps: "   << fps
+                  << std::endl;
+    }
+
+    return resulting_fen;
+}
+
+bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move, MAX_MOVES>& legal_moves) const {
+    Position& position = datagen_thread.engine->thread_states[0].position;
+    for (int random_move_count = 0; random_move_count < initial_random_moves + (datagen_thread.total_fens % 2); random_move_count++) {
+        position.set_state(position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+        position.get_pseudo_legal_moves(position.scored_moves[0]);
+
+        legal_moves.clear();
+
+        for (ScoredMove &scored_move: position.scored_moves[0]) {
+            Move move = scored_move.move;
+            bool attempt = position.make_move(move, position.state_stack[0],
+                                              datagen_thread.engine->thread_states[0].fifty_move);
+
+            if (attempt) legal_moves.push_back(move);
+
+            position.undo_move(move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+        }
+
+        if (legal_moves.empty()) {
+            return false;
+        }
+
+        Move random_move = legal_moves[datagen_thread.prng.rand64() % legal_moves.size()];
+
+        position.make_move(random_move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+        datagen_thread.game_length++;
+    }
+
+    // Verification Search
+    datagen_thread.engine->hard_time_limit = max_time_per_move;
+    datagen_thread.engine->soft_time_limit = TIME_INF;
+    datagen_thread.engine->soft_node_limit = 3 * nodes_per_move;
+
+    lazy_smp_search(*datagen_thread.engine);
+
+    if (abs(datagen_thread.engine->search_results.score) >= opening_max_score) return false;
+
+    return true;
+}
+
+void Datagen::datagen(Datagen_Thread datagen_thread) {
+
+    datagen_thread.engine->transposition_table.resize(MAX_TT_SIZE);
+    datagen_thread.engine->initialize_lmr_reductions();
+    datagen_thread.engine->thread_states.emplace_back();
+    datagen_thread.engine->print_thinking = false;
+
+    Position& position = datagen_thread.engine->thread_states[0].position;
 
     const int thread_fens_max = ceil(max_fens / threads);
-    int total_fens = 0;
+    datagen_thread.total_fens = 0;
 
-    if (thread_id == 0) std::cout << "Max fens per thread: " << thread_fens_max << std::endl;
+    if (datagen_thread.thread_id == 0) std::cout << "Max fens per thread: " << thread_fens_max << std::endl;
 
     position.set_fen(START_FEN);
 
-    std::string file_name = "AltairData/data" + std::to_string(thread_id) + ".txt";
+    std::string file_name = "AltairData/data" + std::to_string(datagen_thread.thread_id) + ".txt";
 
     std::ofstream datagen_file(file_name);
 
     FixedVector<Move, MAX_MOVES> legal_moves{};
     FixedVector<std::string, MAX_GAME_LENGTH + 1> game_fens{};
 
-    auto start_time_point = std::chrono::high_resolution_clock::now();
+    datagen_thread.start_time_point = std::chrono::high_resolution_clock::now();
 
-    while (total_fens < thread_fens_max) {
+    while (datagen_thread.total_fens < thread_fens_max) {
         if (stopped) {
-            std::cout << "Thread " << std::to_string(thread_id) << " games: " << std::to_string(total_fens) << std::endl;
+            std::cout << "Thread " << std::to_string(datagen_thread.thread_id) << " games: "
+                      << std::to_string(datagen_thread.total_fens) << std::endl;
             break;
         }
 
-        engine->new_game();
+        datagen_thread.engine->new_game();
         position.set_fen(START_FEN);
 
-        bool opening_success = true;
-        int game_length = 0;
-
-        if (rand() % 100 < opening_chance) {
-            std::string opening_fen = opening_fens[rand() % opening_fens.size()];
-            engine->thread_states[0].fifty_move = position.set_fen(opening_fen);
-            game_length = 9;
+        if (datagen_thread.prng.rand64() % 100 < opening_chance) {
+            std::string opening_fen = opening_fens[datagen_thread.prng.rand64() % opening_fens.size()];
+            datagen_thread.engine->thread_states[0].fifty_move = position.set_fen(opening_fen);
+            datagen_thread.game_length = 8;
         }
 
-        else {
-            for (int random_move_count = 0;
-                 random_move_count < initial_random_moves + (total_fens % 2); random_move_count++) {
-                position.set_state(position.state_stack[0], engine->thread_states[0].fifty_move);
-                position.get_pseudo_legal_moves(position.scored_moves[0]);
-
-                legal_moves.clear();
-
-                for (ScoredMove &scored_move: position.scored_moves[0]) {
-                    Move move = scored_move.move;
-                    bool attempt = position.make_move(move, position.state_stack[0],
-                                                      engine->thread_states[0].fifty_move);
-
-                    if (attempt) legal_moves.push_back(move);
-
-                    position.undo_move(move, position.state_stack[0], engine->thread_states[0].fifty_move);
-                }
-
-                if (legal_moves.empty()) {
-                    opening_success = false;
-                    break;
-                }
-
-                Move random_move = legal_moves[rand() % legal_moves.size()];
-
-                position.make_move(random_move, position.state_stack[0], engine->thread_states[0].fifty_move);
-                game_length++;
-            }
-        }
-
-        if (!opening_success) continue;
-
-        // Verification Search
-        engine->hard_time_limit = max_time_per_move;
-        engine->soft_time_limit = TIME_INF;
-        engine->soft_node_limit = 0;
-        engine->max_depth = 12;
-
-        lazy_smp_search(*engine);
-
-        if (abs(engine->search_results.score) >= opening_max_score) continue;
-
-        engine->soft_node_limit = nodes_per_move;
-        engine->max_depth = MAX_AB_DEPTH - 1;
+        else if (!randomize_opening(datagen_thread, legal_moves)) continue;
 
         double game_result = -1.0;  // No result
-        int adjudication_count = 0;
+        int win_adjudication_count  = 0;
+        int draw_adjudication_count = 0;
+
         game_fens.clear();
 
         while (true) {
 
-            engine->hard_time_limit = max_time_per_move;
-            engine->soft_time_limit = TIME_INF;
-            engine->search_results.best_move = NO_MOVE;
+            datagen_thread.engine->hard_time_limit = max_time_per_move;
+            datagen_thread.engine->soft_time_limit = TIME_INF;
+            datagen_thread.engine->search_results.best_move = NO_MOVE;
 
-            lazy_smp_search(*engine);
+            datagen_thread.engine->soft_node_limit = nodes_per_move;
 
-            Move best_move = engine->search_results.best_move;
-            SCORE_TYPE score = engine->search_results.score;
+            lazy_smp_search(*datagen_thread.engine);
+
+            Move best_move = datagen_thread.engine->search_results.best_move;
+            SCORE_TYPE score = datagen_thread.engine->search_results.score;
 
             // Depth was not finished
             if (best_move == NO_MOVE) break;
 
-            bool noisy = best_move.is_capture(position) || best_move.type() == MOVE_TYPE_EP;
+            bool noisy = best_move.is_capture(position) || best_move.type() == MOVE_TYPE_EP ||
+                         best_move.type() == MOVE_TYPE_PROMOTION;
 
-            position.make_move(best_move, position.state_stack[0], engine->thread_states[0].fifty_move);
+            position.make_move(best_move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
 
             bool in_check = position.is_attacked(position.get_king_pos(position.side), position.side);
 
-            // Score adjudication
-            if (abs(score) >= adjudication_score) {
-                adjudication_count++;
-                if (adjudication_count >= adjudication_length) {
-                    game_result = score > 0 ? ~position.side : position.side;
-                    break;
-                }
-            } else {
-                adjudication_count = 0;
-            }
+            EvaluationInformation evaluation_information{};
+            initialize_evaluation_information(position, evaluation_information);
 
-            if (engine->thread_states[0].fifty_move >= 100 || engine->thread_states[0].detect_repetition()) {
-                game_result = 0.5;
-                break;
-            }
-
-            // Check for drawn positions after 100 plies (50 full moves)
-            if (game_length >= 100) {
-                EvaluationInformation evaluation_information{};
-                initialize_evaluation_information(position, evaluation_information);
-
-                double drawishness = evaluate_drawishness(position, evaluation_information);
-
-                if (drawishness == 0.0) {
-                    game_result = 0.5;
-                    break;
-                }
-            }
-
-            if (game_length >= MAX_GAME_LENGTH) {
-                game_result = 0.5;
-                break;
-            }
-
-            position.set_state(position.state_stack[0], engine->thread_states[0].fifty_move);
+            position.set_state(position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
             position.get_pseudo_legal_moves(position.scored_moves[0]);
 
-            int legal_move_count = 0;
+            bool terminated = true;
 
             for (ScoredMove& scored_move : position.scored_moves[0]) {
-                Move move = scored_move.move;
-                bool attempt = position.make_move(move, position.state_stack[0], engine->thread_states[0].fifty_move);
-                position.undo_move(move, position.state_stack[0], engine->thread_states[0].fifty_move);
+                bool attempt = position.make_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+                position.undo_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
 
                 if (attempt) {
-                    legal_move_count++;
+                    terminated = false;
                     break;
                 }
             }
 
-            if (legal_move_count == 0) {
+            if (terminated) {
                 game_result = in_check ?
                               static_cast<double>(~position.side) : 0.5;
                 break;
             }
 
-            if (!noisy && !in_check) {
-                game_fens.push_back(position.get_fen(engine->thread_states[0].fifty_move));
-            }
+            if (datagen_thread.engine->thread_states[0].fifty_move >= 100 || datagen_thread.engine->thread_states[0].detect_repetition())
+                game_result = 0.5;
 
-            game_length++;
+            if (datagen_thread.game_length >= MAX_GAME_LENGTH)
+                game_result = 0.5;
+
+            double drawishness = evaluate_drawishness(position, evaluation_information);
+
+            // Win adjudication
+            if ((abs(score) >= win_adjudication_score) &&
+                ++win_adjudication_count >= win_adjudication_length) game_result = score > 0 ? ~position.side : position.side;
+            else win_adjudication_count = 0;
+
+            // Draw adjudication
+            if (datagen_thread.game_length >= draw_adjudication_plies &&
+                (abs(score) <= draw_adjudication_score || drawishness == 0.0) &&
+                ++draw_adjudication_count >= draw_adjudication_length) game_result = 0.5;
+            else draw_adjudication_count = 0;
+
+            if (game_result != -1.0) break;
+
+            // Filter
+            if (!noisy && !in_check && drawishness >= 0.9)
+                game_fens.push_back(position.get_fen(datagen_thread.engine->thread_states[0].fifty_move));
+
+            datagen_thread.game_length++;
 
         }
 
-        if (game_length < minimum_game_length) continue;
+        if (datagen_thread.game_length < minimum_game_length) continue;
 
         if (game_result == -1.0) continue;
 
-        for (const auto &fen : game_fens) {
-            std::string result = fen;
-            result += "; [";
-            result += WDL_scores[static_cast<int>(2.0 * game_result)];
-            result += "]";
+        datagen_thread.total_games++;
 
-            datagen_file << result << std::endl;
-            total_fens++;
+        size_t fens_to_pick = std::min(fens_per_game == 0 ? game_fens.size() : fens_per_game, game_fens.size());
+        size_t fens_picked  = 0;
 
-            if (total_fens % 1000 == 0) {
-                auto end_time_point = std::chrono::high_resolution_clock::now();
-                auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time_point
-                                                                                    - start_time_point);
+        while (fens_picked < fens_to_pick) {
+            auto next_fen_index = datagen_thread.prng.rand64() % game_fens.size();
+            auto next_fen = game_fens[next_fen_index];
 
-                uint64_t elapsed_time = ms_int.count();
-                elapsed_time = std::max<uint64_t>(elapsed_time, 1);
-                auto fps = static_cast<uint64_t>(static_cast<double>(total_fens) / static_cast<double>(elapsed_time) * 1000);
+            game_fens.pop(next_fen_index);
 
-                std::cout << "Thread " << thread_id
-                          << " fens: " << total_fens
-                          << " fps: " << fps
-                          << std::endl;
-            }
+            auto resulting_fen = write_fen(datagen_thread, next_fen, game_result);
+
+            datagen_file << resulting_fen << std::endl;
+            fens_picked++;
         }
-
     }
 
     datagen_file.close();
@@ -259,21 +268,10 @@ std::vector<std::string> Datagen::get_file_fens(const std::string &file_name) {
     std::ifstream infile(file_name);
     std::string basic_fen, side, castling, ep, fifty, result;
     std::vector<std::string> fens;
-    while (infile >> basic_fen >> side >> castling >> ep >> fifty >> result) {
-        std::string fen = basic_fen;
-        fen += " ";
-        fen += side;
-        fen += " ";
-        fen += castling;
-        fen += " ";
-        fen += ep;
-        fen += " ";
-        fen += fifty;
-        fen += " ";
-        fen += result;
-        fen += "\n";
 
-        fens.push_back(fen);
+    std::string line;
+    while (std::getline(infile, line)) {
+        fens.push_back(line);
     }
 
     infile.close();
@@ -311,7 +309,7 @@ void Datagen::merge() {
 
     for (auto fens : all_fens) {
         for (int fen_i = 0; fen_i < static_cast<int>(fens.size()) - 1; fen_i++) {
-            datagen_file << fens[fen_i];
+            datagen_file << fens[fen_i] << std::endl;
             total_fens++;
         }
     }
