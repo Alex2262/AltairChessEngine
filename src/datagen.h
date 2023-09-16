@@ -29,7 +29,7 @@ struct Datagen_Thread {
 class Datagen {
 
     const int max_fens          = 100'000'000;
-    const int nodes_per_move    =       5'000;
+    const int nodes_per_move    =      80'000;
     const int max_time_per_move =         100;
     const int threads           =           8;
 
