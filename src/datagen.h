@@ -31,7 +31,6 @@ class Datagen {
     const int max_fens          = 100'000'000;
     const int nodes_per_move    =      80'000;
     const int max_time_per_move =         100;
-    const int threads           =           8;
 
     const int initial_random_moves      =   8;
     const int opening_max_score         = 400;
@@ -51,6 +50,8 @@ class Datagen {
     std::vector<std::string> opening_fens{};
 
 public:
+    int threads = 1;
+
     bool stopped = false;
 
     void start_datagen();
