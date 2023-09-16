@@ -43,12 +43,13 @@ int main(int argc, char* argv[]) {
     if (datagen_flag) {
         Datagen datagen{};
 
-        if (argc < 2) {
+        if (argc < 3) {
             std::cout << "Thread number expected" << std::endl;
             return 0;
         }
 
-        std::string thread_count = argv[1];
+        std::string thread_count = argv[2];
+
         int thread_num = std::stoi(thread_count);
 
         datagen.threads = thread_num;
