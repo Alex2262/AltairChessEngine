@@ -7,7 +7,7 @@
 #include "search.h"
 #include "fixed_vector.h"
 
-constexpr SCORE_TYPE SEE_MOVE_ORDERING_THRESHOLD = -108;
+constexpr SCORE_TYPE SEE_MOVE_ORDERING_THRESHOLD = -85;
 
 SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
                       InformativeMove last_move_one, InformativeMove last_move_two);
