@@ -5,6 +5,7 @@
 #ifndef ALTAIRCHESSENGINE_DATAGEN_H
 #define ALTAIRCHESSENGINE_DATAGEN_H
 
+#include <chrono>
 #include <vector>
 #include "random.h"
 #include "search.h"

@@ -2,6 +2,7 @@
 // Created by Alexander Tian on 8/16/23.
 //
 
+#include <chrono>
 #include <iostream>
 #include <fstream>
 #include <thread>
