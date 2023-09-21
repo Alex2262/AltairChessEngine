@@ -14,6 +14,7 @@
 struct ScoredMove {
     Move move = NO_MOVE;
     SCORE_TYPE score = 0;
+    bool winning_capture = false;
 };
 
 struct State_Struct {
