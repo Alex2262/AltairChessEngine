@@ -51,7 +51,7 @@ std::string Datagen::write_fen(Datagen_Thread& datagen_thread, std::string& fen,
 
     datagen_thread.total_fens++;
 
-    if (datagen_thread.total_fens % 10000 == 0) {
+    if (datagen_thread.total_fens % 1000 == 0) {
         auto end_time_point = std::chrono::high_resolution_clock::now();
         auto end_time = std::chrono::duration_cast<std::chrono::milliseconds>
                 (std::chrono::time_point_cast<std::chrono::milliseconds>(end_time_point).time_since_epoch()).count();

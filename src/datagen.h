@@ -25,7 +25,10 @@ struct Datagen_Thread {
     // std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> start_time_point;
     uint64_t start_time;
 
-    explicit Datagen_Thread(int t_id) {thread_id = t_id; }
+    explicit Datagen_Thread(int t_id) {
+        thread_id = t_id;
+        prng = PRNG(695848653836736222 + 5 * thread_id);
+    }
 };
 
 class Datagen {
