@@ -100,7 +100,7 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
     }
 
     // Verification Search
-    datagen_thread.engine->soft_time_limit = TIME_INF;
+    datagen_thread.engine->soft_time_limit = max_time_per_move;
     datagen_thread.engine->soft_node_limit = 3 * soft_node_limit;
 
     lazy_smp_search(*datagen_thread.engine);
