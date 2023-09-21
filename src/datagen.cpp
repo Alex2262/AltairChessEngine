@@ -51,7 +51,7 @@ std::string Datagen::write_fen(Datagen_Thread& datagen_thread, std::string& fen,
 
     datagen_thread.total_fens++;
 
-    if (datagen_thread.total_fens % 1000 == 0) {
+    if (datagen_thread.total_fens % 10000 == 0) {
         auto end_time_point = std::chrono::high_resolution_clock::now();
         auto end_time = std::chrono::duration_cast<std::chrono::milliseconds>
                 (std::chrono::time_point_cast<std::chrono::milliseconds>(end_time_point).time_since_epoch()).count();
@@ -72,6 +72,8 @@ std::string Datagen::write_fen(Datagen_Thread& datagen_thread, std::string& fen,
 }
 
 bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move, MAX_MOVES>& legal_moves) const {
+    datagen_thread.game_length = 0;
+
     Position& position = datagen_thread.engine->thread_states[0].position;
     for (int random_move_count = 0; random_move_count < initial_random_moves + (datagen_thread.total_fens % 2); random_move_count++) {
         position.set_state(position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);

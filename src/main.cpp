@@ -57,10 +57,6 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    // Datagen datagen{};
-    // datagen.merge();
-
-
     // Begin the UCI input loop
     main_uci.uci_loop();
 
