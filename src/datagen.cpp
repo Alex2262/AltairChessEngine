@@ -18,11 +18,6 @@ void Datagen::start_datagen() {
     std::vector<std::thread> search_threads;
     search_threads.reserve(threads);
 
-    if (opening_chance > 0) {
-        // opening_fens = get_file_fens("/Users/alexandertian/Documents/UHO_XXL_+0.90_+1.19.epd");
-        opening_fens = get_file_fens("/Users/alexandertian/Documents/noob_4moves.epd");
-    }
-
     std::cout << "Starting " << threads << " threads" << std::endl;
 
     for (int thread_id = 0; thread_id < threads; thread_id++) {
@@ -105,9 +100,8 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
     }
 
     // Verification Search
-    datagen_thread.engine->hard_time_limit = max_time_per_move;
     datagen_thread.engine->soft_time_limit = TIME_INF;
-    datagen_thread.engine->soft_node_limit = 3 * nodes_per_move;
+    datagen_thread.engine->soft_node_limit = 3 * soft_node_limit;
 
     lazy_smp_search(*datagen_thread.engine);
 
@@ -152,17 +146,10 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
         datagen_thread.engine->new_game();
         position.set_fen(START_FEN);
 
-        if (datagen_thread.prng.rand64() % 100 < opening_chance) {
-            std::string opening_fen = opening_fens[datagen_thread.prng.rand64() % opening_fens.size()];
-            datagen_thread.engine->thread_states[0].fifty_move = position.set_fen(opening_fen);
-            datagen_thread.game_length = 8;
-        }
-
-        else if (!randomize_opening(datagen_thread, legal_moves)) continue;
+        if (!randomize_opening(datagen_thread, legal_moves)) continue;
 
         double game_result = -1.0;  // No result
         int win_adjudication_count  = 0;
-        int draw_adjudication_count = 0;
 
         game_fens.clear();
 
@@ -172,7 +159,8 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
             datagen_thread.engine->soft_time_limit = TIME_INF;
             datagen_thread.engine->search_results.best_move = NO_MOVE;
 
-            datagen_thread.engine->soft_node_limit = nodes_per_move;
+            datagen_thread.engine->soft_node_limit = soft_node_limit;
+            datagen_thread.engine->hard_node_limit = hard_node_limit;
 
             lazy_smp_search(*datagen_thread.engine);
 
@@ -227,19 +215,15 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
             else win_adjudication_count = 0;
 
             // Draw adjudication
-            if (datagen_thread.game_length >= draw_adjudication_plies &&
-                (abs(score) <= draw_adjudication_score || drawishness == 0.0) &&
-                ++draw_adjudication_count >= draw_adjudication_length) game_result = 0.5;
-            else draw_adjudication_count = 0;
+            if (datagen_thread.game_length >= 80 && drawishness == 0.0) game_result = 0.5;
 
             if (game_result != -1.0) break;
 
             // Filter
-            if (!noisy && !in_check && drawishness >= 0.9)
+            if (!noisy && !in_check)
                 game_fens.push_back(position.get_fen(datagen_thread.engine->thread_states[0].fifty_move));
 
             datagen_thread.game_length++;
-
         }
 
         if (datagen_thread.game_length < minimum_game_length) continue;

@@ -31,25 +31,23 @@ struct Datagen_Thread {
 class Datagen {
 
     const int max_fens          = 100'000'000;
-    const int nodes_per_move    =     100'000;
-    const int max_time_per_move =         100;
+    const int soft_node_limit   =       5'000;
+    const int hard_node_limit   =     100'000;
+    const int max_time_per_move =        1000;
 
-    const int initial_random_moves      =   8;
-    const int opening_max_score         = 400;
-    const uint64_t opening_chance       = 100;  // Out of 100
+    const int initial_random_moves      =    8;
+    const int opening_max_score         =  700;
+    // const uint64_t opening_chance       = 100;  // Out of 100
 
-    const int win_adjudication_score   = 400;
-    const int win_adjudication_length  =   5;
-    const int draw_adjudication_plies  =  70;
-    const int draw_adjudication_score  =   8;
-    const int draw_adjudication_length =  10;
+    const int win_adjudication_score   = 1500;
+    const int win_adjudication_length  =    5;
 
-    const int minimum_game_length = 20;
+    const int minimum_game_length = 16;
     const int fens_per_game       =  0;  // 0 for using all fens
 
     const std::string WDL_scores[3] = {"1.0", "0.5", "0.0"};
 
-    std::vector<std::string> opening_fens{};
+    // std::vector<std::string> opening_fens{};
 
 public:
     int threads = 1;
