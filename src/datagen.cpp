@@ -237,16 +237,24 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
         size_t fens_to_pick = std::min(fens_per_game == 0 ? game_fens.size() : fens_per_game, game_fens.size());
         size_t fens_picked  = 0;
 
-        while (fens_picked < fens_to_pick) {
-            auto next_fen_index = datagen_thread.prng.rand64() % game_fens.size();
-            auto next_fen = game_fens[next_fen_index];
+        if (fens_to_pick == 0) {
+            for (std::string fen : game_fens) {
+                auto resulting_fen = write_fen(datagen_thread, fen, game_result);
+                datagen_file << resulting_fen << std::endl;
+                fens_picked++;
+            }
+        } else {
+            while (fens_picked < fens_to_pick) {
+                auto next_fen_index = datagen_thread.prng.rand64() % game_fens.size();
+                auto next_fen = game_fens[next_fen_index];
 
-            game_fens.pop(next_fen_index);
+                game_fens.pop(next_fen_index);
 
-            auto resulting_fen = write_fen(datagen_thread, next_fen, game_result);
+                auto resulting_fen = write_fen(datagen_thread, next_fen, game_result);
 
-            datagen_file << resulting_fen << std::endl;
-            fens_picked++;
+                datagen_file << resulting_fen << std::endl;
+                fens_picked++;
+            }
         }
     }
 

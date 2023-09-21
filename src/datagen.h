@@ -35,11 +35,11 @@ class Datagen {
 
     const int max_fens          = 100'000'000;
     const int soft_node_limit   =       5'000;
-    const int hard_node_limit   =     100'000;
-    const int max_time_per_move =        1000;
+    const int hard_node_limit   =      80'000;
+    const int max_time_per_move =         200;
 
     const int initial_random_moves      =    8;
-    const int opening_max_score         =  700;
+    const int opening_max_score         =  800;
     // const uint64_t opening_chance       = 100;  // Out of 100
 
     const int win_adjudication_score   = 1500;
