@@ -2,6 +2,7 @@
 // Created by Alexander Tian on 8/16/23.
 //
 
+#include <chrono>
 #include <iostream>
 #include <fstream>
 #include <thread>
@@ -57,10 +58,11 @@ std::string Datagen::write_fen(Datagen_Thread& datagen_thread, std::string& fen,
 
     if (datagen_thread.total_fens % 1000 == 0) {
         auto end_time_point = std::chrono::high_resolution_clock::now();
-        auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time_point
-                                                                            - datagen_thread.start_time_point);
+        auto end_time = std::chrono::duration_cast<std::chrono::milliseconds>
+                (std::chrono::time_point_cast<std::chrono::milliseconds>(end_time_point).time_since_epoch()).count();
 
-        uint64_t elapsed_time = ms_int.count();
+        uint64_t elapsed_time = end_time - datagen_thread.start_time;
+
         elapsed_time = std::max<uint64_t>(elapsed_time, 1);
         auto fps = static_cast<uint64_t>(static_cast<double>(datagen_thread.total_fens) / static_cast<double>(elapsed_time) * 1000);
 
@@ -137,7 +139,8 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
     FixedVector<Move, MAX_MOVES> legal_moves{};
     FixedVector<std::string, MAX_GAME_LENGTH + 1> game_fens{};
 
-    datagen_thread.start_time_point = std::chrono::high_resolution_clock::now();
+    datagen_thread.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch()).count();
 
     while (datagen_thread.total_fens < thread_fens_max) {
         if (stopped) {

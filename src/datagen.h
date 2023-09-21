@@ -5,6 +5,7 @@
 #ifndef ALTAIRCHESSENGINE_DATAGEN_H
 #define ALTAIRCHESSENGINE_DATAGEN_H
 
+#include <chrono>
 #include <vector>
 #include "random.h"
 #include "search.h"
@@ -21,7 +22,8 @@ struct Datagen_Thread {
 
     std::unique_ptr<Engine> engine = std::make_unique<Engine>();
 
-    std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> start_time_point;
+    // std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> start_time_point;
+    uint64_t start_time;
 
     explicit Datagen_Thread(int t_id) {thread_id = t_id; }
 };
