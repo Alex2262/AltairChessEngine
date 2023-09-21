@@ -17,6 +17,7 @@ constexpr SCORE_TYPE MIN_MINOR_PIECE_VALUE = CANONICAL_PIECE_VALUES[KNIGHT];
 
 
 
+
 constexpr SCORE_TYPE PIECE_VALUES[6] = {S(   114,    84), S(   395,   218), S(   403,   199), S(   662,   312), S(  1566,   413), S(     0,     0)};
 
 constexpr SCORE_TYPE PIECE_SQUARE_TABLES[6][64] = {
