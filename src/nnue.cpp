@@ -11,8 +11,8 @@
 
 #include "incbin.h"
 
-INCBIN(nnue, "src/net-0.bin");
-// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/net-0.bin");
+// INCBIN(nnue, "src/net-0.bin");
+INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/net-0.bin");
 const NNUE_Params &nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 
 void NNUE_State::push() {
@@ -28,9 +28,9 @@ void NNUE_State::pop() {
 
 SCORE_TYPE NNUE_State::evaluate(Color color) const {
     const auto output = color == WHITE
-                        ? screlu_flatten(current_accumulator->white, current_accumulator->black, nnue_parameters.output_weights)
-                        : screlu_flatten(current_accumulator->black, current_accumulator->white, nnue_parameters.output_weights);
-    return (output + nnue_parameters.output_bias) * SCALE / QAB;
+                        ? crelu_flatten(current_accumulator->white, current_accumulator->black, nnue_parameters.output_weights)
+                        : crelu_flatten(current_accumulator->black, current_accumulator->white, nnue_parameters.output_weights);
+    return (output + nnue_parameters.output_bias) * SCALE / Q;
 }
 
 std::pair<size_t , size_t> NNUE_State::get_feature_indices(Piece piece, Square sq) {
@@ -46,16 +46,16 @@ std::pair<size_t , size_t> NNUE_State::get_feature_indices(Piece piece, Square s
     return {whiteIdx, blackIdx};
 }
 
-int32_t NNUE_State::screlu_flatten(const std::array<int16_t, LAYER1_SIZE> &us,
+int32_t NNUE_State::crelu_flatten(const std::array<int16_t, LAYER1_SIZE> &us,
                                    const std::array<int16_t, LAYER1_SIZE> &them, const std::array<int16_t, LAYER1_SIZE * 2> &weights) {
     int32_t sum = 0;
 
     for (size_t i = 0; i < LAYER1_SIZE; ++i) {
-        sum += screlu(  us[i]) * weights[              i];
-        sum += screlu(them[i]) * weights[LAYER1_SIZE + i];
+        sum += crelu(  us[i]) * weights[              i];
+        sum += crelu(them[i]) * weights[LAYER1_SIZE + i];
     }
 
-    return sum / QA;
+    return sum;
 }
 
 void NNUE_State::reset_nnue(Position& position) {

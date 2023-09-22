@@ -22,10 +22,7 @@ constexpr SCORE_TYPE CRELU_MAX = 255;
 
 constexpr SCORE_TYPE SCALE = 400;
 
-constexpr SCORE_TYPE QA = 255;
-constexpr SCORE_TYPE QB = 64;
-
-constexpr SCORE_TYPE QAB = QA * QB;
+constexpr SCORE_TYPE Q = 255 * 64;
 
 struct alignas(64) NNUE_Params {
     std::array<int16_t, INPUT_SIZE * LAYER1_SIZE> feature_weights;
@@ -49,10 +46,10 @@ struct alignas(64) Accumulator
     }
 };
 
-constexpr int32_t screlu(int16_t x)
+constexpr int32_t crelu(int16_t x)
 {
     const auto clipped = std::clamp(static_cast<int32_t>(x), CRELU_MIN, CRELU_MAX);
-    return clipped * clipped;
+    return clipped;
 }
 
 class NNUE_State {
@@ -73,9 +70,9 @@ public:
 
     static std::pair<size_t, size_t> get_feature_indices(Piece piece, Square sq);
 
-    static int32_t screlu_flatten(const std::array<int16_t, LAYER1_SIZE> &us,
-                                  const std::array<int16_t, LAYER1_SIZE> &them,
-                                  const std::array<int16_t, LAYER1_SIZE * 2> &weights);
+    static int32_t crelu_flatten(const std::array<int16_t, LAYER1_SIZE> &us,
+                                 const std::array<int16_t, LAYER1_SIZE> &them,
+                                 const std::array<int16_t, LAYER1_SIZE * 2> &weights);
 
     void reset_nnue(Position& position);
 
