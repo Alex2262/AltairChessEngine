@@ -32,17 +32,16 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
 
     if (move.is_capture(position)) {
         auto occupied_type = get_piece_type(occupied, ~position.side);
-        
-        score += thread_state.capture_history[selected][occupied][move.target()];
         score += thread_state.move_ordering_parameters.capture_scale * MVV_LVA_VALUES[occupied_type]
                 - MVV_LVA_VALUES[selected_type];
 
+        bool winning_capture = get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
+
+        score += thread_state.capture_history[winning_capture][selected][occupied][move.target()];
+
         // Only Use SEE under certain conditions since it is expensive
-        if (score >= -3000) {
-            if (score >= 3000 ||
-                get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD))
-                score += thread_state.move_ordering_parameters.winning_capture_margin;
-        }
+        if (winning_capture)
+            score += thread_state.move_ordering_parameters.winning_capture_margin;
 
         score += thread_state.move_ordering_parameters.base_capture_margin;
     }
@@ -84,12 +83,13 @@ SCORE_TYPE score_capture(Thread_State& thread_state, Move move, Move tt_move) {
     Piece selected = position.board[move.origin()];
     Piece occupied = position.board[move.target()];
 
-    score += thread_state.capture_history[selected][occupied][move.target()];
+    bool winning_capture = get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
 
-    if (score >= -3000) {
-        if (score >= 3000 || get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD))
-            score += thread_state.move_ordering_parameters.winning_capture_margin;
-    }
+    score += thread_state.capture_history[winning_capture][selected][occupied][move.target()];
+
+    // Only Use SEE under certain conditions since it is expensive
+    if (winning_capture)
+        score += thread_state.move_ordering_parameters.winning_capture_margin;
 
     if (selected < BLACK_PAWN) score += MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected];
     else score += MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN];

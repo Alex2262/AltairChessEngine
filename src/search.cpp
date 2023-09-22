@@ -264,7 +264,8 @@ void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
 
 
 void update_histories(Thread_State& thread_state, InformativeMove informative_move,
-                      InformativeMove last_move_one, InformativeMove last_move_two, bool quiet, int move_index, int bonus) {
+                      InformativeMove last_move_one, InformativeMove last_move_two, bool quiet, bool winning_capture,
+                      int move_index, int bonus) {
 
     Position& position = thread_state.position;
     Move move = informative_move.normal_move();
@@ -293,14 +294,15 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
         }
 
     } else {
-        update_history_entry(thread_state.capture_history[position.board[move.origin()]]
+        update_history_entry(thread_state.capture_history[winning_capture][position.board[move.origin()]]
                              [position.board[move.target()]][move.target()],
                              bonus);
     }
 
     // Deduct bonus for moves that don't raise alpha
     for (int failed_move_index = 0; failed_move_index < move_index; failed_move_index++) {
-        Move temp_move = position.scored_moves[thread_state.search_ply][failed_move_index].move;
+        ScoredMove temp_scored_move = position.scored_moves[thread_state.search_ply][failed_move_index];
+        Move temp_move = temp_scored_move.move;
         if (!temp_move.is_capture(position) && move.type() != MOVE_TYPE_EP) {
             update_history_entry(thread_state.history_moves
                                  [position.board[temp_move.origin()]]
@@ -325,8 +327,9 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
                                      -bonus);
             }
 
-        } else {
-            update_history_entry(thread_state.capture_history[position.board[temp_move.origin()]]
+        } else if (temp_scored_move.winning_capture == winning_capture) {
+            update_history_entry(thread_state.capture_history[temp_scored_move.winning_capture]
+                                 [position.board[temp_move.origin()]]
                                  [position.board[temp_move.target()]]
                                  [temp_move.target()],
                                  -bonus);
@@ -393,6 +396,10 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         // Sort and choose the next move to be searched
         Move move = sort_next_move(position.scored_moves[thread_state.search_ply], move_index);
+        SCORE_TYPE move_score = position.scored_moves[thread_state.search_ply][move_index].score;
+        bool winning_capture = move_score >= 10000;
+
+        position.scored_moves[thread_state.search_ply][move_index].winning_capture = winning_capture;
 
         // Delta / Futility pruning
         // If the piece we capture plus a margin cannot even improve our score then
@@ -443,8 +450,10 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
                 // Captures History Heuristic for move ordering
                 SCORE_TYPE bonus = 2;
-                update_history_entry(thread_state.capture_history[position.board[move.origin()]]
-                                     [position.board[move.target()]][move.target()],
+                update_history_entry(thread_state.capture_history[winning_capture]
+                                     [position.board[move.origin()]]
+                                     [position.board[move.target()]]
+                                     [move.target()],
                                      bonus);
 
                 if (return_eval >= beta) {
@@ -668,6 +677,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         Move move = position.scored_moves[thread_state.search_ply][move_index].move;
         InformativeMove informative_move = InformativeMove(move, position.board[move.origin()], position.board[move.target()]);
         SCORE_TYPE move_score = position.scored_moves[thread_state.search_ply][move_index].score;
+        bool winning_capture = move_score >= 10000;
+
+        position.scored_moves[thread_state.search_ply][move_index].winning_capture = winning_capture;
 
         // Skip the excluded move since we are in a singular search
         if (move == position.state_stack[thread_state.search_ply].excluded_move) continue;
@@ -800,14 +812,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         double reduction;
         bool full_depth_zero_window;
-        bool bad_capture = move_score < 10000;
 
         // Late Move Reductions (LMR)
         // The idea that if moves are ordered well, then moves that are searched
         // later shouldn't be as good, and therefore we don't need to search them to a very high depth
         if (legal_moves >= 2 + 2 * root + pv_node
             && depth >= 3
-            && (quiet || bad_capture)
+            && (quiet || !winning_capture)
             ){
 
             // Get the base reduction based on depth and moves searched
@@ -916,7 +927,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 // History Heuristic for move ordering
                 SCORE_TYPE bonus = depth * (depth + 1 + null_search + pv_node + improving) - 1;
 
-                update_histories(thread_state, informative_move, last_move_one, last_move_two, quiet, move_index, bonus);
+                update_histories(thread_state, informative_move, last_move_one, last_move_two, quiet, winning_capture, move_index, bonus);
 
                 if (engine.show_stats) {
                     engine.search_results.alpha_raised_count++;
@@ -933,7 +944,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                         else if (informative_move == thread_state.killer_moves[0][thread_state.search_ply]) engine.search_results.search_fail_high_types[1]++;
                         else if (informative_move == thread_state.killer_moves[1][thread_state.search_ply]) engine.search_results.search_fail_high_types[2]++;
                         else if (quiet) engine.search_results.search_fail_high_types[3]++;
-                        else if (bad_capture) engine.search_results.search_fail_high_types[4]++;
+                        else if (!winning_capture) engine.search_results.search_fail_high_types[4]++;
                         else engine.search_results.search_fail_high_types[5]++;
                     }
 

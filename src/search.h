@@ -134,7 +134,7 @@ public:
 
     InformativeMove killer_moves[2][MAX_AB_DEPTH]{};  // killer moves (2) | max_depth (64)
     SCORE_TYPE history_moves[12][64]{}; // piece | target_square
-    SCORE_TYPE capture_history[12][12][64]{};
+    SCORE_TYPE capture_history[2][12][12][64]{};
     SCORE_TYPE continuation_history[12][64][12][64]{};
 
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH + 512] = {0};
@@ -215,7 +215,8 @@ public:
 
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus);
 void update_histories(Thread_State& thread_state, InformativeMove informative_move,
-                      InformativeMove last_move_one, InformativeMove last_move_two, bool quiet, int move_index, int bonus);
+                      InformativeMove last_move_one, InformativeMove last_move_two, bool quiet, bool winning_capture,
+                      int move_index, int bonus);
 
 SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id);
 SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,  bool do_null, int thread_id);
