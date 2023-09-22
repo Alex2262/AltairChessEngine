@@ -43,11 +43,12 @@ void Datagen::start_datagen() {
     merge();
 }
 
-std::string Datagen::write_fen(Datagen_Thread& datagen_thread, std::string& fen, double game_result) {
-    std::string resulting_fen = fen;
-    resulting_fen += " [";
+std::string Datagen::write_fen(Datagen_Thread& datagen_thread, EvalFenStruct eval_fen, double game_result) {
+    std::string resulting_fen = eval_fen.fen;
+    resulting_fen += " | ";
+    resulting_fen += std::to_string(eval_fen.eval);
+    resulting_fen += " | ";
     resulting_fen += WDL_scores[static_cast<int>(2.0 * game_result)];
-    resulting_fen += "]";
 
     datagen_thread.total_fens++;
 
@@ -133,7 +134,7 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
     std::ofstream datagen_file(file_name);
 
     FixedVector<Move, MAX_MOVES> legal_moves{};
-    FixedVector<std::string, MAX_GAME_LENGTH + 1> game_fens{};
+    FixedVector<EvalFenStruct, MAX_GAME_LENGTH + 1> game_fens{};
 
     datagen_thread.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch()).count();
@@ -168,6 +169,7 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
 
             Move best_move = datagen_thread.engine->search_results.best_move;
             SCORE_TYPE score = datagen_thread.engine->search_results.score;
+            SCORE_TYPE objective_score = position.side == WHITE ? score : -score;
 
             // Depth was not finished
             if (best_move == NO_MOVE) break;
@@ -212,8 +214,8 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
             double drawishness = evaluate_drawishness(position, evaluation_information);
 
             // Win adjudication
-            if ((abs(score) >= win_adjudication_score) &&
-                ++win_adjudication_count >= win_adjudication_length) game_result = score > 0 ? ~position.side : position.side;
+            if (abs(score) >= MATE_BOUND || ((abs(score) >= win_adjudication_score) && ++win_adjudication_count >= win_adjudication_length))
+                game_result = score > 0 ? ~position.side : position.side;
             else win_adjudication_count = 0;
 
             // Draw adjudication
@@ -223,7 +225,8 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
 
             // Filter
             if (!noisy && !in_check)
-                game_fens.push_back(position.get_fen(datagen_thread.engine->thread_states[0].fifty_move));
+                game_fens.push_back({position.get_fen(datagen_thread.engine->thread_states[0].fifty_move),
+                                     objective_score});
 
             datagen_thread.game_length++;
         }
@@ -237,20 +240,22 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
         size_t fens_to_pick = std::min(fens_per_game == 0 ? game_fens.size() : fens_per_game, game_fens.size());
         size_t fens_picked  = 0;
 
-        if (fens_to_pick == 0) {
-            for (std::string fen : game_fens) {
-                auto resulting_fen = write_fen(datagen_thread, fen, game_result);
+        if (fens_per_game == 0) {
+            for (EvalFenStruct& eval_fen : game_fens) {
+                auto resulting_fen = write_fen(datagen_thread, eval_fen, game_result);
                 datagen_file << resulting_fen << std::endl;
                 fens_picked++;
             }
-        } else {
+        }
+
+        else {
             while (fens_picked < fens_to_pick) {
                 auto next_fen_index = datagen_thread.prng.rand64() % game_fens.size();
-                auto next_fen = game_fens[next_fen_index];
+                auto next_eval_fen = game_fens[next_fen_index];
 
                 game_fens.pop(next_fen_index);
 
-                auto resulting_fen = write_fen(datagen_thread, next_fen, game_result);
+                auto resulting_fen = write_fen(datagen_thread, next_eval_fen, game_result);
 
                 datagen_file << resulting_fen << std::endl;
                 fens_picked++;

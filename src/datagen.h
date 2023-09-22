@@ -12,6 +12,11 @@
 
 constexpr int MAX_GAME_LENGTH = 600;
 
+struct EvalFenStruct {
+    std::string fen;
+    int eval;
+};
+
 struct Datagen_Thread {
     int thread_id   = 0;
     int total_fens  = 0;
@@ -59,7 +64,7 @@ public:
 
     void start_datagen();
 
-    std::string write_fen(Datagen_Thread& datagen_thread, std::string& fen, double game_result);
+    std::string write_fen(Datagen_Thread& datagen_thread, EvalFenStruct eval_fen, double game_result);
     bool randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move, MAX_MOVES>& legal_moves) const;
 
     void datagen(Datagen_Thread datagen_thread);
