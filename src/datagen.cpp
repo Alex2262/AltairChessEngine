@@ -92,9 +92,7 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
             position.undo_move(move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
         }
 
-        if (legal_moves.empty()) {
-            return false;
-        }
+        if (legal_moves.empty()) return false;
 
         Move random_move = legal_moves[datagen_thread.prng.rand64() % legal_moves.size()];
 
@@ -102,11 +100,31 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
         datagen_thread.game_length++;
     }
 
+    // Verify the position has moves
+    position.set_state(position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+    position.get_pseudo_legal_moves(position.scored_moves[0]);
+
+    bool terminated = true;
+
+    for (ScoredMove& scored_move : position.scored_moves[0]) {
+        bool attempt = position.make_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+        position.undo_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+
+        if (attempt) {
+            terminated = false;
+            break;
+        }
+    }
+
+    if (terminated) return false;
+
     // Verification Search
     datagen_thread.engine->soft_time_limit = max_time_per_move;
     datagen_thread.engine->soft_node_limit = 2 * soft_node_limit;
 
     lazy_smp_search(*datagen_thread.engine);
+
+    datagen_thread.engine->soft_node_limit = soft_node_limit;
 
     if (abs(datagen_thread.engine->search_results.score) >= opening_max_score) return false;
 
@@ -139,6 +157,11 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
     datagen_thread.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch()).count();
 
+    datagen_thread.engine->hard_time_limit = max_time_per_move;
+    datagen_thread.engine->soft_time_limit = max_time_per_move;
+    datagen_thread.engine->soft_node_limit = soft_node_limit;
+    datagen_thread.engine->hard_node_limit = hard_node_limit;
+
     while (datagen_thread.total_fens < thread_fens_max) {
         if (stopped) {
             std::cout << "Thread " << std::to_string(datagen_thread.thread_id) << " games: "
@@ -158,12 +181,8 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
 
         while (true) {
 
-            datagen_thread.engine->hard_time_limit = max_time_per_move;
             datagen_thread.engine->soft_time_limit = max_time_per_move;
             datagen_thread.engine->search_results.best_move = NO_MOVE;
-
-            datagen_thread.engine->soft_node_limit = soft_node_limit;
-            datagen_thread.engine->hard_node_limit = hard_node_limit;
 
             lazy_smp_search(*datagen_thread.engine);
 
