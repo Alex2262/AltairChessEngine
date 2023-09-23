@@ -7,7 +7,7 @@
 #include "types.h"
 #include "fixed_vector.h"
 #include "bitboard.h"
-#include "tables.h"
+#include "attacks.h"
 #include "move.h"
 
 

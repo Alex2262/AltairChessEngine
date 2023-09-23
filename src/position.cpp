@@ -6,7 +6,7 @@
 #include "position.h"
 #include "useful.h"
 #include "bitboard.h"
-#include "tables.h"
+#include "attacks.h"
 #include "zobrist.h"
 
 

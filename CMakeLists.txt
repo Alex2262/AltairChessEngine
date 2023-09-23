@@ -40,7 +40,7 @@ add_executable(Altair
         src/types.h
         src/bitboard.cpp
         src/bitboard.h
-        src/tables.h
+        src/attacks.h
         src/fixed_vector.h
         src/evaluation.cpp
         src/evaluation.h

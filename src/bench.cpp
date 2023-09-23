@@ -51,7 +51,7 @@ constexpr std::array fens {
 };
 
 // A function for a 'bench' metric that calculates nps and nodes over
-// a set of 50 pre-defined fens. Used to insure equality between machines, which is used
+// a set of pre-defined fens. Used to insure equality between machines, which is used
 // during testing on an instance.
 
 void run_bench(Engine& engine, PLY_TYPE depth) {

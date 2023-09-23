@@ -1,7 +1,7 @@
 
 
-#ifndef ALTAIRCHESSENGINE_TABLES_H
-#define ALTAIRCHESSENGINE_TABLES_H
+#ifndef ALTAIRCHESSENGINE_ATTACKS_H
+#define ALTAIRCHESSENGINE_ATTACKS_H
 
 #include <array>
 #include "bitboard.h"
@@ -334,4 +334,4 @@ constexpr BITBOARD get_pawn_bitboard_attacks(BITBOARD pawns, Color color) {
 }
 
 
-#endif //ALTAIRCHESSENGINE_TABLES_H
+#endif //ALTAIRCHESSENGINE_ATTACKS_H
