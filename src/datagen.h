@@ -23,16 +23,15 @@ struct Datagen_Thread {
     int total_games = 0;
     int game_length = 0;
 
-    PRNG prng = PRNG(695848653836736222);
+    PRNG prng = PRNG(0);
 
     std::unique_ptr<Engine> engine = std::make_unique<Engine>();
 
-    // std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> start_time_point;
     uint64_t start_time;
 
-    explicit Datagen_Thread(int t_id) {
+    explicit Datagen_Thread(int t_id, uint64_t random_seed) {
         thread_id = t_id;
-        prng = PRNG(695848653836736222 + 5 * thread_id);
+        prng = PRNG(695848653836 + 6 * thread_id + random_seed);
     }
 };
 
@@ -59,6 +58,8 @@ class Datagen {
 
 public:
     int threads = 1;
+
+    uint64_t random_seed = 0;
 
     bool stopped = false;
 

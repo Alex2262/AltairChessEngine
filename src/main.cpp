@@ -43,17 +43,21 @@ int main(int argc, char* argv[]) {
     if (datagen_flag) {
         Datagen datagen{};
 
-        if (argc < 3) {
-            std::cout << "Thread number expected" << std::endl;
+        if (argc < 4) {
+            std::cout << "Thread number and Seed expected" << std::endl;
             return 0;
         }
 
         std::string thread_count = argv[2];
+        std::string seed_string  = argv[3];
 
         int thread_num = std::stoi(thread_count);
+        uint64_t seed  = std::stoi(seed_string);
 
         datagen.threads = thread_num;
+        datagen.random_seed = seed % 1048576;
         datagen.start_datagen();
+
         return 0;
     }
 

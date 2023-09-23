@@ -22,7 +22,7 @@ void Datagen::start_datagen() {
 
     for (int thread_id = 0; thread_id < threads; thread_id++) {
         search_threads.emplace_back([this, thread_id]() {
-            this->datagen(Datagen_Thread(thread_id));
+            this->datagen(Datagen_Thread(thread_id, random_seed));
         });
     }
 
