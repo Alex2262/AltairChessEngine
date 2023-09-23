@@ -9,7 +9,7 @@
 #define ENGINE_VERSION              "4.4.1"
 #define ENGINE_AUTHOR               "Alexander Tian"
 
-#define N_TUNING_PARAMETERS         18
+#define N_TUNING_PARAMETERS         13
 #define FAIL_HIGH_STATS_COUNT       5
 #define ALPHA_RAISE_STATS_COUNT     5
 
