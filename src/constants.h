@@ -6,7 +6,7 @@
 #include "types.h"
 
 #define ENGINE_NAME                 "Altair"
-#define ENGINE_VERSION              "4.3.9"
+#define ENGINE_VERSION              "4.4.1"
 #define ENGINE_AUTHOR               "Alexander Tian"
 
 #define N_TUNING_PARAMETERS         18
@@ -37,7 +37,6 @@ constexpr SCORE_TYPE MATE_BOUND = 99000;
 #define HASH_FLAG_ALPHA     1
 #define HASH_FLAG_BETA      2
 
-#define STARTING_WINDOW     26
 #define MINIMUM_ASP_DEPTH   6
 
 constexpr size_t MAX_MOVES = 256;
