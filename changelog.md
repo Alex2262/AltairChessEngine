@@ -5951,3 +5951,36 @@ LLR   | 2.89 (-2.25, 2.89) [0.00, 5.00]
 GAMES | N: 11696 W: 3123 L: 2923 D: 5650
 https://chess.swehosting.se/test/3545/
 ```
+
+### 4.3.9
+Lower Base Capture Margin
+
+```
+ELO: 1.89 +- 1.29 [0.607, 3.18]
+LLR: 4.01 [0.0, 3.0] (-2.25, 2.89)
+H1 Accepted
+GAMES | N: 138192 W: 34571 L: 33822 D: 69799
+https://chess.swehosting.se/test/3661/
+```
+
+### 4.4.0
+More Aggressive Bad Captures
+
+```
+ELO   | 4.06 +- 3.26 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 21568 W: 5471 L: 5219 D: 10878
+https://chess.swehosting.se/test/3871/
+```
+
+### 4.4.1
+Index capture history by SEE result
+
+```
+ELO   | 3.63 +- 2.92 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.97 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 27168 W: 6934 L: 6650 D: 13584
+https://chess.swehosting.se/test/3942/
+```

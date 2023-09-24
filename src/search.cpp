@@ -24,10 +24,6 @@ void Engine::initialize_lmr_reductions() {
                     std::max(0.0,
                              std::log(depth) * std::log(moves) / double(tuning_parameters.LMR_divisor_quiet / 100.0)
                              + double(tuning_parameters.LMR_base_quiet / 100.0));
-            LMR_REDUCTIONS_NOISY[depth][moves] =
-                    std::max(0.0,
-                             std::log(depth) * std::log(moves) / double(tuning_parameters.LMR_divisor_noisy / 100.0)
-                             + double(tuning_parameters.LMR_base_noisy / 100.0));
         }
     }
 }

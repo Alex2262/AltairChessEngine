@@ -8,7 +8,7 @@
   [![Commits][commits-badge]][commits-link]
 
 
-  Altair is a strong UCI-protocol chess engine named after the star Altair.
+  Altair is a superhuman UCI-protocol chess engine named after the star Altair.
 
 </div>
 
@@ -17,12 +17,12 @@
 [CCRL Rating List](http://ccrl.chessdom.com/ccrl/) \
 [MCERL Rating list](https://www.chessengeria.com/mcerl)
 
-| Version | CCRL Blitz | CCRL 40/15 | CCRL FRC | MCERL |
-|:-------:|:----------:|:----------:|:--------:|:-----:|
-|  1.0.0  |    ----    |    2405    |   ----   | ----  |
-|  2.0.0  |    2880    |    2808    |   ----   | 2639  |
-|  3.0.0  |    3013    |    3002    |   ----   | ----  |
-|  **4.0.0**  |    **3083**    |    **3041**    |   **3079**   | **----**  |
+| Version | CCRL Blitz | CCRL 40/15 | CCRL FRC |  MCERL   |
+|:-------:|:----------:|:----------:|:--------:|:--------:|
+|  1.0.0  |    ----    |    2405    |   ----   |   ----   |
+|  2.0.0  |    2880    |    2808    |   ----   |   2657   |
+|  3.0.0  |    3013    |    3002    |   ----   |   ----   |
+|  **4.0.0**  |    **3083**    |    **3041**    |   **3079**   | **3098** |
 
 
 ## Download
@@ -37,13 +37,10 @@ You can also play against Altair on lichess [here](https://lichess.org/@/Altair_
 Note: Lichess BOT ratings are deflated compared to their actual human-relative-strength.
 
 ## Board Representation
-Altair uses a 10x12 mailbox array. This board representation gives padding around the 8x8 board for faster move generation. Altair also features piece lists.
-
-I hope to use bitboards instead in the future since they can be much faster if implemented well. The benefits of implementing bitboards would be a hundred elo gained in strength; however, it would require most of the engine to be rewritten.
+Altair currently uses bitboards, binary representations of the chessboard, as the internal board representation
 
 ## Move Generation
-Offsets / Increments are used in loops to generate the pseudo-legal moves. Within the search and perft, the moves are tested for 
-legality, and if the move is not legal, we skip to the next move.
+Altair uses the magic bitboard approach for decently fast move generation speeds.
 
 ## Search
 Altair utilizes many techniques for its search—the calculation of moves and different positions. 
@@ -87,25 +84,18 @@ Altair's Move Ordering is structured like so:
 - Castling
 
 ## Evaluation
-These are some evaluation features present in Altair:
+These are some evaluation features present in Altair (a more detailed list can be found in evaluation_constants.h):
 
+- Tapered evaluation between the middle-game and end-game
 - Material
 - Piece Square Tables
 - Mobility
-  - Open and semi-open files for rooks and queens
 - Pawn Structure
 - King Safety
-  - King Danger Zone
-  - King Tropism
-  - Pawn Shield
-  - Pawn Storm
-  - Open Files
-- Piece Threats & Support
+- Piece Threats
 - Bishop Pair
 - Tempo
-- King Tropism (Distance from pieces to a King)
-- Tapered evaluation between the middlegame and endgame
-- Scaling based on the likeliness of a draw
+- Endgame draw likelihood scaling
 
 ## Credit and Thanks
 Altair was created with the help of many people and usage of many resources. 
@@ -113,14 +103,14 @@ Altair is also inspired from other strong and notable engines.
 
 Mentions:
 
-- [The Chess Programming Wiki](https://www.chessprogramming.org/Main_Page) contains invaluable resources that I have used.
-- [The Bitboard Chess Engine in C Playlist](https://www.youtube.com/playlist?list=PLmN0neTso3Jxh8ZIylk74JpwfiWNI76Cs) is a great video series that contains implementations for different ideas and features.
+- [The Chess Programming Wiki](https://www.chessprogramming.org/Main_Page) contains many resources that I have used.
+- [The Bitboard Chess Engine in C Playlist](https://www.youtube.com/playlist?list=PLmN0neTso3Jxh8ZIylk74JpwfiWNI76Cs) is a great video series that I initially used to learn aspects of chess programming.
 - [@archishou](https://github.com/archishou) has supported me a lot in the development of my engine with many ideas and help in implementing bitboards.
 - [@Ciekce](https://github.com/Ciekce) has helped me not only fix many issues in my engine, but also improve my understanding of programming in general.
 - [@GediminasMasaitis](https://github.com/GediminasMasaitis) has also helped me a lot in the development of my engine. His engine [Chessdotcpp](https://github.com/GediminasMasaitis/chess-dot-cpp) has inspired me with many ideas. Since version 1.3.6 and beyond, I have also used his [Texel Tuner](https://github.com/GediminasMasaitis/texel-tuner/tree/main/src) for tuning HCE parameters.
 - [Weiss](https://github.com/TerjeKir/weiss) is another great inspiration and resource.
 - The Engine Programming Discord Server for answering many of my questions.
-- Everyone in this [OpenBench Testing Instance](https://chess.swehosting.se/users/) for their support and 
+- Everyone in this [OpenBench Testing Instance](https://chess.swehosting.se/users/) for their invaluable support and 
 contributions in testing my engine.
 
 Many people have helped me along the development of this chess engine. Without them, Altair would have never reached this stage.
