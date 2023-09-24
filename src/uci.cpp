@@ -73,8 +73,6 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
     if (engine->hard_time_limit > static_cast<uint64_t>(movetime) && movetime != 0.0) {
         engine->hard_time_limit = static_cast<uint64_t>(time_amt);
     }
-
-    // std::cout << time_amt << " " << engine->hard_time_limit << " " << engine->soft_time_limit << std::endl;
 }
 
 
@@ -225,10 +223,10 @@ void UCI::uci_loop() {
             std::cout << "option name Threads type spin default " << 1 << " min " << 1 << " max " << 1024
                       << std::endl;
 
-            std::cout << "option name UCI_Chess960 type check default " << false
+            std::cout << "option name UCI_Chess960 type check default false"
                       << std::endl;
 
-            std::cout << "option name Statistics type check default " << false
+            std::cout << "option name Statistics type check default false"
                       << std::endl;
 
             std::cout << "option name Move Overhead type spin default " << 10 << " min " << 0 << " max " << 1000
