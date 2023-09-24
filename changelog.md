@@ -5984,3 +5984,175 @@ LLR   | 2.97 (-2.25, 2.89) [0.00, 5.00]
 GAMES | N: 27168 W: 6934 L: 6650 D: 13584
 https://chess.swehosting.se/test/3942/
 ```
+
+
+## --- Original Data ---
+Altair's HCE weights have been set completely to zero, and all data will be iteratively generated off this version.
+
+### 5.0.1
+First round of original HCE data generation
+
+```
+Score of Altair439-original-data-1 vs Altair439-original-data-0: 105 - 10 - 1 [0.909]
+...      Altair439-original-data-1 playing White: 54 - 3 - 1  [0.940] 58
+...      Altair439-original-data-1 playing Black: 51 - 7 - 0  [0.879] 58
+...      White vs Black: 61 - 54 - 1  [0.530] 116
+Elo difference: 400.8 +/- 121.9, LOS: 100.0 %, DrawRatio: 0.9 %
+116 of 5000 games finished.
+```
+
+### 5.0.2
+Second round of original HCE data generation
+
+```
+Score of Altair439-original-data-2 vs Altair439-original-data-1: 125 - 0 - 0 [1.000]
+...      Altair439-original-data-2 playing White: 63 - 0 - 0  [1.000] 63
+...      Altair439-original-data-2 playing Black: 62 - 0 - 0  [1.000] 62
+...      White vs Black: 63 - 62 - 0  [0.504] 125
+Elo difference: inf +/- nan, LOS: 100.0 %, DrawRatio: 0.0 %
+125 of 5000 games finished.
+```
+
+```
+Score of Altair439-original-data-2 vs vice10_mac_m1: 27 - 91 - 10 [0.250]
+...      Altair439-original-data-2 playing White: 10 - 48 - 6  [0.203] 64
+...      Altair439-original-data-2 playing Black: 17 - 43 - 4  [0.297] 64
+...      White vs Black: 53 - 65 - 10  [0.453] 128
+Elo difference: -190.8 +/- 67.1, LOS: 0.0 %, DrawRatio: 7.8 %
+128 of 5000 games finished.
+```
+
+
+### 5.0.3
+Third round of original HCE data generation
+
+```
+Score of Altair439-original-data-3 vs Altair439-original-data-2: 205 - 1 - 0 [0.995]
+...      Altair439-original-data-3 playing White: 102 - 1 - 0  [0.990] 103
+...      Altair439-original-data-3 playing Black: 103 - 0 - 0  [1.000] 103
+...      White vs Black: 102 - 104 - 0  [0.495] 206
+Elo difference: 924.7 +/- nan, LOS: 100.0 %, DrawRatio: 0.0 %
+212 of 5000 games finished.
+```
+
+### 5.0.4
+Fourth round of original HCE data generation
+
+```
+Score of Altair439-original-data-4 vs Altair439-original-data-3: 131 - 14 - 20 [0.855]
+...      Altair439-original-data-4 playing White: 66 - 6 - 11  [0.861] 83
+...      Altair439-original-data-4 playing Black: 65 - 8 - 9  [0.848] 82
+...      White vs Black: 74 - 71 - 20  [0.509] 165
+Elo difference: 307.6 +/- 67.3, LOS: 100.0 %, DrawRatio: 12.1 %
+171 of 5000 games finished.
+```
+
+```
+Score of Altair439-original-data-4 vs Altair439: 16 - 125 - 64 [0.234]
+...      Altair439-original-data-4 playing White: 7 - 64 - 32  [0.223] 103
+...      Altair439-original-data-4 playing Black: 9 - 61 - 32  [0.245] 102
+...      White vs Black: 68 - 73 - 64  [0.488] 205
+Elo difference: -205.9 +/- 42.5, LOS: 0.0 %, DrawRatio: 31.2 %
+205 of 5000 games finished.
+```
+
+### 5.0.5
+Fifth round of original HCE data generation
+
+```
+Score of Altair439-original-data-5 vs Altair439-original-data-4: 90 - 55 - 171 [0.555]
+...      Altair439-original-data-5 playing White: 47 - 23 - 89  [0.575] 159
+...      Altair439-original-data-5 playing Black: 43 - 32 - 82  [0.535] 157
+...      White vs Black: 79 - 66 - 171  [0.521] 316
+Elo difference: 38.6 +/- 25.9, LOS: 99.8 %, DrawRatio: 54.1 %
+316 of 5000 games finished.
+```
+
+```
+Score of Altair439-original-data-5 vs Altair439: 278 - 1116 - 740 [0.304]
+...      Altair439-original-data-5 playing White: 148 - 549 - 370  [0.312] 1067
+...      Altair439-original-data-5 playing Black: 130 - 567 - 370  [0.295] 1067
+...      White vs Black: 715 - 679 - 740  [0.508] 2134
+Elo difference: -144.2 +/- 12.3, LOS: 0.0 %, DrawRatio: 34.7 %
+2134 of 5000 games finished.
+```
+
+### 5.0.6
+Sixth round of original HCE data generation
+
+```
+Score of Altair439-original-data-6 vs Altair439-original-data-5: 47 - 19 - 52 [0.619]
+...      Altair439-original-data-6 playing White: 20 - 12 - 28  [0.567] 60
+...      Altair439-original-data-6 playing Black: 27 - 7 - 24  [0.672] 58
+...      White vs Black: 27 - 39 - 52  [0.449] 118
+Elo difference: 84.0 +/- 47.4, LOS: 100.0 %, DrawRatio: 44.1 %
+118 of 5000 games finished.
+```
+
+```
+Score of Altair439-original-data-6 vs Altair439: 57 - 163 - 122 [0.345]
+...      Altair439-original-data-6 playing White: 25 - 87 - 59  [0.319] 171
+...      Altair439-original-data-6 playing Black: 32 - 76 - 63  [0.371] 171
+...      White vs Black: 101 - 119 - 122  [0.474] 342
+Elo difference: -111.3 +/- 30.2, LOS: 0.0 %, DrawRatio: 35.7 %
+342 of 5000 games finished.
+```
+
+### 5.0.7
+Seventh round of original HCE data generation
+
+```
+Score of Altair439-original-data-7 vs Altair439-original-data-6: 124 - 110 - 265 [0.514]
+...      Altair439-original-data-7 playing White: 59 - 54 - 137  [0.510] 250
+...      Altair439-original-data-7 playing Black: 65 - 56 - 128  [0.518] 249
+...      White vs Black: 115 - 119 - 265  [0.496] 499
+Elo difference: 9.8 +/- 20.9, LOS: 82.0 %, DrawRatio: 53.1 %
+499 of 5000 games finished.
+```
+
+### 5.0.8
+Eighth and final round of original HCE data generation
+
+```
+Score of Altair439-original-data-8 vs Altair439-original-data-7: 350 - 320 - 625 [0.512]
+...      Altair439-original-data-8 playing White: 174 - 155 - 319  [0.515] 648
+...      Altair439-original-data-8 playing Black: 176 - 165 - 306  [0.509] 647
+...      White vs Black: 339 - 331 - 625  [0.503] 1295
+Elo difference: 8.1 +/- 13.6, LOS: 87.7 %, DrawRatio: 48.3 %
+1301 of 5000 games finished.
+```
+
+```
+Score of Altair439-original-data-8 vs Altair439: 97 - 218 - 178 [0.377]
+...      Altair439-original-data-8 playing White: 57 - 100 - 90  [0.413] 247
+...      Altair439-original-data-8 playing Black: 40 - 118 - 88  [0.341] 246
+...      White vs Black: 175 - 140 - 178  [0.535] 493
+Elo difference: -87.1 +/- 24.8, LOS: 0.0 %, DrawRatio: 36.1 %
+501 of 5000 games finished.
+
+```
+
+## --- Introduction of NNUE ---
+
+### 5.0.9
+First net with 64 HL size, trained on 30M fens of HCE data.
+-46 against master compared to -87 compared to against master with original data HCE
+
+```
+ELO   | -46.02 +- 19.68 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | -2.27 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 896 W: 268 L: 386 D: 242
+https://chess.swehosting.se/test/3973/
+```
+
+### 5.1.0
+Second net with 128 HL size, trained on 128M fens off the previous net.
+
+```
+ELO   | 136.97 +- 30.90 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 432 W: 244 L: 82 D: 106
+https://chess.swehosting.se/test/4001/
+```
