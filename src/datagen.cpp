@@ -40,7 +40,7 @@ void Datagen::start_datagen() {
 
     std::cout << "All threads joined" << std::endl;
 
-    merge();
+    // merge();
 }
 
 std::string Datagen::write_fen(Datagen_Thread& datagen_thread, EvalFenStruct eval_fen, double game_result) {
@@ -157,10 +157,10 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
     datagen_thread.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch()).count();
 
-    datagen_thread.engine->hard_time_limit = max_time_per_move;
+    datagen_thread.engine->hard_time_limit = 2 * max_time_per_move;
     datagen_thread.engine->soft_time_limit = max_time_per_move;
-    datagen_thread.engine->soft_node_limit = soft_node_limit;
     datagen_thread.engine->hard_node_limit = hard_node_limit;
+    datagen_thread.engine->soft_node_limit = soft_node_limit;
 
     while (datagen_thread.total_fens < thread_fens_max) {
         if (stopped) {
@@ -175,7 +175,7 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
         if (!randomize_opening(datagen_thread, legal_moves)) continue;
 
         double game_result = -1.0;  // No result
-        int win_adjudication_count  = 0;
+        int win_adjudication_count = 0;
 
         game_fens.clear();
 
@@ -224,21 +224,20 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
                 break;
             }
 
+            // Win adjudication
+            if (abs(score) >= MATE_BOUND || ((abs(score) >= win_adjudication_score) && ++win_adjudication_count >= win_adjudication_length))
+                game_result = score > 0 ? ~position.side : position.side;
+            else win_adjudication_count = 0;
+
+            // Draw adjudications
             if (datagen_thread.engine->thread_states[0].fifty_move >= 100 || datagen_thread.engine->thread_states[0].detect_repetition())
                 game_result = 0.5;
 
             if (datagen_thread.game_length >= MAX_GAME_LENGTH)
                 game_result = 0.5;
 
-            double drawishness = evaluate_drawishness(position, evaluation_information);
-
-            // Win adjudication
-            if (abs(score) >= MATE_BOUND || ((abs(score) >= win_adjudication_score) && ++win_adjudication_count >= win_adjudication_length))
-                game_result = score > 0 ? ~position.side : position.side;
-            else win_adjudication_count = 0;
-
-            // Draw adjudication
-            if (datagen_thread.game_length >= 80 && drawishness == 0.0) game_result = 0.5;
+            if (datagen_thread.game_length >= 80 && evaluate_drawishness(position, evaluation_information) == 0.0)
+                game_result = 0.5;
 
             if (game_result != -1.0) break;
 
