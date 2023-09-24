@@ -15,7 +15,7 @@
 class Position;
 
 constexpr size_t INPUT_SIZE = 768;
-constexpr size_t LAYER1_SIZE = 64;
+constexpr size_t LAYER1_SIZE = 128;
 
 constexpr SCORE_TYPE CRELU_MIN = 0;
 constexpr SCORE_TYPE CRELU_MAX = 255;
