@@ -152,7 +152,7 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
     std::ofstream datagen_file(file_name);
 
     FixedVector<Move, MAX_MOVES> legal_moves{};
-    FixedVector<EvalFenStruct, MAX_GAME_LENGTH + 1> game_fens{};
+    // FixedVector<EvalFenStruct, MAX_GAME_LENGTH + 64> game_fens{};
 
     datagen_thread.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch()).count();
@@ -177,7 +177,7 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
         double game_result = -1.0;  // No result
         int win_adjudication_count = 0;
 
-        game_fens.clear();
+        // game_fens.clear();
 
         while (true) {
 
@@ -225,26 +225,30 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
             }
 
             // Win adjudication
-            if (abs(score) >= MATE_BOUND || ((abs(score) >= win_adjudication_score) && ++win_adjudication_count >= win_adjudication_length))
+            if (abs(score) >= MATE_BOUND ||
+                ((abs(score) >= win_adjudication_score) && ++win_adjudication_count >= win_adjudication_length))
                 game_result = score > 0 ? ~position.side : position.side;
             else win_adjudication_count = 0;
 
             // Draw adjudications
-            if (datagen_thread.engine->thread_states[0].fifty_move >= 100 || datagen_thread.engine->thread_states[0].detect_repetition())
-                game_result = 0.5;
-
-            if (datagen_thread.game_length >= MAX_GAME_LENGTH)
-                game_result = 0.5;
-
-            if (datagen_thread.game_length >= 80 && evaluate_drawishness(position, evaluation_information) == 0.0)
+            if (datagen_thread.engine->thread_states[0].fifty_move >= 100 || datagen_thread.engine->thread_states[0].detect_repetition() ||
+                datagen_thread.game_length >= MAX_GAME_LENGTH ||
+                (datagen_thread.game_length >= 80 && evaluate_drawishness(position, evaluation_information) == 0.0))
                 game_result = 0.5;
 
             if (game_result != -1.0) break;
 
             // Filter
-            if (!noisy && !in_check)
-                game_fens.push_back({position.get_fen(datagen_thread.engine->thread_states[0].fifty_move),
-                                     objective_score});
+            if (!noisy && !in_check) {
+                auto resulting_fen = write_fen(datagen_thread,
+                                               {position.get_fen(datagen_thread.engine->thread_states[0].fifty_move), objective_score},
+                                               game_result);
+                datagen_file << resulting_fen << std::endl;
+
+
+                // game_fens.push_back({position.get_fen(datagen_thread.engine->thread_states[0].fifty_move),
+                //                      objective_score});
+            }
 
             datagen_thread.game_length++;
         }
@@ -255,6 +259,7 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
 
         datagen_thread.total_games++;
 
+        /*
         size_t fens_to_pick = std::min(fens_per_game == 0 ? game_fens.size() : fens_per_game, game_fens.size());
         size_t fens_picked  = 0;
 
@@ -279,6 +284,7 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
                 fens_picked++;
             }
         }
+        */
     }
 
     datagen_file.close();
