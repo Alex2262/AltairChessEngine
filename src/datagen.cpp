@@ -152,7 +152,7 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
     std::ofstream datagen_file(file_name);
 
     FixedVector<Move, MAX_MOVES> legal_moves{};
-    // FixedVector<EvalFenStruct, MAX_GAME_LENGTH + 64> game_fens{};
+    FixedVector<EvalFenStruct, MAX_GAME_LENGTH + 64> game_fens{};
 
     datagen_thread.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch()).count();
@@ -240,14 +240,8 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
 
             // Filter
             if (!noisy && !in_check) {
-                auto resulting_fen = write_fen(datagen_thread,
-                                               {position.get_fen(datagen_thread.engine->thread_states[0].fifty_move), objective_score},
-                                               game_result);
-                datagen_file << resulting_fen << std::endl;
-
-
-                // game_fens.push_back({position.get_fen(datagen_thread.engine->thread_states[0].fifty_move),
-                //                      objective_score});
+                game_fens.push_back({position.get_fen(datagen_thread.engine->thread_states[0].fifty_move),
+                                     objective_score});
             }
 
             datagen_thread.game_length++;
@@ -259,7 +253,7 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
 
         datagen_thread.total_games++;
 
-        /*
+
         size_t fens_to_pick = std::min(fens_per_game == 0 ? game_fens.size() : fens_per_game, game_fens.size());
         size_t fens_picked  = 0;
 
@@ -284,7 +278,7 @@ void Datagen::datagen(Datagen_Thread datagen_thread) {
                 fens_picked++;
             }
         }
-        */
+
     }
 
     datagen_file.close();

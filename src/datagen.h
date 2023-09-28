@@ -19,9 +19,9 @@ struct EvalFenStruct {
 
 struct Datagen_Thread {
     int thread_id   = 0;
-    int total_fens  = 0;
-    int total_games = 0;
-    int game_length = 0;
+    uint64_t total_fens  = 0;
+    uint64_t total_games = 0;
+    uint64_t game_length = 0;
 
     PRNG prng = PRNG(0);
 
