@@ -42,14 +42,14 @@ void Datagen::start_datagen() {
     stopped = false;
     std::vector<std::thread> search_threads;
     search_threads.reserve(threads + 1);
-    datagen_threads.reserve(threads);
+    datagen_threads.resize(threads);
 
     std::cout << "Starting " << threads << " threads" << std::endl;
 
     for (int thread_id = 0; thread_id < threads; thread_id++) {
-        datagen_threads.push_back(Datagen_Thread(thread_id, random_seed));
-        search_threads.emplace_back([this]() {
-            this->datagen(std::ref(datagen_threads.back()));
+        datagen_threads[thread_id] = Datagen_Thread(thread_id, random_seed);
+        search_threads.emplace_back([this, thread_id](){
+            this->datagen(datagen_threads[thread_id]);
         });
     }
 
@@ -219,7 +219,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
         double game_result = -1.0;  // No result
         int win_adjudication_count = 0;
 
-        // game_fens.clear();
+        game_fens.clear();
 
         while (true) {
 

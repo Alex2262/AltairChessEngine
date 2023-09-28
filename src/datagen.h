@@ -32,7 +32,11 @@ struct Datagen_Thread {
 
     uint64_t start_time;
 
-    explicit Datagen_Thread(int t_id, uint64_t random_seed) {
+    inline Datagen_Thread() {
+        thread_id = 0;
+    }
+
+    inline explicit Datagen_Thread(int t_id, uint64_t random_seed) {
         thread_id = t_id;
         prng = PRNG(695848653836 + 6 * thread_id + random_seed);
     }
