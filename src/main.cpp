@@ -61,11 +61,6 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    Datagen datagen{};
-    datagen.threads = 8;
-    datagen.random_seed = 33;
-    datagen.start_datagen();
-
     // Begin the UCI input loop
     main_uci.uci_loop();
 
