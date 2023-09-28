@@ -18,10 +18,13 @@ struct EvalFenStruct {
 };
 
 struct Datagen_Thread {
-    int thread_id   = 0;
+    int thread_id  = 0;
     uint64_t total_fens  = 0;
     uint64_t total_games = 0;
     uint64_t game_length = 0;
+
+    std::string current_stage = "none";
+
 
     PRNG prng = PRNG(0);
 
@@ -54,6 +57,8 @@ class Datagen {
 
     const std::string WDL_scores[3] = {"1.0", "0.5", "0.0"};
 
+    std::vector<Datagen_Thread> datagen_threads;
+
     // std::vector<std::string> opening_fens{};
 
 public:
@@ -63,12 +68,14 @@ public:
 
     bool stopped = false;
 
+    void integrity_check();
+    void integrity_check_process();
     void start_datagen();
 
     std::string write_fen(Datagen_Thread& datagen_thread, EvalFenStruct eval_fen, double game_result);
     bool randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move, MAX_MOVES>& legal_moves) const;
 
-    void datagen(Datagen_Thread datagen_thread);
+    void datagen(Datagen_Thread& datagen_thread);
 
     std::vector<std::string> get_file_fens(const std::string &file_name);
 
