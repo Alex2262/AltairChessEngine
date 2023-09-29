@@ -24,6 +24,7 @@ struct Datagen_Thread {
     uint64_t total_games = 0;
 
     bool ping = false;
+    bool paused = false;
 
     std::string current_stage = "none";
 
@@ -69,6 +70,7 @@ class Datagen {
 
 public:
     int threads = 1;
+    int running_threads = 1;
 
     uint64_t random_seed = 0;
 

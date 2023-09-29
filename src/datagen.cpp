@@ -11,6 +11,7 @@
 #include "datagen.h"
 #include "search.h"
 #include "evaluation.h"
+#include "useful.h"
 
 
 void Datagen::integrity_check() {
@@ -18,12 +19,12 @@ void Datagen::integrity_check() {
     std::cout << "-----------------------------" << std::endl;
 
     for (Datagen_Thread& datagen_thread : datagen_threads) {
-        std::string status_color = datagen_thread.ping ? GREEN : RED;
-        std::string status = datagen_thread.ping ? "running" : "stalled";
+        std::string status_color = datagen_thread.paused ? YELLOW : datagen_thread.ping ? GREEN : RED;
+        std::string status = datagen_thread.paused ? "paused" : datagen_thread.ping ? "running" : "stalled";
 
         std::cout << "Thread " << datagen_thread.thread_id << " [" << status_color << status << RESET << "]\n";
 
-        if (!datagen_thread.ping) {
+        if (!datagen_thread.ping && !datagen_thread.paused) {
             std::cout << "Current Stage: " << datagen_thread.current_stage << "\n";
             std::cout << "node count: " <<  datagen_thread.engine->thread_states[0].node_count << "\n";
             std::cout << "stopped? " << datagen_thread.engine->stopped << "\n";
@@ -32,28 +33,24 @@ void Datagen::integrity_check() {
         datagen_thread.ping = false;
     }
 
+    uint64_t included_fens = 0;
     uint64_t total_fens = 0;
     uint64_t total_games = 0;
     for (Datagen_Thread& datagen_thread : datagen_threads) {
         total_fens  += datagen_thread.total_fens;
         total_games += datagen_thread.total_games;
+        if (!datagen_thread.paused) included_fens += datagen_thread.total_fens;
     }
 
-    uint64_t fen_average = total_fens / threads;
-
     uint64_t start_time = datagen_threads[0].start_time;
-
     auto end_time_point = std::chrono::high_resolution_clock::now();
     auto end_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(end_time_point).time_since_epoch()).count();
-
-
     uint64_t elapsed_time = end_time - start_time;
-
     elapsed_time = std::max<uint64_t>(elapsed_time, 1);
 
-    auto fps  = static_cast<uint64_t>(static_cast<double>(total_fens) / static_cast<double>(elapsed_time) * 1000);
-    auto fpst = fps / threads;
+    auto fps  = static_cast<uint64_t>(static_cast<double>(included_fens) / static_cast<double>(elapsed_time) * 1000);
+    auto fpst = fps / running_threads;
 
     std::cout << std::endl;
     std::cout << "Total Games \t [" << CYAN << total_games << RESET << "]\n";
@@ -74,6 +71,9 @@ void Datagen::integrity_check_process() {
 
 
 void Datagen::start_datagen() {
+
+    running_threads = threads;
+
     stopped = false;
     std::vector<std::thread> search_threads;
     search_threads.reserve(threads + 1);
@@ -93,16 +93,53 @@ void Datagen::start_datagen() {
     });
 
     std::string msg;
+    std::vector<std::string> tokens{};
+
     while (getline(std::cin, msg)) {
+        tokens.clear();
+        tokens = split(msg, ' ');
+
         if (msg == "stop") {
             stopped = true;
             break;
+        }
+
+        if (tokens[0] == "pause" && tokens.size() >= 2) {
+            int pause_thread = std::stoi(tokens[1]);
+            if (pause_thread < 0 || pause_thread >= threads) continue;
+
+            if (datagen_threads[pause_thread].paused) {
+                std::cout << "Thread is already paused" << std::endl;
+                continue;
+            }
+
+            running_threads--;
+
+            datagen_threads[pause_thread].paused = true;
+            std::cout << "Thread " << pause_thread << " paused" << std::endl;
+        }
+
+        if (tokens[0] == "resume" && tokens.size() >= 2) {
+            int resume_thread = std::stoi(tokens[1]);
+            if (resume_thread < 0 || resume_thread >= threads) continue;
+
+            if (!datagen_threads[resume_thread].paused) {
+                std::cout << "Thread is already running" << std::endl;
+                continue;
+            }
+
+            running_threads++;
+
+            datagen_threads[resume_thread].paused = false;
+            std::cout << "Thread " << resume_thread << " resumed" << std::endl;
         }
     }
 
     for (int thread_id = 0; thread_id < threads; thread_id++) {
         search_threads[thread_id].join();
     }
+
+    search_threads.back().join();
 
     std::cout << "All threads joined" << std::endl;
 
@@ -216,6 +253,10 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
     datagen_thread.engine->soft_node_limit = soft_node_limit;
 
     while (datagen_thread.total_fens < thread_fens_max) {
+
+        while (datagen_thread.paused && !stopped) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+        }
 
         datagen_thread.current_stage = "loop";
 
