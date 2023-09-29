@@ -23,8 +23,12 @@ void Datagen::integrity_check() {
 
     for (Datagen_Thread& datagen_thread : datagen_threads) {
         std::cout << "Thread " << datagen_thread.thread_id << ": " << datagen_thread.current_stage << std::endl;
-        if (datagen_thread.total_fens < 0.9 * fen_average)
+        if (datagen_thread.total_fens < 0.9 * fen_average) {
             std::cout << "Likely Stalled!" << std::endl;
+            std::cout << "node count: " <<  datagen_thread.engine->thread_states[0].node_count << std::endl;
+            std::cout << "soft TL: " <<  datagen_thread.engine->thread_states[0].node_count << std::endl;
+            std::cout << "stopped? " << datagen_thread.engine->stopped << std::endl;
+        }
     }
 }
 
@@ -83,7 +87,7 @@ std::string Datagen::write_fen(Datagen_Thread& datagen_thread, EvalFenStruct eva
 
     datagen_thread.total_fens++;
 
-    if (datagen_thread.total_fens % 1000 == 0) {
+    if (datagen_thread.total_fens % 10000 == 0) {
         auto end_time_point = std::chrono::high_resolution_clock::now();
         auto end_time = std::chrono::duration_cast<std::chrono::milliseconds>
                 (std::chrono::time_point_cast<std::chrono::milliseconds>(end_time_point).time_since_epoch()).count();
