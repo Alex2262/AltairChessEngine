@@ -32,8 +32,6 @@ void Datagen::integrity_check() {
         datagen_thread.ping = false;
     }
 
-    std::cout << std::endl;
-
     uint64_t total_fens = 0;
     uint64_t total_games = 0;
     for (Datagen_Thread& datagen_thread : datagen_threads) {
@@ -60,7 +58,7 @@ void Datagen::integrity_check() {
     std::cout << std::endl;
     std::cout << "Total Games \t [" << CYAN << total_games << RESET << "]\n";
     std::cout << "Total Fens  \t [" << CYAN << total_fens  << RESET << "]\n";
-    std::cout << "FPS / FPST  \t [" << CYAN << fps << RESET << " / " << CYAN << fpst << RESET << "]\n";
+    std::cout << "FPS | FPST  \t [" << CYAN << fps << RESET << " | " << CYAN << fpst << RESET << "]\n";
 
     std::cout << "-----------------------------" << std::endl;
 }
