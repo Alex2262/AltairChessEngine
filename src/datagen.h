@@ -23,6 +23,8 @@ struct Datagen_Thread {
     uint64_t total_games = 0;
     uint64_t game_length = 0;
 
+    bool ping = false;
+
     std::string current_stage = "none";
 
 

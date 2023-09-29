@@ -14,28 +14,61 @@
 
 
 void Datagen::integrity_check() {
-    uint64_t fen_average = 0;
-    for (Datagen_Thread& datagen_thread : datagen_threads) {
-        fen_average += datagen_thread.total_fens;
-    }
 
-    fen_average /= threads;
+    std::cout << "-----------------------------" << std::endl;
 
     for (Datagen_Thread& datagen_thread : datagen_threads) {
-        std::cout << "Thread " << datagen_thread.thread_id << ": " << datagen_thread.current_stage << std::endl;
-        if (datagen_thread.total_fens < 0.9 * fen_average) {
-            std::cout << "Likely Stalled!" << std::endl;
-            std::cout << "node count: " <<  datagen_thread.engine->thread_states[0].node_count << std::endl;
-            std::cout << "soft TL: " <<  datagen_thread.engine->thread_states[0].node_count << std::endl;
-            std::cout << "stopped? " << datagen_thread.engine->stopped << std::endl;
+        std::string status_color = datagen_thread.ping ? GREEN : RED;
+        std::string status = datagen_thread.ping ? "running" : "stalled";
+
+        std::cout << "Thread " << datagen_thread.thread_id << " [" << status_color << status << RESET << "]\n";
+
+        if (!datagen_thread.ping) {
+            std::cout << "Current Stage: " << datagen_thread.current_stage << "\n";
+            std::cout << "node count: " <<  datagen_thread.engine->thread_states[0].node_count << "\n";
+            std::cout << "stopped? " << datagen_thread.engine->stopped << "\n";
         }
+
+        datagen_thread.ping = false;
     }
+
+    std::cout << std::endl;
+
+    uint64_t total_fens = 0;
+    uint64_t total_games = 0;
+    for (Datagen_Thread& datagen_thread : datagen_threads) {
+        total_fens  += datagen_thread.total_fens;
+        total_games += datagen_thread.total_games;
+    }
+
+    uint64_t fen_average = total_fens / threads;
+
+    uint64_t start_time = datagen_threads[0].start_time;
+
+    auto end_time_point = std::chrono::high_resolution_clock::now();
+    auto end_time = std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::time_point_cast<std::chrono::milliseconds>(end_time_point).time_since_epoch()).count();
+
+
+    uint64_t elapsed_time = end_time - start_time;
+
+    elapsed_time = std::max<uint64_t>(elapsed_time, 1);
+
+    auto fps  = static_cast<uint64_t>(static_cast<double>(total_fens) / static_cast<double>(elapsed_time) * 1000);
+    auto fpst = fps / threads;
+
+    std::cout << std::endl;
+    std::cout << "Total Games \t [" << CYAN << total_games << RESET << "]\n";
+    std::cout << "Total Fens  \t [" << CYAN << total_fens  << RESET << "]\n";
+    std::cout << "FPS / FPST  \t [" << CYAN << fps << RESET << " / " << CYAN << fpst << RESET << "]\n";
+
+    std::cout << "-----------------------------" << std::endl;
 }
 
 
 void Datagen::integrity_check_process() {
     while (!stopped) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(60000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(30000));
 
         integrity_check();
     }
@@ -86,23 +119,6 @@ std::string Datagen::write_fen(Datagen_Thread& datagen_thread, EvalFenStruct eva
     resulting_fen += WDL_scores[static_cast<int>(2.0 * game_result)];
 
     datagen_thread.total_fens++;
-
-    if (datagen_thread.total_fens % 10000 == 0) {
-        auto end_time_point = std::chrono::high_resolution_clock::now();
-        auto end_time = std::chrono::duration_cast<std::chrono::milliseconds>
-                (std::chrono::time_point_cast<std::chrono::milliseconds>(end_time_point).time_since_epoch()).count();
-
-        uint64_t elapsed_time = end_time - datagen_thread.start_time;
-
-        elapsed_time = std::max<uint64_t>(elapsed_time, 1);
-        auto fps = static_cast<uint64_t>(static_cast<double>(datagen_thread.total_fens) / static_cast<double>(elapsed_time) * 1000);
-
-        std::cout << "Thread "  << datagen_thread.thread_id
-                  << " games: " << datagen_thread.total_games
-                  << " fens: "  << datagen_thread.total_fens
-                  << " fps: "   << fps
-                  << std::endl;
-    }
 
     return resulting_fen;
 }
@@ -226,6 +242,8 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
         game_fens.clear();
 
         while (true) {
+
+            datagen_thread.ping = true;
 
             datagen_thread.engine->soft_time_limit = max_time_per_move;
             datagen_thread.engine->search_results.best_move = NO_MOVE;
