@@ -125,7 +125,9 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
     datagen_thread.game_length = 0;
 
     Position& position = datagen_thread.engine->thread_states[0].position;
-    for (int random_move_count = 0; random_move_count < initial_random_moves + (datagen_thread.total_fens % 2); random_move_count++) {
+    for (int random_move_count = 0; random_move_count < static_cast<int>(initial_random_moves + (datagen_thread.total_fens % 2));
+         random_move_count++) {
+
         position.set_state(position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
         position.get_pseudo_legal_moves(position.scored_moves[0]);
 
@@ -191,7 +193,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
 
     Position& position = datagen_thread.engine->thread_states[0].position;
 
-    const int thread_fens_max = ceil(max_fens / threads);
+    const uint64_t thread_fens_max = ceil(max_fens / threads);
     datagen_thread.total_fens = 0;
 
     if (datagen_thread.thread_id == 0) std::cout << "Max fens per thread: " << thread_fens_max << std::endl;
