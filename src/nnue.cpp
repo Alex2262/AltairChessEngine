@@ -13,6 +13,7 @@
 
 INCBIN(nnue, "src/net-1.bin");
 // INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/net-1.bin");
+
 const NNUE_Params &nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 
 void NNUE_State::push() {

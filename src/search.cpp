@@ -1134,8 +1134,6 @@ void iterative_search(Engine& engine, int thread_id) {
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
 
-    // Reset certain information
-
     thread_state.terminated = false;
 
     // Initialize variables

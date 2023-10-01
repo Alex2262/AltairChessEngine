@@ -223,7 +223,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
 
     datagen_thread.current_stage = "start";
 
-    datagen_thread.engine->transposition_table.resize(MAX_TT_SIZE);
+    datagen_thread.engine->transposition_table.resize(DEFAULT_TT_SIZE * 1048576 / 24);
     datagen_thread.engine->initialize_lmr_reductions();
     datagen_thread.engine->thread_states.emplace_back();
     datagen_thread.engine->print_thinking = false;

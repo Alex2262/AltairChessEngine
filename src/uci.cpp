@@ -13,7 +13,7 @@
 #include "see.h"
 
 void UCI::initialize_uci() const {
-    engine->transposition_table.resize(MAX_TT_SIZE);
+    engine->transposition_table.resize(DEFAULT_TT_SIZE * 1048576 / 24);
 
     engine->initialize_lmr_reductions();
 
@@ -214,7 +214,7 @@ void UCI::uci_loop() {
             std::cout << "id name " + std::string(ENGINE_NAME) + " " + std::string(ENGINE_VERSION) << std::endl;
             std::cout << "id author Alexander Tian" << std::endl;
 
-            std::cout << "option name Hash type spin default " << 64 << " min " << 1 << " max " << 24576
+            std::cout << "option name Hash type spin default " << DEFAULT_TT_SIZE << " min " << 1 << " max " << 24576
                       << std::endl;
 
             std::cout << "option name nodes type spin default " << 0 << " min " << 0 << " max " << 2147483647
