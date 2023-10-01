@@ -227,7 +227,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
     datagen_thread.engine->initialize_lmr_reductions();
     datagen_thread.engine->thread_states.emplace_back();
     datagen_thread.engine->print_thinking = false;
-    datagen_thread.engine->datagen = true;
+    // datagen_thread.engine->datagen = true;
 
     Position& position = datagen_thread.engine->thread_states[0].position;
 
