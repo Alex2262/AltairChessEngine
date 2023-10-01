@@ -701,7 +701,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         bool quiet = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
 
         // Pruning
-        if (!root && legal_moves >= 1 && abs(best_score) < MATE_BOUND) {
+        if (!root && legal_moves >= 1 && abs(best_score) < MATE_BOUND && !engine.datagen) {
             // Late Move Pruning
             if (!pv_node && depth <= engine.tuning_parameters.LMP_depth &&
                 legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;

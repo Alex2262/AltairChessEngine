@@ -148,6 +148,7 @@ public:
 
     bool stopped = true;
     bool print_thinking = true;
+    bool datagen = false;
 
     double LMR_REDUCTIONS_QUIET[MAX_AB_DEPTH][64]{};
 
