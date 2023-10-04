@@ -40,7 +40,7 @@ double evaluate_drawishness(Position& position, EvaluationInformation& evaluatio
 double evaluate_opposite_colored_bishop_endgames(Position& position, EvaluationInformation& evaluation_information);
 
 SCORE_TYPE evaluate(Position& position);
-
+SCORE_TYPE evaluate_pst(Position& position);
 
 constexpr SCORE_TYPE S(int mg, int eg) {
     return static_cast<SCORE_TYPE>(static_cast<unsigned int>(eg) << 16) + mg;

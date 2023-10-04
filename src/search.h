@@ -202,6 +202,8 @@ public:
     bool check_nodes();
 };
 
+SCORE_TYPE evaluate_position(Position &position);
+
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus);
 void update_histories(Thread_State& thread_state, InformativeMove informative_move,
                       InformativeMove last_move_one, InformativeMove last_move_two, bool quiet, bool winning_capture,

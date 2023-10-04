@@ -563,3 +563,41 @@ SCORE_TYPE evaluate(Position& position) {
     return (position.side * -2 + 1) * evaluation;
 
 }
+
+template<PieceType piece_type>
+SCORE_TYPE evaluate_piece_pst(Position& position, Color color) {
+    SCORE_TYPE score = 0;
+    BITBOARD piece = position.get_pieces(piece_type, color);
+
+    while (piece) {
+        Square square = poplsb(piece);
+        score += PIECE_SQUARE_TABLES[piece_type][get_black_relative_square(square, color)];
+    }
+    return score;
+}
+
+SCORE_TYPE evaluate_pst(Position& position) {
+    SCORE_TYPE score = 0;
+
+    score += evaluate_piece_pst<PAWN>(position, WHITE);
+    score -= evaluate_piece_pst<PAWN>(position, BLACK);
+
+    score += evaluate_piece_pst<KNIGHT>(position, WHITE);
+    score -= evaluate_piece_pst<KNIGHT>(position, BLACK);
+
+    score += evaluate_piece_pst<BISHOP>(position, WHITE);
+    score -= evaluate_piece_pst<BISHOP>(position, BLACK);
+
+    score += evaluate_piece_pst<ROOK>(position, WHITE);
+    score -= evaluate_piece_pst<ROOK>(position, BLACK);
+
+    score += evaluate_piece_pst<QUEEN>(position, WHITE);
+    score -= evaluate_piece_pst<QUEEN>(position, BLACK);
+
+    score += evaluate_piece_pst<KING>(position, WHITE);
+    score -= evaluate_piece_pst<KING>(position, BLACK);
+
+    score = eg_score(score);
+
+    return (position.side * -2 + 1) * score;
+}

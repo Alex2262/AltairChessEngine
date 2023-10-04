@@ -15,6 +15,19 @@
 #include "see.h"
 #include "move_ordering.h"
 
+SCORE_TYPE evaluate_position(Position &position) {
+    SCORE_TYPE v;
+    SCORE_TYPE psq = evaluate_pst(position);
+
+    bool use_Classical = abs(psq) > 2048;
+
+    if (use_Classical) 
+        v = evaluate(position);
+    else
+        v = position.nnue_state.evaluate(position.side);
+    
+    return v;
+}
 
 // Initialize a table for Late Move Reductions, and the base reductions to be applied
 void Engine::initialize_lmr_reductions() {
@@ -378,7 +391,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Get the static evaluation of the position
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = position.nnue_state.evaluate(position.side);
+    if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
 
     // Return the evaluation if we have reached a stand-pat, or we have reached the maximum depth
     if (depth == 0 || static_eval >= beta) return static_eval;
@@ -519,7 +532,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     if (!root) {
 
         // Depth guard
-        if (thread_state.search_ply >= MAX_AB_DEPTH - 2 || depth >= MAX_AB_DEPTH) return position.nnue_state.evaluate(position.side);
+        if (thread_state.search_ply >= MAX_AB_DEPTH - 2 || depth >= MAX_AB_DEPTH) return evaluate(position);
 
         // Detect repetitions and fifty move rule
         if (thread_state.fifty_move >= 100 || thread_state.detect_repetition()) return 3 - static_cast<int>(thread_state.node_count & 8);
@@ -592,7 +605,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Save the current evaluation
     if (!in_check) {
         static_eval = engine.probe_tt_evaluation(position.hash_key);
-        if (static_eval == NO_EVALUATION) static_eval = position.nnue_state.evaluate(position.side);
+        if (static_eval == NO_EVALUATION) static_eval = evaluate(position);
         position.state_stack[thread_state.search_ply].evaluation = static_eval;
     }
 
