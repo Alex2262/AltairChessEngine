@@ -6156,3 +6156,14 @@ LLR   | 2.95 (-2.25, 2.89) [0.00, 5.00]
 GAMES | N: 432 W: 244 L: 82 D: 106
 https://chess.swehosting.se/test/4001/
 ```
+
+### 5.1.1
+Third net with 384 HL size, trained on 360M fens off the previous net.
+
+```
+ELO   | 129.54 +- 28.39 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 3.03 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 432 W: 221 L: 67 D: 144
+https://chess.swehosting.se/test/4155/
+```
