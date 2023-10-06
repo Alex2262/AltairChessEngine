@@ -206,7 +206,7 @@ void Engine::record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE sco
     if (score < -MATE_BOUND) score -= thread_states[thread_id].search_ply;
     else if (score > MATE_BOUND) score += thread_states[thread_id].search_ply;
 
-    if (tt_entry.key != hash_key || tt_flag == HASH_FLAG_EXACT) { // TODO: try doing || depth == -1 for always replace in qs.
+    if (tt_entry.key != hash_key || tt_flag == HASH_FLAG_EXACT) {
         tt_entry.key = hash_key;
         tt_entry.depth = -1;
         tt_entry.flag = tt_flag;
@@ -654,7 +654,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Internal Iterative Deepening
     if (pv_node && depth >= 4 && tt_move == NO_MOVE && !singular_search) {
-        negamax(engine, alpha, beta, static_cast<PLY_TYPE>(depth - 3), true, thread_id);  // TODO: test no null moves here
+        negamax(engine, alpha, beta, static_cast<PLY_TYPE>(depth - 3), true, thread_id);
         tt_move = engine.transposition_table[position.hash_key % engine.transposition_table.size()].move;
     }
 
