@@ -11,7 +11,7 @@
 
 #include "incbin.h"
 
-INCBIN(nnue, "src/nnue-1024-epoch20.bin");
+INCBIN(nnue, "src/net-epoch30.bin");
 
 const NNUE_Params &nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 
