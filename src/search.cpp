@@ -695,8 +695,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Skip the excluded move since we are in a singular search
         if (move == position.state_stack[thread_state.search_ply].excluded_move) continue;
 
-        SCORE_TYPE move_history_score = thread_state.history_moves
-            [position.board[move.origin()]][move.target()];
+        SCORE_TYPE move_history_score = move.is_capture(position) ?
+                                        thread_state.capture_history
+                                        [winning_capture][position.board[move.origin()]][position.board[move.target()]][move.target()] :
+                                        thread_state.history_moves[position.board[move.origin()]][move.target()];
 
         bool quiet = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
 
@@ -713,7 +715,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             if (!pv_node && quiet && depth <= 5 && static_eval + (depth - !improving) * 140 + 70 <= alpha) break;
 
             // History Pruning
-            if (!pv_node && depth <= engine.tuning_parameters.history_pruning_depth &&
+            if ((quiet || !winning_capture) && !pv_node && depth <= engine.tuning_parameters.history_pruning_depth &&
                 move_history_score <= (depth + improving) * -engine.tuning_parameters.history_pruning_divisor) continue;
 
             // SEE Pruning
@@ -851,7 +853,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             reduction -= in_check;
 
             // Scale the reduction based on the move's history score
-            reduction -= move_history_score > 0 ? move_history_score / 7200.0 : move_history_score / 16000.0;
+            reduction -= move_history_score / 7200.0;
 
             // Scale reductions if the move is a recapture, or if we have already found a recapture
             reduction -= recapture * 0.5;
