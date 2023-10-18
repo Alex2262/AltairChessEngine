@@ -46,7 +46,7 @@ struct Tuning_Parameters {
     T tuning_parameter_array[N_TUNING_PARAMETERS] = {
             T{"LMR_divisor_quiet", 150, 230, 185, 20},
             T{"LMR_base_quiet", 100, 170, 155, 20},
-            T{"delta_margin", 100, 400, 175, 40},
+            T{"delta_margin", 100, 400, 220, 40},
             T{"RFP_depth", 5, 11, 9, 2},
             T{"RFP_margin", 50, 200, 126, 30},
             T{"LMP_depth", 2, 4, 3, 1},
