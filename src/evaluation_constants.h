@@ -8,7 +8,7 @@
 
 constexpr int GAME_PHASE_SCORES[6] = {0, 1, 1, 2, 4, 0};
 
-constexpr int MVV_LVA_VALUES[6] = {  87, 390, 429, 561, 1234,   0};
+constexpr int MVV_LVA_VALUES[6] = {  120, 430, 450, 620, 1400,   0};
 
 constexpr SCORE_TYPE CANONICAL_PIECE_VALUES[6] = {100, 310, 340, 500, 900, 0};
 
