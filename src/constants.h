@@ -10,7 +10,7 @@
 #define ENGINE_VERSION              "5.0.0"
 #define ENGINE_AUTHOR               "Alexander Tian"
 
-#define N_TUNING_PARAMETERS         13
+#define N_TUNING_PARAMETERS         12
 #define FAIL_HIGH_STATS_COUNT       5
 #define ALPHA_RAISE_STATS_COUNT     5
 

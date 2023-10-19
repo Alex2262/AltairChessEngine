@@ -46,7 +46,6 @@ struct Tuning_Parameters {
     T tuning_parameter_array[N_TUNING_PARAMETERS] = {
             T{"LMR_divisor_quiet", 150, 230, 185, 20},
             T{"LMR_base_quiet", 100, 170, 155, 20},
-            T{"delta_margin", 100, 400, 220, 40},
             T{"RFP_depth", 5, 11, 9, 2},
             T{"RFP_margin", 50, 200, 126, 30},
             T{"LMP_depth", 2, 4, 3, 1},
@@ -62,21 +61,19 @@ struct Tuning_Parameters {
     int LMR_divisor_quiet = tuning_parameter_array[0].value;
     int LMR_base_quiet = tuning_parameter_array[1].value;
 
-    int delta_margin = tuning_parameter_array[2].value;
+    int RFP_depth = tuning_parameter_array[2].value;
+    int RFP_margin = tuning_parameter_array[3].value;
 
-    int RFP_depth = tuning_parameter_array[3].value;
-    int RFP_margin = tuning_parameter_array[4].value;
+    int LMP_depth = tuning_parameter_array[4].value;
+    int LMP_margin = tuning_parameter_array[5].value;
 
-    int LMP_depth = tuning_parameter_array[5].value;
-    int LMP_margin = tuning_parameter_array[6].value;
+    int history_pruning_depth = tuning_parameter_array[6].value;
+    int history_pruning_divisor = tuning_parameter_array[7].value;
 
-    int history_pruning_depth = tuning_parameter_array[7].value;
-    int history_pruning_divisor = tuning_parameter_array[8].value;
-
-    int NMP_depth = tuning_parameter_array[9].value;
-    int NMP_base = tuning_parameter_array[10].value;
-    int NMP_depth_divisor = tuning_parameter_array[11].value;
-    int NMP_eval_divisor = tuning_parameter_array[12].value;
+    int NMP_depth = tuning_parameter_array[8].value;
+    int NMP_base = tuning_parameter_array[9].value;
+    int NMP_depth_divisor = tuning_parameter_array[10].value;
+    int NMP_eval_divisor = tuning_parameter_array[11].value;
 };
 
 

@@ -412,14 +412,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         position.scored_moves[thread_state.search_ply][move_index].winning_capture = winning_capture;
 
-        // Delta / Futility pruning
-        // If the piece we capture plus a margin cannot even improve our score then
-        // there is no point in searching it
-        if (static_eval + MVV_LVA_VALUES[position.board[move.target()] % BLACK_PAWN] +
-            engine.tuning_parameters.delta_margin < alpha) {
-            continue;
-        }
-
         // SEE pruning
         if (static_eval + 60 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
             best_score = std::max(best_score, static_eval + 60);
