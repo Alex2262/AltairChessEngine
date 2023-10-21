@@ -669,7 +669,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Other information for pruning / reductions
     int alpha_raised_count = 0;
     int legal_moves = 0;
-    bool recapture_found = false;
 
     // Iterate through moves and recursively search with Negamax
     for (int move_index = 0; move_index < static_cast<int>(position.scored_moves[thread_state.search_ply].size()); move_index++) {
@@ -729,13 +728,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         // Increase node count
         thread_state.node_count++;
-
-        // Calculate if the current move is a recapture
-        bool recapture = false;
-        if (last_move_one != NO_INFORMATIVE_MOVE && last_move_one.target() == move.target()) {
-            recapture_found = true;
-            recapture = true;
-        }
 
         // Extensions
         PLY_TYPE extension = in_check;
@@ -847,18 +839,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             // Scale the reduction based on the move's history score
             reduction -= move_history_score / 7200.0;
 
-            // Scale reductions if the move is a recapture, or if we have already found a recapture
-            reduction -= recapture * 0.5;
-            reduction += !recapture && recapture_found && quiet && !move_gives_check && move_history_score <= 0;
-
             // Scale reductions based on how many moves have already raised alpha
             reduction += static_cast<double>(alpha_raised_count) * (0.3 + 0.5 * tt_move_capture);
 
             // My idea that in a null move search you can be more aggressive with LMR
             reduction += null_search;
-
-            // Idea from Weiss, where you reduce more if the TT move is a capture
-            reduction += tt_move_capture * 0.3;
 
             // Clamp the LMR depth
             reduction = std::clamp<PLY_TYPE>(reduction, 0, new_depth - 1);
