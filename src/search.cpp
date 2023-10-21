@@ -827,7 +827,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             reduction -= pv_node;
 
             // Fewer reductions when improving, since the current node and moves searched in it are more important
-            reduction -= improving * 0.9;
+            reduction -= improving;
             reduction += failing;
 
             // Fewer reductions for interesting moves which we define above
