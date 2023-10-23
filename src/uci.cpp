@@ -89,6 +89,21 @@ void UCI::parse_position() {
         next_idx = 2;
     }
 
+    else if (tokens[1] == "dfrc") {
+        if (!position.fischer_random_chess) {
+            std::cout << "Fischer Random Chess not enabled" << std::endl;
+            return;
+        }
+
+        engine->thread_states[0].fifty_move = position.set_fen(START_FEN);
+
+        int dfrc_index = std::stoi(tokens[2]);
+        position.set_dfrc(dfrc_index);
+        next_idx = 3;
+
+        std::cout << position << std::endl;
+    }
+
     else if (tokens[1] == "fen") {
         std::string fen;
         for (int i = 2; i < 8; i++) {

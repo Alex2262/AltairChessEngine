@@ -12,6 +12,16 @@
 #include "nnue.h"
 
 
+constexpr int bishop_ordering_1[2][4] = {
+        { 1,  3,  5,  7},
+        {57, 59, 61, 63}
+};
+
+constexpr int bishop_ordering_2[2][4] = {
+        { 0,  2,  4,  6},
+        {56, 58, 60, 62}
+};
+
 struct ScoredMove {
     Move move = NO_MOVE;
     SCORE_TYPE score = 0;
@@ -116,6 +126,9 @@ public:
 
     PLY_TYPE set_fen(const std::string& fen);
     std::string get_fen(PLY_TYPE fifty_move);
+
+    void set_frc_side(Color color, int index);
+    void set_dfrc(int index);
 
     friend std::ostream& operator<<(std::ostream& os, const Position& position);
 

@@ -270,6 +270,73 @@ std::string Position::get_fen(PLY_TYPE fifty_move) {
     return fen;
 }
 
+void Position::set_frc_side(Color color, int index) {
+
+    // Based on the Scharnagl Numbering Scheme:
+    // https://en.wikipedia.org/wiki/Fischer_random_chess_numbering_scheme
+
+    std::vector<int> empty_back_rank;
+
+    for (int i = 0; i < 8; i++) empty_back_rank.push_back(i ^ 56 * color);
+
+    // Bishops
+    Square bishop_1 = static_cast<Square>(bishop_ordering_1[color][index % 4]);
+    index /= 4;
+
+    Square bishop_2 = static_cast<Square>(bishop_ordering_2[color][index % 4]);
+    index /= 4;
+
+    place_piece(get_piece(BISHOP, color), bishop_1);
+    place_piece(get_piece(BISHOP, color), bishop_2);
+
+    empty_back_rank.erase(std::remove(empty_back_rank.begin(), empty_back_rank.end(), bishop_1));
+    empty_back_rank.erase(std::remove(empty_back_rank.begin(), empty_back_rank.end(), bishop_2));
+
+    // Queen
+    place_piece(get_piece(QUEEN, color), static_cast<Square>(empty_back_rank[index % 6]));
+    empty_back_rank.erase(empty_back_rank.begin() + (index % 6));
+
+    index /= 6;
+
+    // Knights
+    for (int i = 4; i >= 1; i--) {
+        if (index < i) {
+            place_piece(get_piece(KNIGHT, color), static_cast<Square>(empty_back_rank[4 - i]));
+            empty_back_rank.erase(empty_back_rank.begin() + (4 - i));
+
+            place_piece(get_piece(KNIGHT, color), static_cast<Square>(empty_back_rank[index]));
+            empty_back_rank.erase(empty_back_rank.begin() + (index));
+
+            break;
+        }
+        index -= i;
+    }
+
+    place_piece(get_piece(ROOK, color), static_cast<Square>(empty_back_rank[0]));
+    place_piece(get_piece(KING, color), static_cast<Square>(empty_back_rank[1]));
+    place_piece(get_piece(ROOK, color), static_cast<Square>(empty_back_rank[2]));
+
+}
+
+void Position::set_dfrc(int index) {
+
+    for (int piece = WHITE_PAWN; piece < static_cast<int>(EMPTY); piece++) {
+        if (piece == WHITE_PAWN || piece == BLACK_PAWN) continue;
+        pieces[piece] = 0ULL;
+    }
+
+    for (auto & square : board) {
+        if (square == WHITE_PAWN || square == BLACK_PAWN) continue;
+        square = EMPTY;
+    }
+
+    set_frc_side(WHITE, index % 960);
+    set_frc_side(BLACK, index / 960);
+
+    compute_hash_key();
+    nnue_state.reset_nnue(*this);
+}
+
 std::ostream& operator << (std::ostream& os, const Position& position) {
     std::string new_board;
 

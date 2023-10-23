@@ -162,8 +162,10 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
     datagen_thread.game_length = 0;
 
     Position& position = datagen_thread.engine->thread_states[0].position;
-    for (int random_move_count = 0; random_move_count < static_cast<int>(initial_random_moves + (datagen_thread.total_fens % 2));
-         random_move_count++) {
+    int num_random_moves = (position.fischer_random_chess ? initial_random_moves_dfrc : initial_random_moves_standard) +
+                           (datagen_thread.total_fens % 2);  // To balance even/odd number of starting moves
+
+    for (int random_move_count = 0; random_move_count < num_random_moves; random_move_count++) {
 
         position.set_state(position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
         position.get_pseudo_legal_moves(position.scored_moves[0]);
@@ -271,6 +273,14 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
 
         datagen_thread.engine->new_game();
         position.set_fen(START_FEN);
+
+        // DFRC
+        if (datagen_thread.prng.rand64() % 100 <= dfrc_chance) {
+            position.fischer_random_chess = true;
+            position.set_dfrc(datagen_thread.prng.rand64() % (960 * 960));
+        } else {
+            position.fischer_random_chess = false;
+        }
 
         datagen_thread.current_stage = "randomizing opening";
 

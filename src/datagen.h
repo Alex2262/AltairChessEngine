@@ -52,11 +52,13 @@ class Datagen {
     const int hard_node_limit   =      80'000;
     const int max_time_per_move =         200;
 
-    const int initial_random_moves      =    8;
-    const int opening_max_score         =  800;
-    // const uint64_t opening_chance       = 100;  // Out of 100
+    const int initial_random_moves_dfrc     =     5;
+    const int initial_random_moves_standard =     8;
+    const int opening_max_score             =  1500;
+    const int dfrc_chance                   =    60; // Out of 100
+    // const uint64_t opening_chance        =   100;  // Out of 100
 
-    const int win_adjudication_score   = 1500;
+    const int win_adjudication_score   = 2400;
     const int win_adjudication_length  =    5;
 
     const int minimum_game_length = 16;
@@ -81,6 +83,7 @@ public:
     void start_datagen();
 
     std::string write_fen(Datagen_Thread& datagen_thread, EvalFenStruct eval_fen, double game_result);
+
     bool randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move, MAX_MOVES>& legal_moves) const;
 
     void datagen(Datagen_Thread& datagen_thread);
