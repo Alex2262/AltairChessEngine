@@ -4900,7 +4900,7 @@ SPRT: llr 0.735 (25.0%), lbound -2.94, ubound 2.94
 ```
 
 ### 2.2.1
-Very slightly lowering soft and hard time limit bounds
+Very slightly lowering soft and hard time limit bounds \
 Around equal or better in self play over 1000 games
 
 
@@ -4971,7 +4971,7 @@ GAMES | N: 5824 W: 1782 L: 1602 D: 2440
 ```
 
 ### 2.2.8
-Drawishness calculator changes - only tested over affected endgame positions.
+Drawishness calculator changes - only tested over affected endgame positions. \
 Not tested over games, as they only influence niche positions.
 
 ### 2.2.9
@@ -5042,7 +5042,7 @@ GAMES | N: 27000 W: 7781 L: 7704 D: 11515
 ```
 
 ### 2.3.2
-TT move ordering fixed in qsearch
+TT move ordering fixed in qsearch \
 (little to no elo gained)
 
 ### 2.3.3
@@ -5096,7 +5096,7 @@ GAMES | N: 10312 W: 3087 L: 2961 D: 4264
 ```
 
 ### 2.3.8
-No returning TT scores in pv nodes
+No returning TT scores in pv nodes \
 (helped fix crashes and illegals in Lazy SMP)
 
 ```
@@ -5403,8 +5403,8 @@ GAMES | N: 87320 W: 23705 L: 23072 D: 40543
 ```
 
 ### 3.1.5
-Failing term implemented.
-This term is true when the current evaluation is worse than the previous evaluation by a certain margin.
+Failing term implemented. \
+This term is true when the current evaluation is worse than the previous evaluation by a certain margin. \
 Tested in quiet LMP.
 
 ```
@@ -6135,7 +6135,7 @@ Elo difference: -87.1 +/- 24.8, LOS: 0.0 %, DrawRatio: 36.1 %
 ## --- Introduction of NNUE ---
 
 ### 5.0.9
-First net with 64 HL size, trained on 30M fens of HCE data.
+First net with 64 HL size, trained on 30M fens of HCE data. \
 -46 against master compared to -87 compared to against master with original data HCE
 
 ```
@@ -6166,4 +6166,78 @@ SPRT  | 8.0+0.08s Threads=1 Hash=32MB
 LLR   | 3.03 (-2.25, 2.89) [0.00, 5.00]
 GAMES | N: 432 W: 221 L: 67 D: 144
 https://chess.swehosting.se/test/4155/
+```
+
+### 5.1.2
+Fourth net with 768 HL size, trained on ~800M fens off the previous net at 30 epochs.
+
+```
+ELO   | 4.96 +- 3.96 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.89 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 16256 W: 4588 L: 4356 D: 7312
+https://chess.swehosting.se/test/4282/
+```
+
+### 5.1.3
+Same data as above but trained to 55 epochs
+
+```
+ELO   | 17.18 +- 8.66 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.92 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 3056 W: 830 L: 679 D: 1547
+https://chess.swehosting.se/test/4294/
+```
+
+### 5.1.4
+Fix Capture Move History \
+Merged for fixing ongoing issues in the engine of illogical and bad code.
+
+```
+ELO   | -1.97 +- 2.24 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | -0.40 (-2.25, 2.89) [-5.00, 0.00]
+GAMES | N: 44240 W: 10537 L: 10788 D: 22915
+https://chess.swehosting.se/test/4329/
+
+ELO: -1.97 +- 2.24 [-4.22, 0.273]
+LLR: 4.25 [-8.0, 0.0] (-2.94, 2.94)
+H1 Accepted
+```
+
+### 5.1.5
+Change of MVV-LVA values for Delta Pruning mainly
+
+```
+ELO   | 8.67 +- 5.68 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.93 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 6736 W: 1666 L: 1498 D: 3572
+https://chess.swehosting.se/test/4363/
+```
+
+### 5.1.6
+Remove Delta Pruning altogether
+
+```
+ELO   | 12.85 +- 7.33 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.90 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 4192 W: 1097 L: 942 D: 2153
+https://chess.swehosting.se/test/4376/
+```
+
+### 5.1.7
+Cleanup LMR \
+Passed with Simplification bounds [-3, 0]
+
+```
+ELO   | 2.21 +- 2.64 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 0.80 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 31488 W: 7552 L: 7352 D: 16584
+https://chess.swehosting.se/test/4390/
+
+LLR: 3.93 [-3.0, 0.0] (-2.94, 2.94)
 ```
