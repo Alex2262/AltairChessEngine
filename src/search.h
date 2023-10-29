@@ -131,6 +131,8 @@ public:
 
     bool detect_repetition();
     bool detect_repetition_3();
+
+    SCORE_TYPE& get_continuation_history_entry(InformativeMove last_move, InformativeMove informative_move);
 };
 
 
@@ -200,7 +202,7 @@ public:
 
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus);
 void update_histories(Thread_State& thread_state, InformativeMove informative_move,
-                      InformativeMove last_move_one, InformativeMove last_move_two, bool quiet, bool winning_capture,
+                      InformativeMove last_moves[], bool quiet, bool winning_capture,
                       int move_index, int bonus);
 
 SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id);

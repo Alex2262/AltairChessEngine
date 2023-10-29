@@ -5,7 +5,7 @@
 #include "see.h"
 
 SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
-                      InformativeMove last_move_one, InformativeMove last_move_two) {
+                      InformativeMove last_moves[]) {
     if (move == tt_move) return 100000;
 
     SCORE_TYPE score = 0;
@@ -55,14 +55,10 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
 
         score += thread_state.history_moves[selected][move.target()];
 
-        if (last_move_one != NO_INFORMATIVE_MOVE) {
-            score += thread_state.continuation_history[last_move_one.selected()]
-            [last_move_one.target()][selected][move.target()];
-        }
-
-        if (last_move_two != NO_INFORMATIVE_MOVE) {
-            score += thread_state.continuation_history[last_move_two.selected()]
-            [last_move_two.target()][selected][move.target()];
+        for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
+            if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
+                score += thread_state.get_continuation_history_entry(last_moves[last_move_index], informative_move);
+            }
         }
 
         if (move_type == MOVE_TYPE_EP) score += thread_state.move_ordering_parameters.winning_capture_margin +
@@ -98,9 +94,9 @@ SCORE_TYPE score_capture(Thread_State& thread_state, Move move, Move tt_move) {
 }
 
 void get_move_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
-                     Move tt_move, InformativeMove last_move_one, InformativeMove last_move_two) {
+                     Move tt_move, InformativeMove last_moves[]) {
     for (ScoredMove& scored_move : current_scored_moves) {
-        scored_move.score = score_move(thread_state, scored_move.move, tt_move, last_move_one, last_move_two);
+        scored_move.score = score_move(thread_state, scored_move.move, tt_move, last_moves);
     }
 }
 

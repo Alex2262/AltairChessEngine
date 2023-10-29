@@ -119,6 +119,14 @@ bool Thread_State::detect_repetition_3() {
 }
 
 
+SCORE_TYPE& Thread_State::get_continuation_history_entry(InformativeMove last_move, InformativeMove informative_move) {
+    return continuation_history[last_move.selected()]
+                               [last_move.target()]
+                               [position.board[informative_move.origin()]]
+                               [informative_move.target()];
+}
+
+
 // Probes the transposition table for a matching entry based on the position's hash key and other factors.
 short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
                              TT_Entry& return_entry) {
@@ -271,7 +279,7 @@ void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
 
 
 void update_histories(Thread_State& thread_state, InformativeMove informative_move,
-                      InformativeMove last_move_one, InformativeMove last_move_two, bool quiet, bool winning_capture,
+                      InformativeMove last_moves[], bool quiet, bool winning_capture,
                       int move_index, int bonus) {
 
     Position& position = thread_state.position;
@@ -282,22 +290,11 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
                              [position.board[move.origin()]][move.target()],
                              bonus);
 
-        if (last_move_one != NO_INFORMATIVE_MOVE) {
-            update_history_entry(thread_state.continuation_history
-                                 [last_move_one.selected()]
-                                 [last_move_one.target()]
-                                 [informative_move.selected()]
-                                 [informative_move.target()],
-                                 bonus);
-        }
-
-        if (last_move_two != NO_INFORMATIVE_MOVE) {
-            update_history_entry(thread_state.continuation_history
-                                 [last_move_two.selected()]
-                                 [last_move_two.target()]
-                                 [informative_move.selected()]
-                                 [informative_move.target()],
-                                 bonus);
+        for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
+            if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
+                update_history_entry(thread_state.get_continuation_history_entry(last_moves[last_move_index], informative_move),
+                                     bonus);
+            }
         }
 
     } else {
@@ -316,22 +313,12 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
                                  [temp_move.target()],
                                  -bonus);
 
-            if (last_move_one != NO_INFORMATIVE_MOVE) {
-                update_history_entry(thread_state.continuation_history
-                                     [last_move_one.selected()]
-                                     [last_move_one.target()]
-                                     [position.board[temp_move.origin()]]
-                                     [temp_move.target()],
-                                     -bonus);
-            }
-
-            if (last_move_two != NO_INFORMATIVE_MOVE) {
-                update_history_entry(thread_state.continuation_history
-                                     [last_move_two.selected()]
-                                     [last_move_two.target()]
-                                     [position.board[temp_move.origin()]]
-                                     [temp_move.target()],
-                                     -bonus);
+            InformativeMove temp_move_informative = InformativeMove(temp_move, position.board[temp_move.origin()], position.board[temp_move.target()]);
+            for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
+                if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
+                    update_history_entry(thread_state.get_continuation_history_entry(last_moves[last_move_index], temp_move_informative),
+                                         -bonus);
+                }
             }
 
         } else if (temp_scored_move.winning_capture == winning_capture) {
@@ -628,14 +615,20 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     bool tt_move_capture = tt_move.is_capture(position);
 
     // Used for the continuation history heuristic
-    InformativeMove last_move_one = thread_state.search_ply >= 1 ? position.state_stack[thread_state.search_ply - 1].move : NO_INFORMATIVE_MOVE;
-    InformativeMove last_move_two = thread_state.search_ply >= 2 ? position.state_stack[thread_state.search_ply - 2].move : NO_INFORMATIVE_MOVE;
+    InformativeMove last_moves[LAST_MOVE_COUNTS] = {};
+
+    for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
+        int last_move_ply = LAST_MOVE_PLIES[last_move_index];
+
+        last_moves[last_move_index] = thread_state.search_ply >= last_move_ply ?
+                position.state_stack[thread_state.search_ply - last_move_ply].move : NO_INFORMATIVE_MOVE;
+    }
 
     // Retrieving the pseudo legal moves in the current position as a list of integers
     // Score the moves
     position.get_pseudo_legal_moves(position.scored_moves[thread_state.search_ply]);
     get_move_scores(thread_state, position.scored_moves[thread_state.search_ply],
-                    tt_move, last_move_one, last_move_two);
+                    tt_move, last_moves);
 
     // Best score for fail soft, and best move for tt
     SCORE_TYPE best_score = -SCORE_INF;
@@ -895,7 +888,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 // History Heuristic for move ordering
                 SCORE_TYPE bonus = depth * (depth + 1 + null_search + pv_node + improving) - 1;
 
-                update_histories(thread_state, informative_move, last_move_one, last_move_two, quiet, winning_capture, move_index, bonus);
+                update_histories(thread_state, informative_move, last_moves, quiet, winning_capture, move_index, bonus);
 
                 if (engine.show_stats) {
                     engine.search_results.alpha_raised_count++;
