@@ -40,8 +40,8 @@ constexpr SCORE_TYPE MATE_BOUND = 99000;
 
 #define MINIMUM_ASP_DEPTH   6
 
-constexpr int LAST_MOVE_COUNTS = 2;
-constexpr int LAST_MOVE_PLIES[LAST_MOVE_COUNTS] = {1, 2};
+constexpr int LAST_MOVE_COUNTS = 3;
+constexpr int LAST_MOVE_PLIES[LAST_MOVE_COUNTS] = {1, 2, 4};
 
 constexpr size_t MAX_MOVES = 256;
 
