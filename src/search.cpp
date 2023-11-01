@@ -654,14 +654,23 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Skip the excluded move since we are in a singular search
         if (move == position.state_stack[thread_state.search_ply].excluded_move) continue;
 
-        SCORE_TYPE move_history_score = move.is_capture(position) ?
+        bool quiet = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
+
+        SCORE_TYPE move_history_score = quiet ?
+                                        // Quiet Histories
+                                        thread_state.history_moves[position.board[move.origin()]][move.target()] :
                                         // Capture Histories
                                         thread_state.capture_history
-                                        [winning_capture][position.board[move.origin()]][position.board[move.target()]][move.target()] :
-                                        // Quiet Histories
-                                        thread_state.history_moves[position.board[move.origin()]][move.target()];
+                                        [winning_capture][position.board[move.origin()]][position.board[move.target()]][move.target()];
 
-        bool quiet = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
+
+        if (quiet) {
+            for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
+                if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
+                    move_history_score += thread_state.get_continuation_history_entry(last_moves[last_move_index], informative_move);
+                }
+            }
+        }
 
         // Pruning
         if (!root && legal_moves >= 1 && abs(best_score) < MATE_BOUND && !engine.datagen) {
