@@ -59,9 +59,9 @@ class Datagen {
     // const uint64_t opening_chance        =   100;  // Out of 100
 
     const int win_adjudication_score   = 2400;
-    const int win_adjudication_length  =    5;
+    const int win_adjudication_length  =    3;
 
-    const int minimum_game_length = 16;
+    const int minimum_game_length = 15;
     const int fens_per_game       =  0;  // 0 for using all fens
 
     const std::string WDL_scores[3] = {"1.0", "0.5", "0.0"};

@@ -282,59 +282,31 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
             position.fischer_random_chess = false;
         }
 
-        datagen_thread.current_stage = "randomizing opening";
-
+        // Randomize Opening
         if (!randomize_opening(datagen_thread, legal_moves)) continue;
-
-        datagen_thread.current_stage = "randomize success";
 
         double game_result = -1.0;  // No result
         int win_adjudication_count = 0;
-
         game_fens.clear();
 
+        // Game loop
         while (true) {
 
+            // Preparation
             datagen_thread.ping = true;
-
             datagen_thread.engine->soft_time_limit = max_time_per_move;
             datagen_thread.engine->search_results.best_move = NO_MOVE;
 
-            datagen_thread.current_stage = "searching";
-
-            lazy_smp_search(*datagen_thread.engine);
-
-            Move best_move = datagen_thread.engine->search_results.best_move;
-            SCORE_TYPE score = datagen_thread.engine->search_results.score;
-            SCORE_TYPE objective_score = position.side == WHITE ? score : -score;
-
-            // Depth was not finished
-            if (best_move == NO_MOVE) break;
-
-            bool noisy = best_move.is_capture(position) || best_move.type() == MOVE_TYPE_EP ||
-                         best_move.type() == MOVE_TYPE_PROMOTION;
-
-            datagen_thread.current_stage = "making move";
-            position.make_move(best_move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
-
-            datagen_thread.current_stage = "in check";
             bool in_check = position.is_attacked(position.get_king_pos(position.side), position.side);
+            std::string current_fen = position.get_fen(datagen_thread.engine->thread_states[0].fifty_move);
 
-            datagen_thread.current_stage = "evaluation information";
-            EvaluationInformation evaluation_information{};
-            initialize_evaluation_information(position, evaluation_information);
-
-            datagen_thread.current_stage = "set state";
+            // Termination Check
+            bool terminated = true;
             position.set_state(position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
             position.get_pseudo_legal_moves(position.scored_moves[0]);
-
-            bool terminated = true;
-
-            datagen_thread.current_stage = "legal moves check";
             for (ScoredMove& scored_move : position.scored_moves[0]) {
                 bool attempt = position.make_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
                 position.undo_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
-
                 if (attempt) {
                     terminated = false;
                     break;
@@ -342,53 +314,59 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
             }
 
             if (terminated) {
-                game_result = in_check ?
-                              static_cast<double>(~position.side) : 0.5;
+                game_result = in_check ? static_cast<double>(~position.side) : 0.5;
                 break;
             }
 
-            datagen_thread.current_stage = "win adjudication";
+            // Search
+            lazy_smp_search(*datagen_thread.engine);
+
+            // Get Search info
+            Move best_move = datagen_thread.engine->search_results.best_move;
+            if (best_move == NO_MOVE) break;
+
+            SCORE_TYPE score = datagen_thread.engine->search_results.score;
+            SCORE_TYPE objective_score = position.side == WHITE ? score : -score;
+            bool noisy = best_move.is_capture(position) || best_move.type() == MOVE_TYPE_EP ||
+                         best_move.type() == MOVE_TYPE_PROMOTION;
+
+            position.make_move(best_move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+
+            EvaluationInformation evaluation_information{};
+            initialize_evaluation_information(position, evaluation_information);
 
             // Win adjudication
-            if (abs(score) >= MATE_BOUND ||
-                ((abs(score) >= win_adjudication_score) && ++win_adjudication_count >= win_adjudication_length))
+            if (abs(score) >= 32000
+                || ((abs(score) >= win_adjudication_score) && ++win_adjudication_count >= win_adjudication_length))
                 game_result = score > 0 ? ~position.side : position.side;
             else win_adjudication_count = 0;
 
-            datagen_thread.current_stage = "draw adjudications";
-
             // Draw adjudications
-            if (datagen_thread.engine->thread_states[0].fifty_move >= 100 || datagen_thread.engine->thread_states[0].detect_repetition() ||
-                datagen_thread.game_length >= MAX_GAME_LENGTH ||
-                (datagen_thread.game_length >= 80 && evaluate_drawishness(position, evaluation_information) == 0.0))
+            if (datagen_thread.engine->thread_states[0].fifty_move >= 100
+                || datagen_thread.engine->thread_states[0].detect_repetition()
+                || datagen_thread.game_length >= MAX_GAME_LENGTH
+                || (datagen_thread.engine->thread_states[0].fifty_move >= 40 &&
+                    evaluate_drawishness(position, evaluation_information) == 0.0))
                 game_result = 0.5;
 
             if (game_result != -1.0) break;
 
-            datagen_thread.current_stage = "filtering";
-
             // Filter
             if (!noisy && !in_check) {
-                game_fens.push_back({position.get_fen(datagen_thread.engine->thread_states[0].fifty_move),
+                game_fens.push_back({current_fen,
                                      objective_score});
             }
 
             datagen_thread.game_length++;
         }
 
-        datagen_thread.current_stage = "game loop finished";
-
         if (datagen_thread.game_length < minimum_game_length) continue;
-
         if (game_result == -1.0) continue;
 
         datagen_thread.total_games++;
 
-
         size_t fens_to_pick = std::min(fens_per_game == 0 ? game_fens.size() : fens_per_game, game_fens.size());
         size_t fens_picked  = 0;
-
-        datagen_thread.current_stage = "writing fens";
 
         if (fens_per_game == 0) {
             for (EvalFenStruct& eval_fen : game_fens) {
