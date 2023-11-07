@@ -6241,3 +6241,36 @@ https://chess.swehosting.se/test/4390/
 
 LLR: 3.93 [-3.0, 0.0] (-2.94, 2.94)
 ```
+
+### 5.1.8
+Cont-hist on ply 4 added
+
+```
+ELO   | 4.14 +- 3.35 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.91 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 20288 W: 5105 L: 4863 D: 10320
+https://chess.swehosting.se/test/4474/
+```
+
+### 5.1.9
+Cont-hist added to the search move history score
+
+```
+ELO   | 3.61 +- 2.92 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.92 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 27136 W: 6941 L: 6659 D: 13536
+https://chess.swehosting.se/test/4511/
+```
+
+### 5.2.0
+New Net with data from previous net + 200M data with some FRC data mixed in
+
+```
+ELO   | 8.68 +- 5.75 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 3.07 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 7568 W: 2140 L: 1951 D: 3477
+https://chess.swehosting.se/test/4571/
+```
