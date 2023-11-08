@@ -603,7 +603,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             if (return_eval >= beta) {
                 if (return_eval >= MATE_BOUND) return beta;
                 if (depth <= 15) return return_eval;
-                SCORE_TYPE verification_eval = -negamax(engine, beta - 1, beta, depth - reduction, false, thread_id);
+                SCORE_TYPE verification_eval = negamax(engine, beta - 1, beta, depth - reduction, false, thread_id);
                 if (verification_eval > beta) return return_eval;
             }
         }
