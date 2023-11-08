@@ -601,7 +601,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             position.undo_null_move(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
             if (return_eval >= beta) {
-                return beta;
+                if (return_eval >= MATE_BOUND) return beta;
+                if (depth <= 15) return return_eval;
+                SCORE_TYPE verification_eval = -negamax(engine, beta - 1, beta, depth - reduction, false, thread_id);
+                if (verification_eval > beta) return return_eval;
             }
         }
     }
