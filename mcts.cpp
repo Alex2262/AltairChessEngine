@@ -91,6 +91,11 @@ uint32_t MCTS::select_best_child(uint32_t node_index) {
 
         auto selected_type = get_piece_type(selected, test_position.side);
 
+        if (last_move.type() == MOVE_TYPE_PROMOTION) {
+            if (last_move.promotion_type() == PROMOTION_QUEEN) policy += 2.0;
+            policy += 5.0;
+        }
+
         if (last_move.is_capture(test_position)) {
 
             auto occupied_type = get_piece_type(occupied, ~test_position.side);
