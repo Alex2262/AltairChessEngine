@@ -1,6 +1,3 @@
-//
-// Created by Alex Tian on 8/24/2022.
-//
 
 #ifndef ANTARESCHESSENGINE_POSITION_H
 #define ANTARESCHESSENGINE_POSITION_H
@@ -10,13 +7,25 @@
 #include "types.h"
 #include "fixed_vector.h"
 #include "bitboard.h"
-#include "tables.h"
+#include "attacks.h"
 #include "move.h"
+#include "nnue.h"
 
+
+constexpr int bishop_ordering_1[2][4] = {
+        { 1,  3,  5,  7},
+        {57, 59, 61, 63}
+};
+
+constexpr int bishop_ordering_2[2][4] = {
+        { 0,  2,  4,  6},
+        {56, 58, 60, 62}
+};
 
 struct ScoredMove {
     Move move = NO_MOVE;
     SCORE_TYPE score = 0;
+    bool winning_capture = false;
 };
 
 struct State_Struct {
@@ -41,6 +50,8 @@ public:
 
     Position() = default;
 
+    NNUE_State nnue_state{};
+
     bool fischer_random_chess = false;
 
     BITBOARD all_pieces{};
@@ -55,6 +66,8 @@ public:
     Color side = WHITE;
 
     uint8_t castle_ability_bits = 0;
+    Square starting_rook_pos[2][2]{};
+
     Square ep_square = NO_SQUARE;
     HASH_TYPE hash_key = 0;
 
@@ -112,6 +125,10 @@ public:
     void compute_hash_key();
 
     PLY_TYPE set_fen(const std::string& fen);
+    std::string get_fen(PLY_TYPE fifty_move);
+
+    void set_frc_side(Color color, int index);
+    void set_dfrc(int index);
 
     friend std::ostream& operator<<(std::ostream& os, const Position& position);
 

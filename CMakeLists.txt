@@ -36,12 +36,12 @@ add_executable(Altair
         types.h
         bitboard.cpp
         bitboard.h
-        tables.h
+        attacks.h
         fixed_vector.h
         evaluation.cpp
         evaluation.h
         evaluation_constants.h
         move_ordering.cpp
-        move_ordering.h mcts.cpp mcts.h)
+        move_ordering.h mcts.cpp mcts.h nnue.cpp nnue.h incbin.h)
 
 target_link_libraries(Altair Threads::Threads)

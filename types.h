@@ -1,6 +1,4 @@
-//
-// Created by Alexander Tian on 6/23/23.
-//
+
 
 #ifndef ALTAIRCHESSENGINE_TYPES_H
 #define ALTAIRCHESSENGINE_TYPES_H
@@ -63,6 +61,10 @@ constexpr inline PieceType get_piece_type(Piece piece, Color color) {
 
 constexpr inline Piece get_piece(PieceType piece_type, Color color) {
     return static_cast<Piece>(static_cast<int>(piece_type) + static_cast<int>(color * COLOR_OFFSET));
+}
+
+constexpr inline Color get_color(Piece piece) {
+    return static_cast<Color>(piece >= COLOR_OFFSET);
 }
 
 constexpr uint32_t N_DIRS = 8;

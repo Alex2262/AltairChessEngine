@@ -41,7 +41,7 @@ void MCTS::print_info() {
     std::vector<Move> attempted_moves{};
 
     while(true) {
-        position.set_state(position.state_stack[attempted_moves.size()], temp_fifty_move);
+        position.set_state(position.state_stack[ply], temp_fifty_move);
 
         uint32_t best_node_index = get_best_node();
         if (tree.graph[best_node_index].visits < 2) break;
@@ -51,12 +51,15 @@ void MCTS::print_info() {
         root_node_index = best_node_index;
         if (tree.graph[root_node_index].children_end - tree.graph[root_node_index].children_start == 0) break;
 
-        position.make_move(tree.graph[root_node_index].last_move, position.state_stack[attempted_moves.size()], temp_fifty_move);
+        position.make_move(tree.graph[root_node_index].last_move, position.state_stack[ply], temp_fifty_move);
         attempted_moves.push_back(tree.graph[root_node_index].last_move);
+
+        ply++;
     }
 
     for (int i = attempted_moves.size() - 1; i >= 0; i--) {
-        position.undo_move(attempted_moves[i], position.state_stack[i], temp_fifty_move);
+        ply--;
+        position.undo_move(attempted_moves[i], position.state_stack[ply], temp_fifty_move);
     }
 
     root_node_index = original_root_node_index;
@@ -67,8 +70,35 @@ void MCTS::print_info() {
                                   static_cast<double>(tree.graph[best_node_index].visits)
                                   * CP_SCALE);
 
-    std::cout << "info iteration " << iterations << " depth " << seldepth << " score cp " << score << " pv "
-              << pv_line << std::endl;
+    auto time = std::chrono::high_resolution_clock::now();
+    uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::time_point_cast<std::chrono::milliseconds>(time).time_since_epoch()).count();
+
+    auto elapsed_time = current_time - start_time;
+    uint64_t nps = iterations / (elapsed_time / 1000.0);
+
+    std::cout << "info nodes " << iterations
+              << " depth " << seldepth
+              << " score cp " << score
+              << " time " << elapsed_time
+              << " nps " << nps
+              << " pv " << pv_line
+              << std::endl;
+}
+
+
+void MCTS::descend_to_root(uint32_t node_index) {
+    while (node_index != root_node_index && ply > 0) {
+        ply--;
+        position.undo_move(tree.graph[node_index].last_move, position.state_stack[ply], temp_fifty_move);
+        node_index = tree.graph[node_index].parent;
+    }
+}
+
+
+bool MCTS::detect_repetition(HASH_TYPE hash) {
+    if (main_game_hashes.contains(hash) || tree_hashes.contains(hash)) return true;
+    return false;
 }
 
 
@@ -86,27 +116,29 @@ uint32_t MCTS::select_best_child(uint32_t node_index) {
         double policy = 1.0;
 
         Move last_move = child_node.last_move;
-        Piece selected = test_position.board[last_move.origin()];
-        Piece occupied = test_position.board[last_move.target()];
+        Piece selected = position.board[last_move.origin()];
+        Piece occupied = position.board[last_move.target()];
 
-        auto selected_type = get_piece_type(selected, test_position.side);
+        auto selected_type = get_piece_type(selected, position.side);
 
         if (last_move.type() == MOVE_TYPE_PROMOTION) {
-            if (last_move.promotion_type() == PROMOTION_QUEEN) policy += 2.0;
-            policy += 5.0;
+            if (last_move.promotion_type() == PROMOTION_QUEEN) policy += 10.0;
+            policy += 1.0;
         }
 
-        if (last_move.is_capture(test_position)) {
+        if (last_move.is_capture(position)) {
 
-            auto occupied_type = get_piece_type(occupied, ~test_position.side);
+            auto occupied_type = get_piece_type(occupied, ~position.side);
 
             policy += (MVV_LVA_VALUES[occupied_type] - MVV_LVA_VALUES[selected_type]) / 1200.0;
-
-            // Only Use SEE under certain conditions since it is expensive
-            if (get_static_exchange_evaluation(position, last_move, -108)) {
-                policy += 1;
-            } else policy -= 0.2;
+            policy += 4;
         }
+
+        if (get_static_exchange_evaluation(position, last_move, -108)) {
+            policy += 3;
+        } else policy -= 2;
+
+        policy = std::max(policy, 0.1);
 
         policies[i] = policy;
         policy_sum += policy;
@@ -140,7 +172,8 @@ uint32_t MCTS::select_best_child(uint32_t node_index) {
 
 uint32_t MCTS::selection() {
     uint32_t leaf_node_index = root_node_index;
-    test_position = position;
+
+    tree_hashes.clear();
 
     int depth = 0;
     while (true) {
@@ -149,12 +182,15 @@ uint32_t MCTS::selection() {
 
         if (n_children == 0) break;
 
+        tree_hashes.insert(position.hash_key);
+
         leaf_node_index = select_best_child(leaf_node_index);
 
-        test_position.set_state(test_position.state_stack[0], temp_fifty_move);
-        test_position.make_move(tree.graph[leaf_node_index].last_move, test_position.state_stack[0], temp_fifty_move);
+        position.set_state(position.state_stack[ply], temp_fifty_move);
+        position.make_move(tree.graph[leaf_node_index].last_move, position.state_stack[ply], temp_fifty_move);
 
         depth++;
+        ply++;
 
     }
 
@@ -164,15 +200,15 @@ uint32_t MCTS::selection() {
 
 void MCTS::expansion(uint32_t node_index) {
 
-    test_position.get_pseudo_legal_moves(test_position.scored_moves[0]);
-    test_position.set_state(test_position.state_stack[0], temp_fifty_move);
+    position.get_pseudo_legal_moves(position.scored_moves[ply]);
+    position.set_state(position.state_stack[ply], temp_fifty_move);
     tree.graph[node_index].children_start = tree.graph.size();
 
-    for (ScoredMove scored_move : test_position.scored_moves[0]) {
+    for (ScoredMove scored_move : position.scored_moves[ply]) {
 
-        bool attempt = test_position.make_move(scored_move.move, test_position.state_stack[0], temp_fifty_move);
+        bool attempt = position.make_move(scored_move.move, position.state_stack[ply], temp_fifty_move);
 
-        test_position.undo_move(scored_move.move, test_position.state_stack[0], temp_fifty_move);
+        position.undo_move(scored_move.move, position.state_stack[ply], temp_fifty_move);
 
         if (!attempt) continue;
 
@@ -183,13 +219,13 @@ void MCTS::expansion(uint32_t node_index) {
 }
 
 double MCTS::evaluate_mcts() {
-    return tanh(evaluate(test_position) / CP_SCALE);
+    return tanh(position.nnue_state.evaluate(position.side) / CP_SCALE);
 }
 
 void MCTS::back_propagation(uint32_t node_index, double evaluation, int result) {
 
     uint32_t current_node_index = node_index;
-    int current_side = test_position.side ^ 1;
+    int current_side = position.side ^ 1;
     while (true) {
         Node& current_node = tree.graph[current_node_index];
 
@@ -197,7 +233,7 @@ void MCTS::back_propagation(uint32_t node_index, double evaluation, int result) 
         if (current_side == result) current_node.win_count += 5;
         else if ((current_side ^ 1) == result) current_node.win_count -= 5;
         else if (result != DRAW_RESULT) {
-            if (current_side == test_position.side) current_node.win_count += evaluation;
+            if (current_side == position.side) current_node.win_count += evaluation;
             else current_node.win_count -= evaluation;
         }
 
@@ -225,13 +261,14 @@ uint32_t MCTS::get_best_node() {
 void MCTS::search() {
     seldepth = 0;
     iterations = 0;
+
+    flatten_tree();
+
     auto time = std::chrono::high_resolution_clock::now();
     start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(time).time_since_epoch()).count();
 
-    flatten_tree();
-
-    test_position = position;
+    uint32_t selected_node_index = root_node_index;
 
     for (int iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
         iterations = iteration;
@@ -239,31 +276,37 @@ void MCTS::search() {
         // std::cout << "iteration " << iterations << std::endl;
 
         // std::cout << "selection" << std::endl;
-        uint32_t selected_node_index = selection();
-
-        // tree.graph[selected_node_index].visits++;
+        descend_to_root(selected_node_index);
+        selected_node_index = selection();
 
         int node_result = NO_RESULT;
 
         if (tree.graph[selected_node_index].visits >= 2) {
 
-            // std::cout << "expansion" << std::endl;
-            expansion(selected_node_index);
+            if (selected_node_index != root_node_index && detect_repetition(position.hash_key)) node_result = DRAW_RESULT;
+            else {
+                tree_hashes.insert(position.hash_key);
+                expansion(selected_node_index);
 
-            if (tree.graph[selected_node_index].children_end > tree.graph[selected_node_index].children_start) {
-                test_position.set_state(test_position.state_stack[0], temp_fifty_move);
+                if (tree.graph[selected_node_index].children_end > tree.graph[selected_node_index].children_start) {
+                    position.set_state(position.state_stack[ply], temp_fifty_move);
 
-                int random_index = rand() % (tree.graph[selected_node_index].children_end - tree.graph[selected_node_index].children_start);
-                selected_node_index = tree.graph[selected_node_index].children_start + random_index;
+                    int random_index = rand() % (tree.graph[selected_node_index].children_end - tree.graph[selected_node_index].children_start);
+                    selected_node_index = tree.graph[selected_node_index].children_start + random_index;
 
-                test_position.make_move(tree.graph[selected_node_index].last_move, test_position.state_stack[0], temp_fifty_move);
-            } else {
-                node_result = test_position.is_attacked(test_position.get_king_pos(test_position.side), test_position.side) ?
-                        test_position.side ^ 1 : DRAW_RESULT;
+                    position.make_move(tree.graph[selected_node_index].last_move, position.state_stack[ply], temp_fifty_move);
+                    ply++;
+
+                    if (detect_repetition(position.hash_key)) node_result = DRAW_RESULT;
+
+                } else {
+                    node_result = position.is_attacked(position.get_king_pos(position.side), position.side) ?
+                                  position.side ^ 1 : DRAW_RESULT;
+                }
             }
         }
 
-        double evaluation = evaluate_mcts();
+        double evaluation = node_result == NO_RESULT ? evaluate_mcts() : 0;
 
         // std::cout << "back propagation" << std::endl;
         back_propagation(selected_node_index, evaluation, node_result);
@@ -279,10 +322,12 @@ void MCTS::search() {
         }
 
         if ((iteration % 10000) == 0 && iteration != 0) {
+            descend_to_root(selected_node_index);
             print_info();
         }
     }
 
+    descend_to_root(selected_node_index);
     print_info();
     std::cout << "bestmove " << tree.graph[get_best_node()].last_move.get_uci(position) << std::endl;
 }

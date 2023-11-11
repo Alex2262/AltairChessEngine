@@ -5,6 +5,7 @@
 #ifndef ALTAIRCHESSENGINE_MCTS_H
 #define ALTAIRCHESSENGINE_MCTS_H
 
+#include <unordered_set>
 #include "constants.h"
 #include "position.h"
 
@@ -36,7 +37,6 @@ public:
     MCTS() = default;
 
     Position position{};
-    Position test_position{};
 
     uint64_t start_time = 0;
     PLY_TYPE seldepth = 0;
@@ -45,15 +45,21 @@ public:
     uint64_t max_time = MAX_TIME;
 
     uint32_t root_node_index = 0;
+    int ply = 0;
 
     PLY_TYPE temp_fifty_move = 0;
 
     Tree tree{};
 
+    std::unordered_set<HASH_TYPE> main_game_hashes{};
+    std::unordered_set<HASH_TYPE> tree_hashes{};
+
     void new_game();
     void update_tree(Move move);
     void print_info();
 
+    void descend_to_root(uint32_t node_index);
+    bool detect_repetition(HASH_TYPE hash);
     uint32_t select_best_child(uint32_t node_index);
     uint32_t selection();
     void expansion(uint32_t node_index);

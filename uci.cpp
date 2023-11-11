@@ -59,7 +59,7 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
     else if (self_time > 0) time_amt = self_time / (rate + 6);
     else time_amt = static_cast<double>(mcts_engine->max_time);
 
-    mcts_engine->max_time = static_cast<uint64_t>(time_amt * 0.9);
+    mcts_engine->max_time = static_cast<uint64_t>(time_amt * 0.6);
 
     // std::cout << time_amt << " " << engine->hard_time_limit << " " << engine->soft_time_limit << std::endl;
 }
@@ -90,9 +90,13 @@ void UCI::parse_position() {
 
     else return;
 
+    mcts_engine->main_game_hashes.clear();
+
     if (static_cast<int>(tokens.size()) <= next_idx || tokens[next_idx] != "moves") return;
 
     for (int i = next_idx + 1; i < static_cast<int>(tokens.size()); i++) {
+        mcts_engine->main_game_hashes.insert(position.hash_key);
+
         Move move = Move(position, tokens[i]);
 
         position.make_move(move, position.state_stack[0], mcts_engine->temp_fifty_move);
@@ -151,7 +155,7 @@ void UCI::parse_go() {
         double self_time = (position.side == 0) ? wtime : btime;
         double inc = (position.side == 0) ? winc : binc;
 
-        time_handler(std::max<double>(self_time - 10, 0.0), inc, movetime, movestogo);
+        time_handler(std::max<double>(self_time - 30, 0.0), inc, movetime, movestogo);
     }
 
     mcts_engine->search();
