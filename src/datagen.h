@@ -33,8 +33,6 @@ struct Datagen_Thread {
 
     std::unique_ptr<Engine> engine = std::make_unique<Engine>();
 
-    uint64_t start_time;
-
     inline Datagen_Thread() {
         thread_id = 0;
     }
@@ -75,6 +73,9 @@ public:
     int running_threads = 1;
 
     uint64_t random_seed = 0;
+    uint64_t start_time;
+    uint64_t interval_start_time;
+    uint64_t interval_start_fens = 0;
 
     bool stopped = false;
 

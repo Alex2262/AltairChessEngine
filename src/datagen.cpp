@@ -33,23 +33,22 @@ void Datagen::integrity_check() {
         datagen_thread.ping = false;
     }
 
-    uint64_t included_fens = 0;
+    // uint64_t included_fens = 0;
     uint64_t total_fens = 0;
     uint64_t total_games = 0;
     for (Datagen_Thread& datagen_thread : datagen_threads) {
         total_fens  += datagen_thread.total_fens;
         total_games += datagen_thread.total_games;
-        if (!datagen_thread.paused) included_fens += datagen_thread.total_fens;
+        // if (!datagen_thread.paused) included_fens += datagen_thread.total_fens;
     }
+    uint64_t elapsed_fens = total_fens - interval_start_fens;
 
-    uint64_t start_time = datagen_threads[0].start_time;
     auto end_time_point = std::chrono::high_resolution_clock::now();
     auto end_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(end_time_point).time_since_epoch()).count();
-    uint64_t elapsed_time = end_time - start_time;
-    elapsed_time = std::max<uint64_t>(elapsed_time, 1);
+    uint64_t elapsed_time = std::max<uint64_t>(end_time - interval_start_time, 1);
 
-    auto fps  = static_cast<uint64_t>(static_cast<double>(included_fens) / static_cast<double>(elapsed_time) * 1000);
+    auto fps  = static_cast<uint64_t>(static_cast<double>(elapsed_fens) / static_cast<double>(elapsed_time) * 1000);
     auto fpst = fps / running_threads;
 
     std::cout << std::endl;
@@ -58,6 +57,10 @@ void Datagen::integrity_check() {
     std::cout << "FPS | FPST  \t [" << CYAN << fps << RESET << " | " << CYAN << fpst << RESET << "]\n";
 
     std::cout << "-----------------------------" << std::endl;
+
+    interval_start_time = std::chrono::duration_cast<std::chrono::milliseconds>
+                          (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch()).count();
+    interval_start_fens = total_fens;
 }
 
 
@@ -80,6 +83,9 @@ void Datagen::start_datagen() {
     datagen_threads.resize(threads);
 
     std::cout << "Starting " << threads << " threads" << std::endl;
+    start_time = std::chrono::duration_cast<std::chrono::milliseconds>
+                 (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch()).count();
+    interval_start_time = start_time;
 
     for (int thread_id = 0; thread_id < threads; thread_id++) {
         datagen_threads[thread_id] = Datagen_Thread(thread_id, random_seed);
@@ -246,9 +252,6 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
 
     FixedVector<Move, MAX_MOVES> legal_moves{};
     FixedVector<EvalFenStruct, MAX_GAME_LENGTH + 64> game_fens{};
-
-    datagen_thread.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
-            (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch()).count();
 
     datagen_thread.engine->hard_time_limit = 2 * max_time_per_move;
     datagen_thread.engine->soft_time_limit = max_time_per_move;
