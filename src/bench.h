@@ -1,6 +1,6 @@
 
-#ifndef ALTAIRCHESSENGINE_BENCH_H
-#define ALTAIRCHESSENGINE_BENCH_H
+#ifndef ALTAIR_BENCH_H
+#define ALTAIR_BENCH_H
 
 #include "constants.h"
 #include "search.h"
@@ -8,4 +8,4 @@
 
 void run_bench(Engine& engine, PLY_TYPE depth);
 
-#endif //ALTAIRCHESSENGINE_BENCH_H
+#endif //ALTAIR_BENCH_H

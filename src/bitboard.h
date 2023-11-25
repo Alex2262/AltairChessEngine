@@ -1,6 +1,6 @@
 
-#ifndef ALTAIRCHESSENGINE_BITBOARD_H
-#define ALTAIRCHESSENGINE_BITBOARD_H
+#ifndef ALTAIR_BITBOARD_H
+#define ALTAIR_BITBOARD_H
 
 #include <cstdint>
 #include <cassert>
@@ -110,4 +110,4 @@ constexpr Square operator+(Square s, Direction d) {
 [[nodiscard]] uint32_t popcount(BITBOARD bitboard);
 [[nodiscard]] Square poplsb(BITBOARD& bitboard);
 
-#endif //ALTAIRCHESSENGINE_BITBOARD_H
+#endif //ALTAIR_BITBOARD_H

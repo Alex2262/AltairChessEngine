@@ -1,7 +1,7 @@
 
 
-#ifndef ALTAIRCHESSENGINE_TYPES_H
-#define ALTAIRCHESSENGINE_TYPES_H
+#ifndef ALTAIR_TYPES_H
+#define ALTAIR_TYPES_H
 
 #include <cstdint>
 
@@ -102,4 +102,4 @@ using PLY_TYPE = int16_t;
 using HASH_TYPE = uint64_t;
 using SCORE_TYPE = int32_t;
 
-#endif //ALTAIRCHESSENGINE_TYPES_H
+#endif //ALTAIR_TYPES_H

@@ -1,7 +1,7 @@
 
 
-#ifndef ANTARESCHESSENGINE_UCI_H
-#define ANTARESCHESSENGINE_UCI_H
+#ifndef ALTAIR_UCI_H
+#define ALTAIR_UCI_H
 
 #include <thread>
 #include <vector>
@@ -31,4 +31,4 @@ public:
 
 
 
-#endif //ANTARESCHESSENGINE_UCI_H
+#endif //ALTAIR_UCI_H

@@ -1,7 +1,7 @@
 
 
-#ifndef ANTARESCHESSENGINE_SEARCH_H
-#define ANTARESCHESSENGINE_SEARCH_H
+#ifndef ALTAIR_SEARCH_H
+#define ALTAIR_SEARCH_H
 
 #include <vector>
 #include "position.h"
@@ -218,4 +218,4 @@ void print_statistics(Search_Results& res);
 void print_search_tuning_config(Tuning_Parameters& tuning_parameters);
 void print_move_ordering_tuning_config(Move_Ordering_Parameters& tuning_parameters);
 
-#endif //ANTARESCHESSENGINE_SEARCH_H
+#endif //ALTAIR_SEARCH_H

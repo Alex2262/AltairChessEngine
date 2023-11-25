@@ -1,6 +1,6 @@
 
-#ifndef ANTARESCHESSENGINE_CONSTANTS_H
-#define ANTARESCHESSENGINE_CONSTANTS_H
+#ifndef ALTAIR_CONSTANTS_H
+#define ALTAIR_CONSTANTS_H
 
 #include <cstdint>
 #include <string>
@@ -60,4 +60,4 @@ const std::string YELLOW = "\033[33m";
 const std::string GREEN  = "\033[32m";
 const std::string CYAN   = "\033[36m";
 
-#endif //ANTARESCHESSENGINE_CONSTANTS_H
+#endif //ALTAIR_CONSTANTS_H

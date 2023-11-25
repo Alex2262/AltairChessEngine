@@ -1,6 +1,6 @@
 
-#ifndef ANTARESCHESSENGINE_POSITION_H
-#define ANTARESCHESSENGINE_POSITION_H
+#ifndef ALTAIR_POSITION_H
+#define ALTAIR_POSITION_H
 
 #include <string>
 #include "constants.h"
@@ -166,4 +166,4 @@ public:
 
 
 
-#endif //ANTARESCHESSENGINE_POSITION_H
+#endif //ALTAIR_POSITION_H

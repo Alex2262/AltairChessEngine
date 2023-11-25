@@ -1,6 +1,6 @@
 
-#ifndef ANTARESCHESSENGINE_USEFUL_H
-#define ANTARESCHESSENGINE_USEFUL_H
+#ifndef ALTAIR_USEFUL_H
+#define ALTAIR_USEFUL_H
 
 #include <vector>
 #include <string>
@@ -12,4 +12,4 @@ std::vector<std::string> split(const std::string &s, char delim);
 
 Piece piece_to_num(char piece);
 
-#endif //ANTARESCHESSENGINE_USEFUL_H
+#endif //ALTAIR_USEFUL_H

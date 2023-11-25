@@ -1,9 +1,7 @@
-//
-// Created by Alexander Tian on 8/16/23.
-//
 
-#ifndef ALTAIRCHESSENGINE_DATAGEN_H
-#define ALTAIRCHESSENGINE_DATAGEN_H
+
+#ifndef ALTAIR_DATAGEN_H
+#define ALTAIR_DATAGEN_H
 
 #include <chrono>
 #include <vector>
@@ -95,4 +93,4 @@ public:
 };
 
 
-#endif //ALTAIRCHESSENGINE_DATAGEN_H
+#endif //ALTAIR_DATAGEN_H

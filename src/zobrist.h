@@ -1,6 +1,6 @@
 
-#ifndef ANTARESCHESSENGINE_ZOBRIST_H
-#define ANTARESCHESSENGINE_ZOBRIST_H
+#ifndef ALTAIR_ZOBRIST_H
+#define ALTAIR_ZOBRIST_H
 
 #include "random.h"
 #include "constants.h"
@@ -39,4 +39,4 @@ public:
 
 ZobristKeysClass ZobristHashKeys = ZobristKeysClass();
 
-#endif //ANTARESCHESSENGINE_ZOBRIST_H
+#endif //ALTAIR_ZOBRIST_H

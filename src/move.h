@@ -1,6 +1,6 @@
 
-#ifndef ANTARESCHESSENGINE_MOVE_H
-#define ANTARESCHESSENGINE_MOVE_H
+#ifndef ALTAIR_MOVE_H
+#define ALTAIR_MOVE_H
 
 #include <cstdint>
 #include "types.h"
@@ -99,4 +99,4 @@ const Move NO_MOVE = Move();
 const InformativeMove NO_INFORMATIVE_MOVE = InformativeMove();
 
 
-#endif //ANTARESCHESSENGINE_MOVE_H
+#endif //ALTAIR_MOVE_H

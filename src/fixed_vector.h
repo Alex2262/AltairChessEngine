@@ -1,9 +1,8 @@
 
 
-#ifndef ALTAIRCHESSENGINE_FIXED_VECTOR_H
-#define ALTAIRCHESSENGINE_FIXED_VECTOR_H
+#ifndef ALTAIR_FIXED_VECTOR_H
+#define ALTAIR_FIXED_VECTOR_H
 
-// A lot of code in here is influenced by Conor Anstey (Ciekce)
 
 #include <cstdint>
 #include <cstring>
@@ -50,4 +49,4 @@ public:
     }
 };
 
-#endif //ALTAIRCHESSENGINE_FIXED_VECTOR_H
+#endif //ALTAIR_FIXED_VECTOR_H

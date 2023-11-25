@@ -1,7 +1,7 @@
 
 
-#ifndef ALTAIRCHESSENGINE_EVALUATION_H
-#define ALTAIRCHESSENGINE_EVALUATION_H
+#ifndef ALTAIR_EVALUATION_H
+#define ALTAIR_EVALUATION_H
 
 #include "position.h"
 #include "constants.h"
@@ -104,4 +104,4 @@ struct KingRing {
 
 constexpr KingRing king_ring_zone = KingRing<2>();
 
-#endif //ALTAIRCHESSENGINE_EVALUATION_H
+#endif //ALTAIR_EVALUATION_H

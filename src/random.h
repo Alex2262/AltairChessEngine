@@ -1,6 +1,6 @@
 
-#ifndef ALTAIRCHESSENGINE_RANDOM_H
-#define ALTAIRCHESSENGINE_RANDOM_H
+#ifndef ALTAIR_RANDOM_H
+#define ALTAIR_RANDOM_H
 
 
 //A pseudorandom number generator inspired from Stockfish
@@ -18,4 +18,4 @@ public:
 };
 
 
-#endif //ALTAIRCHESSENGINE_RANDOM_H
+#endif //ALTAIR_RANDOM_H

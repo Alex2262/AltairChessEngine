@@ -6,6 +6,7 @@
  * Facilities for including binary files into the current translation unit and
  * making use from them externally in other translation units.
  */
+
 #ifndef INCBIN_HDR
 #define INCBIN_HDR
 #include <limits.h>
@@ -192,7 +193,7 @@
 /* Mingw doesn't support this directive either */
 #    define INCBIN_TYPE(NAME)
 #  elif defined(_WIN32)
-// CIEKCE: this just doesn't work on windows at all
+
 #    define INCBIN_TYPE(NAME)
 #  else
 /* It's safe to use `@' on other architectures */

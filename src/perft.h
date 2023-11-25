@@ -1,6 +1,6 @@
 
-#ifndef ANTARESCHESSENGINE_PERFT_H
-#define ANTARESCHESSENGINE_PERFT_H
+#ifndef ALTAIR_PERFT_H
+#define ALTAIR_PERFT_H
 
 #include "position.h"
 
@@ -20,4 +20,4 @@ long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply);
 long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply);
 
 
-#endif //ANTARESCHESSENGINE_PERFT_H
+#endif //ALTAIR_PERFT_H

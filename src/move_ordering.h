@@ -1,7 +1,7 @@
 
 
-#ifndef ALTAIRCHESSENGINE_MOVE_ORDERING_H
-#define ALTAIRCHESSENGINE_MOVE_ORDERING_H
+#ifndef ALTAIR_MOVE_ORDERING_H
+#define ALTAIR_MOVE_ORDERING_H
 
 #include "types.h"
 #include "search.h"
@@ -22,4 +22,4 @@ void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_
 
 Move sort_next_move(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, int current_count);
 
-#endif //ALTAIRCHESSENGINE_MOVE_ORDERING_H
+#endif //ALTAIR_MOVE_ORDERING_H
