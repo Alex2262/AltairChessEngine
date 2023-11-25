@@ -40,10 +40,11 @@ Altair can be played by connecting it to GUIs such as Arena, Cutechess, Banksia,
 chess GUIs.
 
 You can also play against Altair on lichess [here](https://lichess.org/@/Altair_Engine), but it is not always online. 
-Note: Lichess BOT ratings are deflated compared to their actual human-relative-strength.
+Note: Lichess BOT ratings are deflated compared to their actual human relative strengths.
 
 ## Board Representation
-Altair currently uses bitboards, binary representations of the chessboard, as the internal board representation
+Altair currently uses bitboards, binary representations of the chessboard, as the internal board representation as of version 4.0.1 \
+Versions 4.0.0 and prior used a mailbox (12x10), array board representation
 
 ## Move Generation
 Altair uses the magic bitboard approach for decently fast move generation speeds.
