@@ -4,6 +4,7 @@
 #define ALTAIR_SEARCH_H
 
 #include <vector>
+#include <unordered_set>
 #include "position.h"
 
 struct TT_Entry {
@@ -176,6 +177,9 @@ public:
 
     bool do_tuning = false;
     Tuning_Parameters tuning_parameters{};
+
+    int multi_pv = 1;
+    std::unordered_set<Move> root_moves{};
 
     void clear_tt();
 

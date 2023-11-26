@@ -65,6 +65,8 @@ void Engine::reset() {
         std::memset(search_results.search_fail_highs, 0, sizeof(search_results.search_fail_highs));
         std::memset(search_results.search_fail_high_types, 0, sizeof(search_results.search_fail_high_types));
     }
+
+    root_moves.clear();
 }
 
 
@@ -1076,7 +1078,6 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
         // We have achieved an exact node where the score was between alpha and beta.
         // We are certain of our score and can now safely return.
         else {
-
             if (thread_id == 0) print_thinking(engine, Exact_Node, return_eval, thread_id);
             break;
         }
