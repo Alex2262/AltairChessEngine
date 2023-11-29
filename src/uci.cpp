@@ -30,8 +30,7 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
 
     Position& position = engine->thread_states[0].position;
 
-    if (position.is_attacked(position.get_king_pos(position.side), position.side)) rate -= 3;
-    // if (last_move.is_capture(position)) rate -= 1.5;
+    if (position.is_attacked(position.get_king_pos(position.side), position.side)) rate -= 2;
 
     if (movetime > 0) time_amt = movetime * 0.9;
     else if (inc > 0 && movestogo > 0) {
@@ -60,7 +59,7 @@ void  UCI::time_handler(double self_time, double inc, double movetime, long move
     else if (self_time > 0) time_amt = self_time / (rate + 6);
     else time_amt = static_cast<double>(engine->hard_time_limit);
 
-    engine->hard_time_limit = static_cast<uint64_t>(time_amt * 2.22);
+    engine->hard_time_limit = static_cast<uint64_t>(time_amt * 2.54);
     engine->soft_time_limit = static_cast<uint64_t>(time_amt * 0.66);
 
     if (engine->hard_time_limit > static_cast<uint64_t>(self_time * 0.7)) {
