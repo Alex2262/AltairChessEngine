@@ -11,8 +11,8 @@
 
 #include "incbin.h"
 
-// INCBIN(nnue, "src/net.bin");
-INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/net.bin");
+INCBIN(nnue, "src/net.bin");
+// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/net.bin");
 
 const NNUE_Params &nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 
