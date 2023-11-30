@@ -1127,14 +1127,12 @@ void iterative_search(Engine& engine, int thread_id) {
                         static_cast<double>(engine.node_table[position.board[best_move.origin()]] [best_move.target()]) /
                         static_cast<double>(thread_state.node_count);
 
-                double node_scaling_factor = (1.5 - best_node_percentage) * 1.35;
+                double node_scaling_factor = (1.45 - best_node_percentage) * 1.71;
 
                 SCORE_TYPE score_difference = previous_score - low_depth_score;
-                score_difference = std::clamp(score_difference, -120, 120);
+                score_difference = abs(std::clamp(score_difference, -300, 150));
 
-                double score_scaling_factor = 1.05 - (score_difference / 270.0);
-                //std::cout << previous_score - low_depth_score << " " << score_difference << std::endl;
-                //std::cout << score_scaling_factor << std::endl;
+                double score_scaling_factor = 0.98 + (score_difference / 350.0);
 
                 engine.soft_time_limit = static_cast<uint64_t>(static_cast<double>(original_soft_time_limit)
                         * node_scaling_factor
