@@ -6285,3 +6285,37 @@ LLR   | 2.89 (-2.25, 2.89) [0.00, 5.00]
 GAMES | N: 9088 W: 2335 L: 2153 D: 4600
 https://chess.swehosting.se/test/4612/
 ```
+
+### 5.2.2
+New Net with fixed data generation
+
+Standard:
+```
+ELO   | 0.43 +- 4.28 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | -1.30 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 13840 W: 3800 L: 3783 D: 6257
+https://chess.swehosting.se/test/4840/
+FRC:
+```
+
+FRC:
+```
+ELO   | 22.20 +- 10.12 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.89 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 2304 W: 659 L: 512 D: 1133
+https://chess.swehosting.se/test/4844/
+```
+
+### 5.2.3
+SCRELU net
+
+```
+ELO   | 10.02 +- 6.51 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.90 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 6000 W: 1734 L: 1561 D: 2705
+https://chess.swehosting.se/test/4848/
+```
+
