@@ -196,7 +196,7 @@ void UCI::parse_go() {
         if (engine->thread_states[0].terminated) search_threads.erase(search_threads.end() - 1);
     }
 
-    search_threads.emplace_back(lazy_smp_search, std::ref(*engine));
+    search_threads.emplace_back(search, std::ref(*engine));
 
     //iterative_search(engine, position);
 }
@@ -241,6 +241,9 @@ void UCI::uci_loop() {
                       << std::endl;
 
             std::cout << "option name Statistics type check default false"
+                      << std::endl;
+
+            std::cout << "option name MultiPV type spin default " << 1 << " min " << 1 << " max " << 256
                       << std::endl;
 
             std::cout << "option name Move Overhead type spin default " << 10 << " min " << 0 << " max " << 1000
@@ -299,6 +302,10 @@ void UCI::uci_loop() {
 
             else if (tokens[2] == "Statistics") {
                 engine->show_stats = tokens[4] == "true";
+            }
+
+            else if (tokens[2] == "MultiPV") {
+                engine->multi_pv = std::clamp(std::stoi(tokens[4]), 1, 256);
             }
 
             else if (tokens[2] == "Move" && tokens[3] == "Overhead") {

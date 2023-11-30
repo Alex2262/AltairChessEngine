@@ -87,7 +87,7 @@ void run_bench(Engine& engine, PLY_TYPE depth) {
         engine.soft_time_limit = TIME_INF;
         engine.hard_time_limit = TIME_INF;
 
-        lazy_smp_search(engine);
+        search(engine);
 
         for (Thread_State& thread_state_i : engine.thread_states) {
             total_nodes += thread_state_i.node_count;
