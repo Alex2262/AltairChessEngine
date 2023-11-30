@@ -21,9 +21,9 @@ void Engine::initialize_lmr_reductions() {
     for (PLY_TYPE depth = 0; depth < MAX_AB_DEPTH; depth++) {
         for (int moves = 0; moves < 64; moves++) {
             LMR_REDUCTIONS_QUIET[depth][moves] =
-                    std::max(0.0,
-                             std::log(depth) * std::log(moves) / double(tuning_parameters.LMR_divisor_quiet / 100.0)
-                             + double(tuning_parameters.LMR_base_quiet / 100.0));
+                    static_cast<int>(std::max(0.0,
+                                     std::log(depth) * std::log(moves) / double(tuning_parameters.LMR_divisor_quiet / 100.0)
+                                     + double(tuning_parameters.LMR_base_quiet / 100.0)));
         }
     }
 }
@@ -790,7 +790,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         uint64_t current_nodes = thread_state.node_count;
 
-        double reduction;
+        int reduction;
         bool full_depth_zero_window;
 
         // Late Move Reductions (LMR)
@@ -820,10 +820,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             reduction -= in_check;
 
             // Scale the reduction based on the move's history score
-            reduction -= move_history_score / 7200.0;
+            reduction -= move_history_score / 8192;
 
             // Scale reductions based on how many moves have already raised alpha
-            reduction += static_cast<double>(alpha_raised_count) * (0.3 + 0.5 * tt_move_capture);
+            reduction += static_cast<int>(static_cast<double>(alpha_raised_count) * (0.5 + 0.5 * tt_move_capture));
 
             // My idea that in a null move search you can be more aggressive with LMR
             reduction += null_search;
