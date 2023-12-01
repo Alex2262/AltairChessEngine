@@ -6319,3 +6319,35 @@ GAMES | N: 6000 W: 1734 L: 1561 D: 2705
 https://chess.swehosting.se/test/4848/
 ```
 
+### 5.2.4
+Time Management Changes
+
+LTC
+
+```
+ELO   | 8.70 +- 5.65 (95%)
+SPRT  | 40.0+0.40s Threads=1 Hash=128MB
+LLR   | 2.92 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 6552 W: 1561 L: 1397 D: 3594
+https://chess.swehosting.se/test/4874/
+```
+
+STC
+```
+ELO   | 15.24 +- 8.10 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.94 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 3536 W: 963 L: 808 D: 1765
+https://chess.swehosting.se/test/4871/
+```
+
+### 5.2.5
+Set reductions to integers only in LMR + slight additional LMR changes
+
+```
+ELO   | 6.05 +- 4.54 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.91 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 11136 W: 2856 L: 2662 D: 5618
+https://chess.swehosting.se/test/4887/
+```
