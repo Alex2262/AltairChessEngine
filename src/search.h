@@ -4,6 +4,7 @@
 #define ALTAIR_SEARCH_H
 
 #include <vector>
+#include <unordered_set>
 #include "position.h"
 
 struct TT_Entry {
@@ -117,6 +118,8 @@ public:
 
     uint64_t node_count = 0;
 
+    std::unordered_set<uint16_t> excluded_root_moves{};
+
     InformativeMove killer_moves[2][MAX_AB_DEPTH]{};  // killer moves (2) | max_depth (64)
     SCORE_TYPE history_moves[12][64]{}; // piece | target_square
     SCORE_TYPE capture_history[2][12][12][64]{};
@@ -177,6 +180,9 @@ public:
     bool do_tuning = false;
     Tuning_Parameters tuning_parameters{};
 
+    int multi_pv = 1;
+    std::unordered_set<uint16_t> root_moves{};
+
     void clear_tt();
 
     void reset();
@@ -208,10 +214,12 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
 SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id);
 SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,  bool do_null, int thread_id);
 
-void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int thread_id);
+void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int pv_number, int thread_id);
 SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id);
+SCORE_TYPE multi_pv_search(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id);
 void iterative_search(Engine& engine, int thread_id);
 void lazy_smp_search(Engine& engine);
+void search(Engine& engine);
 
 void print_statistics(Search_Results& res);
 

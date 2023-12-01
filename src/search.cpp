@@ -65,6 +65,8 @@ void Engine::reset() {
         std::memset(search_results.search_fail_highs, 0, sizeof(search_results.search_fail_highs));
         std::memset(search_results.search_fail_high_types, 0, sizeof(search_results.search_fail_high_types));
     }
+
+    root_moves.clear();
 }
 
 
@@ -654,7 +656,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         position.scored_moves[thread_state.search_ply][move_index].winning_capture = winning_capture;
 
-        // Skip the excluded move since we are in a singular search
+        // std::cout << engine.root_moves.contains(move.internal_move()) << " " << engine.root_moves.size() << std::endl;
+
+        // Skip excluded moves
+        if (root && (thread_state.excluded_root_moves.contains(move.internal_move())
+                     || !engine.root_moves.contains(move.internal_move()))) continue;
         if (move == position.state_stack[thread_state.search_ply].excluded_move) continue;
 
         bool quiet = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
@@ -950,7 +956,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 }
 
 
-void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int thread_id) {
+void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int pv_number, int thread_id) {
 
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
@@ -1009,7 +1015,8 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int th
     position.side = original_side;
 
     // Print the UCI search information
-    std::cout << "info multipv 1 depth " << depth << " seldepth " << thread_state.selective_depth
+    std::cout << "info multipv " << pv_number + 1
+              << " depth " << depth << " seldepth " << thread_state.selective_depth
               << " score " << result_type << " time " << elapsed_time
               << " nodes " << total_nodes << " nps " << nps
               << " pv " << pv_line << std::endl;
@@ -1054,7 +1061,7 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
             asp_depth--;
             asp_depth = std::max<PLY_TYPE>(6, asp_depth);
 
-            if (depth >= 18 && thread_id == 0) print_thinking(engine, Lower_Node, return_eval, thread_id);
+            if (depth >= 18 && thread_id == 0) print_thinking(engine, Lower_Node, return_eval, 0, thread_id);
         }
 
         // The aspiration window search has failed high.
@@ -1070,14 +1077,16 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
 
             if (thread_id == 0) best_move = engine.pv_table[0][0];  // Safe to update the best move on fail highs.
 
-            if (depth >= 18 && thread_id == 0) print_thinking(engine, Upper_Node, return_eval, thread_id);
+            if (depth >= 18 && thread_id == 0) print_thinking(engine, Upper_Node, return_eval, 0, thread_id);
         }
 
         // We have achieved an exact node where the score was between alpha and beta.
         // We are certain of our score and can now safely return.
         else {
-
-            if (thread_id == 0) print_thinking(engine, Exact_Node, return_eval, thread_id);
+            if (thread_id == 0) {
+                best_move = engine.pv_table[0][0];
+                print_thinking(engine, Exact_Node, return_eval, 0, thread_id);
+            }
             break;
         }
 
@@ -1086,6 +1095,34 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
     }
 
     return return_eval;
+}
+
+
+SCORE_TYPE multi_pv_search(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id) {
+    Thread_State& thread_state = engine.thread_states[thread_id];
+    Position& position = thread_state.position;
+
+    thread_state.excluded_root_moves.clear();
+
+    position.clear_state_stack();
+    int main_score = aspiration_window(engine, previous_score, asp_depth, best_move, thread_id);
+
+    thread_state.excluded_root_moves.insert(best_move.internal_move());
+
+    PLY_TYPE depth = thread_state.current_search_depth;
+
+    int alternate_pvs = std::min(engine.multi_pv, static_cast<int>(engine.root_moves.size()));
+    for (int i = 1; i < alternate_pvs; i++) {
+        int pv_score = negamax(engine, -SCORE_INF, SCORE_INF, depth, false, thread_id);
+        if (engine.stopped) break;
+
+        print_thinking(engine, Exact_Node, pv_score, i, thread_id);
+        thread_state.excluded_root_moves.insert(engine.pv_table[0][0].internal_move());
+    }
+
+    thread_state.excluded_root_moves.clear();
+
+    return main_score;
 }
 
 
@@ -1108,16 +1145,12 @@ void iterative_search(Engine& engine, int thread_id) {
 
     while (running_depth <= engine.max_depth) {
         thread_state.current_search_depth = running_depth;
-        position.clear_state_stack();
 
         // Run a search with aspiration window bounds
-        previous_score = aspiration_window(engine, previous_score, asp_depth, best_move, thread_id);
+        previous_score = multi_pv_search(engine, previous_score, asp_depth, best_move, thread_id);
 
-        // Store the best move when the engine has finished a search (it hasn't stopped in the middle of a search)
-        if (thread_id == 0 && !engine.stopped) {
-            best_move = engine.pv_table[0][0];
-            engine.search_results.score = previous_score;
-        }
+        // Update information when engine has finished a search (it hasn't stopped in the middle of a search)
+        if (thread_id == 0 && !engine.stopped) engine.search_results.score = previous_score;
 
         if (thread_id == 0) {
             if (running_depth <= 4) low_depth_score = previous_score;
@@ -1197,13 +1230,6 @@ void iterative_search(Engine& engine, int thread_id) {
 
 void lazy_smp_search(Engine& engine) {
 
-    engine.reset();
-    engine.stopped = false;
-
-    auto start_time = std::chrono::high_resolution_clock::now();
-    engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
-            (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
-
     std::vector<std::thread> search_threads;
     //std::vector<Position> new_positions;
 
@@ -1224,6 +1250,32 @@ void lazy_smp_search(Engine& engine) {
 
     if (engine.show_stats) print_statistics(engine.search_results);
 
+}
+
+
+void search(Engine& engine) {
+    Thread_State& thread_state = engine.thread_states[0];
+    Position& position = thread_state.position;
+
+    engine.reset();
+
+    engine.stopped = false;
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+    engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
+
+    position.get_pseudo_legal_moves(position.scored_moves[0]);
+    position.set_state(position.state_stack[0], thread_state.fifty_move);
+
+    for (ScoredMove scored_move : position.scored_moves[0]) {
+        bool attempt = position.make_move(scored_move.move, position.state_stack[0], thread_state.fifty_move);
+        position.undo_move(scored_move.move, position.state_stack[0], thread_state.fifty_move);
+
+        if (attempt) engine.root_moves.insert(scored_move.move.internal_move());
+    }
+
+    lazy_smp_search(engine);
 }
 
 
