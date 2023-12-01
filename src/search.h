@@ -149,7 +149,7 @@ public:
     bool print_thinking = true;
     bool datagen = false;
 
-    double LMR_REDUCTIONS_QUIET[MAX_AB_DEPTH][64]{};
+    int LMR_REDUCTIONS_QUIET[MAX_AB_DEPTH][64]{};
 
     PLY_TYPE max_depth = MAX_AB_DEPTH - 1;
     PLY_TYPE max_q_depth = TOTAL_MAX_DEPTH - MAX_AB_DEPTH;
