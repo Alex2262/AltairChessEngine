@@ -43,6 +43,11 @@ struct State_Struct {
     int in_check = -1;
 };
 
+struct FenInfo {
+    PLY_TYPE fifty_move_counter = 0;
+    PLY_TYPE full_move_counter  = 1;
+};
+
 
 class Position {
 
@@ -124,7 +129,7 @@ public:
 
     void compute_hash_key();
 
-    PLY_TYPE set_fen(const std::string& fen);
+    FenInfo set_fen(const std::string& fen);
     std::string get_fen(PLY_TYPE fifty_move);
 
     void set_frc_side(Color color, int index);

@@ -46,6 +46,12 @@ add_executable(Altair
         src/evaluation.h
         src/evaluation_constants.h
         src/move_ordering.cpp
-        src/move_ordering.h src/datagen.cpp src/datagen.h src/nnue.cpp src/nnue.h src/incbin.h)
+        src/move_ordering.h
+        src/datagen.cpp
+        src/datagen.h
+        src/nnue.cpp
+        src/nnue.h
+        src/incbin.h
+        src/wdl.h)
 
 target_link_libraries(Altair Threads::Threads)

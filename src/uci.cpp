@@ -83,8 +83,10 @@ void UCI::parse_position() {
     int next_idx;
     engine->thread_states[0].game_ply = 0;
 
+    FenInfo fen_info;
+
     if (tokens[1] == "startpos") {
-        engine->thread_states[0].fifty_move = position.set_fen(START_FEN);
+        fen_info = position.set_fen(START_FEN);
         next_idx = 2;
     }
 
@@ -94,7 +96,7 @@ void UCI::parse_position() {
             return;
         }
 
-        engine->thread_states[0].fifty_move = position.set_fen(START_FEN);
+        fen_info = position.set_fen(START_FEN);
 
         int dfrc_index = std::stoi(tokens[2]);
         position.set_dfrc(dfrc_index);
@@ -110,16 +112,18 @@ void UCI::parse_position() {
             fen += " ";
         }
 
-        engine->thread_states[0].fifty_move = position.set_fen(fen);
+        fen_info = position.set_fen(fen);
         next_idx = 8;
     }
 
     else return;
 
+    engine->thread_states[0].fifty_move = fen_info.fifty_move_counter;
+    engine->thread_states[0].base_full_moves = fen_info.full_move_counter;
+
     if (static_cast<int>(tokens.size()) <= next_idx || tokens[next_idx] != "moves") return;
 
     for (int i = next_idx + 1; i < static_cast<int>(tokens.size()); i++) {
-        // std::cout << tokens[i] << std::endl;
         Move move = Move(position, tokens[i]);
         last_move = move;
 
@@ -128,8 +132,6 @@ void UCI::parse_position() {
         engine->thread_states[0].game_ply++;
         engine->thread_states[0].repetition_table[engine->thread_states[0].game_ply] = position.hash_key;
     }
-
-    // position.print_board();
 }
 
 
@@ -240,6 +242,9 @@ void UCI::uci_loop() {
             std::cout << "option name UCI_Chess960 type check default false"
                       << std::endl;
 
+            std::cout << "option name UCI_ShowWDL type check default false"
+                      << std::endl;
+
             std::cout << "option name Statistics type check default false"
                       << std::endl;
 
@@ -298,6 +303,10 @@ void UCI::uci_loop() {
 
             else if (tokens[2] == "UCI_Chess960") {
                 engine->thread_states[0].position.fischer_random_chess = tokens[4] == "true";
+            }
+
+            else if (tokens[2] == "UCI_ShowWDL") {
+                engine->show_wdl = tokens[4] == "true";
             }
 
             else if (tokens[2] == "Statistics") {

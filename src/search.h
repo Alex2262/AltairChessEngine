@@ -113,6 +113,7 @@ public:
 
     PLY_TYPE current_search_depth = 0;
     PLY_TYPE search_ply = 0;
+    PLY_TYPE base_full_moves = 1;
     PLY_TYPE game_ply = 0;
     PLY_TYPE fifty_move = 0;
 
@@ -132,6 +133,7 @@ public:
 
     bool terminated = true;
 
+    inline PLY_TYPE get_full_game_ply() { return base_full_moves * 2 + game_ply + position.side; }
     bool detect_repetition();
     bool detect_repetition_3();
 
@@ -151,6 +153,10 @@ public:
     bool stopped = true;
     bool print_thinking = true;
     bool datagen = false;
+    bool show_wdl = false;
+    bool show_stats = false;
+    bool do_tuning = false;
+    int multi_pv = 1;
 
     int LMR_REDUCTIONS_QUIET[MAX_AB_DEPTH][64]{};
 
@@ -174,13 +180,10 @@ public:
     // TT_Entry transposition_table[MAX_TT_SIZE]{};
     std::vector<TT_Entry> transposition_table;
 
-    bool show_stats = false;
     Search_Results search_results{};
 
-    bool do_tuning = false;
     Tuning_Parameters tuning_parameters{};
 
-    int multi_pv = 1;
     std::unordered_set<uint16_t> root_moves{};
 
     void clear_tt();

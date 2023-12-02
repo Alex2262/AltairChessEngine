@@ -14,6 +14,7 @@
 #include "useful.h"
 #include "see.h"
 #include "move_ordering.h"
+#include "wdl.h"
 
 
 // Initialize a table for Late Move Reductions, and the base reductions to be applied
@@ -982,19 +983,23 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int pv
                                      (static_cast<double>(elapsed_time) / 1000.0));
 
     // Format the scores for printing to UCI
+    best_score = normalize_score(best_score, thread_state.get_full_game_ply());
+
     SCORE_TYPE format_score = best_score;
-    std::string result_type = "cp ";
+    std::string string_score = "cp ";
+
     if (abs(best_score) >= MATE_BOUND) {
-        result_type = "mate ";
+        string_score = "mate ";
         format_score = best_score >= MATE_BOUND ?
-                       (MATE_SCORE - best_score) / 2 + 1: (-MATE_SCORE - best_score) / 2;
+                       (MATE_SCORE - best_score) / 2 + 1 :
+                       (-MATE_SCORE - best_score) / 2;
     }
 
-    result_type += std::to_string(format_score);
+    string_score += std::to_string(format_score);
 
     // Identify the type of node / bound if necessary
-    if (node == Lower_Node) result_type += " lowerbound";
-    else if (node == Upper_Node) result_type += " upperbound";
+    if (node == Lower_Node) string_score += " lowerbound";
+    else if (node == Upper_Node) string_score += " upperbound";
 
     // PV information
     std::string pv_line;
@@ -1017,7 +1022,18 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int pv
     // Print the UCI search information
     std::cout << "info multipv " << pv_number + 1
               << " depth " << depth << " seldepth " << thread_state.selective_depth
-              << " score " << result_type << " time " << elapsed_time
+              << " score " << string_score;
+
+    if (engine.show_wdl) {
+        if (best_score >= MATE_BOUND) std::cout << " wdl 1000 0 0";
+        else if (best_score <= -MATE_BOUND) std::cout << " wdl 0 0 1000";
+        else {
+            auto [win, draw, loss] = get_wdl(best_score, thread_state.get_full_game_ply());
+            std::cout << " wdl " << win << " " << draw << " " << loss;
+        }
+    }
+
+    std::cout << " time " << elapsed_time
               << " nodes " << total_nodes << " nps " << nps
               << " pv " << pv_line << std::endl;
 

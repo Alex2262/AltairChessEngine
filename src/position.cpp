@@ -108,7 +108,7 @@ void Position::compute_hash_key() {
     if (side) hash_key ^= ZobristHashKeys.side_hash_key;
 }
 
-PLY_TYPE Position::set_fen(const std::string& fen_string) {
+FenInfo Position::set_fen(const std::string& fen_string) {
 
     std::string reduced_fen_string = std::regex_replace(fen_string, std::regex("^ +| +$|( ) +"), "$1");
     std::vector<std::string> fen_tokens = split(reduced_fen_string, ' ');
@@ -221,7 +221,10 @@ PLY_TYPE Position::set_fen(const std::string& fen_string) {
 
     nnue_state.reset_nnue(*this);
 
-    return static_cast<PLY_TYPE>(std::stoi(half_move_clock));
+    FenInfo fen_info = FenInfo{static_cast<PLY_TYPE>(std::stoi(half_move_clock)),
+                               static_cast<PLY_TYPE>(std::stoi(full_move_counter))};
+
+    return fen_info;
 }
 
 std::string Position::get_fen(PLY_TYPE fifty_move) {
