@@ -278,7 +278,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
         position.set_fen(START_FEN);
 
         // DFRC
-        if (datagen_thread.prng.rand64() % 100 <= dfrc_chance) {
+        if (static_cast<int>(datagen_thread.prng.rand64() % 100) <= dfrc_chance) {
             position.fischer_random_chess = true;
             position.set_dfrc(datagen_thread.prng.rand64() % (960 * 960));
         } else {

@@ -7,6 +7,8 @@
  * making use from them externally in other translation units.
  */
 
+#define INCBIN_SILENCE_BITCODE_WARNING
+
 #ifndef INCBIN_HDR
 #define INCBIN_HDR
 #include <limits.h>
