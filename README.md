@@ -1,6 +1,10 @@
 
 <div align="center">
-  
+
+# 
+
+<img src="AltairLogo.png" alt="Berserk" width="256" />
+
 # Altair
   
   [![License][license-badge]][license-link]
