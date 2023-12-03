@@ -151,7 +151,7 @@ public:
     std::vector<Thread_State> thread_states;
 
     bool stopped = true;
-    bool use_nnue = true;
+    bool use_nnue = false;
     bool print_thinking = true;
     bool datagen = false;
     bool show_wdl = false;
