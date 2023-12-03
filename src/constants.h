@@ -60,4 +60,10 @@ const std::string YELLOW = "\033[33m";
 const std::string GREEN  = "\033[32m";
 const std::string CYAN   = "\033[36m";
 
+constexpr bool ACTIVATE   = true;
+constexpr bool DEACTIVATE = false;
+
+constexpr bool USE_NNUE = true;
+constexpr bool NO_NNUE  = false;
+
 #endif //ALTAIR_CONSTANTS_H

@@ -159,11 +159,13 @@ public:
 
     void get_pseudo_legal_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
 
-    bool make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_move);
-    void undo_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_move);
-
     void make_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move);
     void undo_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move);
+
+    template<bool NNUE>
+    bool make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_move);
+    template<bool NNUE>
+    void undo_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_move);
 
 };
 

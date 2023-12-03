@@ -274,6 +274,17 @@ bool Engine::check_nodes() {
 }
 
 
+template<bool NNUE>
+SCORE_TYPE Engine::evaluate(int thread_id) {
+    Position& position = thread_states[thread_id].position;
+
+    if constexpr (NNUE) return position.nnue_state.evaluate(position.side);
+    return evaluate_classic(position);
+}
+template SCORE_TYPE Engine::evaluate<USE_NNUE>(int thread_id);
+template SCORE_TYPE Engine::evaluate<NO_NNUE >(int thread_id);
+
+
 // History entry updates with scaling
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
     score -= (score * abs(bonus)) / 324;
@@ -338,6 +349,7 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
 // This is used to counter the horizon effect in which negamax is unable to resolve
 // noisy moves after a certain depth has been reached. The qsearch function will look at remaining captures
 // until it reaches a quiet position.
+template<bool NNUE>
 SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id) {
 
     // Initialize Variables
@@ -362,7 +374,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Get the static evaluation of the position
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = position.nnue_state.evaluate(position.side);
+    if (static_eval == NO_EVALUATION) static_eval = engine.evaluate<NNUE>(thread_id);
 
     // Return the evaluation if we have reached a stand-pat, or we have reached the maximum depth
     if (depth == 0 || static_eval >= beta) return static_eval;
@@ -403,11 +415,11 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         }
 
         // Attempt the current pseudo-legal move
-        bool attempt = position.make_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+        bool attempt = position.make_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
         engine.tt_prefetch_read(position.hash_key);  // Prefetch the TT for cache
 
         if (!attempt) {
-            position.undo_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+            position.undo_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
             continue;
         }
 
@@ -416,12 +428,12 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Recursively search
         thread_state.search_ply++;
 
-        SCORE_TYPE return_eval = -qsearch(engine, -beta, -alpha, depth - 1, thread_id);
+        SCORE_TYPE return_eval = -qsearch<NNUE>(engine, -beta, -alpha, depth - 1, thread_id);
 
         thread_state.search_ply--;
 
         // Undo the move
-        position.undo_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+        position.undo_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
         if (engine.stopped) return 0;
 
@@ -464,10 +476,14 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     return best_score;
 }
 
+template SCORE_TYPE qsearch<USE_NNUE>(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id);
+template SCORE_TYPE qsearch<NO_NNUE >(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id);
+
 
 // The core of the engine, negamax.
 // This is a recursive search function based on the minimax algorithm that uses alpha-beta pruning
 // among other heuristics.
+template<bool NNUE>
 SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, int thread_id) {
 
     // Initialize Variables
@@ -500,7 +516,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     if (!root) {
 
         // Depth guard
-        if (thread_state.search_ply >= MAX_AB_DEPTH - 2 || depth >= MAX_AB_DEPTH) return position.nnue_state.evaluate(position.side);
+        if (thread_state.search_ply >= MAX_AB_DEPTH - 2 || depth >= MAX_AB_DEPTH) return engine.evaluate<NNUE>(thread_id);
 
         // Detect repetitions and fifty move rule
         if (thread_state.fifty_move >= 100 || thread_state.detect_repetition()) return 3 - static_cast<int>(thread_state.node_count & 8);
@@ -514,7 +530,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Start quiescence search at the start of regular negamax search to counter the horizon effect.
     if (depth <= 0) {
-        return qsearch(engine, alpha, beta, engine.max_q_depth, thread_id);
+        return qsearch<NNUE>(engine, alpha, beta, engine.max_q_depth, thread_id);
     }
 
     // Set values for State
@@ -549,7 +565,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Save the current evaluation
     if (!in_check) {
         static_eval = engine.probe_tt_evaluation(position.hash_key);
-        if (static_eval == NO_EVALUATION) static_eval = position.nnue_state.evaluate(position.side);
+        if (static_eval == NO_EVALUATION) static_eval = engine.evaluate<NNUE>(thread_id);
         position.state_stack[thread_state.search_ply].evaluation = static_eval;
 
         // Calculate if we are "improving", or "failing"
@@ -597,7 +613,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             thread_state.game_ply++;
 
             // zero window search with reduced depth
-            SCORE_TYPE return_eval = -negamax(engine, -beta, -beta + 1, depth - reduction, false, thread_id);
+            SCORE_TYPE return_eval = -negamax<NNUE>(engine, -beta, -beta + 1, depth - reduction, false, thread_id);
 
             thread_state.game_ply--;
             thread_state.search_ply--;
@@ -606,7 +622,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             if (return_eval >= beta) {
                 if (return_eval >= MATE_BOUND) return beta;
                 if (depth <= 15) return return_eval;
-                SCORE_TYPE verification_eval = negamax(engine, beta - 1, beta, depth - reduction, false, thread_id);
+                SCORE_TYPE verification_eval = negamax<NNUE>(engine, beta - 1, beta, depth - reduction, false, thread_id);
                 if (verification_eval > beta) return return_eval;
             }
         }
@@ -614,7 +630,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Internal Iterative Deepening
     if (pv_node && depth >= 4 && tt_move == NO_MOVE && !singular_search) {
-        negamax(engine, alpha, beta, static_cast<PLY_TYPE>(depth - 3), true, thread_id);
+        negamax<NNUE>(engine, alpha, beta, static_cast<PLY_TYPE>(depth - 3), true, thread_id);
         tt_move = engine.transposition_table[position.hash_key % engine.transposition_table.size()].move;
     }
 
@@ -707,12 +723,12 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         }
 
         // Make the move
-        bool attempt = position.make_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+        bool attempt = position.make_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
         engine.tt_prefetch_read(position.hash_key);  // Prefetch the TT for cache
 
         // The move put us in check, therefore it was not legal, and we must disregard it
         if (!attempt) {
-            position.undo_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+            position.undo_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
             continue;
         }
 
@@ -739,13 +755,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             position.state_stack[thread_state.search_ply].excluded_move == NO_MOVE &&
             abs(tt_entry.score) < MATE_BOUND) {
 
-            position.undo_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+            position.undo_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
             int singular_beta = tt_entry.score - depth * 2;
 
             position.state_stack[thread_state.search_ply].excluded_move = move;
-            SCORE_TYPE return_eval = negamax(engine, singular_beta - 1, singular_beta, (depth - 1) / 2,
-                                             false, thread_id);
+            SCORE_TYPE return_eval = negamax<NNUE>(engine, singular_beta - 1, singular_beta, (depth - 1) / 2,
+                                                   false, thread_id);
             position.state_stack[thread_state.search_ply].excluded_move = NO_MOVE;
 
             // Singular Extensions
@@ -763,7 +779,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 extension--;
             }
 
-            position.make_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+            position.make_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
         }
 
         extension = std::min<PLY_TYPE>(extension, std::min<PLY_TYPE>(2, MAX_AB_DEPTH - 1 - depth));
@@ -840,7 +856,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             auto lmr_depth = new_depth - reduction;
 
             // Recursively search
-            return_eval = -negamax(engine, -alpha - 1, -alpha, lmr_depth, true, thread_id);
+            return_eval = -negamax<NNUE>(engine, -alpha - 1, -alpha, lmr_depth, true, thread_id);
 
             // Check if we need to search at full depth with a zero window
             full_depth_zero_window = return_eval > alpha && lmr_depth != new_depth;
@@ -855,18 +871,18 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // The zero window is a type of assumption that the current move being searched will not raise alpha,
         // which is why the bounds are [-alpha - 1, -alpha] instead of [-beta, -alpha]
         if (full_depth_zero_window)
-            return_eval = -negamax(engine, -alpha - 1, -alpha, new_depth, true, thread_id);
+            return_eval = -negamax<NNUE>(engine, -alpha - 1, -alpha, new_depth, true, thread_id);
 
         // Search to a full depth at normal bounds if necessary
         if (return_eval == -SCORE_INF || (pv_node && ((return_eval > alpha && return_eval < beta) || legal_moves == 0)))
-            return_eval = -negamax(engine, -beta, -alpha, new_depth, true, thread_id);
+            return_eval = -negamax<NNUE>(engine, -beta, -alpha, new_depth, true, thread_id);
 
         // Undo the move and other changes
         thread_state.game_ply--;
         position.state_stack[thread_state.search_ply].in_check = -1;
         thread_state.search_ply--;
 
-        position.undo_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+        position.undo_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
         // Return early if the engine is stopped in order to prevent changes
         if (engine.stopped) return 0;
@@ -956,6 +972,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     return best_score;
 }
 
+template SCORE_TYPE negamax<USE_NNUE>(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, int thread_id);
+template SCORE_TYPE negamax<NO_NNUE >(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, int thread_id);
+
 
 void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int pv_number, int thread_id) {
 
@@ -1040,6 +1059,7 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int pv
 }
 
 
+template<bool NNUE>
 SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id) {
 
     Thread_State& thread_state = engine.thread_states[thread_id];
@@ -1062,7 +1082,7 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
         if (alpha <= -1000) alpha = -SCORE_INF;
         if (beta  >=  1000) beta  =  SCORE_INF;
 
-        return_eval = negamax(engine, alpha, beta, depth, false, thread_id);
+        return_eval = negamax<NNUE>(engine, alpha, beta, depth, false, thread_id);
 
         if (engine.stopped) break;
 
@@ -1113,7 +1133,11 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
     return return_eval;
 }
 
+template SCORE_TYPE aspiration_window<USE_NNUE>(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id);
+template SCORE_TYPE aspiration_window<NO_NNUE >(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id);
 
+
+template <bool NNUE>
 SCORE_TYPE multi_pv_search(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id) {
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
@@ -1121,7 +1145,7 @@ SCORE_TYPE multi_pv_search(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& 
     thread_state.excluded_root_moves.clear();
 
     position.clear_state_stack();
-    int main_score = aspiration_window(engine, previous_score, asp_depth, best_move, thread_id);
+    int main_score = aspiration_window<NNUE>(engine, previous_score, asp_depth, best_move, thread_id);
 
     thread_state.excluded_root_moves.insert(best_move.internal_move());
 
@@ -1129,7 +1153,7 @@ SCORE_TYPE multi_pv_search(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& 
 
     int alternate_pvs = std::min(engine.multi_pv, static_cast<int>(engine.root_moves.size()));
     for (int i = 1; i < alternate_pvs; i++) {
-        int pv_score = negamax(engine, -SCORE_INF, SCORE_INF, depth, false, thread_id);
+        int pv_score = negamax<NNUE>(engine, -SCORE_INF, SCORE_INF, depth, false, thread_id);
         if (engine.stopped) break;
 
         print_thinking(engine, Exact_Node, pv_score, i, thread_id);
@@ -1141,7 +1165,11 @@ SCORE_TYPE multi_pv_search(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& 
     return main_score;
 }
 
+template SCORE_TYPE multi_pv_search<USE_NNUE>(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id);
+template SCORE_TYPE multi_pv_search<NO_NNUE >(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id);
 
+
+template<bool NNUE>
 void iterative_search(Engine& engine, int thread_id) {
 
     Thread_State& thread_state = engine.thread_states[thread_id];
@@ -1163,7 +1191,7 @@ void iterative_search(Engine& engine, int thread_id) {
         thread_state.current_search_depth = running_depth;
 
         // Run a search with aspiration window bounds
-        previous_score = multi_pv_search(engine, previous_score, asp_depth, best_move, thread_id);
+        previous_score = multi_pv_search<NNUE>(engine, previous_score, asp_depth, best_move, thread_id);
 
         // Update information when engine has finished a search (it hasn't stopped in the middle of a search)
         if (thread_id == 0 && !engine.stopped) engine.search_results.score = previous_score;
@@ -1243,7 +1271,11 @@ void iterative_search(Engine& engine, int thread_id) {
     thread_state.terminated = true;
 }
 
+template void iterative_search<USE_NNUE>(Engine& engine, int thread_id);
+template void iterative_search<NO_NNUE >(Engine& engine, int thread_id);
 
+
+template<bool NNUE>
 void lazy_smp_search(Engine& engine) {
 
     std::vector<std::thread> search_threads;
@@ -1252,11 +1284,11 @@ void lazy_smp_search(Engine& engine) {
     for (int thread_id = 1; thread_id < engine.num_threads; thread_id++) {
         // std::cout << "Creating Helper Thread #" << thread_id << std::endl;
         engine.thread_states[thread_id] = engine.thread_states[0];
-        search_threads.emplace_back(iterative_search, std::ref(engine), thread_id);
+        search_threads.emplace_back(iterative_search<NNUE>, std::ref(engine), thread_id);
     }
 
     //engine.thread_states[0].position.print_board();
-    iterative_search(engine, 0);
+    iterative_search<NNUE>(engine, 0);
     // std::cout << "Search ended" << std::endl;
 
     for (int thread_id = engine.num_threads - 1; thread_id >= 1; thread_id--) {
@@ -1265,8 +1297,10 @@ void lazy_smp_search(Engine& engine) {
     }
 
     if (engine.show_stats) print_statistics(engine.search_results);
-
 }
+
+template void lazy_smp_search<USE_NNUE>(Engine& engine);
+template void lazy_smp_search<NO_NNUE >(Engine& engine);
 
 
 void search(Engine& engine) {
@@ -1285,13 +1319,14 @@ void search(Engine& engine) {
     position.set_state(position.state_stack[0], thread_state.fifty_move);
 
     for (ScoredMove scored_move : position.scored_moves[0]) {
-        bool attempt = position.make_move(scored_move.move, position.state_stack[0], thread_state.fifty_move);
-        position.undo_move(scored_move.move, position.state_stack[0], thread_state.fifty_move);
+        bool attempt = position.make_move<NO_NNUE>(scored_move.move, position.state_stack[0], thread_state.fifty_move);
+        position.undo_move<NO_NNUE>(scored_move.move, position.state_stack[0], thread_state.fifty_move);
 
         if (attempt) engine.root_moves.insert(scored_move.move.internal_move());
     }
 
-    lazy_smp_search(engine);
+    if (engine.use_nnue) lazy_smp_search<USE_NNUE>(engine);
+    else lazy_smp_search<NO_NNUE>(engine);
 }
 
 
