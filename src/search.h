@@ -151,11 +151,13 @@ public:
     std::vector<Thread_State> thread_states;
 
     bool stopped = true;
+    bool use_nnue = true;
     bool print_thinking = true;
     bool datagen = false;
     bool show_wdl = false;
     bool show_stats = false;
     bool do_tuning = false;
+
     int multi_pv = 1;
 
     int LMR_REDUCTIONS_QUIET[MAX_AB_DEPTH][64]{};
@@ -207,6 +209,9 @@ public:
 
     bool check_time();
     bool check_nodes();
+
+    template<bool NNUE>
+    SCORE_TYPE evaluate(int thread_id);
 };
 
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus);
@@ -214,13 +219,20 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
                       InformativeMove last_moves[], bool quiet, bool winning_capture,
                       int move_index, int bonus);
 
+template<bool NNUE>
 SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id);
+template<bool NNUE>
 SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,  bool do_null, int thread_id);
 
 void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int pv_number, int thread_id);
+
+template<bool NNUE>
 SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id);
+template<bool NNUE>
 SCORE_TYPE multi_pv_search(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id);
+template<bool NNUE>
 void iterative_search(Engine& engine, int thread_id);
+template<bool NNUE>
 void lazy_smp_search(Engine& engine);
 void search(Engine& engine);
 

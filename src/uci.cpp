@@ -127,7 +127,7 @@ void UCI::parse_position() {
         Move move = Move(position, tokens[i]);
         last_move = move;
 
-        position.make_move(move, position.state_stack[0], engine->thread_states[0].fifty_move);
+        position.make_move<USE_NNUE>(move, position.state_stack[0], engine->thread_states[0].fifty_move);
 
         engine->thread_states[0].game_ply++;
         engine->thread_states[0].repetition_table[engine->thread_states[0].game_ply] = position.hash_key;
@@ -245,6 +245,9 @@ void UCI::uci_loop() {
             std::cout << "option name UCI_ShowWDL type check default false"
                       << std::endl;
 
+            std::cout << "option name UseNNUE type check default true"
+                      << std::endl;
+
             std::cout << "option name Statistics type check default false"
                       << std::endl;
 
@@ -307,6 +310,10 @@ void UCI::uci_loop() {
 
             else if (tokens[2] == "UCI_ShowWDL") {
                 engine->show_wdl = tokens[4] == "true";
+            }
+
+            else if (tokens[2] == "UseNNUE") {
+                engine->use_nnue = tokens[4] == "true";
             }
 
             else if (tokens[2] == "Statistics") {
@@ -380,8 +387,9 @@ void UCI::uci_loop() {
         }
 
         else if (tokens[0] == "evaluate") {
-            Position& position = engine->thread_states[0].position;
-            std::cout << position.nnue_state.evaluate(position.side) << std::endl;
+            SCORE_TYPE evaluation = engine->use_nnue ? engine->evaluate<USE_NNUE>(0) :
+                                                       engine->evaluate<NO_NNUE >(0);
+            std::cout << evaluation << std::endl;
         }
 
         else if (tokens[0] == "see") {

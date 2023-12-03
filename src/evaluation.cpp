@@ -531,7 +531,7 @@ double evaluate_opposite_colored_bishop_endgames(Position& position, EvaluationI
 }
 
 
-SCORE_TYPE evaluate(Position& position) {
+SCORE_TYPE evaluate_classic(Position& position) {
 
     EvaluationInformation evaluation_information{};
     initialize_evaluation_information(position, evaluation_information);

@@ -39,7 +39,7 @@ SCORE_TYPE evaluate_pieces(Position& position, int& game_phase);
 double evaluate_drawishness(Position& position, EvaluationInformation& evaluation_information);
 double evaluate_opposite_colored_bishop_endgames(Position& position, EvaluationInformation& evaluation_information);
 
-SCORE_TYPE evaluate(Position& position);
+SCORE_TYPE evaluate_classic(Position& position);
 
 
 constexpr SCORE_TYPE S(int mg, int eg) {

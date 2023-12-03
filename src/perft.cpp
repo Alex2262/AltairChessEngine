@@ -24,10 +24,10 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
         Move move = scored_move.move;
         // std::cout << "move: " << get_uci_from_move(position, move) << std::endl;
 
-        bool attempt = position.make_move(move, position.state_stack[ply], fifty);
+        bool attempt = position.make_move<NO_NNUE>(move, position.state_stack[ply], fifty);
 
         if (!attempt) {
-            position.undo_move(move, position.state_stack[ply], fifty);
+            position.undo_move<NO_NNUE>(move, position.state_stack[ply], fifty);
             continue;
         }
 
@@ -49,7 +49,7 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
 
         debug_perft(position, res, depth - 1, ply + 1);
 
-        position.undo_move(move, position.state_stack[ply], fifty);
+        position.undo_move<NO_NNUE>(move, position.state_stack[ply], fifty);
     }
 
 }
@@ -78,17 +78,17 @@ long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 
         Move move = scored_move.move;
 
-        bool attempt = position.make_move(move, position.state_stack[ply], fifty);
+        bool attempt = position.make_move<NO_NNUE>(move, position.state_stack[ply], fifty);
 
         if (!attempt) {
-            position.undo_move(move, position.state_stack[ply], fifty);
+            position.undo_move<NO_NNUE>(move, position.state_stack[ply], fifty);
             continue;
         }
 
         amt += depth == 1 ? 1 : fast_perft(position, depth - 1, ply + 1);
         // amt += fast_perft(position, depth - 1, ply + 1);
 
-        position.undo_move(move, position.state_stack[ply], fifty);
+        position.undo_move<NO_NNUE>(move, position.state_stack[ply], fifty);
     }
 
     return amt;
@@ -115,17 +115,17 @@ long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 
         Move move = scored_move.move;
 
-        bool attempt = position.make_move(move, position.state_stack[ply], fifty);
+        bool attempt = position.make_move<NO_NNUE>(move, position.state_stack[ply], fifty);
 
         if (!attempt) {
-            position.undo_move(move, position.state_stack[ply], fifty);
+            position.undo_move<NO_NNUE>(move, position.state_stack[ply], fifty);
             continue;
         }
 
         long long amt = depth == 1 ? 1 : fast_perft(position, depth - 1, ply + 1);
         total_amt += amt;
 
-        position.undo_move(move, position.state_stack[ply], fifty);
+        position.undo_move<NO_NNUE>(move, position.state_stack[ply], fifty);
 
         std::cout << move.get_uci(position) << ": " << amt << std::endl;
     }
