@@ -322,7 +322,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
             }
 
             // Search
-            lazy_smp_search(*datagen_thread.engine);
+            search(*datagen_thread.engine);
 
             // Get Search info
             Move best_move = datagen_thread.engine->search_results.best_move;
