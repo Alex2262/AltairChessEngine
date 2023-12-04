@@ -40,7 +40,8 @@ The release page provides different binaries. \
 Altair's binaries in its newer releases follow the [x86-64 Micro-architecture Level](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) scheme. \
 Most modern computers will support x86-64-v3.
 
-Altair can also be built from the source code with cmake or make.
+Altair can also be built from the source code with its makefile; however, it's mainly intended for testing purposes on frameworks.
+Building requires make and a C++20 compiler (Clang is suggested)
 
 Example:
 ```
@@ -170,7 +171,7 @@ Altair was created with the help of many people and usage of many resources, and
 
 #### External Programs / Files:
 Altair uses [@jw1912's](https://github.com/jw1912) [Bullet](https://github.com/jw1912/bullet) for training neural networks as of version 5.0.9 \
-Altair uses Dale Weiler's INCBIN utility for including binary files
+Altair uses Dale Weiler's [incbin utility](https://github.com/graphitemaster/incbin) for including binary files
 
 Versions 1.3.6 to 5.0.8 used [@GediminasMasaitis's](https://github.com/GediminasMasaitis) 
 [Texel Tuner](https://github.com/GediminasMasaitis/texel-tuner/tree/main/src) for tuning Altair's classical evaluation.
@@ -189,6 +190,10 @@ Versions 1.3.6 to 5.0.8 used [@GediminasMasaitis's](https://github.com/Gediminas
 - [The Bitboard Chess Engine in C Playlist](https://www.youtube.com/playlist?list=PLmN0neTso3Jxh8ZIylk74JpwfiWNI76Cs) is a great video series that I initially used to learn aspects of chess programming.
 - [Weiss](https://github.com/TerjeKir/weiss) is another great inspiration and resource.
 - The Engine Programming Discord Server for answering many of my questions.
+
+*All mentions above are in no particular order*
+
+Furthermore, thank you to all contributors and everyone who has helped to test Altair.
 
 Many people have helped me along the development of this chess engine. Without them, Altair would have never reached this stage.
 
