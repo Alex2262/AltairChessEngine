@@ -37,7 +37,17 @@
 
 ## Download
 The release page provides different binaries. \
-Altair can also be built from the source code with cmake, using the CMakeLists.txt, and make, using the makefile.
+Altair's binaries in its newer releases follow the [x86-64 Micro-architecture Level](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) scheme. \
+Most modern computers will support x86-64-v3.
+
+Altair can also be built from the source code with cmake or make.
+
+Example:
+```
+git clone git@github.com:Alex2262/AltairChessEngine.git
+cd AltairChessEngine
+make
+```
 
 ## Play
 Altair can be played by connecting it to GUIs such as Arena, Cutechess, Banksia, and other UCI-protocol supporting 
@@ -45,6 +55,12 @@ chess GUIs.
 
 You can also play against Altair on lichess [here](https://lichess.org/@/Altair_Engine), but it is not always online. 
 Note: Lichess BOT ratings are deflated compared to their actual human relative strengths.
+
+## Analysis
+Altair can be used for analyzing positions with software such as ChessBase and other GUIs. \ 
+It can also be used in lichess using its APIs with the [external-engine](https://github.com/lichess-org/external-engine) repository.
+
+Altair supports a configurable hash size, thread number, and MultiPV for analyzing multiple variations.
 
 ## Board Representation
 Altair currently uses bitboards, binary representations of the chessboard, as the internal board representation as of version 4.0.1 \
@@ -95,12 +111,17 @@ Altair's Move Ordering is structured like so:
 - Castling
 
 ## Evaluation
-From Altair's creation to version 5.0.8, it primarily used a classical evaluation. \
-Currently, from version 5.0.9 and onwards, it primarily uses NNUE (Efficiently Updatable Neural Networks) for its evaluation. \
-The classical evaluation still exists in Altair currently, however it is not advised to use it.
+The evaluation function is a heuristic function used to determine a non-terminal position's value to aid the search.
+Since the engine cannot possibly calculate all lines to a terminal state, it must estimate the evaluation of a position it reaches.
+
+Altair used a classical evaluation from its creation to version 5.0.8, 
+and currently uses NNUE (Efficiently Updatable Neural Networks) from version 5.0.9 and onwards.
 
 ### Neural Network Evaluation
-Altair's nets are trained on completely original data. \
+Implemented as [NNUE](https://en.wikipedia.org/wiki/Efficiently_updatable_neural_network)
+
+#### Data:
+Altair's neural networks are trained on completely original data. \
 The data was originally trained from Altair's classical evaluation, which was specifically tuned from zero values from 5.0.0 and onwards. \
 The current data has been repeatedly trained on previous data in a cycle of reinforcement learning of sorts.
 
@@ -119,10 +140,18 @@ Architecture:
 
 ### Classical Evaluation
 
-Altair's classical evaluation from versions 1.3.6 to 5.0.0 was tuned on public Zurichess data, Lichess data, and Ethereal data. \
-From version 5.0.1 and onwards, Altair's classical evaluation was reset to zero values and re-tuned on self generated data.
+This is the legacy evaluation with specifically defined terms, features, and values. 
+It is not used anymore due to strength reasons; however, it can still be used by setting UseNNUE to false.
 
-These are some evaluation features present in Altair's classical evaluation (a more detailed list can be found in evaluation_constants.h):
+*Note: Altair 5.0.0, the last release using a classical evaluation, 
+is stronger than any other version of Altair using a classical evaluation—including current releases with UseNNUE turned off.*
+
+#### Data:
+Altair's classical evaluation from versions 1.3.6 to 5.0.0 was tuned on public Zurichess data, Lichess data, and Ethereal data. \
+From version 5.0.1 and onwards, Altair's classical evaluation was completely reset to zero values and re-tuned on self generated data.
+
+#### Features:
+These are some evaluation features present in Altair's classical evaluation (a more detailed list can be found in src/evaluation_constants.h):
 
 - Tapered evaluation between the middle-game and end-game
 - Material
@@ -133,30 +162,33 @@ These are some evaluation features present in Altair's classical evaluation (a m
 - Piece Threats
 - Bishop Pair
 - Tempo
-- Endgame draw likelihood scaling
+- Specialized endgame scaling
+- Specialized Opposite Colored Bishop endgame scaling
 
 ## Credit and Thanks
-Altair was created with the help of many people and usage of many resources. 
-Altair is also inspired from other strong and notable engines.
+Altair was created with the help of many people and usage of many resources, and has taken inspiration from other strong and notable engines.
 
-Altair uses [@jw1912's](https://github.com/jw1912) [Bullet](https://github.com/jw1912/bullet) for training neural networks as of version 5.0.9\
-Altair's NNUE inference code is influenced by [@Ciekce's](https://github.com/Ciekce) [Polaris](https://github.com/Ciekce/Polaris/tree/viri_nnue) \
+#### External Programs / Files:
+Altair uses [@jw1912's](https://github.com/jw1912) [Bullet](https://github.com/jw1912/bullet) for training neural networks as of version 5.0.9 \
 Altair uses Dale Weiler's INCBIN utility for including binary files
 
-Since version 1.3.6 and beyond, Altair's classical evaluation has been tuned with [@GediminasMasaitis's](https://github.com/GediminasMasaitis) 
-[Texel Tuner](https://github.com/GediminasMasaitis/texel-tuner/tree/main/src) for tuning HCE parameters.
+Versions 1.3.6 to 5.0.8 used [@GediminasMasaitis's](https://github.com/GediminasMasaitis) 
+[Texel Tuner](https://github.com/GediminasMasaitis/texel-tuner/tree/main/src) for tuning Altair's classical evaluation.
 
-Other Mentions:
+#### People:
+- [@archishou](https://github.com/archishou) has supported me a lot in the development of my engine with many ideas and invaluable help in implementing bitboards.
+- [@Ciekce](https://github.com/Ciekce) has helped me fix many issues in my engine and improved my understanding of programming greatly.
+  His engines [Polaris](https://github.com/Ciekce/Polaris) and [Stormphrax](https://github.com/Ciekce/Stormphrax) have also served as great resources.
+  On top of this, he has also helped train Altair's latest neural network with his hardware.
+- [@GediminasMasaitis](https://github.com/GediminasMasaitis) has also helped me a lot in the development of my engine. His engine [Chessdotcpp](https://github.com/GediminasMasaitis/chess-dot-cpp) has inspired me with many ideas.
+- Everyone in this [OpenBench Testing Instance](https://chess.swehosting.se/users/) for their extensive support, gracious contribution of hardware, and help in many other ways.
+
+#### Additional Mentions:
 
 - [The Chess Programming Wiki](https://www.chessprogramming.org/Main_Page) contains many resources that I have used.
 - [The Bitboard Chess Engine in C Playlist](https://www.youtube.com/playlist?list=PLmN0neTso3Jxh8ZIylk74JpwfiWNI76Cs) is a great video series that I initially used to learn aspects of chess programming.
-- [@archishou](https://github.com/archishou) has supported me a lot in the development of my engine with many ideas and help in implementing bitboards.
-- [@Ciekce](https://github.com/Ciekce) has helped me not only fix many issues in my engine, but also improve my understanding of programming in general.
-- [@GediminasMasaitis](https://github.com/GediminasMasaitis) has also helped me a lot in the development of my engine. His engine [Chessdotcpp](https://github.com/GediminasMasaitis/chess-dot-cpp) has inspired me with many ideas.
 - [Weiss](https://github.com/TerjeKir/weiss) is another great inspiration and resource.
 - The Engine Programming Discord Server for answering many of my questions.
-- Everyone in this [OpenBench Testing Instance](https://chess.swehosting.se/users/) for their invaluable support and 
-contributions in testing my engine.
 
 Many people have helped me along the development of this chess engine. Without them, Altair would have never reached this stage.
 
