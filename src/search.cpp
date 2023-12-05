@@ -1156,7 +1156,7 @@ SCORE_TYPE multi_pv_search(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& 
         int pv_score = negamax<NNUE>(engine, -SCORE_INF, SCORE_INF, depth, false, thread_id);
         if (engine.stopped) break;
 
-        print_thinking(engine, Exact_Node, pv_score, i, thread_id);
+        if (thread_id == 0) print_thinking(engine, Exact_Node, pv_score, i, thread_id);
         thread_state.excluded_root_moves.insert(engine.pv_table[0][0].internal_move());
     }
 
