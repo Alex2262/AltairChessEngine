@@ -11,8 +11,8 @@
 
 #include "incbin.h"
 
-INCBIN(nnue, "src/net.bin");
-// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/net.bin");
+INCBIN(nnue, "src/trappist-net.bin");
+// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/trappist-net.bin");
 
 const NNUE_Params &nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 
@@ -34,26 +34,26 @@ SCORE_TYPE NNUE_State::evaluate(Color color) const {
     return (output + nnue_parameters.output_bias) * SCALE / QAB;
 }
 
-std::pair<size_t , size_t> NNUE_State::get_feature_indices(Piece piece, Square sq) {
+std::pair<size_t, size_t> NNUE_State::get_feature_indices(Piece piece, Square sq) {
     constexpr size_t color_offset = 64 * 6;
     constexpr size_t piece_offset = 64;
 
     const Color color = get_color(piece);
     const auto piece_type = get_piece_type(piece, color);
 
-    const auto whiteIdx =  color * color_offset + piece_type * piece_offset + static_cast<size_t>(sq);
-    const auto blackIdx = ~color * color_offset + piece_type * piece_offset + static_cast<size_t>(sq ^ 56);
+    const auto white_idx =  color * color_offset + piece_type * piece_offset + static_cast<size_t>(sq);
+    const auto black_idx = ~color * color_offset + piece_type * piece_offset + static_cast<size_t>(sq ^ 56);
 
-    return {whiteIdx, blackIdx};
+    return {white_idx, black_idx};
 }
 
-int32_t NNUE_State::screlu_flatten(const std::array<int16_t, LAYER1_SIZE> &us,
-                                   const std::array<int16_t, LAYER1_SIZE> &them, const std::array<int16_t, LAYER1_SIZE * 2> &weights) {
+int32_t NNUE_State::screlu_flatten(const std::array<int16_t, LAYER1_SIZE> &our,
+                                   const std::array<int16_t, LAYER1_SIZE> &opp, const std::array<int16_t, LAYER1_SIZE * 2> &weights) {
     int32_t sum = 0;
 
     for (size_t i = 0; i < LAYER1_SIZE; ++i) {
-        sum += screlu(  us[i]) * weights[              i];
-        sum += screlu(them[i]) * weights[LAYER1_SIZE + i];
+        sum += screlu(our[i]) * weights[              i];
+        sum += screlu(opp[i]) * weights[LAYER1_SIZE + i];
     }
 
     return sum / QA;

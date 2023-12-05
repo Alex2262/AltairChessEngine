@@ -36,13 +36,13 @@ struct alignas(64) NNUE_Params {
 
 extern const NNUE_Params &nnue_parameters;
 
-template <size_t HiddenSize>
+template <size_t hidden_size>
 struct alignas(64) Accumulator
 {
-    std::array<int16_t, HiddenSize> white;
-    std::array<int16_t, HiddenSize> black;
+    std::array<int16_t, hidden_size> white;
+    std::array<int16_t, hidden_size> black;
 
-    inline void init(std::span<const int16_t, HiddenSize> bias)
+    inline void init(std::span<const int16_t, hidden_size> bias)
     {
         std::memcpy(white.data(), bias.data(), bias.size_bytes());
         std::memcpy(black.data(), bias.data(), bias.size_bytes());
@@ -73,8 +73,8 @@ public:
 
     static std::pair<size_t, size_t> get_feature_indices(Piece piece, Square sq);
 
-    static int32_t screlu_flatten(const std::array<int16_t, LAYER1_SIZE> &us,
-                                  const std::array<int16_t, LAYER1_SIZE> &them,
+    static int32_t screlu_flatten(const std::array<int16_t, LAYER1_SIZE> &our,
+                                  const std::array<int16_t, LAYER1_SIZE> &opp,
                                   const std::array<int16_t, LAYER1_SIZE * 2> &weights);
 
     void reset_nnue(Position& position);
