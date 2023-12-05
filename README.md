@@ -51,6 +51,8 @@ make
 ```
 
 ## Play
+Altair currently supports standard chess and Fischer Random Chess (AKA Chess960)
+
 Altair can be played by connecting it to GUIs such as Arena, Cutechess, Banksia, and other UCI-protocol supporting 
 chess GUIs.
 
@@ -121,13 +123,14 @@ and currently uses NNUE (Efficiently Updatable Neural Networks) from version 5.0
 ### Neural Network Evaluation
 Implemented as [NNUE](https://en.wikipedia.org/wiki/Efficiently_updatable_neural_network)
 
-#### Data:
+#### Data Originality:
 Altair's neural networks are trained on completely original data. \
 The data was originally trained from Altair's classical evaluation, which was specifically tuned from zero values from 5.0.0 and onwards. \
-The current data has been repeatedly trained on previous data in a cycle of reinforcement learning of sorts.
+The current data has been repeatedly trained on previous data in a cycle of reinforcement learning of sorts from an initial state of zero knowledge.
 
-#### Current Net:
-Trained on over 800M FENs including mostly standard data and minimal DFRC data.
+#### Current Net (Trappist):
+Trappist, named after the Trappist-1 system, is a neural network
+trained on over 700M FENs including a portion of standard data and DFRC (Double Fischer Random Chess) data.
 
 Architecture:
 ```
@@ -147,9 +150,9 @@ It is not used anymore due to strength reasons; however, it can still be used by
 *Note: Altair 5.0.0, the last release using a classical evaluation, 
 is stronger than any other version of Altair using a classical evaluation—including current releases with UseNNUE turned off.*
 
-#### Data:
+#### Data Originality:
 Altair's classical evaluation from versions 1.3.6 to 5.0.0 was tuned on public Zurichess data, Lichess data, and Ethereal data. \
-From version 5.0.1 and onwards, Altair's classical evaluation was completely reset to zero values and re-tuned on self generated data.
+From version 5.0.1 and onwards, Altair's classical evaluation was completely reset to zero values and re-tuned on self generated data from an initial state of zero knowledge.
 
 #### Features:
 These are some evaluation features present in Altair's classical evaluation (a more detailed list can be found in src/evaluation_constants.h):
