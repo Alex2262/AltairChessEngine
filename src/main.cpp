@@ -1,6 +1,7 @@
 
 
 #include <iostream>
+#include <random>
 #include "position.h"
 #include "perft.h"
 #include "uci.h"
@@ -28,19 +29,21 @@ int main(int argc, char* argv[]) {
     if (datagen_flag) {
         Datagen datagen{};
 
-        if (argc < 4) {
-            std::cout << "Thread number and Seed expected" << std::endl;
+        if (argc < 3) {
+            std::cout << "Thread number expected" << std::endl;
             return 0;
         }
 
         std::string thread_count = argv[2];
-        std::string seed_string  = argv[3];
+        std::random_device random_device;
+        std::mt19937 gen(random_device());
+        std::uniform_int_distribution<> distribution(1, 1048576);
 
         int thread_num = std::stoi(thread_count);
-        uint64_t seed  = std::stoi(seed_string);
 
         datagen.threads = thread_num;
-        datagen.random_seed = seed % 1048576;
+        datagen.random_seed = distribution(gen);
+
         datagen.start_datagen();
 
         return 0;
