@@ -159,6 +159,8 @@ public:
 
     void get_pseudo_legal_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const;
 
+    bool is_pseudo_legal(Move move);
+
     void make_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move);
     void undo_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move);
 

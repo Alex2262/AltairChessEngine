@@ -286,6 +286,11 @@ constexpr BITBOARD get_queen_attacks(Square square, BITBOARD occupancy) {
     return get_bishop_attacks(square, occupancy) | get_rook_attacks(square, occupancy);
 }
 
+constexpr BITBOARD get_pawn_attacks(Square square, Color color) {
+    if (color == WHITE) return WHITE_PAWN_ATTACKS[square];
+    return BLACK_PAWN_ATTACKS[square];
+}
+
 constexpr BITBOARD get_piece_attacks(Piece piece, Square square, BITBOARD occupancy) {
     auto piece_type = static_cast<PieceType>(piece % COLOR_OFFSET);
     if (piece == WHITE_PAWN) return WHITE_PAWN_ATTACKS[square];
@@ -295,6 +300,15 @@ constexpr BITBOARD get_piece_attacks(Piece piece, Square square, BITBOARD occupa
     else if (piece_type == ROOK) return get_rook_attacks(square, occupancy);
     else if (piece_type == QUEEN) return get_queen_attacks(square, occupancy);
     else return KING_ATTACKS[square];
+}
+
+constexpr BITBOARD get_regular_piece_type_attacks_nt(PieceType piece_type, Square square, BITBOARD occupancy) {
+
+    if (piece_type == KNIGHT) return KNIGHT_ATTACKS[square];
+    else if (piece_type == BISHOP) return get_bishop_attacks(square, occupancy);
+    else if (piece_type == ROOK) return get_rook_attacks(square, occupancy);
+    else if (piece_type == QUEEN) return get_queen_attacks(square, occupancy);
+    return KING_ATTACKS[square];
 }
 
 template<PieceType piece_type>

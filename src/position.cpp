@@ -779,6 +779,98 @@ void Position::get_pseudo_legal_moves(FixedVector<ScoredMove, MAX_MOVES>& curren
     get_king_moves(current_scored_moves);
 }
 
+bool Position::is_pseudo_legal(Move move) {
+    Square origin_square = move.origin();
+    Square target_square = move.target();
+    Piece selected = board[origin_square];
+    Piece occupied = board[target_square];
+    MoveType move_type = move.type();
+
+    if (selected == EMPTY || get_color(selected) != side) return false;
+    PieceType selected_type = get_piece_type(selected, side);
+
+    bool capture = false;
+
+    if (occupied != EMPTY) {
+        if (get_color(occupied) == side) {
+            if (!fischer_random_chess || selected_type != KING ||
+                 occupied != get_piece(ROOK, side) || move_type != MOVE_TYPE_CASTLE) return false;
+        } else capture = true;
+    }
+
+    if (move_type == MOVE_TYPE_CASTLE) {
+
+        if (selected_type != KING) return false;
+        if (rank_of(origin_square) != side * RANK_8) return false;
+
+        Square appropriate_target_square_q = static_cast<Square>(c1 ^ (56 * side));
+        Square appropriate_target_square_k = static_cast<Square>(g1 ^ (56 * side));
+
+        if (target_square == appropriate_target_square_q) {
+            if ((side == WHITE && (castle_ability_bits & 2) != 2) ||
+                (side == BLACK && (castle_ability_bits & 8) != 8)) return false;
+
+            if (board[starting_rook_pos[side][1]] != get_piece(ROOK, side)) return false;
+
+            Square rook_target_square = static_cast<Square>(target_square + 1);
+            for (int temp_pos = static_cast<int>(origin_square) - 1; temp_pos > static_cast<int>(rook_target_square); temp_pos--) {
+                if (board[temp_pos] != EMPTY) return false;
+            }
+
+            return true;
+        }
+
+        else if (target_square == appropriate_target_square_k) {
+            if ((side == WHITE && (castle_ability_bits & 1) != 1) ||
+                (side == BLACK && (castle_ability_bits & 4) != 4)) return false;
+
+            if (board[starting_rook_pos[side][2]] != get_piece(ROOK, side)) return false;
+
+            Square rook_target_square = static_cast<Square>(target_square - 1);
+            for (int temp_pos = static_cast<int>(origin_square) + 1; temp_pos < static_cast<int>(rook_target_square); temp_pos++) {
+                if (board[temp_pos] != EMPTY) return false;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    else if (move_type == MOVE_TYPE_EP) {
+        return target_square == ep_square &&
+            (get_pawn_attacks(target_square, ~side) & get_pieces(PAWN, side) & from_square(origin_square));
+    }
+
+    if (selected_type == PAWN) {
+        if ((side == WHITE && target_square <= origin_square) ||
+            (side == BLACK && target_square >= origin_square)) return false;
+
+        if (move_type == MOVE_TYPE_PROMOTION && rank_of(target_square) != ~side * RANK_8) return false;
+
+        if (file_of(target_square) == file_of(origin_square)) {
+            if (capture) return false;
+        } else if (!capture) return false;
+
+        int rank_diff = abs(static_cast<int>(rank_of(target_square)) - static_cast<int>(rank_of(origin_square)));
+        if (rank_diff > 2) return false;
+        else if (rank_diff == 2 &&
+                 ((side == WHITE && rank_of(origin_square) != RANK_2) ||
+                  (side == BLACK && rank_of(origin_square) != RANK_7))) return false;
+
+        if (!(get_pawn_attacks(origin_square, side) & from_square(target_square))) return false;
+    }
+
+    else {
+        if (move_type != MOVE_TYPE_NORMAL) return false;
+
+        BITBOARD attacks = get_regular_piece_type_attacks_nt(selected_type, origin_square, all_pieces);
+        if (!(attacks & from_square(target_square))) return false;
+    }
+
+    return true;
+}
+
 
 void Position::make_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move) {
     side = ~side;

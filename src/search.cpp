@@ -9,11 +9,9 @@
 #include <cassert>
 #include "search.h"
 #include "evaluation.h"
-#include "evaluation_constants.h"
 #include "move.h"
 #include "useful.h"
 #include "see.h"
-#include "move_ordering.h"
 #include "wdl.h"
 
 
@@ -355,6 +353,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Initialize Variables
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
+    Generator& generator = thread_state.generators[thread_state.search_ply];
 
     // Check the remaining time
     if (engine.stopped || (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
@@ -388,10 +387,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Set values for State
     position.set_state(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
     position.state_stack[thread_state.search_ply].evaluation = static_eval;
-
-    // Get the moves and score them
-    position.get_pseudo_legal_captures(position.scored_moves[thread_state.search_ply]);
-    get_capture_scores(thread_state, position.scored_moves[thread_state.search_ply], tt_move);
+    generator.reset_qsearch(tt_move);
 
     // Variables for getting information about the best score / best move
     SCORE_TYPE best_score = static_eval;
@@ -399,14 +395,17 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Search loop
     int legal_moves = 0;
-    for (int move_index = 0; move_index < static_cast<int>(position.scored_moves[thread_state.search_ply].size()); move_index++) {
+    // std::cout << "QSEARCH" << std::endl;
+    for (generator.move_index = 0; generator.stage != Stage::Terminated; generator.increment()) {
+        Move move = generator.next_move<true>();
 
-        // Sort and choose the next move to be searched
-        Move move = sort_next_move(position.scored_moves[thread_state.search_ply], move_index);
-        SCORE_TYPE move_score = position.scored_moves[thread_state.search_ply][move_index].score;
+        // std::cout << move.get_uci(position) << " " << generator.move_index << " " << position.scored_moves[thread_state.search_ply].size() << std::endl;
+        if (move == NO_MOVE) break; // No legal moves
+
+        SCORE_TYPE move_score = position.scored_moves[thread_state.search_ply][generator.move_index].score;
         bool winning_capture = move_score >= 10000;
 
-        position.scored_moves[thread_state.search_ply][move_index].winning_capture = winning_capture;
+        position.scored_moves[thread_state.search_ply][generator.move_index].winning_capture = winning_capture;
 
         // SEE pruning
         if (static_eval + 60 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
@@ -489,6 +488,14 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Initialize Variables
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
+    Generator& generator = thread_state.generators[thread_state.search_ply];
+
+    /*
+    std::cout << "CHILDREN " << thread_state.search_ply << std::endl;
+    if (thread_state.current_search_depth >= 8) {
+        std::cout << position << std::endl;
+    }
+     */
 
     bool root = !thread_state.search_ply;
     bool pv_node = alpha != beta - 1;  // Hack to determine pv_node, a zero window is when alpha == beta - 1
@@ -646,11 +653,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 position.state_stack[thread_state.search_ply - last_move_ply].move : NO_INFORMATIVE_MOVE;
     }
 
-    // Retrieving the pseudo legal moves in the current position as a list of integers
-    // Score the moves
-    position.get_pseudo_legal_moves(position.scored_moves[thread_state.search_ply]);
-    get_move_scores(thread_state, position.scored_moves[thread_state.search_ply],
-                    tt_move, last_moves);
+    generator.reset_negamax(tt_move, last_moves);
 
     // Best score for fail soft, and best move for tt
     SCORE_TYPE best_score = -SCORE_INF;
@@ -660,20 +663,19 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     int alpha_raised_count = 0;
     int legal_moves = 0;
 
+    //std::cout << "NEGA MAXXING " << thread_state.search_ply << std::endl;
     // Iterate through moves and recursively search with Negamax
-    for (int move_index = 0; move_index < static_cast<int>(position.scored_moves[thread_state.search_ply].size()); move_index++) {
+    for (generator.move_index = 0; generator.stage != Stage::Terminated; generator.increment()) {
+        Move move = generator.next_move<false>();
 
-        // Sort the next move. If an early move causes a cutoff then we have saved time
-        // by only sorting one or a few moves rather than the whole list.
-        sort_next_move(position.scored_moves[thread_state.search_ply], move_index);
-        Move move = position.scored_moves[thread_state.search_ply][move_index].move;
+        // std::cout << move.get_uci(position) << " " << generator.move_index << " " << position.scored_moves[thread_state.search_ply].size() << std::endl;
+        if (move == NO_MOVE) break; // No legal moves
+
         InformativeMove informative_move = InformativeMove(move, position.board[move.origin()], position.board[move.target()]);
-        SCORE_TYPE move_score = position.scored_moves[thread_state.search_ply][move_index].score;
+        SCORE_TYPE move_score = position.scored_moves[thread_state.search_ply][generator.move_index].score;
         bool winning_capture = move_score >= 10000;
 
-        position.scored_moves[thread_state.search_ply][move_index].winning_capture = winning_capture;
-
-        // std::cout << engine.root_moves.contains(move.internal_move()) << " " << engine.root_moves.size() << std::endl;
+        position.scored_moves[thread_state.search_ply][generator.move_index].winning_capture = winning_capture;
 
         // Skip excluded moves
         if (root && (thread_state.excluded_root_moves.contains(move.internal_move())
@@ -688,7 +690,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                                         // Capture Histories
                                         thread_state.capture_history
                                         [winning_capture][position.board[move.origin()]][position.board[move.target()]][move.target()];
-
 
         if (quiet) {
             for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
@@ -731,6 +732,13 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             position.undo_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
             continue;
         }
+
+        /*
+        if (thread_state.current_search_depth >= 8) {
+            std::cout << depth << " " << thread_state.search_ply << std::endl;
+            std::cout << position << std::endl;
+        }
+         */
 
         // Increase node count
         thread_state.node_count++;
@@ -923,7 +931,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 // History Heuristic for move ordering
                 SCORE_TYPE bonus = depth * (depth + 1 + null_search + pv_node + improving) - 1;
 
-                update_histories(thread_state, informative_move, last_moves, quiet, winning_capture, move_index, bonus);
+                update_histories(thread_state, informative_move, last_moves, quiet, winning_capture, generator.move_index, bonus);
 
                 if (engine.show_stats) {
                     engine.search_results.alpha_raised_count++;
@@ -961,6 +969,14 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         }
     }
 
+    /*
+    std::cout << "WOAH " << thread_state.search_ply << std::endl;
+
+    if (thread_state.current_search_depth >= 8) {
+        std::cout << position << std::endl;
+    }
+     */
+
     if (legal_moves == 0) {
         if (singular_search) return alpha;
         if (!in_check) return 0;
@@ -968,6 +984,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval, pv_node);
+
+    // std::cout << "WOAH2" << std::endl;
 
     return best_score;
 }
