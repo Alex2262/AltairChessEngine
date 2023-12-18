@@ -11,8 +11,8 @@
 
 #include "incbin.h"
 
-INCBIN(nnue, "src/trappist-net.bin");
-// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/trappist-net.bin");
+// INCBIN(nnue, "src/trappist-net.bin");
+INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/trappist-net.bin");
 
 const NNUE_Params &nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 

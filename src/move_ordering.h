@@ -72,6 +72,8 @@ public:
         Move picked = NO_MOVE;
         FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves = position->scored_moves[search_ply];
 
+        assert(!moves_generated || move_index < current_scored_moves.size());
+
         if (stage == Stage::None) {
 
             if (!moves_generated) {
@@ -85,6 +87,10 @@ public:
                 else {
                     position->get_pseudo_legal_moves(current_scored_moves);
                     get_move_scores(*thread_state, current_scored_moves, tt_move, last_moves);
+
+                    for (ScoredMove scored_move : current_scored_moves) {
+                        std::cout << scored_move.move.get_uci(*position) << std::endl;
+                    }
                 }
             }
 
@@ -92,7 +98,7 @@ public:
                 picked = sort_next_move(current_scored_moves, move_index);
         }
 
-        // std::cout << search_ply << " " << qsearch << " " << picked.get_uci(*position) << " " << move_index << std::endl;
+        std::cout << search_ply << " " << qsearch << " " << picked.get_uci(*position) << " " << move_index << std::endl;
         return picked;
     }
 };
