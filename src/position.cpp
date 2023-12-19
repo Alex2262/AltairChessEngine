@@ -855,15 +855,19 @@ bool Position::is_pseudo_legal(Move move) {
 
         if (file_of(target_square) == file_of(origin_square)) {
             if (capture) return false;
-        } else if (!capture) return false;
+        } else {
+            if (!capture) return false;
+            if (!(get_pawn_attacks(origin_square, side) & from_square(target_square))) return false;
+        }
 
         int rank_diff = abs(static_cast<int>(rank_of(target_square)) - static_cast<int>(rank_of(origin_square)));
         if (rank_diff > 2) return false;
-        else if (rank_diff == 2 &&
-                 ((side == WHITE && rank_of(origin_square) != RANK_2) ||
-                  (side == BLACK && rank_of(origin_square) != RANK_7))) return false;
-
-        if (!(get_pawn_attacks(origin_square, side) & from_square(target_square))) return false;
+        else if (rank_diff == 2) {
+            if (side == WHITE &&
+                (rank_of(origin_square) != RANK_2 || board[origin_square + NORTH] != EMPTY)) return false;
+            if (side == BLACK &&
+                (rank_of(origin_square) != RANK_7 || board[origin_square + SOUTH] != EMPTY)) return false;
+        }
     }
 
     else {

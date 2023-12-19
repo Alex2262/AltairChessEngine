@@ -67,6 +67,7 @@ public:
             stage = Stage::None;
 
             if (tt_move != NO_MOVE && position->is_pseudo_legal(tt_move)) {
+                tt_probe_successful = true;
                 return tt_move;
             }
         }
@@ -100,6 +101,8 @@ public:
                     }
 
                     std::swap(current_scored_moves[0], current_scored_moves[tt_m_index]);
+
+                    assert(move_index > 0);
                 }
             }
 
