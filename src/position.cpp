@@ -813,7 +813,7 @@ bool Position::is_pseudo_legal(Move move) {
             if (board[starting_rook_pos[side][1]] != get_piece(ROOK, side)) return false;
 
             Square rook_target_square = static_cast<Square>(target_square + 1);
-            for (int temp_pos = static_cast<int>(origin_square) - 1; temp_pos > static_cast<int>(rook_target_square); temp_pos--) {
+            for (int temp_pos = static_cast<int>(origin_square) - 1; temp_pos > starting_rook_pos[side][1]; temp_pos--) {
                 if (board[temp_pos] != EMPTY) return false;
             }
 
@@ -821,13 +821,17 @@ bool Position::is_pseudo_legal(Move move) {
         }
 
         else if (target_square == appropriate_target_square_k) {
+            //std::cout << "WOW " << move.get_uci(*this) << std::endl;
             if ((side == WHITE && (castle_ability_bits & 1) != 1) ||
                 (side == BLACK && (castle_ability_bits & 4) != 4)) return false;
 
-            if (board[starting_rook_pos[side][2]] != get_piece(ROOK, side)) return false;
+            if (board[starting_rook_pos[side][0]] != get_piece(ROOK, side)) return false;
 
             Square rook_target_square = static_cast<Square>(target_square - 1);
-            for (int temp_pos = static_cast<int>(origin_square) + 1; temp_pos < static_cast<int>(rook_target_square); temp_pos++) {
+
+            //std::cout << static_cast<int>(origin_square) + 1 << " " << starting_rook_pos[side][0] << std::endl;
+            for (int temp_pos = static_cast<int>(origin_square) + 1; temp_pos < starting_rook_pos[side][0]; temp_pos++) {
+                // std::cout << temp_pos << std::endl;
                 if (board[temp_pos] != EMPTY) return false;
             }
 
@@ -847,6 +851,7 @@ bool Position::is_pseudo_legal(Move move) {
             (side == BLACK && target_square >= origin_square)) return false;
 
         if (move_type == MOVE_TYPE_PROMOTION && rank_of(target_square) != ~side * RANK_8) return false;
+        if (move_type != MOVE_TYPE_PROMOTION && rank_of(target_square) == ~side * RANK_8) return false;
 
         if (file_of(target_square) == file_of(origin_square)) {
             if (capture) return false;

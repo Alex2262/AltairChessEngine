@@ -132,8 +132,9 @@ Generator::Generator(Thread_State& thread_state_passed) {
 
 void Generator::reset_qsearch(Move tt_move_passed) {
     moves_generated = false;
+    tt_probe_successful = false;
 
-    stage = Stage::None;
+    stage = Stage::TT_probe;
     tt_move = tt_move_passed;
     search_ply = thread_state->search_ply;
 
@@ -142,8 +143,9 @@ void Generator::reset_qsearch(Move tt_move_passed) {
 
 void Generator::reset_negamax(Move tt_move_passed, InformativeMove last_moves_passed[]) {
     moves_generated = false;
+    tt_probe_successful = false;
 
-    stage = Stage::None;
+    stage = Stage::TT_probe;
     tt_move = tt_move_passed;
     search_ply = thread_state->search_ply;
 

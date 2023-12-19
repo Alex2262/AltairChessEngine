@@ -5,6 +5,7 @@
 
 #include "types.h"
 #include "fixed_vector.h"
+#include "position.h"
 
 class Thread_State;
 
@@ -43,8 +44,9 @@ public:
     InformativeMove last_moves[LAST_MOVE_COUNTS]{};
 
     bool moves_generated = false;
-    int move_index = 0;
+    bool tt_probe_successful = false;
     int stage = Stage::TT_probe;
+    int move_index = 0;
 
     PLY_TYPE search_ply = 0;
 
@@ -87,18 +89,26 @@ public:
                 else {
                     position->get_pseudo_legal_moves(current_scored_moves);
                     get_move_scores(*thread_state, current_scored_moves, tt_move, last_moves);
+                }
 
-                    for (ScoredMove scored_move : current_scored_moves) {
-                        std::cout << scored_move.move.get_uci(*position) << std::endl;
+                // Move the tt move (which we already probed earlier) to the front,
+                // to prevent it from being chosen again
+                if (tt_probe_successful) {
+                    int tt_m_index = 0;
+                    for (; tt_m_index < current_scored_moves.size(); tt_m_index++) {
+                        if (current_scored_moves[tt_m_index].move == tt_move) break;
                     }
+
+                    std::swap(current_scored_moves[0], current_scored_moves[tt_m_index]);
                 }
             }
 
             if (!current_scored_moves.empty() && move_index < current_scored_moves.size())
                 picked = sort_next_move(current_scored_moves, move_index);
+            else stage = Stage::Terminated;
         }
 
-        std::cout << search_ply << " " << qsearch << " " << picked.get_uci(*position) << " " << move_index << std::endl;
+        // assert(current_scored_moves.empty() || picked != NO_MOVE);
         return picked;
     }
 };
