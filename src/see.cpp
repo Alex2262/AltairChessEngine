@@ -36,6 +36,8 @@ BITBOARD get_all_attackers(Position& position, Square square) {
 
 
 SCORE_TYPE get_static_exchange_evaluation(Position& position, Move move, SCORE_TYPE threshold) {
+    assert(move != NO_MOVE);
+
     MoveType move_type = move.type();
     if (move_type == MOVE_TYPE_CASTLE) return true;
     if (move_type == MOVE_TYPE_PROMOTION) return true;

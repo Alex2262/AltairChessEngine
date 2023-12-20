@@ -9,11 +9,9 @@
 #include <cassert>
 #include "search.h"
 #include "evaluation.h"
-#include "evaluation_constants.h"
 #include "move.h"
 #include "useful.h"
 #include "see.h"
-#include "move_ordering.h"
 #include "wdl.h"
 
 
@@ -355,6 +353,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Initialize Variables
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
+    Generator& generator = thread_state.generators[thread_state.search_ply];
 
     // Check the remaining time
     if (engine.stopped || (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
@@ -389,24 +388,21 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     position.set_state(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
     position.state_stack[thread_state.search_ply].evaluation = static_eval;
 
-    // Get the moves and score them
-    position.get_pseudo_legal_captures(position.scored_moves[thread_state.search_ply]);
-    get_capture_scores(thread_state, position.scored_moves[thread_state.search_ply], tt_move);
-
     // Variables for getting information about the best score / best move
     SCORE_TYPE best_score = static_eval;
     Move best_move = NO_MOVE;
 
     // Search loop
     int legal_moves = 0;
-    for (int move_index = 0; move_index < static_cast<int>(position.scored_moves[thread_state.search_ply].size()); move_index++) {
+    for (generator.reset_qsearch(tt_move); generator.stage != Stage::Terminated; generator.increment()) {
+        Move move = generator.next_move<true>();
 
-        // Sort and choose the next move to be searched
-        Move move = sort_next_move(position.scored_moves[thread_state.search_ply], move_index);
-        SCORE_TYPE move_score = position.scored_moves[thread_state.search_ply][move_index].score;
+        if (move == NO_MOVE) break; // No legal moves
+
+        SCORE_TYPE move_score = position.scored_moves[thread_state.search_ply][generator.move_index].score;
         bool winning_capture = move_score >= 10000;
 
-        position.scored_moves[thread_state.search_ply][move_index].winning_capture = winning_capture;
+        position.scored_moves[thread_state.search_ply][generator.move_index].winning_capture = winning_capture;
 
         // SEE pruning
         if (static_eval + 60 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
@@ -489,6 +485,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Initialize Variables
     Thread_State& thread_state = engine.thread_states[thread_id];
     Position& position = thread_state.position;
+    Generator& generator = thread_state.generators[thread_state.search_ply];
 
     bool root = !thread_state.search_ply;
     bool pv_node = alpha != beta - 1;  // Hack to determine pv_node, a zero window is when alpha == beta - 1
@@ -646,12 +643,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 position.state_stack[thread_state.search_ply - last_move_ply].move : NO_INFORMATIVE_MOVE;
     }
 
-    // Retrieving the pseudo legal moves in the current position as a list of integers
-    // Score the moves
-    position.get_pseudo_legal_moves(position.scored_moves[thread_state.search_ply]);
-    get_move_scores(thread_state, position.scored_moves[thread_state.search_ply],
-                    tt_move, last_moves);
-
     // Best score for fail soft, and best move for tt
     SCORE_TYPE best_score = -SCORE_INF;
     Move best_move = NO_MOVE;
@@ -660,20 +651,17 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     int alpha_raised_count = 0;
     int legal_moves = 0;
 
-    // Iterate through moves and recursively search with Negamax
-    for (int move_index = 0; move_index < static_cast<int>(position.scored_moves[thread_state.search_ply].size()); move_index++) {
+    for (generator.reset_negamax(tt_move, last_moves); generator.stage != Stage::Terminated; generator.increment()) {
 
-        // Sort the next move. If an early move causes a cutoff then we have saved time
-        // by only sorting one or a few moves rather than the whole list.
-        sort_next_move(position.scored_moves[thread_state.search_ply], move_index);
-        Move move = position.scored_moves[thread_state.search_ply][move_index].move;
+        Move move = generator.next_move<false>();
+
+        if (move == NO_MOVE) break; // No legal moves
+
         InformativeMove informative_move = InformativeMove(move, position.board[move.origin()], position.board[move.target()]);
-        SCORE_TYPE move_score = position.scored_moves[thread_state.search_ply][move_index].score;
+        SCORE_TYPE move_score = position.scored_moves[thread_state.search_ply][generator.move_index].score;
         bool winning_capture = move_score >= 10000;
 
-        position.scored_moves[thread_state.search_ply][move_index].winning_capture = winning_capture;
-
-        // std::cout << engine.root_moves.contains(move.internal_move()) << " " << engine.root_moves.size() << std::endl;
+        position.scored_moves[thread_state.search_ply][generator.move_index].winning_capture = winning_capture;
 
         // Skip excluded moves
         if (root && (thread_state.excluded_root_moves.contains(move.internal_move())
@@ -688,7 +676,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                                         // Capture Histories
                                         thread_state.capture_history
                                         [winning_capture][position.board[move.origin()]][position.board[move.target()]][move.target()];
-
 
         if (quiet) {
             for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
@@ -759,10 +746,14 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             int singular_beta = tt_entry.score - depth * 2;
 
+            thread_state.search_ply++;
+
             position.state_stack[thread_state.search_ply].excluded_move = move;
             SCORE_TYPE return_eval = negamax<NNUE>(engine, singular_beta - 1, singular_beta, (depth - 1) / 2,
                                                    false, thread_id);
             position.state_stack[thread_state.search_ply].excluded_move = NO_MOVE;
+
+            thread_state.search_ply--;
 
             // Singular Extensions
             if (return_eval < singular_beta) {
@@ -923,7 +914,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 // History Heuristic for move ordering
                 SCORE_TYPE bonus = depth * (depth + 1 + null_search + pv_node + improving) - 1;
 
-                update_histories(thread_state, informative_move, last_moves, quiet, winning_capture, move_index, bonus);
+                update_histories(thread_state, informative_move, last_moves, quiet, winning_capture, generator.move_index, bonus);
 
                 if (engine.show_stats) {
                     engine.search_results.alpha_raised_count++;

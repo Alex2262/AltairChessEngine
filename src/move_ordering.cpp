@@ -3,9 +3,12 @@
 #include "evaluation_constants.h"
 #include "move_ordering.h"
 #include "see.h"
+#include "search.h"
 
 SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
                       InformativeMove last_moves[]) {
+    assert(move != NO_MOVE);
+
     if (move == tt_move) return 100000;
 
     SCORE_TYPE score = 0;
@@ -70,6 +73,8 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
 }
 
 SCORE_TYPE score_capture(Thread_State& thread_state, Move move, Move tt_move) {
+    assert(move != NO_MOVE);
+
     if (move == tt_move) return 100000;
 
     SCORE_TYPE score = 0;
@@ -118,4 +123,35 @@ Move sort_next_move(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, in
     }
 	std::swap(current_scored_moves[current_count], current_scored_moves[best_idx]);
 	return current_scored_moves[current_count].move;
+}
+
+Generator::Generator(Thread_State& thread_state_passed) {
+    thread_state = &thread_state_passed;
+    position = &thread_state->position;
+}
+
+void Generator::reset_qsearch(Move tt_move_passed) {
+    moves_generated = false;
+    tt_probe_successful = false;
+
+    stage = Stage::TT_probe;
+    tt_move = tt_move_passed;
+    search_ply = thread_state->search_ply;
+
+    move_index = 0;
+}
+
+void Generator::reset_negamax(Move tt_move_passed, InformativeMove last_moves_passed[]) {
+    moves_generated = false;
+    tt_probe_successful = false;
+
+    stage = Stage::TT_probe;
+    tt_move = tt_move_passed;
+    search_ply = thread_state->search_ply;
+
+    move_index = 0;
+
+    for (int last_move_i = 0; last_move_i < LAST_MOVE_COUNTS; last_move_i++) {
+        last_moves[last_move_i] = last_moves_passed[last_move_i];
+    }
 }

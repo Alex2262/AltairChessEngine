@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_set>
 #include "position.h"
+#include "move_ordering.h"
 
 struct TT_Entry {
     HASH_TYPE key = 0;
@@ -105,7 +106,11 @@ class Thread_State {
 
 public:
 
-    Thread_State() = default;
+    inline Thread_State() {
+        for (Generator& generator : generators) {
+            generator = Generator(*this);
+        }
+    };
 
     PLY_TYPE selective_depth = 0;
 
@@ -132,6 +137,8 @@ public:
     Move_Ordering_Parameters move_ordering_parameters{};
 
     bool terminated = true;
+
+    std::array<Generator, TOTAL_MAX_DEPTH> generators;
 
     inline PLY_TYPE get_full_game_ply() { return base_full_moves * 2 + game_ply + position.side; }
     bool detect_repetition();
