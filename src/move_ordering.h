@@ -26,8 +26,10 @@ Move sort_next_move(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, in
 
 namespace Stage {
     constexpr int TT_probe = 0;
-    constexpr int None = 1;
-    constexpr int Terminated = 2;
+    constexpr int Noisy = 1;
+    constexpr int Refutation = 2;
+    constexpr int Q_BN = 3;  // Quiet + Bad Noisy
+    constexpr int Terminated = 4;
 }
 
 class Generator {
@@ -43,6 +45,7 @@ public:
     Position *position;
     InformativeMove last_moves[LAST_MOVE_COUNTS]{};
 
+    bool noisy_generated = false;
     bool moves_generated = false;
     bool tt_probe_successful = false;
     int stage = Stage::TT_probe;
@@ -53,9 +56,30 @@ public:
     void reset_qsearch(Move tt_move_passed);
     void reset_negamax(Move tt_move_passed, InformativeMove last_moves_passed[]);
 
-    void increment() {
+    // Move the tt move (which we already probed earlier) to the front,
+    // to prevent it from being chosen again
+    inline void shift_tt_move() {
+        FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves = position->scored_moves[search_ply];
+
+        int tt_m_index = 0;
+        for (; tt_m_index < current_scored_moves.size(); tt_m_index++) {
+            if (current_scored_moves[tt_m_index].move == tt_move) break;
+        }
+
+        std::swap(current_scored_moves[0], current_scored_moves[tt_m_index]);
+
+        assert(move_index > 0);
+    }
+
+
+    template<bool qsearch>
+    inline void increment() {
         move_index++;
-        if (moves_generated && move_index >= position->scored_moves[search_ply].size()) stage = Stage::Terminated;
+        if constexpr (qsearch) {
+            if (noisy_generated && move_index >= position->scored_moves[search_ply].size()) stage = Stage::Terminated;
+        } else {
+            if (moves_generated && move_index >= position->scored_moves[search_ply].size()) stage = Stage::Terminated;
+        }
     }
 
     template<bool qsearch>
@@ -63,8 +87,11 @@ public:
 
         assert(stage != Stage::Terminated);
 
+        Move picked = NO_MOVE;
+        FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves = position->scored_moves[search_ply];
+
         if (stage == Stage::TT_probe) {
-            stage = Stage::None;
+            stage = Stage::Noisy;
 
             if (tt_move != NO_MOVE && position->is_pseudo_legal(tt_move)) {
                 tt_probe_successful = true;
@@ -72,43 +99,34 @@ public:
             }
         }
 
-        Move picked = NO_MOVE;
-        FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves = position->scored_moves[search_ply];
+        if (stage == Stage::Noisy) {
 
-        assert(!moves_generated || move_index < current_scored_moves.size());
+            if (!noisy_generated) {
+                noisy_generated = true;
 
-        if (stage == Stage::None) {
+                position->get_pseudo_legal_captures(current_scored_moves);
+                get_capture_scores(*thread_state, current_scored_moves, tt_move);
 
-            if (!moves_generated) {
-                moves_generated = true;
-
-                if constexpr (qsearch) {
-                    position->get_pseudo_legal_captures(current_scored_moves);
-                    get_capture_scores(*thread_state, current_scored_moves, tt_move);
-                }
-
-                else {
-                    position->get_pseudo_legal_moves(current_scored_moves);
-                    get_move_scores(*thread_state, current_scored_moves, tt_move, last_moves);
-                }
-
-                // Move the tt move (which we already probed earlier) to the front,
-                // to prevent it from being chosen again
-                if (tt_probe_successful) {
-                    int tt_m_index = 0;
-                    for (; tt_m_index < current_scored_moves.size(); tt_m_index++) {
-                        if (current_scored_moves[tt_m_index].move == tt_move) break;
-                    }
-
-                    std::swap(current_scored_moves[0], current_scored_moves[tt_m_index]);
-
-                    assert(move_index > 0);
+                if (tt_probe_successful && tt_move.is_capture(*position)) {
+                    shift_tt_move();
                 }
             }
 
-            if (!current_scored_moves.empty() && move_index < current_scored_moves.size())
+            if (move_index < current_scored_moves.size()) {
                 picked = sort_next_move(current_scored_moves, move_index);
-            else stage = Stage::Terminated;
+            }
+
+            else {
+                if constexpr (qsearch) stage = Stage::Terminated;
+                else stage++;
+            }
+        }
+
+        if (stage == Stage::Q_BN) {
+            if (!moves_generated) {
+                moves_generated = true;
+
+            }
         }
 
         // assert(current_scored_moves.empty() || picked != NO_MOVE);

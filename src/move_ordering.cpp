@@ -84,16 +84,20 @@ SCORE_TYPE score_capture(Thread_State& thread_state, Move move, Move tt_move) {
     Piece selected = position.board[move.origin()];
     Piece occupied = position.board[move.target()];
 
+    auto selected_type = get_piece_type(selected, position.side);
+    auto occupied_type = get_piece_type(occupied, ~position.side);
+
     bool winning_capture = get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
 
     score += thread_state.capture_history[winning_capture][selected][occupied][move.target()];
 
-    // Only Use SEE under certain conditions since it is expensive
     if (winning_capture)
         score += thread_state.move_ordering_parameters.winning_capture_margin;
 
-    if (selected < BLACK_PAWN) score += MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected];
-    else score += MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN];
+    score += thread_state.move_ordering_parameters.capture_scale * MVV_LVA_VALUES[occupied_type]
+            - MVV_LVA_VALUES[selected_type];
+
+    score += thread_state.move_ordering_parameters.base_capture_margin;
 
     return score;
 }
