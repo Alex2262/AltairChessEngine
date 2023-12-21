@@ -107,10 +107,10 @@ class Thread_State {
 public:
 
     inline Thread_State() {
-        for (Generator& generator : generators) {
-            generator = Generator(*this);
-        }
+        reset_generators();
     };
+
+    int thread_id = 0;
 
     PLY_TYPE selective_depth = 0;
 
@@ -145,6 +145,14 @@ public:
     bool detect_repetition_3();
 
     SCORE_TYPE& get_continuation_history_entry(InformativeMove last_move, InformativeMove informative_move);
+
+    inline void reset_generators() {
+        for (int ply = 0; ply < static_cast<int>(generators.size()); ply++) {
+            Generator& generator = generators[ply];
+            generator = Generator(*this);
+            generator.search_ply = ply;
+        }
+    }
 };
 
 
