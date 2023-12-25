@@ -139,6 +139,8 @@ public:
     bool terminated = true;
 
     std::array<Generator, TOTAL_MAX_DEPTH> generators;
+    std::array<FixedVector<ScoredMove, MAX_MOVES>, TOTAL_MAX_DEPTH> searched_quiets;
+    std::array<FixedVector<ScoredMove, MAX_NOISY>, TOTAL_MAX_DEPTH> searched_noisy;
 
     inline PLY_TYPE get_full_game_ply() { return base_full_moves * 2 + game_ply + position.side; }
     bool detect_repetition();
@@ -232,7 +234,7 @@ public:
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus);
 void update_histories(Thread_State& thread_state, InformativeMove informative_move,
                       InformativeMove last_moves[], bool quiet, bool winning_capture,
-                      int move_index, int bonus);
+                      int bonus);
 
 template<bool NNUE>
 SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id);

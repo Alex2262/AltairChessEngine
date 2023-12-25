@@ -292,7 +292,10 @@ void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
 
 void update_histories(Thread_State& thread_state, InformativeMove informative_move,
                       InformativeMove last_moves[], bool quiet, bool winning_capture,
-                      int move_index, int bonus) {
+                      int bonus) {
+
+    auto& searched_quiets = thread_state.searched_quiets[thread_state.search_ply];
+    auto& searched_noisy  = thread_state.searched_noisy [thread_state.search_ply];
 
     Position& position = thread_state.position;
     Move move = informative_move.normal_move();
@@ -316,24 +319,34 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
     }
 
     // Deduct bonus for moves that don't raise alpha
-    for (int failed_move_index = 0; failed_move_index < move_index; failed_move_index++) {
-        ScoredMove temp_scored_move = position.scored_moves[thread_state.search_ply][failed_move_index];
+    for (int failed_index = 0; failed_index < static_cast<int>(searched_quiets.size()) - 1; failed_index++) {
+        ScoredMove& temp_scored_move = searched_quiets[failed_index];
         Move temp_move = temp_scored_move.move;
-        if (!temp_move.is_capture(position) && move.type() != MOVE_TYPE_EP) {
-            update_history_entry(thread_state.history_moves
-                                 [position.board[temp_move.origin()]]
-                                 [temp_move.target()],
-                                 -bonus);
 
-            InformativeMove temp_move_informative = InformativeMove(temp_move, position.board[temp_move.origin()], position.board[temp_move.target()]);
-            for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
-                if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
-                    update_history_entry(thread_state.get_continuation_history_entry(last_moves[last_move_index], temp_move_informative),
-                                         -bonus);
-                }
+        update_history_entry(thread_state.history_moves
+                             [position.board[temp_move.origin()]]
+                             [temp_move.target()],
+                             -bonus);
+
+
+        InformativeMove temp_move_informative = InformativeMove(temp_move, position.board[temp_move.origin()], position.board[temp_move.target()]);
+        for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
+            if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
+                update_history_entry(thread_state.get_continuation_history_entry(last_moves[last_move_index], temp_move_informative),
+                                     -bonus);
             }
+        }
 
-        } else if (temp_scored_move.winning_capture == winning_capture) {
+    }
+
+
+    for (int failed_index = 0; failed_index < static_cast<int>(searched_noisy.size()) - 1; failed_index++) {
+        ScoredMove& temp_scored_move = searched_noisy[failed_index];
+        Move temp_move = temp_scored_move.move;
+
+        assert(temp_move != move);
+
+        if (temp_scored_move.winning_capture == winning_capture) {
             update_history_entry(thread_state.capture_history[temp_scored_move.winning_capture]
                                  [position.board[temp_move.origin()]]
                                  [position.board[temp_move.target()]]
@@ -394,15 +407,14 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Search loop
     int legal_moves = 0;
-    for (generator.reset_qsearch(tt_move); generator.stage != Stage::Terminated; generator.increment()) {
-        Move move = generator.next_move<true>();
+
+    for (generator.reset_qsearch(tt_move); generator.stage != Stage::Terminated;) {
+        ScoredMove scored_move = generator.next_move<true>();
+        Move move = scored_move.move;
+
+        bool winning_capture = scored_move.winning_capture;
 
         if (move == NO_MOVE) break; // No legal moves
-
-        SCORE_TYPE move_score = position.scored_moves[thread_state.search_ply][generator.move_index].score;
-        bool winning_capture = move_score >= 10000;
-
-        position.scored_moves[thread_state.search_ply][generator.move_index].winning_capture = winning_capture;
 
         // SEE pruning
         if (static_eval + 60 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
@@ -643,6 +655,12 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 position.state_stack[thread_state.search_ply - last_move_ply].move : NO_INFORMATIVE_MOVE;
     }
 
+    auto& searched_quiets = thread_state.searched_quiets[thread_state.search_ply];
+    auto& searched_noisy  = thread_state.searched_noisy [thread_state.search_ply];
+
+    searched_quiets.clear();
+    searched_noisy.clear();
+
     // Best score for fail soft, and best move for tt
     SCORE_TYPE best_score = -SCORE_INF;
     Move best_move = NO_MOVE;
@@ -651,17 +669,16 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     int alpha_raised_count = 0;
     int legal_moves = 0;
 
-    for (generator.reset_negamax(tt_move, last_moves); generator.stage != Stage::Terminated; generator.increment()) {
+    for (generator.reset_negamax(tt_move, last_moves); generator.stage != Stage::Terminated;) {
 
-        Move move = generator.next_move<false>();
+        ScoredMove scored_move = generator.next_move<false>();
+        Move move = scored_move.move;
+        SCORE_TYPE move_score = scored_move.score;
 
         if (move == NO_MOVE) break; // No legal moves
 
         InformativeMove informative_move = InformativeMove(move, position.board[move.origin()], position.board[move.target()]);
-        SCORE_TYPE move_score = position.scored_moves[thread_state.search_ply][generator.move_index].score;
-        bool winning_capture = move_score >= 10000;
-
-        position.scored_moves[thread_state.search_ply][generator.move_index].winning_capture = winning_capture;
+        bool winning_capture = scored_move.winning_capture;
 
         // Skip excluded moves
         if (root && (thread_state.excluded_root_moves.contains(move.internal_move())
@@ -669,6 +686,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (move == position.state_stack[thread_state.search_ply].excluded_move) continue;
 
         bool quiet = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
+
+        if (quiet) searched_quiets.push_back(scored_move);
+        else searched_noisy.push_back(scored_move);
 
         SCORE_TYPE move_history_score = quiet ?
                                         // Quiet Histories
@@ -914,7 +934,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 // History Heuristic for move ordering
                 SCORE_TYPE bonus = depth * (depth + 1 + null_search + pv_node + improving) - 1;
 
-                update_histories(thread_state, informative_move, last_moves, quiet, winning_capture, generator.move_index, bonus);
+                update_histories(thread_state, informative_move, last_moves, quiet, winning_capture, bonus);
 
                 if (engine.show_stats) {
                     engine.search_results.alpha_raised_count++;
@@ -1309,7 +1329,7 @@ void search(Engine& engine) {
     engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
 
-    position.get_pseudo_legal_moves(position.scored_moves[0]);
+    position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[0]);
     position.set_state(position.state_stack[0], thread_state.fifty_move);
 
     for (ScoredMove scored_move : position.scored_moves[0]) {

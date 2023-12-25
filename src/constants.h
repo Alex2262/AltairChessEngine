@@ -44,6 +44,7 @@ constexpr int LAST_MOVE_COUNTS = 3;
 constexpr int LAST_MOVE_PLIES[LAST_MOVE_COUNTS] = {1, 2, 4};
 
 constexpr size_t MAX_MOVES = 256;
+constexpr size_t MAX_NOISY = 128;
 
 enum NodeType {
     Exact_Node,
