@@ -456,13 +456,18 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 alpha = return_eval;
                 tt_hash_flag = HASH_FLAG_EXACT;
 
-                // Captures History Heuristic for move ordering
                 SCORE_TYPE bonus = 2;
-                update_history_entry(thread_state.capture_history[winning_capture]
-                                     [position.board[move.origin()]]
-                                     [position.board[move.target()]]
-                                     [move.target()],
-                                     bonus);
+                if (move.is_capture(position)) {
+                    update_history_entry(thread_state.capture_history[winning_capture]
+                                         [position.board[move.origin()]]
+                                         [position.board[move.target()]]
+                                         [move.target()],
+                                         bonus);
+                } else {
+                    update_history_entry(thread_state.history_moves
+                                         [position.board[move.origin()]][move.target()],
+                                         bonus);
+                }
 
                 if (return_eval >= beta) {
                     if (engine.show_stats) {

@@ -138,9 +138,9 @@ public:
 
     bool terminated = true;
 
-    std::array<Generator, TOTAL_MAX_DEPTH> generators;
-    std::array<FixedVector<ScoredMove, MAX_MOVES>, TOTAL_MAX_DEPTH> searched_quiets;
-    std::array<FixedVector<ScoredMove, MAX_NOISY>, TOTAL_MAX_DEPTH> searched_noisy;
+    std::array<Generator, TOTAL_MAX_DEPTH> generators{};
+    std::array<FixedVector<ScoredMove, MAX_MOVES>, TOTAL_MAX_DEPTH> searched_quiets{};
+    std::array<FixedVector<ScoredMove, MAX_NOISY>, TOTAL_MAX_DEPTH> searched_noisy{};
 
     inline PLY_TYPE get_full_game_ply() { return base_full_moves * 2 + game_ply + position.side; }
     bool detect_repetition();
