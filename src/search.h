@@ -50,32 +50,49 @@ struct Tuning_Parameters {
             T{"LMR_base_quiet", 100, 170, 155, 20},
             T{"RFP_depth", 5, 11, 9, 2},
             T{"RFP_margin", 50, 200, 126, 30},
-            T{"LMP_depth", 2, 4, 3, 1},
+            T{"LMP_depth", 2, 5, 3, 1},
             T{"LMP_margin", 6, 15, 10, 1},
-            T{"history_pruning_depth", 4, 20, 12, 2},
-            T{"history_pruning_divisor", 4000, 20000, 12062, 1000},
+            T{"history_pruning_depth", 3, 20, 12, 2},
+            T{"history_pruning_divisor", 1000, 20000, 12062, 1800},
             T{"NMP_depth", 0, 4, 2, 1},
             T{"NMP_base", 1, 5, 3, 1},
             T{"NMP_depth_divisor", 2, 6, 4, 1},
-            T{"NMP_eval_divisor", 100, 350, 297, 40},
+            T{"NMP_eval_divisor", 100, 400, 297, 40},
+            T{"SEE_base_depth", 1, 10, 3, 1},
+            T{"SEE_noisy_depth", 0, 4, 3, 1},
+            T{"SEE_pv_depth", 0, 5, 5, 1},
+            T{"LMP_margin_quiet", 1, 4, 2, 1},
+            T{"FP_depth", 1, 8, 5, 1},
+            T{"FP_multiplier", 80, 220, 140, 20},
+            T{"FP_margin", 40, 150, 70, 20}
     };
 
-    int LMR_divisor_quiet = tuning_parameter_array[0].value;
-    int LMR_base_quiet = tuning_parameter_array[1].value;
+    int& LMR_divisor_quiet = tuning_parameter_array[0].value;
+    int& LMR_base_quiet = tuning_parameter_array[1].value;
 
-    int RFP_depth = tuning_parameter_array[2].value;
-    int RFP_margin = tuning_parameter_array[3].value;
+    int& RFP_depth = tuning_parameter_array[2].value;
+    int& RFP_margin = tuning_parameter_array[3].value;
 
-    int LMP_depth = tuning_parameter_array[4].value;
-    int LMP_margin = tuning_parameter_array[5].value;
+    int& LMP_depth = tuning_parameter_array[4].value;
+    int& LMP_margin = tuning_parameter_array[5].value;
 
-    int history_pruning_depth = tuning_parameter_array[6].value;
-    int history_pruning_divisor = tuning_parameter_array[7].value;
+    int& history_pruning_depth = tuning_parameter_array[6].value;
+    int& history_pruning_divisor = tuning_parameter_array[7].value;
 
-    int NMP_depth = tuning_parameter_array[8].value;
-    int NMP_base = tuning_parameter_array[9].value;
-    int NMP_depth_divisor = tuning_parameter_array[10].value;
-    int NMP_eval_divisor = tuning_parameter_array[11].value;
+    int& NMP_depth = tuning_parameter_array[8].value;
+    int& NMP_base = tuning_parameter_array[9].value;
+    int& NMP_depth_divisor = tuning_parameter_array[10].value;
+    int& NMP_eval_divisor = tuning_parameter_array[11].value;
+
+    int& SEE_base_depth = tuning_parameter_array[12].value;
+    int& SEE_noisy_depth = tuning_parameter_array[13].value;
+    int& SEE_pv_depth = tuning_parameter_array[14].value;
+
+    int& LMP_margin_quiet = tuning_parameter_array[15].value;
+
+    int& FP_depth = tuning_parameter_array[16].value;
+    int& FP_multiplier = tuning_parameter_array[17].value;
+    int& FP_margin = tuning_parameter_array[18].value;
 };
 
 
@@ -91,6 +108,7 @@ struct Move_Ordering_Parameters {
             T{"castle_margin", 0, 2000, 1200, 200},
     };
 
+    //TODO: Fix references before tuning move ordering params
     int winning_capture_margin = tuning_parameter_array[0].value;
     int base_capture_margin = tuning_parameter_array[1].value;
     int capture_scale = tuning_parameter_array[2].value;
@@ -140,7 +158,7 @@ public:
 
     std::array<Generator, TOTAL_MAX_DEPTH> generators;
 
-    inline PLY_TYPE get_full_game_ply() { return base_full_moves * 2 + game_ply + position.side; }
+    inline PLY_TYPE get_full_game_ply() const { return base_full_moves * 2 + game_ply + position.side; }
     bool detect_repetition();
     bool detect_repetition_3();
 
@@ -171,7 +189,7 @@ public:
     bool datagen = false;
     bool show_wdl = false;
     bool show_stats = false;
-    bool do_tuning = false;
+    bool do_tuning = true;
 
     int multi_pv = 1;
 
