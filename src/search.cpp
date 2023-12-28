@@ -717,18 +717,22 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;
 
             // Quiet Late Move Pruning
-            if (!pv_node && quiet && legal_moves >= 2 + depth * depth / (1 + !improving + failing)) break;
+            if (!pv_node && quiet &&
+                legal_moves >= engine.tuning_parameters.LMP_margin_quiet + depth * depth / (1 + !improving + failing)) break;
 
             // Futility Pruning
-            if (!pv_node && quiet && depth <= 5 && static_eval + (depth - !improving) * 140 + 70 <= alpha) break;
+            if (!pv_node && quiet && depth <= engine.tuning_parameters.FP_depth &&
+                static_eval + (depth - !improving) * engine.tuning_parameters.FP_multiplier + engine.tuning_parameters.FP_margin <= alpha) break;
 
             // History Pruning
             if ((quiet || !winning_capture) && !pv_node && depth <= engine.tuning_parameters.history_pruning_depth &&
                 move_history_score <= (depth + improving) * -engine.tuning_parameters.history_pruning_divisor) continue;
 
             // SEE Pruning
-            if (depth <= (3 + 3 * !quiet + 5 * pv_node) && legal_moves >= 3 &&
-                 move_history_score <= 5000 &&
+            if (depth <= (engine.tuning_parameters.SEE_base_depth +
+                          engine.tuning_parameters.SEE_noisy_depth * !quiet +
+                          engine.tuning_parameters.SEE_pv_depth * pv_node)
+                 && legal_moves >= 3 && move_history_score <= 5000 &&
                  !get_static_exchange_evaluation(position, move, (quiet ? -50 : -90) * depth))
                 continue;
 
