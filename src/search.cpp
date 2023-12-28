@@ -457,7 +457,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 tt_hash_flag = HASH_FLAG_EXACT;
 
                 SCORE_TYPE bonus = 2;
-                if (move.is_capture(position)) {
+                if (move.is_capture(position) || move.type() == MOVE_TYPE_EP) {
                     update_history_entry(thread_state.capture_history[winning_capture]
                                          [position.board[move.origin()]]
                                          [position.board[move.target()]]
