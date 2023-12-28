@@ -275,7 +275,7 @@ public:
     void get_knight_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const {
         BITBOARD knights = get_pieces(KNIGHT, side);
 
-        const BITBOARD mask = [this]() -> const BITBOARD {
+        const BITBOARD mask = [this]() -> BITBOARD {
             if constexpr (movegen == Movegen::Quiet) return empty_squares;
             else if constexpr (movegen == Movegen::All) return ~(our_pieces);
             return opp_pieces;
@@ -299,7 +299,7 @@ public:
     void get_bishop_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const {
         BITBOARD bishops = get_pieces(BISHOP, side);
 
-        const BITBOARD mask = [this]() -> const BITBOARD {
+        const BITBOARD mask = [this]() -> BITBOARD {
             if constexpr (movegen == Movegen::Quiet) return empty_squares;
             else if constexpr (movegen == Movegen::All) return ~(our_pieces);
             return opp_pieces;
@@ -326,7 +326,7 @@ public:
         BITBOARD rooks = get_pieces(ROOK, side);
         Square king_pos = get_king_pos(side);
 
-        const BITBOARD mask = [this]() -> const BITBOARD {
+        const BITBOARD mask = [this]() -> BITBOARD {
             if constexpr (movegen == Movegen::Quiet) return empty_squares;
             else if constexpr (movegen == Movegen::All) return ~(our_pieces);
             return opp_pieces;
@@ -434,7 +434,7 @@ public:
     void get_queen_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const {
         BITBOARD queens = get_pieces(QUEEN, side);
 
-        const BITBOARD mask = [this]() -> const BITBOARD {
+        const BITBOARD mask = [this]() -> BITBOARD {
             if constexpr (movegen == Movegen::Quiet) return empty_squares;
             else if constexpr (movegen == Movegen::All) return ~(our_pieces);
             return opp_pieces;
@@ -460,7 +460,7 @@ public:
     void get_king_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const {
         Square square = get_king_pos(side);
 
-        const BITBOARD mask = [this]() -> const BITBOARD {
+        const BITBOARD mask = [this]() -> BITBOARD {
             if constexpr (movegen == Movegen::Quiet) return empty_squares;
             else if constexpr (movegen == Movegen::All) return ~(our_pieces);
             return opp_pieces;
