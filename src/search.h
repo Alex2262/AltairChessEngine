@@ -191,7 +191,7 @@ public:
     bool datagen = false;
     bool show_wdl = false;
     bool show_stats = false;
-    bool do_tuning = true;
+    bool do_tuning = false;
 
     int multi_pv = 1;
 
