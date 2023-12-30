@@ -17,7 +17,7 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
     PLY_TYPE fifty = 0;
 
     position.set_state(position.state_stack[ply], fifty);
-    position.get_pseudo_legal_moves(position.scored_moves[ply]);
+    position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[ply]);
 
     for (ScoredMove& scored_move : position.scored_moves[ply]) {
 
@@ -70,7 +70,7 @@ long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
     PLY_TYPE fifty = 0;
 
     position.set_state(position.state_stack[ply], fifty);
-    position.get_pseudo_legal_moves(position.scored_moves[ply]);
+    position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[ply]);
 
     long long amt = 0;
 
@@ -107,7 +107,7 @@ long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
     }
 
     position.set_state(position.state_stack[ply], fifty);
-    position.get_pseudo_legal_moves(position.scored_moves[ply]);
+    position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[ply]);
 
     long long total_amt = 0;
 

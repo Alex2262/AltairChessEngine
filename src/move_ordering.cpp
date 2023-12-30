@@ -9,7 +9,7 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
                       InformativeMove last_moves[]) {
     assert(move != NO_MOVE);
 
-    if (move == tt_move) return 100000;
+    if (move == tt_move) return TT_MOVE_BONUS;
 
     SCORE_TYPE score = 0;
 
@@ -25,18 +25,27 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
 
     if (move_type == MOVE_TYPE_PROMOTION) {
         auto promotion_piece_type = static_cast<PieceType>(move.promotion_type() + 1);
-        if (promotion_piece_type == QUEEN) {
-            score += thread_state.move_ordering_parameters.queen_promotion_margin;
-        } else {
-            score = score + thread_state.move_ordering_parameters.other_promotion_margin +
-                    MVV_LVA_VALUES[promotion_piece_type];
-        }
+        if (promotion_piece_type == QUEEN) score += thread_state.move_ordering_parameters.queen_promotion_margin;
+        else score += thread_state.move_ordering_parameters.other_promotion_margin +
+                      MVV_LVA_VALUES[promotion_piece_type];
+    }
+
+    else if (move_type == MOVE_TYPE_CASTLE) {
+        score += thread_state.move_ordering_parameters.castle_margin;
+    }
+
+    else if (move_type == MOVE_TYPE_EP) {
+        score += thread_state.move_ordering_parameters.winning_capture_margin +
+                 thread_state.move_ordering_parameters.capture_scale * (MVV_LVA_VALUES[PAWN] / 2);
+        score += thread_state.capture_history[true][selected][occupied][move.target()];
+
+        return score;
     }
 
     if (move.is_capture(position)) {
         auto occupied_type = get_piece_type(occupied, ~position.side);
         score += thread_state.move_ordering_parameters.capture_scale * MVV_LVA_VALUES[occupied_type]
-                - MVV_LVA_VALUES[selected_type];
+                 - MVV_LVA_VALUES[selected_type];
 
         bool winning_capture = get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
 
@@ -63,19 +72,18 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
                 score += thread_state.get_continuation_history_entry(last_moves[last_move_index], informative_move);
             }
         }
-
-        if (move_type == MOVE_TYPE_EP) score += thread_state.move_ordering_parameters.winning_capture_margin +
-                thread_state.move_ordering_parameters.capture_scale * (MVV_LVA_VALUES[PAWN] / 2);
-        else if (move_type == MOVE_TYPE_CASTLE) score += thread_state.move_ordering_parameters.castle_margin;
     }
 
     return score;
 }
 
-SCORE_TYPE score_capture(Thread_State& thread_state, Move move, Move tt_move) {
+SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, int& good_capture_count) {
+
+    Move move = scored_move.move;
+
     assert(move != NO_MOVE);
 
-    if (move == tt_move) return 100000;
+    if (move == tt_move) return TT_MOVE_BONUS;
 
     SCORE_TYPE score = 0;
 
@@ -83,46 +91,52 @@ SCORE_TYPE score_capture(Thread_State& thread_state, Move move, Move tt_move) {
 
     Piece selected = position.board[move.origin()];
     Piece occupied = position.board[move.target()];
+    MoveType move_type = move.type();
 
     bool winning_capture = get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
-
     score += thread_state.capture_history[winning_capture][selected][occupied][move.target()];
 
-    // Only Use SEE under certain conditions since it is expensive
-    if (winning_capture)
-        score += thread_state.move_ordering_parameters.winning_capture_margin;
+    if (move_type == MOVE_TYPE_EP) return score +
+        thread_state.move_ordering_parameters.winning_capture_margin +
+        thread_state.move_ordering_parameters.capture_scale * (MVV_LVA_VALUES[PAWN] / 2);
 
-    if (selected < BLACK_PAWN) score += MVV_LVA_VALUES[occupied - BLACK_PAWN] - MVV_LVA_VALUES[selected];
-    else score += MVV_LVA_VALUES[occupied] - MVV_LVA_VALUES[selected - BLACK_PAWN];
+    auto selected_type = get_piece_type(selected, position.side);
+    auto occupied_type = get_piece_type(occupied, ~position.side);
+
+    if (move_type == MOVE_TYPE_PROMOTION) {
+        auto promotion_piece_type = static_cast<PieceType>(move.promotion_type() + 1);
+        if (promotion_piece_type == QUEEN) score += thread_state.move_ordering_parameters.queen_promotion_margin;
+        else score += thread_state.move_ordering_parameters.other_promotion_margin +
+                      MVV_LVA_VALUES[promotion_piece_type];
+    }
+
+    if (winning_capture) {
+        score += thread_state.move_ordering_parameters.winning_capture_margin;
+        scored_move.winning_capture = true;
+        good_capture_count++;
+    } else scored_move.winning_capture = false;
+
+    score += thread_state.move_ordering_parameters.capture_scale * MVV_LVA_VALUES[occupied_type]
+             - MVV_LVA_VALUES[selected_type];
+
+    score += thread_state.move_ordering_parameters.base_capture_margin;
 
     return score;
 }
 
 void get_move_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
-                     Move tt_move, InformativeMove last_moves[]) {
-    for (ScoredMove& scored_move : current_scored_moves) {
+                     Move tt_move, InformativeMove last_moves[], int start_index) {
+    for (int i = start_index; i < current_scored_moves.size(); i++) {
+        ScoredMove& scored_move = current_scored_moves[i];
         scored_move.score = score_move(thread_state, scored_move.move, tt_move, last_moves);
     }
 }
 
 void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
-                        Move tt_move) {
+                        Move tt_move, int& good_capture_count) {
     for (ScoredMove& scored_move : current_scored_moves) {
-        scored_move.score = score_capture(thread_state, scored_move.move, tt_move);
+        scored_move.score = score_capture(thread_state, scored_move, tt_move, good_capture_count);
     }
-}
-
-Move sort_next_move(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves, int current_count) {
-	auto best_score = current_scored_moves[current_count].score;
-	auto best_idx = current_count;
-    for (auto next_count = current_count + 1; next_count < static_cast<int>(current_scored_moves.size()); next_count++) {
-        if (best_score < current_scored_moves[next_count].score) {
-			best_score = current_scored_moves[next_count].score;
-			best_idx = next_count;
-        }
-    }
-	std::swap(current_scored_moves[current_count], current_scored_moves[best_idx]);
-	return current_scored_moves[current_count].move;
 }
 
 Generator::Generator(Thread_State& thread_state_passed) {
@@ -131,8 +145,6 @@ Generator::Generator(Thread_State& thread_state_passed) {
 }
 
 void Generator::reset_qsearch(Move tt_move_passed) {
-    moves_generated = false;
-    tt_probe_successful = false;
 
     stage = Stage::TT_probe;
     tt_move = tt_move_passed;
@@ -141,8 +153,6 @@ void Generator::reset_qsearch(Move tt_move_passed) {
 }
 
 void Generator::reset_negamax(Move tt_move_passed, InformativeMove last_moves_passed[]) {
-    moves_generated = false;
-    tt_probe_successful = false;
 
     stage = Stage::TT_probe;
     tt_move = tt_move_passed;

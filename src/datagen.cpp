@@ -174,7 +174,7 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
     for (int random_move_count = 0; random_move_count < num_random_moves; random_move_count++) {
 
         position.set_state(position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
-        position.get_pseudo_legal_moves(position.scored_moves[0]);
+        position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[0]);
 
         legal_moves.clear();
 
@@ -198,7 +198,7 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
 
     // Verify the position has moves
     position.set_state(position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
-    position.get_pseudo_legal_moves(position.scored_moves[0]);
+    position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[0]);
 
     bool terminated = true;
 
@@ -306,7 +306,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
             // Termination Check
             bool terminated = true;
             position.set_state(position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
-            position.get_pseudo_legal_moves(position.scored_moves[0]);
+            position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[0]);
             for (ScoredMove& scored_move : position.scored_moves[0]) {
                 bool attempt = position.make_move<NO_NNUE>(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
                 position.undo_move<NO_NNUE>(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
