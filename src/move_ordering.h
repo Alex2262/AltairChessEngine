@@ -15,13 +15,13 @@ constexpr SCORE_TYPE SEE_MOVE_ORDERING_THRESHOLD = -85;
 SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
                       InformativeMove last_moves[]);
 
-SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move);
+SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, int& good_capture_count);
 
 void get_move_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                      Move tt_move, InformativeMove last_moves[], int start_index);
 
 void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
-                        Move tt_move);
+                        Move tt_move, int& good_capture_count);
 
 enum class Filter : uint16_t {
     None,
@@ -57,6 +57,7 @@ public:
 
     int stage = Stage::TT_probe;
     int move_index = 0;
+    int good_capture_count = 0;
 
     PLY_TYPE search_ply = 0;
 
@@ -71,6 +72,7 @@ public:
         auto best_idx = move_index;
         for (auto next_count = move_index + 1; next_count < static_cast<int>(current_scored_moves.size()); next_count++) {
             ScoredMove& scored_move = current_scored_moves[next_count];
+
             if constexpr (filter == Filter::Noisy) {
                 if (!scored_move.move.is_capture(*position)) continue;
             }
@@ -115,11 +117,12 @@ public:
 
         if (stage == Stage::GenNoisy) {
             move_index = 0;
+            good_capture_count = 0;
 
             if constexpr (qsearch) position->get_pseudo_legal_moves<Movegen::Qsearch, true>(current_scored_moves);
             else position->get_pseudo_legal_moves<Movegen::Noisy, true>(current_scored_moves);
 
-            get_capture_scores(*thread_state, current_scored_moves, tt_move);
+            get_capture_scores(*thread_state, current_scored_moves, tt_move, good_capture_count);
 
             stage = Stage::Noisy;
         }
@@ -128,9 +131,9 @@ public:
 
             if (current_scored_moves[move_index].move == tt_move) move_index++;
 
-            if (move_index >= current_scored_moves.size()) {
-                if constexpr (qsearch) stage = Stage::Terminated;
-                else stage = Stage::GenQ_BN;
+            if (move_index >= good_capture_count) {
+                if constexpr (!qsearch) stage = Stage::GenQ_BN;
+                else if (move_index >= current_scored_moves.size()) stage = Stage::Terminated;
             }
 
             else {

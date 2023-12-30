@@ -77,7 +77,7 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
     return score;
 }
 
-SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move) {
+SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, int& good_capture_count) {
 
     Move move = scored_move.move;
 
@@ -113,6 +113,7 @@ SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Mo
     if (winning_capture) {
         score += thread_state.move_ordering_parameters.winning_capture_margin;
         scored_move.winning_capture = true;
+        good_capture_count++;
     } else scored_move.winning_capture = false;
 
     score += thread_state.move_ordering_parameters.capture_scale * MVV_LVA_VALUES[occupied_type]
@@ -132,9 +133,9 @@ void get_move_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOV
 }
 
 void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
-                        Move tt_move) {
+                        Move tt_move, int& good_capture_count) {
     for (ScoredMove& scored_move : current_scored_moves) {
-        scored_move.score = score_capture(thread_state, scored_move, tt_move);
+        scored_move.score = score_capture(thread_state, scored_move, tt_move, good_capture_count);
     }
 }
 
