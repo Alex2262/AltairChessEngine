@@ -581,6 +581,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     // Save the current evaluation
     if (!in_check) {
         static_eval = engine.probe_tt_evaluation(position.hash_key);
+        if (singular_search) static_eval = position.state_stack[thread_state.search_ply - 1].evaluation;
         if (static_eval == NO_EVALUATION) static_eval = engine.evaluate<NNUE>(thread_id);
         position.state_stack[thread_state.search_ply].evaluation = static_eval;
 
