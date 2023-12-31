@@ -28,7 +28,12 @@ struct ScoredMove {
     bool winning_capture = false;
 };
 
-struct State_Struct {
+struct NNUpdate {
+    Piece  piece;
+    Square square;
+};
+
+struct State {
     uint64_t current_hash_key = 0ULL;
     Square current_ep_square = NO_SQUARE;
     uint8_t current_castle_ability_bits = 0;
@@ -41,6 +46,10 @@ struct State_Struct {
 
     int double_extensions = 0;
     int in_check = -1;
+
+    FixedVector<NNUpdate, 4> activations{};
+    FixedVector<NNUpdate, 4> deactivations{};
+    bool NNUE_pushed = false;
 };
 
 struct FenInfo {
@@ -82,12 +91,12 @@ public:
     Square ep_square = NO_SQUARE;
     HASH_TYPE hash_key = 0;
 
-    std::array<State_Struct, TOTAL_MAX_DEPTH> state_stack{};
+    std::array<State, TOTAL_MAX_DEPTH> state_stack{};
 
     std::array<FixedVector<ScoredMove, MAX_MOVES>, TOTAL_MAX_DEPTH> scored_moves{};
 
     void clear_state_stack();
-    void set_state(State_Struct& state_struct, PLY_TYPE fifty_move) const;
+    void set_state(State& state, PLY_TYPE fifty_move) const;
 
     [[nodiscard]] inline BITBOARD get_pieces(Piece piece) const {
         return pieces[piece];
@@ -490,14 +499,15 @@ public:
 
     bool is_pseudo_legal(Move move);
 
-    void make_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move);
-    void undo_null_move(State_Struct& state_struct, PLY_TYPE& fifty_move);
+    void make_null_move(State& state, PLY_TYPE& fifty_move);
+    void undo_null_move(State& state, PLY_TYPE& fifty_move);
 
     template<bool NNUE>
-    bool make_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_move);
+    bool make_move(Move move, State& state, PLY_TYPE& fifty_move);
     template<bool NNUE>
-    void undo_move(Move move, State_Struct& state_struct, PLY_TYPE& fifty_move);
+    void undo_move(Move move, State& state, PLY_TYPE& fifty_move);
 
+    void update_nnue(State& state);
 };
 
 

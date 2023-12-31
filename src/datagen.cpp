@@ -193,6 +193,7 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
         Move random_move = legal_moves[datagen_thread.prng.rand64() % legal_moves.size()];
 
         position.make_move<USE_NNUE>(random_move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+        position.update_nnue(position.state_stack[0]);
         datagen_thread.game_length++;
     }
 
@@ -334,6 +335,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
                          best_move.type() == MOVE_TYPE_PROMOTION;
 
             position.make_move<USE_NNUE>(best_move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+            position.update_nnue(position.state_stack[0]);
 
             EvaluationInformation evaluation_information{};
             initialize_evaluation_information(position, evaluation_information);

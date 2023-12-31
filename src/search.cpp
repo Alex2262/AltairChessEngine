@@ -431,6 +431,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             continue;
         }
 
+        position.update_nnue(position.state_stack[thread_state.search_ply]);
+
         thread_state.node_count++;
 
         // Recursively search
@@ -771,7 +773,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             position.state_stack[thread_state.search_ply].excluded_move == NO_MOVE &&
             abs(tt_entry.score) < MATE_BOUND) {
 
-            position.undo_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+            position.undo_move<NO_NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
             int singular_beta = tt_entry.score - depth * 2;
 
@@ -799,7 +801,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 extension--;
             }
 
-            position.make_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+            position.make_move<NO_NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
         }
 
         extension = std::min<PLY_TYPE>(extension, std::min<PLY_TYPE>(2, MAX_AB_DEPTH - 1 - depth));
@@ -816,6 +818,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         PLY_TYPE new_depth = depth + extension - 1;
 
         // Prepare for recursive searching
+        position.update_nnue(position.state_stack[thread_state.search_ply]);
+
         thread_state.search_ply++;
         thread_state.game_ply++;
         thread_state.repetition_table[thread_state.game_ply] = position.hash_key;

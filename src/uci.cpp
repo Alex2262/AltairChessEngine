@@ -128,6 +128,7 @@ void UCI::parse_position() {
         last_move = move;
 
         position.make_move<USE_NNUE>(move, position.state_stack[0], engine->thread_states[0].fifty_move);
+        position.update_nnue(position.state_stack[0]);
 
         engine->thread_states[0].game_ply++;
         engine->thread_states[0].repetition_table[engine->thread_states[0].game_ply] = position.hash_key;
