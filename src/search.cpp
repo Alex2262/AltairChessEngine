@@ -645,12 +645,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         }
     }
 
-    // Internal Iterative Deepening
-    if (pv_node && depth >= 4 && tt_move == NO_MOVE && !singular_search) {
-        negamax<NNUE>(engine, alpha, beta, static_cast<PLY_TYPE>(depth - 3), true, thread_id);
-        tt_move = engine.transposition_table[position.hash_key % engine.transposition_table.size()].move;
-    }
-
     bool tt_move_capture = tt_move.is_capture(position);
 
     // Used for the continuation history heuristic
