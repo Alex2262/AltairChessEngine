@@ -139,7 +139,7 @@ public:
                 else if (move_index >= current_scored_moves.size()) stage = Stage::Terminated;
             }
 
-            else {
+            if (stage == Stage::Noisy) {
                 if constexpr (qsearch) picked = sort_next_move<Filter::None>();
                 else picked = sort_next_move<Filter::Good>();
 
