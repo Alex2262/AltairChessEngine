@@ -5,7 +5,7 @@
 #include "see.h"
 #include "search.h"
 
-SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
+SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
                       InformativeMove last_moves[]) {
     assert(move != NO_MOVE);
 
@@ -21,7 +21,6 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
     auto selected_type = get_piece_type(selected, position.side);
 
     MoveType move_type = move.type();
-    InformativeMove informative_move = InformativeMove(move, selected, occupied);
 
     if (move_type == MOVE_TYPE_PROMOTION) {
         auto promotion_piece_type = static_cast<PieceType>(move.promotion_type() + 1);
@@ -34,31 +33,22 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
         score += thread_state.move_ordering_parameters.castle_margin;
     }
 
-    else if (move_type == MOVE_TYPE_EP) {
-        score += thread_state.move_ordering_parameters.winning_capture_margin +
-                 thread_state.move_ordering_parameters.capture_scale * (MVV_LVA_VALUES[PAWN] / 2);
-        score += thread_state.capture_history[true][selected][occupied][move.target()];
-
-        return score;
-    }
+    // No EP moves appear as Q_BN
 
     if (move.is_capture(position)) {
         auto occupied_type = get_piece_type(occupied, ~position.side);
         score += thread_state.move_ordering_parameters.capture_scale * MVV_LVA_VALUES[occupied_type]
                  - MVV_LVA_VALUES[selected_type];
 
-        bool winning_capture = get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
-
-        score += thread_state.capture_history[winning_capture][selected][occupied][move.target()];
-
-        // Only Use SEE under certain conditions since it is expensive
-        if (winning_capture)
-            score += thread_state.move_ordering_parameters.winning_capture_margin;
-
+        // All captures are not winning in Q_BN;
+        score += thread_state.capture_history[false][selected][occupied][move.target()];
         score += thread_state.move_ordering_parameters.base_capture_margin;
     }
 
     else {
+
+        InformativeMove informative_move = InformativeMove(move, selected, occupied);
+
         // score 1st and 2nd killer move
         if (thread_state.killer_moves[0][thread_state.search_ply] == informative_move) score +=
                 thread_state.move_ordering_parameters.first_killer_margin;
@@ -77,6 +67,7 @@ SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
     return score;
 }
 
+template<bool qsearch>
 SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, int& good_capture_count) {
 
     Move move = scored_move.move;
@@ -94,6 +85,18 @@ SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Mo
     MoveType move_type = move.type();
 
     bool winning_capture = get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
+
+    if (winning_capture) {
+        score += thread_state.move_ordering_parameters.winning_capture_margin;
+        scored_move.winning_capture = true;
+        good_capture_count++;
+    }
+
+    else {
+        scored_move.winning_capture = false;
+        if constexpr (!qsearch) return -1000000;  // Skip scoring the bad capture currently, as it will be scored fully later
+    }
+
     score += thread_state.capture_history[winning_capture][selected][occupied][move.target()];
 
     if (move_type == MOVE_TYPE_EP) return score +
@@ -110,12 +113,6 @@ SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Mo
                       MVV_LVA_VALUES[promotion_piece_type];
     }
 
-    if (winning_capture) {
-        score += thread_state.move_ordering_parameters.winning_capture_margin;
-        scored_move.winning_capture = true;
-        good_capture_count++;
-    } else scored_move.winning_capture = false;
-
     score += thread_state.move_ordering_parameters.capture_scale * MVV_LVA_VALUES[occupied_type]
              - MVV_LVA_VALUES[selected_type];
 
@@ -124,20 +121,29 @@ SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Mo
     return score;
 }
 
-void get_move_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
+template SCORE_TYPE score_capture<true >(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, int& good_capture_count);
+template SCORE_TYPE score_capture<false>(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, int& good_capture_count);
+
+void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                      Move tt_move, InformativeMove last_moves[], int start_index) {
     for (int i = start_index; i < current_scored_moves.size(); i++) {
         ScoredMove& scored_move = current_scored_moves[i];
-        scored_move.score = score_move(thread_state, scored_move.move, tt_move, last_moves);
+        scored_move.score = score_q_bn(thread_state, scored_move.move, tt_move, last_moves);
     }
 }
 
+template<bool qsearch>
 void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                         Move tt_move, int& good_capture_count) {
     for (ScoredMove& scored_move : current_scored_moves) {
-        scored_move.score = score_capture(thread_state, scored_move, tt_move, good_capture_count);
+        scored_move.score = score_capture<qsearch>(thread_state, scored_move, tt_move, good_capture_count);
     }
 }
+
+template void get_capture_scores<true >(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
+                                        Move tt_move, int& good_capture_count);
+template void get_capture_scores<false>(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
+                                        Move tt_move, int& good_capture_count);
 
 Generator::Generator(Thread_State& thread_state_passed) {
     thread_state = &thread_state_passed;
