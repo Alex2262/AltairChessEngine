@@ -12,14 +12,16 @@ class Thread_State;
 constexpr SCORE_TYPE TT_MOVE_BONUS = 100000;
 constexpr SCORE_TYPE SEE_MOVE_ORDERING_THRESHOLD = -85;
 
-SCORE_TYPE score_move(Thread_State& thread_state, Move move, Move tt_move,
+SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
                       InformativeMove last_moves[]);
 
+template<bool qsearch>
 SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, int& good_capture_count);
 
-void get_move_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
+void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                      Move tt_move, InformativeMove last_moves[], int start_index);
 
+template<bool qsearch>
 void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                         Move tt_move, int& good_capture_count);
 
@@ -58,6 +60,7 @@ public:
     int stage = Stage::TT_probe;
     int move_index = 0;
     int good_capture_count = 0;
+    int good_capture_found = 0;
 
     PLY_TYPE search_ply = 0;
 
@@ -118,12 +121,12 @@ public:
         if (stage == Stage::GenNoisy) {
             move_index = 0;
             good_capture_count = 0;
+            good_capture_found = 0;
 
             if constexpr (qsearch) position->get_pseudo_legal_moves<Movegen::Qsearch, true>(current_scored_moves);
             else position->get_pseudo_legal_moves<Movegen::Noisy, true>(current_scored_moves);
 
-            get_capture_scores(*thread_state, current_scored_moves, tt_move, good_capture_count);
-
+            get_capture_scores<qsearch>(*thread_state, current_scored_moves, tt_move, good_capture_count);
             stage = Stage::Noisy;
         }
 
@@ -131,7 +134,7 @@ public:
 
             if (current_scored_moves[move_index].move == tt_move) move_index++;
 
-            if (move_index >= good_capture_count) {
+            if (good_capture_found >= good_capture_count) {
                 if constexpr (!qsearch) stage = Stage::GenQ_BN;
                 else if (move_index >= current_scored_moves.size()) stage = Stage::Terminated;
             }
@@ -140,6 +143,7 @@ public:
                 if constexpr (qsearch) picked = sort_next_move<Filter::None>();
                 else picked = sort_next_move<Filter::Good>();
 
+                good_capture_found++;
                 move_index++;
             }
         }
@@ -148,7 +152,7 @@ public:
             assert(!qsearch);
 
             position->get_pseudo_legal_moves<Movegen::Quiet, false>(current_scored_moves);
-            get_move_scores(*thread_state, current_scored_moves, tt_move, last_moves, move_index);
+            get_q_bn_scores(*thread_state, current_scored_moves, tt_move, last_moves, move_index);
 
             stage = Stage::Q_BN;
         }
