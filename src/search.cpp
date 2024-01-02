@@ -596,9 +596,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     // Internal Iterative Reduction. Based on Rebel's idea
-    if (tt_move == NO_MOVE && !singular_search) {
-        if (depth >= 4) depth--;
-        if (depth >= 8) depth--;
+    if (tt_move == NO_MOVE && !singular_search && depth >= 4) {
+        depth--;
+        if (pv_node) depth--;
     }
 
     // Forward Pruning Methods
