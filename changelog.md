@@ -6341,7 +6341,7 @@ GAMES | N: 3536 W: 963 L: 808 D: 1765
 https://chess.swehosting.se/test/4871/
 ```
 
-### 5.2.5
+### 5.2.5 (6.0.0)
 Set reductions to integers only in LMR + slight additional LMR changes
 
 ```
@@ -6351,3 +6351,72 @@ LLR   | 2.91 (-2.25, 2.89) [0.00, 5.00]
 GAMES | N: 11136 W: 2856 L: 2662 D: 5618
 https://chess.swehosting.se/test/4887/
 ```
+
+### 6.0.1
+TT Staged move generation +~30Knps
+
+```
+ELO   | 7.69 +- 5.56 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.94 (-2.25, 2.89) [-1.00, 4.00]
+GAMES | N: 7008 W: 1717 L: 1562 D: 3729
+https://chess.swehosting.se/test/5065/
+```
+
+### 6.0.2
+Staged noisy / quiet + bad noisy generation +~70Knps
+
+```
+ELO   | 7.78 +- 5.27 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.94 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 7680 W: 1859 L: 1687 D: 4134
+https://chess.swehosting.se/test/5170/
+```
+
+### 6.0.3
+NNUE updates optimizations in search +~150Knps
+
+```
+ELO   | 23.92 +- 10.30 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.91 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 2080 W: 566 L: 423 D: 1091
+https://chess.swehosting.se/test/5187/
+```
+
+### 6.0.4
+Remove IID
+
+```
+ELO   | 4.05 +- 3.27 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.90 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 20144 W: 4810 L: 4575 D: 10759
+https://chess.swehosting.se/test/5214/
+```
+
+### 6.0.5
+Change IIR mechanics in PV nodes
+
+```
+Elo   | 16.35 +- 9.14 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.89 (-2.25, 2.89) [0.00, 5.00]
+Games | N: 2552 W: 647 L: 527 D: 1378
+Penta | [15, 250, 638, 346, 27]
+https://antares2262.pythonanywhere.com/test/5/
+```
+
+### 6.0.6
+Staged scoring efficiency changes + fixes
+
+```
+Elo   | 0.25 +- 2.87 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | -2.26 (-2.25, 2.89) [0.00, 5.00]
+Games | N: 26548 W: 6271 L: 6252 D: 14025
+Penta | [220, 3241, 6338, 3250, 225]
+```
+
+Merged for simplification + bug fixes. Although not passing at [0, 5], did not lose any or much ELO.

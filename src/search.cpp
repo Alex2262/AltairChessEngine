@@ -415,7 +415,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         bool winning_capture = scored_move.winning_capture;
 
         if (move == NO_MOVE) break; // No legal moves
-        if (!winning_capture) break;
+        if (!winning_capture) break; // Gainer on god
 
         // SEE pruning
         if (static_eval + 60 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
