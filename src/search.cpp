@@ -276,9 +276,10 @@ template<bool NNUE>
 SCORE_TYPE Engine::evaluate(int thread_id) {
     Position& position = thread_states[thread_id].position;
 
-    if constexpr (NNUE) return position.nnue_state.evaluate(position.side);
+    if constexpr (NNUE) return position.nnue_state.evaluate(position, position.side);
     return evaluate_classic(position);
 }
+
 template SCORE_TYPE Engine::evaluate<USE_NNUE>(int thread_id);
 template SCORE_TYPE Engine::evaluate<NO_NNUE >(int thread_id);
 
