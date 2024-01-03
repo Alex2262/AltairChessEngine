@@ -11,8 +11,8 @@
 
 #include "incbin.h"
 
-INCBIN(nnue, "src/trappist-net.bin");
-// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/trappist-net.bin");
+INCBIN(nnue, "src/taffreta-net.bin");
+// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/taffreta-net.bin");
 
 const NNUE_Params &nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 
@@ -27,11 +27,13 @@ void NNUE_State::pop() {
 }
 
 
-SCORE_TYPE NNUE_State::evaluate(Color color) const {
+SCORE_TYPE NNUE_State::evaluate(Position& position, Color color) const {
+
+    const int output_bucket = (popcount(position.all_pieces) - 2) / MATERIAL_OUTPUT_BUCKET_DIVSIOR;
     const auto output = color == WHITE
-                        ? screlu_flatten(current_accumulator->white, current_accumulator->black, nnue_parameters.output_weights)
-                        : screlu_flatten(current_accumulator->black, current_accumulator->white, nnue_parameters.output_weights);
-    return (output + nnue_parameters.output_bias) * SCALE / QAB;
+                        ? screlu_flatten(current_accumulator->white, current_accumulator->black, nnue_parameters.output_weights, output_bucket)
+                        : screlu_flatten(current_accumulator->black, current_accumulator->white, nnue_parameters.output_weights, output_bucket);
+    return (output + nnue_parameters.output_bias[output_bucket]) * SCALE / QAB;
 }
 
 std::pair<size_t, size_t> NNUE_State::get_feature_indices(Piece piece, Square sq) {
@@ -48,12 +50,15 @@ std::pair<size_t, size_t> NNUE_State::get_feature_indices(Piece piece, Square sq
 }
 
 int32_t NNUE_State::screlu_flatten(const std::array<int16_t, LAYER1_SIZE> &our,
-                                   const std::array<int16_t, LAYER1_SIZE> &opp, const std::array<int16_t, LAYER1_SIZE * 2> &weights) {
+                                   const std::array<int16_t, LAYER1_SIZE> &opp,
+                                   const std::array<int16_t, LAYER1_SIZE * 2 * MATERIAL_OUTPUT_BUCKETS> &weights,
+                                   int output_bucket) {
     int32_t sum = 0;
+    int output_bucket_offset = output_bucket * 2 * LAYER1_SIZE;
 
-    for (size_t i = 0; i < LAYER1_SIZE; ++i) {
-        sum += screlu(our[i]) * weights[              i];
-        sum += screlu(opp[i]) * weights[LAYER1_SIZE + i];
+    for (size_t i = 0; i < LAYER1_SIZE; i++) {
+        sum += screlu(our[i]) * weights[output_bucket_offset +               i];
+        sum += screlu(opp[i]) * weights[output_bucket_offset + LAYER1_SIZE + i];
     }
 
     return sum / QA;

@@ -17,6 +17,9 @@ class Position;
 constexpr size_t INPUT_SIZE = 768;
 constexpr size_t LAYER1_SIZE = 768;
 
+constexpr size_t MATERIAL_OUTPUT_BUCKETS = 8;
+constexpr int    MATERIAL_OUTPUT_BUCKET_DIVSIOR = 32 / MATERIAL_OUTPUT_BUCKETS;
+
 constexpr SCORE_TYPE CRELU_MIN = 0;
 constexpr SCORE_TYPE CRELU_MAX = 255;
 
@@ -30,8 +33,8 @@ constexpr SCORE_TYPE QAB = QA * QB;
 struct alignas(64) NNUE_Params {
     std::array<int16_t, INPUT_SIZE * LAYER1_SIZE> feature_weights;
     std::array<int16_t, LAYER1_SIZE> feature_bias;
-    std::array<int16_t, LAYER1_SIZE * 2> output_weights;
-    int16_t output_bias;
+    std::array<int16_t, LAYER1_SIZE * 2 * MATERIAL_OUTPUT_BUCKETS> output_weights;
+    std::array<int16_t, MATERIAL_OUTPUT_BUCKETS> output_bias;
 };
 
 extern const NNUE_Params &nnue_parameters;
@@ -69,13 +72,14 @@ public:
     void push();
     void pop();
 
-    SCORE_TYPE evaluate(Color color) const;
+    SCORE_TYPE evaluate(Position& position, Color color) const;
 
     static std::pair<size_t, size_t> get_feature_indices(Piece piece, Square sq);
 
     static int32_t screlu_flatten(const std::array<int16_t, LAYER1_SIZE> &our,
                                   const std::array<int16_t, LAYER1_SIZE> &opp,
-                                  const std::array<int16_t, LAYER1_SIZE * 2> &weights);
+                                  const std::array<int16_t, LAYER1_SIZE * 2 * MATERIAL_OUTPUT_BUCKETS> &weights,
+                                  int output_bucket);
 
     void reset_nnue(Position& position);
 
