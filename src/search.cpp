@@ -763,16 +763,16 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         // Checking for singularity
         if (!root &&
-            depth >= 8 &&
+            depth >= 6 &&
             move == tt_move &&
-            tt_entry.depth >= depth - 3 &&
+            tt_entry.depth >= depth - 2 &&
             tt_entry.flag != HASH_FLAG_ALPHA &&
             position.state_stack[thread_state.search_ply].excluded_move == NO_MOVE &&
             abs(tt_entry.score) < MATE_BOUND) {
 
             position.undo_move<NO_NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
-            int singular_beta = tt_entry.score - depth * 2;
+            int singular_beta = tt_entry.score - depth;
 
             thread_state.search_ply++;
 
@@ -786,7 +786,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             // Singular Extensions
             if (return_eval < singular_beta) {
                 extension++;
-                if (!pv_node && return_eval < singular_beta - 24) extension++;
+                if (!pv_node && return_eval < singular_beta - 16) extension++;
             }
 
             // Multi-cut Pruning
