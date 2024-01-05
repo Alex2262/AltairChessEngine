@@ -6420,3 +6420,50 @@ Penta | [220, 3241, 6338, 3250, 225]
 ```
 
 Merged for simplification + bug fixes. Although not passing at [0, 5], did not lose any or much ELO.
+
+### 6.0.7
+Taffreta Net
+Arch: (768->768)x2->1x8
+Data: Trappist Data + 350M fens
+
+```
+ELO   | 34.34 +- 12.88 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.92 (-2.25, 2.89) [0.00, 5.00]
+GAMES | N: 1472 W: 458 L: 313 D: 701
+https://chess.swehosting.se/test/5240/
+```
+
+### 6.0.8
+SE params changed
+
+STC:
+```
+Elo   | -4.83 +- 8.13 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | -1.55 (-2.25, 2.89) [0.00, 5.00]
+Games | N: 3452 W: 827 L: 875 D: 1750
+Penta | [49, 429, 798, 421, 29]
+```
+
+LTC:
+```
+Elo   | 2.56 +- 3.40 (95%)
+SPRT  | 40.0+0.40s Threads=1 Hash=128MB
+LLR   | 1.80 (-2.25, 2.89) [0.00, 5.00]
+Games | N: 17940 W: 4089 L: 3957 D: 9894
+Penta | [86, 2015, 4626, 2167, 76]
+```
+
+Merged for scaling as time control increases
+
+### 6.0.9
+Deeper / Shallower search
+
+```
+Elo   | 8.62 +- 6.33 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.89 (-2.25, 2.89) [0.00, 5.00]
+Games | N: 5642 W: 1449 L: 1309 D: 2884
+Penta | [57, 628, 1332, 726, 78]
+```
