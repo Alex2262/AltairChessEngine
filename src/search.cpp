@@ -891,12 +891,19 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Search at a full depth with a zero window
         // The zero window is a type of assumption that the current move being searched will not raise alpha,
         // which is why the bounds are [-alpha - 1, -alpha] instead of [-beta, -alpha]
-        if (full_depth_zero_window)
+        if (full_depth_zero_window) {
+            if (return_eval != -SCORE_INF) {
+                new_depth += return_eval >= best_score + 85;        // Deeper Search
+                new_depth -= return_eval <  best_score + new_depth; // Shallower Search
+            }
+
             return_eval = -negamax<NNUE>(engine, -alpha - 1, -alpha, new_depth, true, thread_id);
+        }
 
         // Search to a full depth at normal bounds if necessary
-        if (return_eval == -SCORE_INF || (pv_node && ((return_eval > alpha && return_eval < beta) || legal_moves == 0)))
+        if (return_eval == -SCORE_INF || (pv_node && ((return_eval > alpha && return_eval < beta) || legal_moves == 0))) {
             return_eval = -negamax<NNUE>(engine, -beta, -alpha, new_depth, true, thread_id);
+        }
 
         // Undo the move and other changes
         thread_state.game_ply--;
