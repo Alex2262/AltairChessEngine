@@ -751,7 +751,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         thread_state.node_count++;
 
         // Extensions
-        PLY_TYPE extension = in_check;
+        PLY_TYPE extension = 0;
 
         // Pawn going to 7th rank must be passed
         bool passed_pawn = get_piece_type(informative_move.selected(), ~position.side) == PAWN &&
@@ -759,7 +759,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         bool queen_promotion = move.type() == MOVE_TYPE_PROMOTION &&
                                static_cast<PieceType>(move.promotion_type() + 1) == QUEEN;
 
-        if (move_score >= 0 && (passed_pawn || queen_promotion)) extension++;
+        int double_extensions = root ? 0 : position.state_stack[thread_state.search_ply].double_extensions;
 
         // Checking for singularity
         if (!root &&
@@ -786,7 +786,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             // Singular Extensions
             if (return_eval < singular_beta) {
                 extension++;
-                if (!pv_node && return_eval < singular_beta - 16) extension++;
+                if (!pv_node && return_eval < singular_beta - 16 && double_extensions <= 7) extension++;
             }
 
             // Multi-cut Pruning
@@ -801,13 +801,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             position.make_move<NO_NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
         }
 
+        else if (move_score >= 0 && (passed_pawn || queen_promotion)) extension++;
+
+        else if (in_check) extension++;
+
         extension = std::min<PLY_TYPE>(extension, std::min<PLY_TYPE>(2, MAX_AB_DEPTH - 1 - depth));
-
-        int double_extensions = root ? 0 : position.state_stack[thread_state.search_ply].double_extensions;
-
-        if (double_extensions >= 7) {
-            extension = std::min<PLY_TYPE>(extension, 1);
-        }
 
         position.state_stack[thread_state.search_ply].double_extensions = root ? 0 :
                 position.state_stack[thread_state.search_ply - 1].double_extensions + (extension == 2);
