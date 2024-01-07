@@ -52,6 +52,6 @@ add_executable(Altair
         src/nnue.cpp
         src/nnue.h
         src/incbin.h
-        src/wdl.h)
+        src/wdl.h src/simd.h)
 
 target_link_libraries(Altair Threads::Threads)
