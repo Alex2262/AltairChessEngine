@@ -50,6 +50,7 @@ struct State {
     FixedVector<NNUpdate, 4> activations{};
     FixedVector<NNUpdate, 4> deactivations{};
     bool NNUE_pushed = false;
+    bool NNUE_update_necessary = false;
 };
 
 struct FenInfo {

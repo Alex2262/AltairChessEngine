@@ -24,6 +24,7 @@ void Position::clear_state_stack() {
         state.activations.clear();
         state.deactivations.clear();
         state.NNUE_pushed = false;
+        state.NNUE_update_necessary = false;
     }
 }
 
@@ -491,6 +492,7 @@ void Position::make_null_move(State& state, PLY_TYPE& fifty_move) {
     hash_key ^= ZobristHashKeys.side_hash_key;
     state.move = NO_INFORMATIVE_MOVE;
     state.NNUE_pushed = false;
+    state.NNUE_update_necessary = false;
 
     if (ep_square != NO_SQUARE) {
         hash_key ^= ZobristHashKeys.ep_hash_keys[ep_square];
@@ -531,6 +533,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     state.move = InformativeMove(move, selected, occupied);
 
     state.NNUE_pushed = false;
+    state.NNUE_update_necessary = true;
 
     if constexpr (NNUE) {
         state.activations.clear();
@@ -762,6 +765,8 @@ template void Position::undo_move<USE_NNUE>(Move move, State& state, PLY_TYPE& f
 template void Position::undo_move<NO_NNUE >(Move move, State& state, PLY_TYPE& fifty_move);
 
 void Position::update_nnue(State& state) {
+    if (state.NNUE_pushed || !state.NNUE_update_necessary) return;
+
     state.NNUE_pushed = true;
     nnue_state.push();
 

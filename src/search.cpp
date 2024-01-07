@@ -385,6 +385,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         return tt_value;
     }
 
+    if constexpr (NNUE) position.update_nnue(position.state_stack[thread_state.search_ply - 1]);
+
     // Get the static evaluation of the position
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
     if (static_eval == NO_EVALUATION) static_eval = engine.evaluate<NNUE>(thread_id);
@@ -432,8 +434,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             position.undo_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
             continue;
         }
-
-        position.update_nnue(position.state_stack[thread_state.search_ply]);
 
         thread_state.node_count++;
 
@@ -534,7 +534,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     if (!root) {
 
         // Depth guard
-        if (thread_state.search_ply >= MAX_AB_DEPTH - 2 || depth >= MAX_AB_DEPTH) return engine.evaluate<NNUE>(thread_id);
+        if (thread_state.search_ply >= MAX_AB_DEPTH - 2 || depth >= MAX_AB_DEPTH) {
+            position.update_nnue(position.state_stack[thread_state.search_ply - 1]);
+            return engine.evaluate<NNUE>(thread_id);
+        }
 
         // Detect repetitions and fifty move rule
         if (thread_state.fifty_move >= 100 || thread_state.detect_repetition()) return 3 - static_cast<int>(thread_state.node_count & 8);
@@ -568,6 +571,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     if (position.state_stack[thread_state.search_ply].in_check != -1)
         in_check = static_cast<bool>(position.state_stack[thread_state.search_ply].in_check);
     else in_check = position.is_attacked(position.get_king_pos(position.side), position.side);
+
+    // Accumulator Update from previous ply after cutoffs for speed
+    if constexpr (NNUE) if (!root) position.update_nnue(position.state_stack[thread_state.search_ply - 1]);
 
     // The "improving" heuristic is when the current position has a better static evaluation than the evaluation
     // from a full-move or two plies ago. When this is true, we can be more aggressive with
@@ -641,6 +647,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             if (return_eval >= beta) {
                 if (return_eval >= MATE_BOUND) return beta;
                 if (depth <= 15) return return_eval;
+
+                position.state_stack[thread_state.search_ply].NNUE_update_necessary = false;
                 SCORE_TYPE verification_eval = negamax<NNUE>(engine, beta - 1, beta, depth - reduction, false, cutnode, thread_id);
                 if (verification_eval > beta) return return_eval;
             }
@@ -771,6 +779,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             abs(tt_entry.score) < MATE_BOUND) {
 
             position.undo_move<NO_NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+            position.state_stack[thread_state.search_ply].NNUE_update_necessary = false;
 
             int singular_beta = tt_entry.score - depth;
 
@@ -813,7 +822,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         PLY_TYPE new_depth = depth + extension - 1;
 
         // Prepare for recursive searching
-        position.update_nnue(position.state_stack[thread_state.search_ply]);
+        // position.update_nnue(position.state_stack[thread_state.search_ply]);
 
         thread_state.search_ply++;
         thread_state.game_ply++;
