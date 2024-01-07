@@ -385,7 +385,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         return tt_value;
     }
 
-    if (depth != engine.max_q_depth) position.update_nnue(position.state_stack[thread_state.search_ply]);
+    if (depth != engine.max_q_depth) position.update_nnue(position.state_stack[thread_state.search_ply - 1]);
 
     // Get the static evaluation of the position
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
