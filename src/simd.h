@@ -31,4 +31,18 @@ constexpr size_t REGISTER_SIZE = 0;
 
 #endif
 
+
+auto inline loadi32(auto input) {
+
+#if defined(__AVX2__)
+    return _mm256_loadu_si256(reinterpret_cast<const __m256i*>(input));
+#elif defined(__ARM_NEON)
+    return vld1q_s16(input);
+#else
+    return 0;
+#endif
+
+}
+
+
 #endif //ALTAIRCHESSENGINE_SIMD_H
