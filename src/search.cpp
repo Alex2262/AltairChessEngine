@@ -385,6 +385,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         return tt_value;
     }
 
+    if (depth != engine.max_q_depth) position.update_nnue(position.state_stack[thread_state.search_ply]);
+
     // Get the static evaluation of the position
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
     if (static_eval == NO_EVALUATION) static_eval = engine.evaluate<NNUE>(thread_id);
@@ -432,8 +434,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             position.undo_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
             continue;
         }
-
-        position.update_nnue(position.state_stack[thread_state.search_ply]);
 
         thread_state.node_count++;
 
