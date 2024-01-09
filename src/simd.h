@@ -36,7 +36,7 @@ namespace SIMD {
     auto inline int16_load(auto data) {
 
 #if defined(__AVX2__)
-        return _mm256_loadu_si256(reinterpret_cast<__m256i*>(data));
+        return _mm256_loadu_si256(reinterpret_cast<const __m256i*>(data));
 #elif defined(__ARM_NEON)
         return vld1q_s16(data);
 #else
@@ -60,9 +60,6 @@ namespace SIMD {
     auto inline vec_int16_clamp(auto vec, auto min_vec, auto max_vec) {
 
 #if defined(__AVX2__)
-        __m256i min_vec = _mm256_set1_epi16(min);
-        __m256i max_vec = _mm256_set1_epi16(max);
-
         vec = _mm256_max_epi16(vec, min_vec);
         vec = _mm256_min_epi16(vec, max_vec);
         return vec;
