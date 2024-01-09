@@ -131,7 +131,7 @@ namespace SIMD {
 
         auto lane_1 = _mm256_castsi256_si128(sum_into_2);
         auto lane_2 = _mm256_extractf128_si256(sum_into_2, 1);
-        auto result = _mm_add_epi32(lower_number, higher_number);
+        auto result = _mm_add_epi32(lane_1, lane_2);
         auto rel    = _mm_extract_epi32(result, 0);
 
         return rel;
