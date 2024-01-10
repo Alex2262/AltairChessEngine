@@ -11,6 +11,7 @@
 #include <vector>
 #include <algorithm>
 #include "constants.h"
+#include "simd.h"
 
 class Position;
 
@@ -18,17 +19,19 @@ constexpr size_t INPUT_SIZE = 768;
 constexpr size_t LAYER1_SIZE = 768;
 
 constexpr size_t MATERIAL_OUTPUT_BUCKETS = 8;
-constexpr int    MATERIAL_OUTPUT_BUCKET_DIVSIOR = 32 / MATERIAL_OUTPUT_BUCKETS;
+constexpr int    MATERIAL_OUTPUT_BUCKET_DIVISOR = 32 / MATERIAL_OUTPUT_BUCKETS;
 
-constexpr SCORE_TYPE CRELU_MIN = 0;
-constexpr SCORE_TYPE CRELU_MAX = 255;
+constexpr int16_t CRELU_MIN = 0;
 
 constexpr SCORE_TYPE SCALE = 400;
 
-constexpr SCORE_TYPE QA = 255;
-constexpr SCORE_TYPE QB = 64;
+constexpr int16_t QA = 181;
+constexpr int16_t QB = 64;
 
-constexpr SCORE_TYPE QAB = QA * QB;
+constexpr int16_t QAB = QA * QB;
+
+const auto CRELU_MIN_VEC = SIMD::get_int16_vec(CRELU_MIN);
+const auto QA_VEC        = SIMD::get_int16_vec(QA);
 
 struct alignas(64) NNUE_Params {
     std::array<int16_t, INPUT_SIZE * LAYER1_SIZE> feature_weights;
@@ -52,9 +55,9 @@ struct alignas(64) Accumulator
     }
 };
 
-constexpr int32_t screlu(int16_t x)
+constexpr int16_t screlu(int16_t x)
 {
-    const auto clipped = std::clamp(static_cast<int32_t>(x), CRELU_MIN, CRELU_MAX);
+    const auto clipped = std::clamp(static_cast<int16_t>(x), CRELU_MIN, QA);
     return clipped * clipped;
 }
 
@@ -80,6 +83,11 @@ public:
                                   const std::array<int16_t, LAYER1_SIZE> &opp,
                                   const std::array<int16_t, LAYER1_SIZE * 2 * MATERIAL_OUTPUT_BUCKETS> &weights,
                                   int output_bucket);
+
+    static int32_t screlu_flatten_simd(const std::array<int16_t, LAYER1_SIZE> &our,
+                                       const std::array<int16_t, LAYER1_SIZE> &opp,
+                                       const std::array<int16_t, LAYER1_SIZE * 2 * MATERIAL_OUTPUT_BUCKETS> &weights,
+                                       int output_bucket);
 
     void reset_nnue(Position& position);
 
