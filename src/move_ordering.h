@@ -62,6 +62,9 @@ public:
     int good_capture_count = 0;
     int good_capture_found = 0;
 
+    bool probcut = false;
+    bool good_noisy_generated = false;
+
     PLY_TYPE search_ply = 0;
 
     void reset_qsearch(Move tt_move_passed);
@@ -123,10 +126,13 @@ public:
             good_capture_count = 0;
             good_capture_found = 0;
 
-            if constexpr (qsearch) position->get_pseudo_legal_moves<Movegen::Qsearch, true>(current_scored_moves);
-            else position->get_pseudo_legal_moves<Movegen::Noisy, true>(current_scored_moves);
+            if (!good_noisy_generated) {
+                if constexpr (qsearch) position->get_pseudo_legal_moves<Movegen::Qsearch, true>(current_scored_moves);
+                else position->get_pseudo_legal_moves<Movegen::Noisy, true>(current_scored_moves);
 
-            get_capture_scores<qsearch>(*thread_state, current_scored_moves, tt_move, good_capture_count);
+                get_capture_scores<qsearch>(*thread_state, current_scored_moves, tt_move, good_capture_count);
+            }
+
             stage = Stage::Noisy;
         }
 
@@ -150,6 +156,8 @@ public:
 
         if (stage == Stage::GenQ_BN) {
             assert(!qsearch);
+
+
 
             position->get_pseudo_legal_moves<Movegen::Quiet, false>(current_scored_moves);
             get_q_bn_scores(*thread_state, current_scored_moves, tt_move, last_moves, move_index);

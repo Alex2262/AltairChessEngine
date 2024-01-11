@@ -155,6 +155,9 @@ void Generator::reset_qsearch(Move tt_move_passed) {
     stage = Stage::TT_probe;
     tt_move = tt_move_passed;
 
+    probcut = false;
+    good_noisy_generated = false;
+
     move_index = 0;
 }
 
@@ -162,6 +165,9 @@ void Generator::reset_negamax(Move tt_move_passed, InformativeMove last_moves_pa
 
     stage = Stage::TT_probe;
     tt_move = tt_move_passed;
+
+    probcut = false;
+    good_noisy_generated = false;
 
     move_index = 0;
 
