@@ -341,16 +341,16 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
             initialize_evaluation_information(position, evaluation_information);
 
             // Win adjudication
-            if (abs(score) >= 32000
-                || ((abs(score) >= win_adjudication_score) && ++win_adjudication_count >= win_adjudication_length))
-                game_result = score > 0 ? ~position.side : position.side;
-            else win_adjudication_count = 0;
+            if (abs(score) >= 32000 || (
+                abs(score) >= win_adjudication_score && ++win_adjudication_count >= win_adjudication_length
+                )) game_result = score > 0 ? ~position.side : position.side;
+            else if (abs(score) < win_adjudication_score) win_adjudication_count = 0;
 
             // Draw adjudications
             if (datagen_thread.engine->thread_states[0].fifty_move >= 100
                 || datagen_thread.engine->thread_states[0].detect_repetition()
                 || datagen_thread.game_length >= MAX_GAME_LENGTH
-                || (datagen_thread.engine->thread_states[0].fifty_move >= 40 &&
+                || (datagen_thread.engine->thread_states[0].fifty_move >= 20 &&
                     evaluate_drawishness(position, evaluation_information) == 0.0))
                 game_result = 0.5;
 
