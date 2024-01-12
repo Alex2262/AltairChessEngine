@@ -603,6 +603,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (pv_node) depth--;
     }
 
+    InformativeMove last_moves[LAST_MOVE_COUNTS] = {NO_INFORMATIVE_MOVE, NO_INFORMATIVE_MOVE, NO_INFORMATIVE_MOVE};
+    bool probcut_attempted = false;
+
     // Forward Pruning Methods
     if (!pv_node && !in_check && !singular_search && abs(beta) < MATE_BOUND) {
 
@@ -645,55 +648,53 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 if (verification_eval > beta) return return_eval;
             }
         }
+
+        // ProbCut
+        SCORE_TYPE probcut_beta = beta + 226;
+
+        if (depth >= 5 && abs(beta) < MATE_BOUND && (tt_move == NO_MOVE || tt_entry.depth < depth - 3 || tt_value >= probcut_beta)) {
+
+            probcut_attempted = true;
+
+            for (generator.reset_negamax(tt_move, last_moves), generator.probcut = true; generator.stage != Stage::GenQ_BN;) {
+                Move move = generator.next_move<false>().move;
+
+                if (move == NO_MOVE) break;
+                if (move == tt_move && (!tt_move.is_capture(position) && tt_move.type() != MOVE_TYPE_EP)) continue;
+
+                bool attempt = position.make_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+                engine.tt_prefetch_read(position.hash_key);  // Prefetch the TT for cache
+
+                if (!attempt) {
+                    position.undo_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+                    continue;
+                }
+
+                position.update_nnue(position.state_stack[thread_state.search_ply]);
+
+                thread_state.search_ply++;
+                SCORE_TYPE return_eval = -qsearch<NNUE>(engine, -probcut_beta, -probcut_beta + 1, engine.max_q_depth, thread_id);
+
+                if (return_eval >= probcut_beta) {
+                    return_eval = -negamax<NNUE>(engine, -probcut_beta, -probcut_beta + 1, depth - 4, true, !cutnode, thread_id);
+                }
+
+                thread_state.search_ply--;
+                position.undo_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+
+                if (return_eval >= probcut_beta) {
+                    return return_eval;
+                }
+            }
+        }
     }
 
     // Used for the continuation history heuristic
-    InformativeMove last_moves[LAST_MOVE_COUNTS] = {};
-
     for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
         int last_move_ply = LAST_MOVE_PLIES[last_move_index];
 
         last_moves[last_move_index] = thread_state.search_ply >= last_move_ply ?
                                       position.state_stack[thread_state.search_ply - last_move_ply].move : NO_INFORMATIVE_MOVE;
-    }
-
-    // ProbCut
-    SCORE_TYPE probcut_beta = beta + 226;
-    bool probcut_attempted = false;
-
-    if (depth >= 5 && (tt_move == NO_MOVE || tt_hash_flag == HASH_FLAG_ALPHA || tt_value >= probcut_beta)) {
-
-        probcut_attempted = true;
-
-        for (generator.reset_negamax(tt_move, last_moves), generator.probcut = true; generator.stage != Stage::GenQ_BN;) {
-            Move move = generator.next_move<false>().move;
-
-            if (move == NO_MOVE) break;
-
-            bool attempt = position.make_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
-            engine.tt_prefetch_read(position.hash_key);  // Prefetch the TT for cache
-
-            if (!attempt) {
-                position.undo_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
-                continue;
-            }
-
-            position.update_nnue(position.state_stack[thread_state.search_ply]);
-
-            thread_state.search_ply++;
-            SCORE_TYPE return_eval = -qsearch<NNUE>(engine, -probcut_beta, -probcut_beta + 1, engine.max_q_depth, thread_id);
-
-            if (return_eval >= probcut_beta) {
-                return_eval = -negamax<NNUE>(engine, -probcut_beta, -probcut_beta + 1, depth - 4, true, !cutnode, thread_id);
-            }
-
-            thread_state.search_ply--;
-            position.undo_move<NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
-
-            if (return_eval >= probcut_beta) {
-                return return_eval - 175;
-            }
-        }
     }
 
     bool tt_move_capture = tt_move.is_capture(position);
