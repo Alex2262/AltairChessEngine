@@ -794,7 +794,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 return singular_beta;
             }
 
-            else if (tt_entry.score >= beta) {
+            else if (tt_entry.score >= beta || tt_entry.score <= alpha) {
                 extension--;
             }
 
