@@ -6467,3 +6467,73 @@ LLR   | 2.89 (-2.25, 2.89) [0.00, 5.00]
 Games | N: 5642 W: 1449 L: 1309 D: 2884
 Penta | [57, 628, 1332, 726, 78]
 ```
+
+### 6.1.0
+Check Extension Change
+
+STC
+```
+Elo   | 1.43 +- 1.76 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | -0.05 (-2.25, 2.89) [0.00, 5.00]
+Games | N: 73502 W: 18165 L: 17863 D: 37474
+Penta | [825, 8731, 17312, 9083, 800]
+```
+
+LTC
+```
+Elo   | 5.65 +- 4.97 (95%)
+SPRT  | 40.0+0.40s Threads=1 Hash=128MB
+LLR   | 2.92 (-2.25, 2.89) [0.00, 5.00]
+Games | N: 8424 W: 1960 L: 1823 D: 4641
+Penta | [32, 925, 2182, 1020, 53]
+```
+
+LTC pass
+
+### 6.1.1
+Cutnodes
+
+```
+Elo   | 1.90 +- 3.68 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 0.58 (-2.25, 2.89) [0.00, 5.00]
+Games | N: 16808 W: 4176 L: 4084 D: 8548
+Penta | [184, 1960, 4021, 2058, 181]
+
+ELO: 1.9 +- 3.68 [-1.78, 5.58]
+LLR: 3.17 [-4.0, 1.0] (-2.94, 2.94)
+```
+
+Merged for cutnode functionality, and passed non-regression
+
+### 6.1.2
+SIMD (AVX2 enabled only currently)
+
+STC SPRT
+```
+Elo   | 23.57 +- 11.20 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.94 (-2.25, 2.89) [0.00, 5.00]
+Games | N: 1890 W: 546 L: 418 D: 926
+Penta | [14, 188, 432, 278, 33]
+```
+
+LTC Fixed games
+```
+Elo   | 22.23 +- 16.42 (95%)
+Conf  | 40.0+0.40s Threads=1 Hash=128MB
+Games | N: 798 W: 210 L: 159 D: 429
+Penta | [3, 74, 199, 115, 8]
+```
+
+### 6.1.3
+Negative Extensions on alpha condition in SE
+
+```
+Elo   | 4.71 +- 4.22 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.99 (-2.25, 2.89) [0.00, 5.00]
+Games | N: 13132 W: 3404 L: 3226 D: 6502
+Penta | [172, 1489, 3081, 1637, 187]
+```
