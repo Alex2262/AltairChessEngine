@@ -136,7 +136,7 @@ public:
 
             if (good_capture_found >= good_capture_count) {
                 if constexpr (!qsearch) stage = Stage::GenQ_BN;
-                else if (move_index >= current_scored_moves.size()) stage = Stage::Terminated;
+                else if (move_index >= static_cast<int>(current_scored_moves.size())) stage = Stage::Terminated;
             }
 
             if (stage == Stage::Noisy) {
@@ -162,7 +162,7 @@ public:
 
             if (current_scored_moves[move_index].move == tt_move) move_index++;
 
-            if (move_index >= current_scored_moves.size()) {
+            if (move_index >= static_cast<int>(current_scored_moves.size())) {
                 stage = Stage::Terminated;
             }
 

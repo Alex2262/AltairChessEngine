@@ -126,7 +126,7 @@ template SCORE_TYPE score_capture<false>(Thread_State& thread_state, ScoredMove&
 
 void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                      Move tt_move, InformativeMove last_moves[], int start_index) {
-    for (int i = start_index; i < current_scored_moves.size(); i++) {
+    for (int i = start_index; i < static_cast<int>(current_scored_moves.size()); i++) {
         ScoredMove& scored_move = current_scored_moves[i];
         scored_move.score = score_q_bn(thread_state, scored_move.move, tt_move, last_moves);
     }

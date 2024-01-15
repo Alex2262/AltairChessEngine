@@ -11,8 +11,16 @@ CXXFLAGS     := -O3 -std=c++20 -march=native -Wall -Wextra -pedantic -DNDEBUG -f
 CXX          := clang++
 SUFFIX       :=
 
+PGO := true
+
+LLVM_PROF_CMD = llvm-profdata
+
 ifeq ($(native),1)
     CXXFLAGS += -march=native
+
+    ifeq (,$(shell where llvm-profdata))
+    	override PGO := off
+    endif
 endif
 
 # Detect Windows
@@ -23,8 +31,14 @@ ifeq ($(OS), Windows_NT)
 else
     DETECTED_OS := $(shell uname -s)
     ifneq (,$(findstring clang,$(shell $(CXX) --version)))
-        ifneq ($(DETECTED_OS),Darwin)
+        ifneq ($(DETECTED_OS), Darwin)
             CXXFLAGS += -fuse-ld=lld
+
+            ifeq (,$(shell which llvm-profdata))
+              	override PGO := off
+            endif
+        else
+            LLVM_PROF_CMD = xcrun llvm-profdata
         endif
     endif
 	CXXFLAGS += -pthread
@@ -33,9 +47,29 @@ endif
 
 OUT := $(EXE)$(SUFFIX)
 
-all: $(EXE)
 
-$(EXE) : $(SOURCES)
+make:
+
+ifeq ($(PGO), true)
+
+	$(CXX) $(CXXFLAGS) -fprofile-instr-generate="Altair_pgo" -o $(OUT) $(SOURCES)
+
+ifeq ($(OS), Windows_NT)
+	$(OUT) bench
+else
+	./$(OUT) bench
+endif
+
+	xcrun llvm-profdata merge -output="Altair.profdata" default.profraw
+	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES) -fprofile-instr-use="Altair.profdata"
+	rm "Altair.profdata"
+	rm "Altair_pgo"
+
+else
+	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES)
+endif
+
+basic:
 	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES)
 
 clean:
