@@ -420,7 +420,7 @@ bool Position::is_pseudo_legal(Move move) {
 
             if (board[starting_rook_pos[side][1]] != get_piece(ROOK, side)) return false;
 
-            for (int temp_pos = static_cast<int>(origin_square) - 1; temp_pos > starting_rook_pos[side][1]; temp_pos--) {
+            for (int temp_pos = static_cast<int>(origin_square) - 1; temp_pos > static_cast<int>(starting_rook_pos[side][1]); temp_pos--) {
                 if (board[temp_pos] != EMPTY) return false;
             }
 
@@ -435,7 +435,7 @@ bool Position::is_pseudo_legal(Move move) {
             if (board[starting_rook_pos[side][0]] != get_piece(ROOK, side)) return false;
 
             //std::cout << static_cast<int>(origin_square) + 1 << " " << starting_rook_pos[side][0] << std::endl;
-            for (int temp_pos = static_cast<int>(origin_square) + 1; temp_pos < starting_rook_pos[side][0]; temp_pos++) {
+            for (int temp_pos = static_cast<int>(origin_square) + 1; temp_pos < static_cast<int>(starting_rook_pos[side][0]); temp_pos++) {
                 // std::cout << temp_pos << std::endl;
                 if (board[temp_pos] != EMPTY) return false;
             }
