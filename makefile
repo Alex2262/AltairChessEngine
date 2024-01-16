@@ -29,17 +29,20 @@ ifeq ($(OS), Windows_NT)
     CXXFLAGS += -static
     CXXFLAGS += -fuse-ld=lld
 else
+
     DETECTED_OS := $(shell uname -s)
     ifneq (,$(findstring clang,$(shell $(CXX) --version)))
         ifneq ($(DETECTED_OS), Darwin)
             CXXFLAGS += -fuse-ld=lld
 
             ifeq (,$(shell which llvm-profdata))
-              	override PGO := off
+              	override PGO := false
             endif
         else
             LLVM_PROF_CMD = xcrun llvm-profdata
         endif
+    else
+    	override PGO := false
     endif
 	CXXFLAGS += -pthread
 
@@ -60,7 +63,7 @@ else
 	./$(OUT) bench
 endif
 
-	xcrun llvm-profdata merge -output="Altair.profdata" default.profraw
+	$(LLVM_PROF_CMD) merge -output="Altair.profdata" default.profraw
 	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES) -fprofile-instr-use="Altair.profdata"
 	rm "Altair.profdata"
 	rm "Altair_pgo"
