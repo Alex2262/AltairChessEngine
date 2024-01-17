@@ -55,7 +55,7 @@ make:
 
 ifeq ($(PGO), true)
 
-	$(CXX) $(CXXFLAGS) -fprofile-instr-generate="Altair_pgo" -o $(OUT) $(SOURCES)
+	$(CXX) $(CXXFLAGS) -fprofile-instr-generate -o $(OUT) $(SOURCES)
 
 ifeq ($(OS), Windows_NT)
 	$(OUT) bench
@@ -63,10 +63,10 @@ else
 	./$(OUT) bench
 endif
 
-	$(LLVM_PROF_CMD) merge -output="Altair.profdata" default.profraw
+	$(LLVM_PROF_CMD) merge -output="Altair.profdata" *.profraw
 	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES) -fprofile-instr-use="Altair.profdata"
 	rm "Altair.profdata"
-	rm "Altair_pgo"
+	rm *.profraw
 
 else
 	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES)
