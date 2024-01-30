@@ -75,11 +75,13 @@ int32_t NNUE_State::screlu_flatten(const std::array<int16_t, LAYER1_SIZE> &our,
                                    const std::array<int16_t, LAYER1_SIZE * 2 * MATERIAL_OUTPUT_BUCKETS> &weights,
                                    int output_bucket) {
     int32_t sum = 0;
-    int output_bucket_offset = output_bucket * 2 * LAYER1_SIZE;
+
+    int offset_1 = output_bucket;
+    int offset_2 = LAYER1_SIZE * MATERIAL_OUTPUT_BUCKETS + output_bucket;
 
     for (size_t i = 0; i < LAYER1_SIZE; i++) {
-        sum += screlu(our[i]) * weights[output_bucket_offset +               i];
-        sum += screlu(opp[i]) * weights[output_bucket_offset + LAYER1_SIZE + i];
+        sum += screlu(our[i]) * weights[i * MATERIAL_OUTPUT_BUCKETS + offset_1];
+        sum += screlu(opp[i]) * weights[i * MATERIAL_OUTPUT_BUCKETS + offset_2];
     }
 
     return sum / QA;
@@ -128,8 +130,8 @@ void NNUE_State::reset_nnue(Position& position) {
     current_accumulator->king_buckets[WHITE] = KING_BUCKET_MAP[position.get_king_pos(WHITE)];
     current_accumulator->king_buckets[BLACK] = KING_BUCKET_MAP[position.get_king_pos(BLACK) ^ 56];
 
-    std::cout << current_accumulator->king_buckets[WHITE] << std::endl;
-    std::cout << current_accumulator->king_buckets[BLACK] << std::endl;
+    // std::cout << current_accumulator->king_buckets[WHITE] << std::endl;
+    // std::cout << current_accumulator->king_buckets[BLACK] << std::endl;
 
     for (int square = 0; square < 64; square++) {
         if (position.board[square] < EMPTY) {
