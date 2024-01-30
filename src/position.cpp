@@ -765,11 +765,28 @@ void Position::update_nnue(State& state) {
     state.NNUE_pushed = true;
     nnue_state.push();
 
+    Color original_color = ~side; // Changed sides after making the move.
+
+    bool original_side_reset = true;
+
+    const int king_bucket = KING_BUCKET_MAP[get_king_pos(original_color) ^ (56 * original_color)];
+    if (king_bucket != nnue_state.current_accumulator->king_buckets[original_color]) {
+        auto& accumulator_our = original_color == WHITE ? nnue_state.current_accumulator->white :
+                                                          nnue_state.current_accumulator->black;
+
+        nnue_state.current_accumulator->king_buckets[original_color] = king_bucket;
+        nnue_state.reset_side(*this, accumulator_our, original_color);
+    }
+
     for (NNUpdate& nn_update : state.activations) {
+        if (original_side_reset && get_color(nn_update.piece) == original_color) continue;
+
         nnue_state.update_feature<ACTIVATE>(nn_update.piece, nn_update.square);
     }
 
     for (NNUpdate& nn_update : state.deactivations) {
+        if (original_side_reset && get_color(nn_update.piece) == original_color) continue;
+
         nnue_state.update_feature<DEACTIVATE>(nn_update.piece, nn_update.square);
     }
 }

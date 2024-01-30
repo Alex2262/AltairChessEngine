@@ -2,6 +2,7 @@
 // Created by Alexander Tian on 6/16/23.
 //
 
+#include <iostream>
 #include "nnue.h"
 #include "position.h"
 
@@ -11,8 +12,8 @@
 
 #include "incbin.h"
 
-INCBIN(nnue, "src/taffreta-net.bin");
-// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/taffreta-net.bin");
+// INCBIN(nnue, "src/solaris-net.bin");
+INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/solaris-net.bin");
 
 const NNUE_Params &nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 
@@ -27,7 +28,20 @@ void NNUE_State::pop() {
 }
 
 
-SCORE_TYPE NNUE_State::evaluate(Position& position, Color color) const {
+void NNUE_State::reset_side(Position& position, std::array<int16_t, LAYER1_SIZE> &our, Color color) {
+    current_accumulator->init_side(nnue_parameters.feature_bias, color);
+
+    for (int piece = get_piece(PAWN, color); piece <= get_piece(KING, color); piece++) {
+        BITBOARD piece_bb = position.pieces[piece];
+        while (piece_bb) {
+            Square square = poplsb(piece_bb);
+            update_feature<true>(static_cast<Piece>(piece), square);
+        }
+    }
+}
+
+
+SCORE_TYPE NNUE_State::evaluate(Position& position, Color color) {
 
     const int output_bucket = (popcount(position.all_pieces) - 2) / MATERIAL_OUTPUT_BUCKET_DIVISOR;
 
@@ -110,6 +124,12 @@ void NNUE_State::reset_nnue(Position& position) {
     current_accumulator = &accumulator_stack.emplace_back();
 
     current_accumulator->init(nnue_parameters.feature_bias);
+
+    current_accumulator->king_buckets[WHITE] = KING_BUCKET_MAP[position.get_king_pos(WHITE)];
+    current_accumulator->king_buckets[BLACK] = KING_BUCKET_MAP[position.get_king_pos(BLACK) ^ 56];
+
+    std::cout << current_accumulator->king_buckets[WHITE] << std::endl;
+    std::cout << current_accumulator->king_buckets[BLACK] << std::endl;
 
     for (int square = 0; square < 64; square++) {
         if (position.board[square] < EMPTY) {
