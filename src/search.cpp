@@ -597,12 +597,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         }
     }
 
-    // Internal Iterative Reduction. Based on Rebel's idea
-    if (tt_move == NO_MOVE && !singular_search && depth >= 4) {
-        depth--;
-        if (pv_node) depth--;
-    }
-
     // Forward Pruning Methods
     if (!pv_node && !in_check && !singular_search && abs(beta) < MATE_BOUND) {
 
@@ -645,6 +639,12 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 if (verification_eval > beta) return return_eval;
             }
         }
+    }
+
+    // Internal Iterative Reduction. Based on Rebel's idea
+    if (tt_move == NO_MOVE && depth >= 4) {
+        depth--;
+        if (pv_node) depth--;
     }
 
     bool tt_move_capture = tt_move.is_capture(position);
