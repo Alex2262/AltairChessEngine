@@ -23,6 +23,7 @@ void Position::clear_state_stack() {
 
         state.activations.clear();
         state.deactivations.clear();
+        state.king_bucket_update = {};
         state.NNUE_pushed = false;
     }
 }
@@ -535,6 +536,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     if constexpr (NNUE) {
         state.activations.clear();
         state.deactivations.clear();
+        state.king_bucket_update = {};
     }
 
     bool legal = true;
@@ -667,9 +669,25 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     if (selected == WHITE_KING) {
         castle_ability_bits &= ~(1 << 0);
         castle_ability_bits &= ~(1 << 1);
+
+        int king_bucket = KING_BUCKET_MAP[target_square];
+
+        if (king_bucket != nnue_state.current_accumulator->king_buckets[side]) {
+            state.king_bucket_update.update_necessary = true;
+            state.king_bucket_update.side = WHITE;
+            state.king_bucket_update.bucket = king_bucket;
+        }
+
     } else if (selected == BLACK_KING) {
         castle_ability_bits &= ~(1 << 2);
         castle_ability_bits &= ~(1 << 3);
+
+        int king_bucket = KING_BUCKET_MAP[target_square ^ 56];
+        if (king_bucket != nnue_state.current_accumulator->king_buckets[side]) {
+            state.king_bucket_update.update_necessary = true;
+            state.king_bucket_update.side = BLACK;
+            state.king_bucket_update.bucket = king_bucket;
+        }
     }
 
     // Rook moves or is captured
@@ -765,12 +783,26 @@ void Position::update_nnue(State& state) {
     state.NNUE_pushed = true;
     nnue_state.push();
 
+    Color bucket_side = state.king_bucket_update.side;
+
+    if (state.king_bucket_update.update_necessary) {
+        auto& accumulator_our = bucket_side == WHITE ? nnue_state.current_accumulator->white :
+                                nnue_state.current_accumulator->black;
+
+        nnue_state.current_accumulator->king_buckets[bucket_side] = state.king_bucket_update.bucket;
+        nnue_state.reset_side(*this, accumulator_our, bucket_side);
+    }
+
     for (NNUpdate& nn_update : state.activations) {
-        nnue_state.update_feature<ACTIVATE>(nn_update.piece, nn_update.square);
+        if (state.king_bucket_update.update_necessary)
+            nnue_state.update_feature_side<ACTIVATE>(nn_update.piece, nn_update.square, ~bucket_side);
+        else nnue_state.update_feature<ACTIVATE>(nn_update.piece, nn_update.square);
     }
 
     for (NNUpdate& nn_update : state.deactivations) {
-        nnue_state.update_feature<DEACTIVATE>(nn_update.piece, nn_update.square);
+        if (state.king_bucket_update.update_necessary)
+            nnue_state.update_feature_side<DEACTIVATE>(nn_update.piece, nn_update.square, ~bucket_side);
+        else nnue_state.update_feature<DEACTIVATE>(nn_update.piece, nn_update.square);
     }
 }
 

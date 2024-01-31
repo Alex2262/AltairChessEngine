@@ -2,6 +2,7 @@
 // Created by Alexander Tian on 6/16/23.
 //
 
+#include <iostream>
 #include "nnue.h"
 #include "position.h"
 
@@ -11,10 +12,10 @@
 
 #include "incbin.h"
 
-INCBIN(nnue, "src/taffreta-net.bin");
-// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/taffreta-net.bin");
+INCBIN(nnue, "src/solaris-net.bin");
+// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/solaris-net.bin");
 
-const NNUE_Params &nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
+const NNUE_Params &original_nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 
 void NNUE_State::push() {
     accumulator_stack.push_back(*current_accumulator);
@@ -27,7 +28,22 @@ void NNUE_State::pop() {
 }
 
 
-SCORE_TYPE NNUE_State::evaluate(Position& position, Color color) const {
+void NNUE_State::reset_side(Position& position, std::array<int16_t, LAYER1_SIZE> &our, Color color) {
+    current_accumulator->init_side(nnue_parameters.feature_bias, color);
+
+    auto& accumulator_c = color == WHITE ? current_accumulator->white : current_accumulator->black;
+
+    for (int piece = WHITE_PAWN; piece < EMPTY; piece++) {
+        BITBOARD piece_bb = position.pieces[piece];
+        while (piece_bb) {
+            Square square = poplsb(piece_bb);
+            update_feature_side<true>(static_cast<Piece>(piece), square, color);
+        }
+    }
+}
+
+
+SCORE_TYPE NNUE_State::evaluate(Position& position, Color color) {
 
     const int output_bucket = (popcount(position.all_pieces) - 2) / MATERIAL_OUTPUT_BUCKET_DIVISOR;
 
@@ -44,14 +60,16 @@ SCORE_TYPE NNUE_State::evaluate(Position& position, Color color) const {
 }
 
 std::pair<size_t, size_t> NNUE_State::get_feature_indices(Piece piece, Square sq) {
-    constexpr size_t color_offset = 64 * 6;
+    constexpr size_t color_offset = 384;
     constexpr size_t piece_offset = 64;
 
     const Color color = get_color(piece);
     const auto piece_type = get_piece_type(piece, color);
 
-    const auto white_idx =  color * color_offset + piece_type * piece_offset + static_cast<size_t>(sq);
-    const auto black_idx = ~color * color_offset + piece_type * piece_offset + static_cast<size_t>(sq ^ 56);
+    const auto white_idx = INPUT_SIZE * (current_accumulator->king_buckets[WHITE])
+            +  color * color_offset + piece_type * piece_offset + static_cast<size_t>(sq);
+    const auto black_idx = INPUT_SIZE * (current_accumulator->king_buckets[BLACK])
+            + ~color * color_offset + piece_type * piece_offset + static_cast<size_t>(sq ^ 56);
 
     return {white_idx, black_idx};
 }
@@ -61,11 +79,13 @@ int32_t NNUE_State::screlu_flatten(const std::array<int16_t, LAYER1_SIZE> &our,
                                    const std::array<int16_t, LAYER1_SIZE * 2 * MATERIAL_OUTPUT_BUCKETS> &weights,
                                    int output_bucket) {
     int32_t sum = 0;
-    int output_bucket_offset = output_bucket * 2 * LAYER1_SIZE;
+
+    const int offset_1 = output_bucket * 2 * LAYER1_SIZE;
+    const int offset_2 = offset_1 + LAYER1_SIZE;
 
     for (size_t i = 0; i < LAYER1_SIZE; i++) {
-        sum += screlu(our[i]) * weights[output_bucket_offset +               i];
-        sum += screlu(opp[i]) * weights[output_bucket_offset + LAYER1_SIZE + i];
+        sum += screlu(our[i]) * weights[offset_1 + i];
+        sum += screlu(opp[i]) * weights[offset_2 + i];
     }
 
     return sum / QA;
@@ -76,7 +96,8 @@ int32_t NNUE_State::screlu_flatten_simd(const std::array<int16_t, LAYER1_SIZE> &
                                         const std::array<int16_t, LAYER1_SIZE * 2 * MATERIAL_OUTPUT_BUCKETS> &weights,
                                         int output_bucket) {
     auto sum = SIMD::vec_int32_zero();
-    int output_bucket_offset = output_bucket * 2 * LAYER1_SIZE;
+    const int offset_1 = output_bucket * 2 * LAYER1_SIZE;
+    const int offset_2 = offset_1 + LAYER1_SIZE;
 
     for (size_t i = 0; i < LAYER1_SIZE; i += SIMD::REGISTER_SIZE) {
 
@@ -85,7 +106,7 @@ int32_t NNUE_State::screlu_flatten_simd(const std::array<int16_t, LAYER1_SIZE> &
         our_weight      = SIMD::vec_int16_clamp(our_weight, CRELU_MIN_VEC, QA_VEC);
         our_weight      = SIMD::vec_int16_multiply(our_weight, our_weight);
 
-        auto out_weight_1 = SIMD::int16_load(&weights[output_bucket_offset + i]);
+        auto out_weight_1 = SIMD::int16_load(&weights[offset_1 + i]);
         auto our_product  = SIMD::vec_int16_madd_int32(our_weight, out_weight_1);
 
         sum = SIMD::vec_int32_add(sum, our_product);
@@ -95,7 +116,7 @@ int32_t NNUE_State::screlu_flatten_simd(const std::array<int16_t, LAYER1_SIZE> &
         opp_weight      = SIMD::vec_int16_clamp(opp_weight, CRELU_MIN_VEC, QA_VEC);
         opp_weight      = SIMD::vec_int16_multiply(opp_weight, opp_weight);
 
-        auto out_weight_2 = SIMD::int16_load(&weights[output_bucket_offset + LAYER1_SIZE + i]);
+        auto out_weight_2 = SIMD::int16_load(&weights[offset_2 + i]);
         auto opp_product  = SIMD::vec_int16_madd_int32(opp_weight, out_weight_2);
 
         sum = SIMD::vec_int32_add(sum, opp_product);
@@ -110,6 +131,12 @@ void NNUE_State::reset_nnue(Position& position) {
     current_accumulator = &accumulator_stack.emplace_back();
 
     current_accumulator->init(nnue_parameters.feature_bias);
+
+    current_accumulator->king_buckets[WHITE] = KING_BUCKET_MAP[position.get_king_pos(WHITE)];
+    current_accumulator->king_buckets[BLACK] = KING_BUCKET_MAP[position.get_king_pos(BLACK) ^ 56];
+
+    // std::cout << current_accumulator->king_buckets[WHITE] << std::endl;
+    // std::cout << current_accumulator->king_buckets[BLACK] << std::endl;
 
     for (int square = 0; square < 64; square++) {
         if (position.board[square] < EMPTY) {

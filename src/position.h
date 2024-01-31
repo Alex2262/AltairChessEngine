@@ -33,6 +33,12 @@ struct NNUpdate {
     Square square;
 };
 
+struct KingBucketUpdate {
+    bool update_necessary = false;
+    Color side = WHITE;
+    int bucket = 0;
+};
+
 struct State {
     uint64_t current_hash_key = 0ULL;
     Square current_ep_square = NO_SQUARE;
@@ -49,6 +55,7 @@ struct State {
 
     FixedVector<NNUpdate, 4> activations{};
     FixedVector<NNUpdate, 4> deactivations{};
+    KingBucketUpdate king_bucket_update{};
     bool NNUE_pushed = false;
 };
 
