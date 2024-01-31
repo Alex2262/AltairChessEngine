@@ -6537,3 +6537,37 @@ LLR   | 2.99 (-2.25, 2.89) [0.00, 5.00]
 Games | N: 13132 W: 3404 L: 3226 D: 6502
 Penta | [172, 1489, 3081, 1637, 187]
 ```
+
+
+### 6.1.4
+Move IIR after forward pruning
+
+```
+Elo   | 3.41 +- 3.35 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.89 (-2.25, 2.89) [0.00, 5.00]
+Games | N: 20288 W: 5088 L: 4889 D: 10311
+Penta | [196, 2400, 4810, 2485, 253]
+```
+
+### 6.1.5
+New net named Solaris with four king buckets, and +~1B FENs for a total of ~2B FENs.
+Arch of (768x4->768)x2->1x8
+
+STC
+```
+Elo   | 19.32 +- 9.17 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.91 (-2.25, 2.89) [0.00, 4.00]
+Games | N: 2916 W: 851 L: 689 D: 1376
+Penta | [33, 291, 669, 411, 54]
+```
+
+LTC
+```
+Elo   | 34.71 +- 12.84 (95%)
+SPRT  | 40.0+0.40s Threads=1 Hash=128MB
+LLR   | 2.90 (-2.25, 2.89) [0.00, 4.00]
+Games | N: 1416 W: 425 L: 284 D: 707
+Penta | [3, 113, 348, 228, 16]
+```
