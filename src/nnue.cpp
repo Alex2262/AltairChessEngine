@@ -28,12 +28,10 @@ void NNUE_State::pop() {
 }
 
 
-void NNUE_State::reset_side(Position& position, std::array<int16_t, LAYER1_SIZE> &our, Color color) {
+void NNUE_State::reset_side(Position& position, Color color) {
     current_accumulator->init_side(nnue_parameters.feature_bias, color);
 
-    auto& accumulator_c = color == WHITE ? current_accumulator->white : current_accumulator->black;
-
-    for (int piece = WHITE_PAWN; piece < EMPTY; piece++) {
+    for (int piece = WHITE_PAWN; piece < static_cast<int>(EMPTY); piece++) {
         BITBOARD piece_bb = position.pieces[piece];
         while (piece_bb) {
             Square square = poplsb(piece_bb);

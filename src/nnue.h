@@ -117,7 +117,7 @@ public:
     void push();
     void pop();
 
-    void reset_side(Position& position, std::array<int16_t, LAYER1_SIZE> &our, Color color);
+    void reset_side(Position& position, Color color);
 
     SCORE_TYPE evaluate(Position& position, Color color);
 
