@@ -53,7 +53,30 @@ struct alignas(64) NNUE_Params {
     std::array<int16_t, MATERIAL_OUTPUT_BUCKETS> output_bias;
 };
 
-extern const NNUE_Params &nnue_parameters;
+extern const NNUE_Params& original_nnue_parameters;
+
+inline const NNUE_Params get_nnue_parameters() {
+    NNUE_Params parameters;
+    parameters.feature_bias = original_nnue_parameters.feature_bias;
+    parameters.feature_weights = original_nnue_parameters.feature_weights;
+    parameters.output_bias = original_nnue_parameters.output_bias;
+    parameters.output_weights = {};
+
+    // Transpose Output Weights
+    const int original_rows = 2 * LAYER1_SIZE;
+    const int original_cols = MATERIAL_OUTPUT_BUCKETS;
+
+    for (int i = 0; i < original_rows; i++) {
+        for (int j = 0; j < original_cols; j++) {
+            parameters.output_weights[j * original_rows + i] =
+                    original_nnue_parameters.output_weights[i * original_cols + j];
+        }
+    }
+
+    return parameters;
+}
+
+const NNUE_Params nnue_parameters = get_nnue_parameters();
 
 template <size_t hidden_size>
 struct alignas(64) Accumulator {
@@ -69,7 +92,7 @@ struct alignas(64) Accumulator {
     }
 
     inline void init_side(std::span<const int16_t, hidden_size> bias, Color color) {
-        std::memcmp(color == WHITE ? white.data() : black.data(),
+        std::memcpy(color == WHITE ? white.data() : black.data(),
                     bias.data(),
                     bias.size_bytes());
     }
@@ -98,7 +121,7 @@ public:
 
     SCORE_TYPE evaluate(Position& position, Color color);
 
-    static std::pair<size_t, size_t> get_feature_indices(Piece piece, Square sq);
+    std::pair<size_t, size_t> get_feature_indices(Piece piece, Square sq);
 
     static int32_t screlu_flatten(const std::array<int16_t, LAYER1_SIZE> &our,
                                   const std::array<int16_t, LAYER1_SIZE> &opp,
@@ -116,29 +139,43 @@ public:
     inline void update_feature(Piece piece, Square square) {
         const auto [white_idx, black_idx] = get_feature_indices(piece, square);
 
-        if constexpr (Activate)
-        {
-            activate_all(current_accumulator->white, white_idx * LAYER1_SIZE, current_accumulator->king_buckets[WHITE]);
-            activate_all(current_accumulator->black, black_idx * LAYER1_SIZE, current_accumulator->king_buckets[BLACK]);
+        if constexpr (Activate) {
+            activate_all(current_accumulator->white, white_idx * LAYER1_SIZE);
+            activate_all(current_accumulator->black, black_idx * LAYER1_SIZE);
         }
 
-        else
-        {
-            deactivate_all(current_accumulator->white, white_idx * LAYER1_SIZE, current_accumulator->king_buckets[WHITE]);
-            deactivate_all(current_accumulator->black, black_idx * LAYER1_SIZE, current_accumulator->king_buckets[BLACK]);
+        else {
+            deactivate_all(current_accumulator->white, white_idx * LAYER1_SIZE);
+            deactivate_all(current_accumulator->black, black_idx * LAYER1_SIZE);
         }
     }
 
-    static inline void activate_all(std::array<int16_t, LAYER1_SIZE>& input, size_t offset, int king_bucket) {
-        // std::cout << king_bucket << " " << KING_INPUT_BUCKETS * INPUT_SIZE * LAYER1_SIZE << " " << offset << std::endl;
+    template <bool Activate>
+    inline void update_feature_side(Piece piece, Square square, Color color) {
+        const auto [white_idx, black_idx] = get_feature_indices(piece, square);
+
+        auto& accumulator = color == WHITE ? current_accumulator->white : current_accumulator->black;
+        auto index = color == WHITE ? white_idx : black_idx;
+
+        if constexpr (Activate) {
+            activate_all(accumulator, index * LAYER1_SIZE);
+        }
+
+        else {
+            deactivate_all(accumulator, index * LAYER1_SIZE);
+        }
+    }
+
+    static inline void activate_all(std::array<int16_t, LAYER1_SIZE>& input, size_t offset) {
         for (size_t i = 0; i < LAYER1_SIZE; ++i) input[i] +=
-                nnue_parameters.feature_weights[KING_INPUT_BUCKETS * INPUT_SIZE * LAYER1_SIZE + offset + i];
+                nnue_parameters.feature_weights[offset + i];
     }
 
-    static inline void deactivate_all(std::array<int16_t, LAYER1_SIZE>& input, size_t offset, int king_bucket) {
+    static inline void deactivate_all(std::array<int16_t, LAYER1_SIZE>& input, size_t offset) {
         for (size_t i = 0; i < LAYER1_SIZE; ++i) input[i] -=
-                nnue_parameters.feature_weights[KING_INPUT_BUCKETS * INPUT_SIZE * LAYER1_SIZE + offset + i];
+                nnue_parameters.feature_weights[offset + i];
     }
 };
+
 
 #endif //ALTAIR_NNUE_H
