@@ -790,7 +790,7 @@ void Position::update_nnue(State& state) {
                                 nnue_state.current_accumulator->black;
 
         nnue_state.current_accumulator->king_buckets[bucket_side] = state.king_bucket_update.bucket;
-        nnue_state.reset_side(*this, accumulator_our, bucket_side);
+        nnue_state.reset_side(*this, bucket_side);
     }
 
     for (NNUpdate& nn_update : state.activations) {
