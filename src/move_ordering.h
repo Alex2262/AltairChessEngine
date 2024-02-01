@@ -9,7 +9,20 @@
 
 class Thread_State;
 
-constexpr SCORE_TYPE TT_MOVE_BONUS = 100000;
+
+enum class MO_Margin : SCORE_TYPE {
+    TT = 500000,
+    winning_capture = 50000,
+    base_capture = -3000,
+    capture_scale = 3,
+    queen_promotion = 100000,
+    other_promotion = -30000,
+    killer_1 = 30000,
+    killer_2 = 25000,
+    castle = 1200
+};
+
+
 constexpr SCORE_TYPE SEE_MOVE_ORDERING_THRESHOLD = -85;
 
 SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
@@ -115,7 +128,7 @@ public:
 
         if (stage == Stage::TT_probe) {
             stage = Stage::GenNoisy;
-            if (position->is_pseudo_legal(tt_move)) return {tt_move, TT_MOVE_BONUS, true};
+            if (position->is_pseudo_legal(tt_move)) return {tt_move, static_cast<SCORE_TYPE>(MO_Margin::TT), true};
         }
 
         if (stage == Stage::GenNoisy) {

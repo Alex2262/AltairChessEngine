@@ -96,30 +96,6 @@ struct Tuning_Parameters {
 };
 
 
-struct Move_Ordering_Parameters {
-    T tuning_parameter_array[8] = {
-            T{"winning_capture_margin", 5000, 50000, 50000, 1750},
-            T{"base_capture_margin", -10000, 8000, -3000, 2000},
-            T{"capture_scale", 1, 20, 3, 2},
-            T{"queen_promotion_margin", 20000, 200000, 100000, 1500},
-            T{"other_promotion_margin", -20000, 10000, -30000, 2000},
-            T{"first_killer_margin", 5000, 50000, 30000, 1000},
-            T{"second_killer_margin", 1000, 49000, 25000, 1500},
-            T{"castle_margin", 0, 2000, 1200, 200},
-    };
-
-    //TODO: Fix references before tuning move ordering params
-    int winning_capture_margin = tuning_parameter_array[0].value;
-    int base_capture_margin = tuning_parameter_array[1].value;
-    int capture_scale = tuning_parameter_array[2].value;
-    int queen_promotion_margin = tuning_parameter_array[3].value;
-    int other_promotion_margin = tuning_parameter_array[4].value;
-    int first_killer_margin = tuning_parameter_array[5].value;
-    int second_killer_margin = tuning_parameter_array[6].value;
-    int castle_margin = tuning_parameter_array[7].value;
-};
-
-
 class Thread_State {
 
 public:
@@ -150,9 +126,6 @@ public:
     SCORE_TYPE continuation_history[12][64][12][64]{};
 
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH + 512] = {0};
-
-    bool do_move_ordering_tuning = false;
-    Move_Ordering_Parameters move_ordering_parameters{};
 
     bool terminated = true;
 
@@ -274,6 +247,5 @@ void search(Engine& engine);
 void print_statistics(Search_Results& res);
 
 void print_search_tuning_config(Tuning_Parameters& tuning_parameters);
-void print_move_ordering_tuning_config(Move_Ordering_Parameters& tuning_parameters);
 
 #endif //ALTAIR_SEARCH_H

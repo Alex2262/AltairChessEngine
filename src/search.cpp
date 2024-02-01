@@ -677,7 +677,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         ScoredMove scored_move = generator.next_move<false>();
         Move move = scored_move.move;
-        SCORE_TYPE move_score = scored_move.score;
+        SCORE_TYPE move_score = move == tt_move ? static_cast<SCORE_TYPE>(MO_Margin::TT) : scored_move.score;
 
         if (move == NO_MOVE) break; // No legal moves
 
@@ -1432,21 +1432,6 @@ void print_statistics(Search_Results& res) {
 
 
 void print_search_tuning_config(Tuning_Parameters& tuning_parameters) {
-    std::cout << "{";
-    for (auto & i : tuning_parameters.tuning_parameter_array) {
-        std::cout << "\n\t\"" << i.name << "\": {"
-                  << "\n\t\t\"value\": " << i.value
-                  << ",\n\t\t\"min_value\": " << i.min
-                  << ",\n\t\t\"max_value\": " << i.max
-                  << ",\n\t\t\"step\": " << i.step
-                  << "\n\t},"
-                  << std::endl;
-    }
-    std::cout << "}" << std::endl;
-}
-
-
-void print_move_ordering_tuning_config(Move_Ordering_Parameters& tuning_parameters) {
     std::cout << "{";
     for (auto & i : tuning_parameters.tuning_parameter_array) {
         std::cout << "\n\t\"" << i.name << "\": {"

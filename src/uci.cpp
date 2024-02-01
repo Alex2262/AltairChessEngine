@@ -269,17 +269,6 @@ void UCI::uci_loop() {
                 }
             }
 
-            if (engine->thread_states[0].do_move_ordering_tuning) {
-                for (auto & i : engine->thread_states[0].move_ordering_parameters.tuning_parameter_array) {
-                    std::cout << "option name " << i.name
-                              << " type spin default " << i.value
-                              << " min " << i.min
-                              << " max " << i.max
-                              << std::endl;
-
-                }
-            }
-
             std::cout << "uciok" << std::endl;
         }
 
@@ -337,14 +326,6 @@ void UCI::uci_loop() {
                         }
                     }
                 }
-
-                if (engine->thread_states[0].do_move_ordering_tuning) {
-                    for (auto & i : engine->thread_states[0].move_ordering_parameters.tuning_parameter_array) {
-                        if (tokens[2] == i.name) {
-                            i.value = std::stoi(tokens[4]);
-                        }
-                    }
-                }
             }
         }
 
@@ -381,10 +362,6 @@ void UCI::uci_loop() {
 
         else if (tokens[0] == "search_tune_wf" && engine->do_tuning) {
             print_search_tuning_config(engine->tuning_parameters);
-        }
-
-        else if (tokens[0] == "move_ordering_tune_wf" && engine->thread_states[0].do_move_ordering_tuning) {
-            print_move_ordering_tuning_config(engine->thread_states[0].move_ordering_parameters);
         }
 
         else if (tokens[0] == "evaluate") {

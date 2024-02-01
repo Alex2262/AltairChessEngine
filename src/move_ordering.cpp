@@ -9,7 +9,7 @@ SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
                       InformativeMove last_moves[]) {
     assert(move != NO_MOVE);
 
-    if (move == tt_move) return TT_MOVE_BONUS;
+    if (move == tt_move) return static_cast<SCORE_TYPE>(MO_Margin::TT);
 
     SCORE_TYPE score = 0;
 
@@ -24,25 +24,24 @@ SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
 
     if (move_type == MOVE_TYPE_PROMOTION) {
         auto promotion_piece_type = static_cast<PieceType>(move.promotion_type() + 1);
-        if (promotion_piece_type == QUEEN) score += thread_state.move_ordering_parameters.queen_promotion_margin;
-        else score += thread_state.move_ordering_parameters.other_promotion_margin +
-                      MVV_LVA_VALUES[promotion_piece_type];
+        if (promotion_piece_type == QUEEN) score += static_cast<SCORE_TYPE>(MO_Margin::queen_promotion);
+        else score += static_cast<SCORE_TYPE>(MO_Margin::other_promotion) + MVV_LVA_VALUES[promotion_piece_type];
     }
 
     else if (move_type == MOVE_TYPE_CASTLE) {
-        score += thread_state.move_ordering_parameters.castle_margin;
+        score += static_cast<SCORE_TYPE>(MO_Margin::castle);
     }
 
     // No EP moves appear as Q_BN
 
     if (move.is_capture(position)) {
         auto occupied_type = get_piece_type(occupied, ~position.side);
-        score += thread_state.move_ordering_parameters.capture_scale * MVV_LVA_VALUES[occupied_type]
-                 - MVV_LVA_VALUES[selected_type];
+        score += static_cast<SCORE_TYPE>(MO_Margin::capture_scale) * MVV_LVA_VALUES[occupied_type] -
+                 MVV_LVA_VALUES[selected_type];
 
         // All captures are not winning in Q_BN;
         score += thread_state.capture_history[false][selected][occupied][move.target()];
-        score += thread_state.move_ordering_parameters.base_capture_margin;
+        score += static_cast<SCORE_TYPE>(MO_Margin::base_capture);
     }
 
     else {
@@ -51,9 +50,9 @@ SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
 
         // score 1st and 2nd killer move
         if (thread_state.killer_moves[0][thread_state.search_ply] == informative_move) score +=
-                thread_state.move_ordering_parameters.first_killer_margin;
+                static_cast<SCORE_TYPE>(MO_Margin::killer_1);
         else if (thread_state.killer_moves[1][thread_state.search_ply] == informative_move) score +=
-                thread_state.move_ordering_parameters.second_killer_margin;
+                static_cast<SCORE_TYPE>(MO_Margin::killer_2);
 
         score += thread_state.history_moves[selected][move.target()];
 
@@ -74,7 +73,7 @@ SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Mo
 
     assert(move != NO_MOVE);
 
-    if (move == tt_move) return TT_MOVE_BONUS;
+    if (move == tt_move) return static_cast<SCORE_TYPE>(MO_Margin::TT);
 
     SCORE_TYPE score = 0;
 
@@ -87,7 +86,7 @@ SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Mo
     bool winning_capture = get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
 
     if (winning_capture) {
-        score += thread_state.move_ordering_parameters.winning_capture_margin;
+        score += static_cast<SCORE_TYPE>(MO_Margin::winning_capture);
         scored_move.winning_capture = true;
         good_capture_count++;
     }
@@ -100,23 +99,21 @@ SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Mo
     score += thread_state.capture_history[winning_capture][selected][occupied][move.target()];
 
     if (move_type == MOVE_TYPE_EP) return score +
-        thread_state.move_ordering_parameters.winning_capture_margin +
-        thread_state.move_ordering_parameters.capture_scale * (MVV_LVA_VALUES[PAWN] / 2);
+        static_cast<SCORE_TYPE>(MO_Margin::winning_capture) +
+        static_cast<SCORE_TYPE>(MO_Margin::capture_scale) * (MVV_LVA_VALUES[PAWN] / 2);
 
     auto selected_type = get_piece_type(selected, position.side);
     auto occupied_type = get_piece_type(occupied, ~position.side);
 
     if (move_type == MOVE_TYPE_PROMOTION) {
         auto promotion_piece_type = static_cast<PieceType>(move.promotion_type() + 1);
-        if (promotion_piece_type == QUEEN) score += thread_state.move_ordering_parameters.queen_promotion_margin;
-        else score += thread_state.move_ordering_parameters.other_promotion_margin +
-                      MVV_LVA_VALUES[promotion_piece_type];
+        if (promotion_piece_type == QUEEN) score += static_cast<SCORE_TYPE>(MO_Margin::queen_promotion);
+        else score += static_cast<SCORE_TYPE>(MO_Margin::other_promotion) + MVV_LVA_VALUES[promotion_piece_type];
     }
 
-    score += thread_state.move_ordering_parameters.capture_scale * MVV_LVA_VALUES[occupied_type]
-             - MVV_LVA_VALUES[selected_type];
+    score += static_cast<SCORE_TYPE>(MO_Margin::capture_scale) * MVV_LVA_VALUES[occupied_type] - MVV_LVA_VALUES[selected_type];
 
-    score += thread_state.move_ordering_parameters.base_capture_margin;
+    score += static_cast<SCORE_TYPE>(MO_Margin::base_capture);
 
     return score;
 }
