@@ -12,10 +12,9 @@
 
 #include "incbin.h"
 
-// INCBIN(nnue, "src/solaris-net.bin");
-INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/solaris-net.bin");
-//setoption name UCI_Chess960 value true
-//position fen brknrb1q/pppp2pp/4pn2/5p2/1P6/2N2N2/P1PPPPPP/BRK1RB1Q w KQkq - 0 1
+INCBIN(nnue, "src/solaris-net.bin");
+// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/solaris-net.bin");
+
 const NNUE_Params &original_nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 
 void NNUE_State::push() {

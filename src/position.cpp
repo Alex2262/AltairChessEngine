@@ -402,8 +402,10 @@ bool Position::is_pseudo_legal(Move move) {
 
     if (occupied != EMPTY) {
         if (get_color(occupied) == side) {
-            if (!fischer_random_chess || selected_type != KING ||
-                 occupied != get_piece(ROOK, side) || move_type != MOVE_TYPE_CASTLE) return false;
+            if (!(fischer_random_chess && selected_type == KING &&
+                    (occupied == get_piece(ROOK, side) || occupied == selected)
+                    && move_type == MOVE_TYPE_CASTLE)) return false;
+
         } else capture = true;
     }
 
@@ -415,6 +417,9 @@ bool Position::is_pseudo_legal(Move move) {
         Square appropriate_target_square_q = static_cast<Square>(c1 ^ (56 * side));
         Square appropriate_target_square_k = static_cast<Square>(g1 ^ (56 * side));
 
+        Square rook_target_square_q = appropriate_target_square_q + EAST;
+        Square rook_target_square_k = appropriate_target_square_k + WEST;
+
         if (target_square == appropriate_target_square_q) {
             if ((side == WHITE && (castle_ability_bits & 2) != 2) ||
                 (side == BLACK && (castle_ability_bits & 8) != 8)) return false;
@@ -425,20 +430,38 @@ bool Position::is_pseudo_legal(Move move) {
                 if (board[temp_pos] != EMPTY) return false;
             }
 
+            if (fischer_random_chess) {
+                if (origin_square < rook_target_square_q) {
+                    if (board[appropriate_target_square_q] != EMPTY && board[appropriate_target_square_q] != WHITE_KING) return false;
+                    if (board[rook_target_square_q] != EMPTY) return false;
+                } else if (origin_square > rook_target_square_q) {
+                    for (int temp_square = target_square; temp_square < static_cast<int>(starting_rook_pos[side][1]); temp_square++) {
+                        if (board[temp_square] != EMPTY) return false;
+                    }
+                }
+            }
+
             return true;
         }
 
         else if (target_square == appropriate_target_square_k) {
-            //std::cout << "WOW " << move.get_uci(*this) << std::endl;
             if ((side == WHITE && (castle_ability_bits & 1) != 1) ||
                 (side == BLACK && (castle_ability_bits & 4) != 4)) return false;
 
             if (board[starting_rook_pos[side][0]] != get_piece(ROOK, side)) return false;
 
-            //std::cout << static_cast<int>(origin_square) + 1 << " " << starting_rook_pos[side][0] << std::endl;
             for (int temp_pos = static_cast<int>(origin_square) + 1; temp_pos < static_cast<int>(starting_rook_pos[side][0]); temp_pos++) {
-                // std::cout << temp_pos << std::endl;
                 if (board[temp_pos] != EMPTY) return false;
+            }
+
+            if (fischer_random_chess) {
+                if (origin_square > rook_target_square_k) {
+                    if (board[rook_target_square_k] != EMPTY) return false;
+                } else if (origin_square < rook_target_square_k) {
+                    for (int temp_square = target_square; temp_square > static_cast<int>(starting_rook_pos[side][0]); temp_square--) {
+                        if (board[temp_square] != EMPTY) return false;
+                    }
+                }
             }
 
             return true;
