@@ -4,6 +4,8 @@
 #include "move.h"
 
 bool Move::is_capture(const Position& position) const {
+    if (type() == MOVE_TYPE_CASTLE) return false;
+
     Color side_to_move = get_color(position.board[origin()]);
     return ~side_to_move * 6        <= static_cast<int>(position.board[target()]) &&
            ~side_to_move * 6 + 6     > static_cast<int>(position.board[target()]);
