@@ -136,6 +136,7 @@ template<bool qsearch>
 void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                         Move tt_move, int& good_capture_count) {
     for (ScoredMove& scored_move : current_scored_moves) {
+        assert(scored_move.move.type() != MOVE_TYPE_CASTLE);
         scored_move.score = score_capture<qsearch>(thread_state, scored_move, tt_move, good_capture_count);
     }
 }

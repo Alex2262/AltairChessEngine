@@ -172,6 +172,9 @@ public:
             }
         }
 
+        if (stage == Stage::Noisy) {
+            assert(picked.move.type() != MOVE_TYPE_CASTLE);
+        }
         return picked;
     }
 };
