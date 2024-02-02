@@ -3,6 +3,7 @@
 #ifndef ALTAIR_TYPES_H
 #define ALTAIR_TYPES_H
 
+#include <iostream>
 #include <cstdint>
 
 enum Color : int {
@@ -52,7 +53,8 @@ enum PieceType : uint32_t {
     BISHOP,
     ROOK,
     QUEEN,
-    KING
+    KING,
+    NONE
 };
 
 constexpr inline PieceType get_piece_type(Piece piece, Color color) {
@@ -64,7 +66,7 @@ constexpr inline Piece get_piece(PieceType piece_type, Color color) {
 }
 
 constexpr inline Color get_color(Piece piece) {
-    return static_cast<Color>(piece >= COLOR_OFFSET);
+    return static_cast<Color>(piece / COLOR_OFFSET);
 }
 
 constexpr uint32_t N_DIRS = 8;

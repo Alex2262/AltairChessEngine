@@ -647,7 +647,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (pv_node) depth--;
     }
 
-    bool tt_move_capture = tt_move.is_capture(position);
+    bool tt_move_noisy = false;
 
     // Used for the continuation history heuristic
     InformativeMove last_moves[LAST_MOVE_COUNTS] = {};
@@ -690,6 +690,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (move == position.state_stack[thread_state.search_ply].excluded_move) continue;
 
         bool quiet = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
+        if (move == tt_move) tt_move_noisy = !quiet;
 
         if (quiet) searched_quiets.push_back(scored_move);
         else searched_noisy.push_back(scored_move);
@@ -865,7 +866,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             reduction -= move_history_score / 8192;
 
             // Scale reductions based on how many moves have already raised alpha
-            reduction += static_cast<int>(static_cast<double>(alpha_raised_count) * (0.5 + 0.5 * tt_move_capture));
+            reduction += static_cast<int>(static_cast<double>(alpha_raised_count) * (0.5 + 0.5 * tt_move_noisy));
 
             // My idea that in a null move search you can be more aggressive with LMR
             reduction += null_search;

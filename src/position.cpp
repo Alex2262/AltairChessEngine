@@ -14,6 +14,7 @@ void Position::clear_state_stack() {
     for (auto& state : state_stack) {
         state.in_check = -1;
         state.current_hash_key = 0ULL;
+        state.current_pawn_hash_key = 0ULL;
         state.move = NO_INFORMATIVE_MOVE;
         state.evaluation = NO_EVALUATION;
         state.current_ep_square = NO_SQUARE;
@@ -32,6 +33,7 @@ void Position::set_state(State& state, PLY_TYPE fifty_move) const {
     state.current_ep_square = ep_square;
     state.current_castle_ability_bits = castle_ability_bits;
     state.current_hash_key = hash_key;
+    state.current_pawn_hash_key = pawn_hash_key;
     state.current_fifty_move = fifty_move;
 }
 
@@ -97,12 +99,17 @@ void Position::place_piece(Piece piece, Square square) {
 
 void Position::compute_hash_key() {
     hash_key = 0;
+    pawn_hash_key = 0;
 
     for (int piece = 0; piece < static_cast<int>(EMPTY); piece++) {
         BITBOARD piece_bitboard = get_pieces(static_cast<Piece>(piece));
         while (piece_bitboard) {
             Square square = poplsb(piece_bitboard);
             hash_key ^= ZobristHashKeys.piece_hash_keys[piece][square];
+
+            if (get_piece_type(static_cast<Piece>(piece), get_color(static_cast<Piece>(piece))) == PAWN) {
+                pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[piece][square];
+            }
         }
     }
 
@@ -110,7 +117,10 @@ void Position::compute_hash_key() {
 
     hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
-    if (side) hash_key ^= ZobristHashKeys.side_hash_key;
+    if (side) {
+        hash_key ^= ZobristHashKeys.side_hash_key;
+        pawn_hash_key ^= ZobristHashKeys.side_hash_key;
+    }
 }
 
 FenInfo Position::set_fen(const std::string& fen_string) {
@@ -513,6 +523,7 @@ bool Position::is_pseudo_legal(Move move) {
 void Position::make_null_move(State& state, PLY_TYPE& fifty_move) {
     side = ~side;
     hash_key ^= ZobristHashKeys.side_hash_key;
+    pawn_hash_key ^= ZobristHashKeys.side_hash_key;
     state.move = NO_INFORMATIVE_MOVE;
     state.NNUE_pushed = false;
 
@@ -532,6 +543,7 @@ void Position::undo_null_move(State& state, PLY_TYPE& fifty_move) {
     side = ~side;
     ep_square = state.current_ep_square;
     hash_key = state.current_hash_key;
+    pawn_hash_key = state.current_pawn_hash_key;
     fifty_move = state.current_fifty_move;
 
     BITBOARD temp_our_pieces = our_pieces;
@@ -552,6 +564,9 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     Piece occupied = board[target_square];
     MoveType move_type = move.type();
 
+    PieceType selected_type = get_piece_type(selected, side);
+    PieceType occupied_type = occupied == EMPTY ? NONE : get_piece_type(selected, ~side);
+
     state.move = InformativeMove(move, selected, occupied);
 
     state.NNUE_pushed = false;
@@ -571,6 +586,8 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
         remove_piece(occupied, target_square);
         if constexpr (NNUE) state.deactivations.push_back({occupied, target_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
+        if (occupied_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
+
         fifty_move = 0;
     }
 
@@ -579,17 +596,20 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
         place_piece(selected, target_square);
         if constexpr (NNUE) state.activations.push_back({selected, target_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
+        if (selected_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
     }
 
     else if (move_type == MOVE_TYPE_EP) {
         place_piece(selected, target_square);
         if constexpr (NNUE) state.activations.push_back({selected, target_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
+        pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
 
         // Find and remove the captured EP pawn
         auto captured_square = static_cast<Square>(target_square + static_cast<Square>(side == WHITE ? SOUTH : NORTH));
         if constexpr (NNUE) state.deactivations.push_back({board[captured_square], captured_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[board[captured_square]][captured_square];
+        pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[board[captured_square]][captured_square];
         remove_piece(board[captured_square], captured_square);
     }
 
@@ -637,6 +657,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
 
         if constexpr (NNUE) state.deactivations.push_back({selected, origin_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
+        if (selected_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
 
         // The rook and king have swapped in FRC, and we just removed the piece on the rook's target square,
         // so we need to set the rook back onto this location
@@ -730,6 +751,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
     hash_key ^= ZobristHashKeys.side_hash_key;
+    pawn_hash_key ^= ZobristHashKeys.side_hash_key;
     side = ~side;
 
     BITBOARD temp_our_pieces = our_pieces;
@@ -757,10 +779,12 @@ void Position::undo_move(Move move, State& state, PLY_TYPE& fifty_move) {
     if (state.NNUE_pushed) nnue_state.pop();
 
     // Reset certain information
-    side = static_cast<Color>(selected >= BLACK_PAWN);
-    hash_key   = state.current_hash_key;
-    fifty_move = state.current_fifty_move;
-    ep_square  = state.current_ep_square;
+    side = get_color(selected);
+
+    hash_key            = state.current_hash_key;
+    pawn_hash_key       = state.current_pawn_hash_key;
+    fifty_move          = state.current_fifty_move;
+    ep_square           = state.current_ep_square;
     castle_ability_bits = state.current_castle_ability_bits;
 
     if (move_type == MOVE_TYPE_EP) {
