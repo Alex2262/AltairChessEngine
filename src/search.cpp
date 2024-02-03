@@ -159,7 +159,7 @@ short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha
 
             if (tt_entry.flag == HASH_FLAG_EXACT) return RETURN_HASH_SCORE;
             if (tt_entry.flag == HASH_FLAG_ALPHA && return_entry.score <= alpha) return RETURN_HASH_SCORE;
-            if (tt_entry.flag == HASH_FLAG_BETA && return_entry.score >= beta) return RETURN_HASH_SCORE;
+            if (tt_entry.flag == HASH_FLAG_BETA  && return_entry.score >= beta ) return RETURN_HASH_SCORE;
         }
 
         return USE_HASH_MOVE;
@@ -628,7 +628,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // We give the opponent an extra move and if they are not able to make their position
         // any better, then our position is too good, and we don't need to search any deeper.
         if (depth >= engine.tuning_parameters.NMP_depth && do_null &&
-            adjusted_eval >= beta + 108 - (12 + improving * 7) * depth &&
+            static_eval >= beta + 108 - (12 + improving * 7) * depth &&
             position.get_non_pawn_material_count() >= 1 + (depth >= 10)) {
 
             // Adaptive NMP
@@ -738,7 +738,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // Futility Pruning
             if (!pv_node && quiet && depth <= engine.tuning_parameters.FP_depth &&
-                adjusted_eval + (depth - !improving) * engine.tuning_parameters.FP_multiplier + engine.tuning_parameters.FP_margin <= alpha) break;
+                static_eval + (depth - !improving) * engine.tuning_parameters.FP_multiplier + engine.tuning_parameters.FP_margin <= alpha) break;
 
             // History Pruning
             if ((quiet || !winning_capture) && !pv_node && depth <= engine.tuning_parameters.history_pruning_depth &&
