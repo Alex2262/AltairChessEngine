@@ -127,6 +127,17 @@ SCORE_TYPE& Thread_State::get_continuation_history_entry(InformativeMove last_mo
                                [informative_move.target()];
 }
 
+SCORE_TYPE Thread_State::get_eval_correction() {
+    const HASH_TYPE pawn_index = position.pawn_hash_key % psc_size;
+    return pawn_structure_correction[pawn_index] / psc_scale;
+}
+
+void Thread_State::update_eval_correction(SCORE_TYPE static_eval, SCORE_TYPE search_score) {
+    const SCORE_TYPE eval_diff = std::clamp((static_eval - search_score) * psc_scale, -32000, 32000);
+    const HASH_TYPE pawn_index = position.pawn_hash_key % psc_size;
+    SCORE_TYPE& psc = pawn_structure_correction[pawn_index];
+    psc = static_cast<SCORE_TYPE>((psc * (psc_blend - 1) + eval_diff) / psc_blend);
+}
 
 // Probes the transposition table for a matching entry based on the position's hash key and other factors.
 short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
@@ -389,11 +400,14 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
     if (static_eval == NO_EVALUATION) static_eval = engine.evaluate<NNUE>(thread_id);
 
-    // Return the evaluation if we have reached a stand-pat, or we have reached the maximum depth
-    if (depth == 0 || static_eval >= beta) return static_eval;
+    SCORE_TYPE adjusted_eval = static_eval + thread_state.get_eval_correction() * psc_adjustment_scale;
+    SCORE_TYPE best_score = adjusted_eval;
 
-    // Set alpha to the greatest of either alpha or the evaluation
-    alpha = std::max(alpha, static_eval);
+    // Return the best score if we have reached a stand-pat, or we have reached the maximum depth
+    if (depth == 0 || best_score >= beta) return best_score;
+
+    // Set alpha to the greatest of either alpha or the best score
+    alpha = std::max(alpha, best_score);
 
     // Variable to record the hash flag
     short tt_hash_flag = HASH_FLAG_ALPHA;
@@ -403,7 +417,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     position.state_stack[thread_state.search_ply].evaluation = static_eval;
 
     // Variables for getting information about the best score / best move
-    SCORE_TYPE best_score = static_eval;
     Move best_move = NO_MOVE;
 
     // Search loop
@@ -515,6 +528,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     bool in_check;
 
     SCORE_TYPE static_eval = NO_EVALUATION;
+    SCORE_TYPE adjusted_eval = NO_EVALUATION;
 
     thread_state.selective_depth = std::max(thread_state.search_ply, thread_state.selective_depth);
 
@@ -595,6 +609,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 failing = !pv_node && static_eval < past_eval - (60 + 40 * depth);
             }
         }
+
+        adjusted_eval = static_eval + thread_state.get_eval_correction() * psc_adjustment_scale;
     }
 
     // Forward Pruning Methods
@@ -603,22 +619,22 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Reverse Futility Pruning
         // If the last move was very bad, such that the static evaluation - a margin is still greater
         // than the opponent's best score, then return the static evaluation.
-        if (depth <= engine.tuning_parameters.RFP_depth && static_eval -
+        if (depth <= engine.tuning_parameters.RFP_depth && adjusted_eval -
             engine.tuning_parameters.RFP_margin * (depth - improving) >= beta) {
-            return static_eval;
+            return adjusted_eval;
         }
 
         // Null move pruning
         // We give the opponent an extra move and if they are not able to make their position
         // any better, then our position is too good, and we don't need to search any deeper.
         if (depth >= engine.tuning_parameters.NMP_depth && do_null &&
-            static_eval >= beta + 108 - (12 + improving * 7) * depth &&
+            adjusted_eval >= beta + 108 - (12 + improving * 7) * depth &&
             position.get_non_pawn_material_count() >= 1 + (depth >= 10)) {
 
             // Adaptive NMP
             int reduction = engine.tuning_parameters.NMP_base +
                             depth / engine.tuning_parameters.NMP_depth_divisor +
-                            std::clamp((static_eval - beta) / engine.tuning_parameters.NMP_eval_divisor, -1, 3);
+                            std::clamp((adjusted_eval - beta) / engine.tuning_parameters.NMP_eval_divisor, -1, 3);
 
             position.make_null_move(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
@@ -722,7 +738,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // Futility Pruning
             if (!pv_node && quiet && depth <= engine.tuning_parameters.FP_depth &&
-                static_eval + (depth - !improving) * engine.tuning_parameters.FP_multiplier + engine.tuning_parameters.FP_margin <= alpha) break;
+                adjusted_eval + (depth - !improving) * engine.tuning_parameters.FP_multiplier + engine.tuning_parameters.FP_margin <= alpha) break;
 
             // History Pruning
             if ((quiet || !winning_capture) && !pv_node && depth <= engine.tuning_parameters.history_pruning_depth &&
@@ -998,6 +1014,14 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval, pv_node);
+
+    if (!in_check && !best_move.is_capture(position) && best_move.type() != MOVE_TYPE_EP &&
+        (tt_hash_flag == HASH_FLAG_EXACT ||
+        (tt_hash_flag == HASH_FLAG_ALPHA && best_score >= static_eval) ||
+        (tt_hash_flag == HASH_FLAG_BETA  && best_score <= static_eval)
+        )) {
+        thread_state.update_eval_correction(static_eval, best_score);
+    }
 
     return best_score;
 }
