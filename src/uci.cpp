@@ -258,17 +258,16 @@ void UCI::uci_loop() {
             std::cout << "option name Move Overhead type spin default " << 10 << " min " << 0 << " max " << 1000
                       << std::endl;
 
-            if (engine->do_tuning) {
-                for (auto & i : engine->tuning_parameters.tuning_parameter_array) {
-                    std::cout << "option name " << i.name
-                              << " type spin default " << i.value
-                              << " min " << i.min
-                              << " max " << i.max
-                              << std::endl;
+#ifdef DO_SEARCH_TUNING
+            for (auto& param : search_params.all_parameters) {
+                std::cout << "option name " << param->name
+                          << " type spin default " << param->v
+                          << " min " << param->min
+                          << " max " << param->max
+                          << std::endl;
 
-                }
             }
-
+#endif
             std::cout << "uciok" << std::endl;
         }
 
@@ -319,13 +318,19 @@ void UCI::uci_loop() {
             }
 
             else {
-                if (engine->do_tuning) {
-                    for (auto & i : engine->tuning_parameters.tuning_parameter_array) {
-                        if (tokens[2] == i.name) {
-                            i.value = std::stoi(tokens[4]);
-                        }
+#ifdef DO_SEARCH_TUNING
+                bool param_changed = false;
+                for (auto& param : search_params.all_parameters) {
+                    if (tokens[2] == param->name) {
+                        param->v = std::stoi(tokens[4]);
+                        param_changed = true;
                     }
                 }
+
+                if (param_changed) {
+                    engine->initialize_lmr_reductions();
+                }
+#endif
             }
         }
 
@@ -360,8 +365,10 @@ void UCI::uci_loop() {
             print_statistics(engine->search_results);
         }
 
-        else if (tokens[0] == "search_tune_wf" && engine->do_tuning) {
-            print_search_tuning_config(engine->tuning_parameters);
+        else if (tokens[0] == "search_tune_config") {
+#ifdef DO_SEARCH_TUNING
+            print_search_tuning_config();
+#endif
         }
 
         else if (tokens[0] == "evaluate") {
