@@ -50,32 +50,32 @@ struct T {
 
 struct SearchParameters {
 
-    T LMR_divisor_quiet = {185, 150, 230, 20, "LMR_divisor_quiet"};
-    T LMR_base_quiet    = {155, 100, 170, 20, "LMR_base_quiet"};
+    T LMR_divisor_quiet = {224, 150, 230, 20, "LMR_divisor_quiet"};
+    T LMR_base_quiet    = {111, 100, 170, 20, "LMR_base_quiet"};
 
-    T RFP_depth  = {  9,   5,  11,   2, "RFP_depth"};
-    T RFP_margin = {126,  50, 200,  30, "RFP_margin"};
+    T RFP_depth  = {  8,   5,  11,   2, "RFP_depth"};
+    T RFP_margin = {103,  50, 200,  30, "RFP_margin"};
 
-    T LMP_depth  = { 3,  1,  5,  1, "LMP_depth"};
+    T LMP_depth  = { 5,  1,  5,  1, "LMP_depth"};
     T LMP_margin = {10,  5, 15,  1, "LMP_margin"};
 
-    T history_pruning_depth   = {12,  3, 20, 2, "history_pruning_depth"};
-    T history_pruning_divisor = {12062, 1000, 20000, 1800, "history_pruning_divisor"};
+    T history_pruning_depth   = {9,  3, 20, 2, "history_pruning_depth"};
+    T history_pruning_divisor = {6594, 1000, 20000, 1800, "history_pruning_divisor"};
 
-    T NMP_depth = {2, 0, 4, 1, "NMP_depth"};
-    T NMP_base  = {3, 1, 5, 1, "NMP_base"};
+    T NMP_depth = {1, 0, 4, 1, "NMP_depth"};
+    T NMP_base  = {4, 1, 5, 1, "NMP_base"};
     T NMP_depth_divisor = {4, 2, 6, 1, "NMP_depth_divisor"};
-    T NMP_eval_divisor  = {297, 100, 400, 40, "NMP_eval_divisor"};
+    T NMP_eval_divisor  = {345, 100, 400, 40, "NMP_eval_divisor"};
 
-    T SEE_base_depth  = {3,  1, 10,  1, "SEE_base_depth"};
-    T SEE_noisy_depth = {3,  0,  4,  1, "SEE_noisy_depth"};
+    T SEE_base_depth  = {2,  1, 10,  1, "SEE_base_depth"};
+    T SEE_noisy_depth = {2,  0,  4,  1, "SEE_noisy_depth"};
     T SEE_pv_depth    = {5,  0,  5,  1, "SEE_pv_depth"};
 
     T LMP_margin_quiet = {2, 1, 4, 1, "LMP_margin_quiet"};
 
-    T FP_depth      = {5, 1, 8, 1, "FP_depth"};
-    T FP_multiplier = {140, 80, 220, 20, "FP_multiplier"};
-    T FP_margin     = { 70, 40, 150, 20, "FP_margin"};
+    T FP_depth      = {7, 1, 8, 1, "FP_depth"};
+    T FP_multiplier = {197, 80, 220, 20, "FP_multiplier"};
+    T FP_margin     = { 45, 40, 150, 20, "FP_margin"};
 
     T* all_parameters[19] = {
             &LMR_divisor_quiet,
