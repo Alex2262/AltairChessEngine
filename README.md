@@ -19,21 +19,22 @@
 
 ## Ratings
 
-*Last Updated 11/24/23* \
-(All rankings are based on single-CPU only for fairness of comparison)
+*Last Updated 2/8/24* \
+(All rankings are based on single-CPU only for fairness of comparison, 
+ratings without rankings are either old versions or on lists where the best engine version ranking is not shown)
 
-[CCRL Rating List](http://ccrl.chessdom.com/ccrl/) \
+[CCRL Rating List](http://computerchess.org.uk/ccrl/) \
 [CEGT Rating List](http://www.cegt.net) \
-[MCERL Rating list](https://www.chessengeria.com/mcerl)
+[MCERL Rating list](https://www.chessengeria.eu/mcerl)
 
-|  Version  | CCRL Blitz 2+1 |  CCRL 40/15  | CCRL FRC 40/2 | CEGT 40/4 |  MCERL   |
-|:---------:|:--------------:|:------------:|:-------------:|:---------:|:--------:|
-|   1.0.0   |      ----      |     2405     |     ----      |   2206    |   ----   |
-|   2.0.0   |      2880      |     2808     |     ----      |   2674    |   2657   |
-|   3.0.0   |      3013      |     3002     |     ----      |   2874    |   ----   |
-|   4.0.0   |      3083      |     3041     |     3079      |   2924    |   3098   |
-|   5.0.0   |      3202      |     3132     |     3214      |   3047    |   3221   |
-| **6.0.0** |  #30 **3498**  | #29 **3349** | #18 **3617**  | **----**  | **3505** |
+|  Version  | CCRL Blitz 2+1 |  CCRL 40/15  | CCRL FRC 40/2 |  CEGT 40/4   |  MCERL   |
+|:---------:|:--------------:|:------------:|:-------------:|:------------:|:--------:|
+| **6.0.0** |  #33 **3522**  | #36 **3430** | #18 **3656**  | **#37 3397** | **3502** |
+|   5.0.0   |      3207      |     3170     |     3229      |     3043     |   3209   |
+|   4.0.0   |      3069      |     3077     |     3082      |     2924     |   3069   |
+|   3.0.0   |      3000      |     3036     |     ----      |     2874     |   ----   |
+|   2.0.0   |      2854      |     2820     |     ----      |     2674     |   2649   |
+|   1.0.0   |      ----      |     2372     |     ----      |     2205     |   ----   |
 
 
 ## Download
