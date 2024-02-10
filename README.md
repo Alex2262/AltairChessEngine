@@ -3,7 +3,7 @@
 
 # 
 
-<img src="AltairLogo.png" alt="Berserk" width="256" />
+<img src="AltairLogo.png" alt="Altair" width="256" />
 
 # Altair
   
