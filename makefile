@@ -52,27 +52,6 @@ OUT := $(EXE)$(SUFFIX)
 
 
 make:
-
-ifeq ($(PGO), true)
-
-	$(CXX) $(CXXFLAGS) -fprofile-instr-generate -o $(OUT) $(SOURCES)
-
-ifeq ($(OS), Windows_NT)
-	$(OUT) bench
-else
-	./$(OUT) bench
-endif
-
-	$(LLVM_PROF_CMD) merge -output="Altair.profdata" *.profraw
-	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES) -fprofile-instr-use="Altair.profdata"
-	rm "Altair.profdata"
-	rm *.profraw
-
-else
-	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES)
-endif
-
-basic:
 	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES)
 
 clean:
