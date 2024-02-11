@@ -8,6 +8,10 @@
 #include "position.h"
 #include "move_ordering.h"
 
+// #define DO_SEARCH_TUNING
+
+constexpr double learning_rate = 0.002;
+
 constexpr int psc_size = 4096;
 constexpr SCORE_TYPE psc_scale = 128;
 constexpr SCORE_TYPE psc_blend = 256;
@@ -41,65 +45,72 @@ struct Search_Results {
 };
 
 struct T {
-    std::string name;
+    int v;
     int min;
     int max;
-    int value;
     int step;
+
+    std::string name;
 };
 
-struct Tuning_Parameters {
+struct SearchParameters {
 
-    T tuning_parameter_array[N_TUNING_PARAMETERS] = {
-            T{"LMR_divisor_quiet", 150, 230, 185, 20},
-            T{"LMR_base_quiet", 100, 170, 155, 20},
-            T{"RFP_depth", 5, 11, 9, 2},
-            T{"RFP_margin", 50, 200, 126, 30},
-            T{"LMP_depth", 2, 5, 3, 1},
-            T{"LMP_margin", 6, 15, 10, 1},
-            T{"history_pruning_depth", 3, 20, 12, 2},
-            T{"history_pruning_divisor", 1000, 20000, 12062, 1800},
-            T{"NMP_depth", 0, 4, 2, 1},
-            T{"NMP_base", 1, 5, 3, 1},
-            T{"NMP_depth_divisor", 2, 6, 4, 1},
-            T{"NMP_eval_divisor", 100, 400, 297, 40},
-            T{"SEE_base_depth", 1, 10, 3, 1},
-            T{"SEE_noisy_depth", 0, 4, 3, 1},
-            T{"SEE_pv_depth", 0, 5, 5, 1},
-            T{"LMP_margin_quiet", 1, 4, 2, 1},
-            T{"FP_depth", 1, 8, 5, 1},
-            T{"FP_multiplier", 80, 220, 140, 20},
-            T{"FP_margin", 40, 150, 70, 20}
+    T LMR_divisor_quiet = {224, 150, 230, 20, "LMR_divisor_quiet"};
+    T LMR_base_quiet    = {111, 100, 170, 20, "LMR_base_quiet"};
+
+    T RFP_depth  = {  8,   5,  11,   2, "RFP_depth"};
+    T RFP_margin = {103,  50, 200,  30, "RFP_margin"};
+
+    T LMP_depth  = { 5,  1,  5,  1, "LMP_depth"};
+    T LMP_margin = {10,  5, 15,  1, "LMP_margin"};
+
+    T history_pruning_depth   = {9,  3, 20, 2, "history_pruning_depth"};
+    T history_pruning_divisor = {6594, 1000, 20000, 1800, "history_pruning_divisor"};
+
+    T NMP_depth = {1, 0, 4, 1, "NMP_depth"};
+    T NMP_base  = {4, 1, 5, 1, "NMP_base"};
+    T NMP_depth_divisor = {4, 2, 6, 1, "NMP_depth_divisor"};
+    T NMP_eval_divisor  = {345, 100, 400, 40, "NMP_eval_divisor"};
+
+    T SEE_base_depth  = {2,  1, 10,  1, "SEE_base_depth"};
+    T SEE_noisy_depth = {2,  0,  4,  1, "SEE_noisy_depth"};
+    T SEE_pv_depth    = {5,  0,  5,  1, "SEE_pv_depth"};
+
+    T LMP_margin_quiet = {2, 1, 4, 1, "LMP_margin_quiet"};
+
+    T FP_depth      = {7, 1, 8, 1, "FP_depth"};
+    T FP_multiplier = {197, 80, 220, 20, "FP_multiplier"};
+    T FP_margin     = { 45, 40, 150, 20, "FP_margin"};
+
+    T* all_parameters[19] = {
+            &LMR_divisor_quiet,
+            &LMR_base_quiet,
+
+            &RFP_depth,
+            &RFP_margin,
+
+            &LMP_depth,
+            &LMP_margin,
+
+            &history_pruning_depth,
+            &history_pruning_divisor,
+
+            &NMP_depth,
+            &NMP_base,
+            &NMP_depth_divisor,
+            &NMP_eval_divisor,
+
+            &SEE_base_depth,
+            &SEE_noisy_depth,
+            &SEE_pv_depth,
+
+            &LMP_margin_quiet,
+
+            &FP_depth,
+            &FP_multiplier,
+            &FP_margin
     };
-
-    int& LMR_divisor_quiet = tuning_parameter_array[0].value;
-    int& LMR_base_quiet = tuning_parameter_array[1].value;
-
-    int& RFP_depth = tuning_parameter_array[2].value;
-    int& RFP_margin = tuning_parameter_array[3].value;
-
-    int& LMP_depth = tuning_parameter_array[4].value;
-    int& LMP_margin = tuning_parameter_array[5].value;
-
-    int& history_pruning_depth = tuning_parameter_array[6].value;
-    int& history_pruning_divisor = tuning_parameter_array[7].value;
-
-    int& NMP_depth = tuning_parameter_array[8].value;
-    int& NMP_base = tuning_parameter_array[9].value;
-    int& NMP_depth_divisor = tuning_parameter_array[10].value;
-    int& NMP_eval_divisor = tuning_parameter_array[11].value;
-
-    int& SEE_base_depth = tuning_parameter_array[12].value;
-    int& SEE_noisy_depth = tuning_parameter_array[13].value;
-    int& SEE_pv_depth = tuning_parameter_array[14].value;
-
-    int& LMP_margin_quiet = tuning_parameter_array[15].value;
-
-    int& FP_depth = tuning_parameter_array[16].value;
-    int& FP_multiplier = tuning_parameter_array[17].value;
-    int& FP_margin = tuning_parameter_array[18].value;
 };
-
 
 class Thread_State {
 
@@ -173,7 +184,6 @@ public:
     bool datagen = false;
     bool show_wdl = false;
     bool show_stats = false;
-    bool do_tuning = false;
 
     int multi_pv = 1;
 
@@ -201,8 +211,6 @@ public:
 
     Search_Results search_results{};
 
-    Tuning_Parameters tuning_parameters{};
-
     std::unordered_set<uint16_t> root_moves{};
 
     void clear_tt();
@@ -211,6 +219,8 @@ public:
     void new_game();
 
     void initialize_lmr_reductions();
+
+    void resize_tt(uint64_t mb);
 
     short probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
                          TT_Entry& return_entry);
@@ -255,6 +265,8 @@ void search(Engine& engine);
 
 void print_statistics(Search_Results& res);
 
-void print_search_tuning_config(Tuning_Parameters& tuning_parameters);
+void print_search_tuning_config();
+
+inline SearchParameters search_params{};
 
 #endif //ALTAIR_SEARCH_H

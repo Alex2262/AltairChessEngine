@@ -21,10 +21,22 @@ void Engine::initialize_lmr_reductions() {
         for (int moves = 0; moves < 64; moves++) {
             LMR_REDUCTIONS_QUIET[depth][moves] =
                     static_cast<int>(std::max(0.0,
-                                     std::log(depth) * std::log(moves) / double(tuning_parameters.LMR_divisor_quiet / 100.0)
-                                     + double(tuning_parameters.LMR_base_quiet / 100.0)));
+                                     std::log(depth) * std::log(moves) / double(search_params.LMR_divisor_quiet.v / 100.0)
+                                     + double(search_params.LMR_base_quiet.v / 100.0)));
         }
     }
+}
+
+
+void Engine::resize_tt(uint64_t mb) {
+    size_t entries = static_cast<size_t>(mb) * 1048576 / 24;
+
+    uint64_t exponent = std::floor(std::log2(entries));
+    size_t new_entries = std::pow(2, exponent);
+
+    transposition_table.resize(new_entries);
+
+    // std::cout << new_entries << std::endl;
 }
 
 
@@ -142,7 +154,7 @@ void Thread_State::update_eval_correction(SCORE_TYPE static_eval, SCORE_TYPE sea
 // Probes the transposition table for a matching entry based on the position's hash key and other factors.
 short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
                              TT_Entry& return_entry) {
-    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
+    TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (tt_entry.key == hash_key) {
         return_entry.move = tt_entry.move;
@@ -173,7 +185,7 @@ short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha
 void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move, PLY_TYPE depth,
                              SCORE_TYPE static_eval, bool pv_node) {
 
-    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
+    TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (score < -MATE_BOUND) score -= thread_states[thread_id].search_ply;
     else if (score > MATE_BOUND) score += thread_states[thread_id].search_ply;
@@ -197,7 +209,7 @@ void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score
 // Probes the transposition table for a matching entry (only for quiescence search)
 short Engine::probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
                                SCORE_TYPE& return_score, Move& tt_move) {
-    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
+    TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (tt_entry.key == hash_key) {
         tt_move = tt_entry.move;
@@ -221,7 +233,7 @@ short Engine::probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alp
 // Records an entry to the transposition table (only for quiescence search)
 void Engine::record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move,
                                SCORE_TYPE static_eval) {
-    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
+    TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (score < -MATE_BOUND) score -= thread_states[thread_id].search_ply;
     else if (score > MATE_BOUND) score += thread_states[thread_id].search_ply;
@@ -417,6 +429,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     position.state_stack[thread_state.search_ply].evaluation = static_eval;
 
     // Variables for getting information about the best score / best move
+    SCORE_TYPE best_score = static_eval;
     Move best_move = NO_MOVE;
 
     // Search loop
@@ -619,22 +632,22 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Reverse Futility Pruning
         // If the last move was very bad, such that the static evaluation - a margin is still greater
         // than the opponent's best score, then return the static evaluation.
-        if (depth <= engine.tuning_parameters.RFP_depth && adjusted_eval -
-            engine.tuning_parameters.RFP_margin * (depth - improving) >= beta) {
-            return adjusted_eval;
+        if (depth <= search_params.RFP_depth.v && static_eval -
+            search_params.RFP_margin.v * (depth - improving) >= beta) {
+            return static_eval;
         }
 
         // Null move pruning
         // We give the opponent an extra move and if they are not able to make their position
         // any better, then our position is too good, and we don't need to search any deeper.
-        if (depth >= engine.tuning_parameters.NMP_depth && do_null &&
+        if (depth >= search_params.NMP_depth.v && do_null &&
             static_eval >= beta + 108 - (12 + improving * 7) * depth &&
             position.get_non_pawn_material_count() >= 1 + (depth >= 10)) {
 
             // Adaptive NMP
-            int reduction = engine.tuning_parameters.NMP_base +
-                            depth / engine.tuning_parameters.NMP_depth_divisor +
-                            std::clamp((adjusted_eval - beta) / engine.tuning_parameters.NMP_eval_divisor, -1, 3);
+            int reduction = search_params.NMP_base.v +
+                            depth / search_params.NMP_depth_divisor.v +
+                            std::clamp((static_eval - beta) / search_params.NMP_eval_divisor.v, -1, 3);
 
             position.make_null_move(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
@@ -729,25 +742,25 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Pruning
         if (!root && legal_moves >= 1 && abs(best_score) < MATE_BOUND && !engine.datagen) {
             // Late Move Pruning
-            if (!pv_node && depth <= engine.tuning_parameters.LMP_depth &&
-                legal_moves >= depth * engine.tuning_parameters.LMP_margin) break;
+            if (!pv_node && depth <= search_params.LMP_depth.v &&
+                legal_moves >= depth * search_params.LMP_margin.v) break;
 
             // Quiet Late Move Pruning
             if (!pv_node && quiet &&
-                legal_moves >= engine.tuning_parameters.LMP_margin_quiet + depth * depth / (1 + !improving + failing)) break;
+                legal_moves >= search_params.LMP_margin_quiet.v + depth * depth / (1 + !improving + failing)) break;
 
             // Futility Pruning
-            if (!pv_node && quiet && depth <= engine.tuning_parameters.FP_depth &&
-                static_eval + (depth - !improving) * engine.tuning_parameters.FP_multiplier + engine.tuning_parameters.FP_margin <= alpha) break;
+            if (!pv_node && quiet && depth <= search_params.FP_depth.v &&
+                static_eval + (depth - !improving) * search_params.FP_multiplier.v + search_params.FP_margin.v <= alpha) break;
 
             // History Pruning
-            if ((quiet || !winning_capture) && !pv_node && depth <= engine.tuning_parameters.history_pruning_depth &&
-                move_history_score <= (depth + improving) * -engine.tuning_parameters.history_pruning_divisor) continue;
+            if ((quiet || !winning_capture) && !pv_node && depth <= search_params.history_pruning_depth.v &&
+                move_history_score <= (depth + improving) * -search_params.history_pruning_divisor.v) continue;
 
             // SEE Pruning
-            if (depth <= (engine.tuning_parameters.SEE_base_depth +
-                          engine.tuning_parameters.SEE_noisy_depth * !quiet +
-                          engine.tuning_parameters.SEE_pv_depth * pv_node)
+            if (depth <= (search_params.SEE_base_depth.v +
+                          search_params.SEE_noisy_depth.v * !quiet +
+                          search_params.SEE_pv_depth.v * pv_node)
                  && legal_moves >= 3 && move_history_score <= 5000 &&
                  !get_static_exchange_evaluation(position, move, (quiet ? -50 : -90) * depth))
                 continue;
@@ -1456,16 +1469,15 @@ void print_statistics(Search_Results& res) {
 }
 
 
-void print_search_tuning_config(Tuning_Parameters& tuning_parameters) {
-    std::cout << "{";
-    for (auto & i : tuning_parameters.tuning_parameter_array) {
-        std::cout << "\n\t\"" << i.name << "\": {"
-                  << "\n\t\t\"value\": " << i.value
-                  << ",\n\t\t\"min_value\": " << i.min
-                  << ",\n\t\t\"max_value\": " << i.max
-                  << ",\n\t\t\"step\": " << i.step
-                  << "\n\t},"
-                  << std::endl;
+void print_search_tuning_config() {
+    for (auto& param : search_params.all_parameters) {
+        std::cout << param->name << ", "
+                  << "int, "
+                  << param->v << ", "
+                  << param->min << ", "
+                  << param->max << ", "
+                  << param->step << ", "
+                  << learning_rate << std::endl;
     }
     std::cout << "}" << std::endl;
 }
