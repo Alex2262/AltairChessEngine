@@ -140,14 +140,16 @@ SCORE_TYPE& Thread_State::get_continuation_history_entry(InformativeMove last_mo
 }
 
 SCORE_TYPE Thread_State::get_eval_correction() {
-    const HASH_TYPE pawn_index = position.pawn_hash_key % psc_size;
+    const HASH_TYPE pawn_index = position.pawn_hash_key & (psc_size - 1);
     return pawn_structure_correction[pawn_index] / psc_scale;
 }
 
 void Thread_State::update_eval_correction(SCORE_TYPE static_eval, SCORE_TYPE search_score) {
     const SCORE_TYPE eval_diff = std::clamp((static_eval - search_score) * psc_scale, -32000, 32000);
-    const HASH_TYPE pawn_index = position.pawn_hash_key % psc_size;
+    const HASH_TYPE pawn_index = position.pawn_hash_key & (psc_size - 1);
+
     SCORE_TYPE& psc = pawn_structure_correction[pawn_index];
+
     psc = static_cast<SCORE_TYPE>((psc * (psc_blend - 1) + eval_diff) / psc_blend);
 }
 
@@ -254,7 +256,7 @@ void Engine::record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE sco
 
 // Probes the transposition table for an evaluation
 SCORE_TYPE Engine::probe_tt_evaluation(HASH_TYPE hash_key) {
-    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
+    TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (tt_entry.key == hash_key && tt_entry.evaluation != NO_EVALUATION) return tt_entry.evaluation;
     return NO_EVALUATION;
@@ -262,7 +264,7 @@ SCORE_TYPE Engine::probe_tt_evaluation(HASH_TYPE hash_key) {
 
 // Prefetching for cache
 void Engine::tt_prefetch_read(HASH_TYPE hash_key) {
-    __builtin_prefetch(&transposition_table[hash_key % transposition_table.size()]);
+    __builtin_prefetch(&transposition_table[hash_key & (transposition_table.size() - 1)]);
 }
 
 
@@ -540,7 +542,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     bool in_check;
 
     SCORE_TYPE static_eval = NO_EVALUATION;
-    SCORE_TYPE adjusted_eval = NO_EVALUATION;
+    // SCORE_TYPE adjusted_eval = NO_EVALUATION;
 
     thread_state.selective_depth = std::max(thread_state.search_ply, thread_state.selective_depth);
 
@@ -622,7 +624,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             }
         }
 
-        adjusted_eval = static_eval + thread_state.get_eval_correction() * psc_adjustment_scale;
+        // adjusted_eval = static_eval + thread_state.get_eval_correction() * psc_adjustment_scale;
     }
 
     // Forward Pruning Methods
@@ -1478,6 +1480,5 @@ void print_search_tuning_config() {
                   << param->step << ", "
                   << learning_rate << std::endl;
     }
-    std::cout << "}" << std::endl;
 }
 
