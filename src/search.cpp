@@ -412,8 +412,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
     if (static_eval == NO_EVALUATION) static_eval = engine.evaluate<NNUE>(thread_id);
 
-    // SCORE_TYPE adjusted_eval = static_eval + thread_state.get_eval_correction() * psc_adjustment_scale;
-    SCORE_TYPE best_score = static_eval;
+    SCORE_TYPE adjusted_eval = static_eval + thread_state.get_eval_correction() * psc_adjustment_scale;
+    SCORE_TYPE best_score = adjusted_eval;
 
     // Return the best score if we have reached a stand-pat, or we have reached the maximum depth
     if (depth == 0 || best_score >= beta) return best_score;
@@ -429,7 +429,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     position.state_stack[thread_state.search_ply].evaluation = static_eval;
 
     // Variables for getting information about the best score / best move
-    SCORE_TYPE best_score = static_eval;
     Move best_move = NO_MOVE;
 
     // Search loop
