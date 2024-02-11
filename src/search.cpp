@@ -385,38 +385,60 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         return tt_value;
     }
 
+    if (depth == 0) return engine.evaluate<NNUE>(thread_id);
+
+    bool in_check = position.is_attacked(position.get_king_pos(position.side), position.side);
+
     // Get the static evaluation of the position
-    SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = engine.evaluate<NNUE>(thread_id);
+    SCORE_TYPE static_eval = NO_EVALUATION;
+    SCORE_TYPE best_score = -SCORE_INF;
 
-    // Return the evaluation if we have reached a stand-pat, or we have reached the maximum depth
-    if (depth == 0 || static_eval >= beta) return static_eval;
+    if (!in_check) {
+        engine.probe_tt_evaluation(position.hash_key);
+        if (static_eval == NO_EVALUATION) static_eval = engine.evaluate<NNUE>(thread_id);
+        position.state_stack[thread_state.search_ply].evaluation = static_eval;
 
-    // Set alpha to the greatest of either alpha or the evaluation
-    alpha = std::max(alpha, static_eval);
+        // Return the evaluation if we have reached a stand-pat, or we have reached the maximum depth
+        if (static_eval >= beta) return static_eval;
+
+        // Set alpha to the greatest of either alpha or the evaluation
+        alpha = std::max(alpha, static_eval);
+
+        best_score = static_eval;
+    }
 
     // Variable to record the hash flag
     short tt_hash_flag = HASH_FLAG_ALPHA;
 
     // Set values for State
     position.set_state(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
-    position.state_stack[thread_state.search_ply].evaluation = static_eval;
 
     // Variables for getting information about the best score / best move
-    SCORE_TYPE best_score = static_eval;
     Move best_move = NO_MOVE;
 
     // Search loop
     int legal_moves = 0;
 
-    for (generator.reset_qsearch(tt_move); generator.stage != Stage::Terminated;) {
-        ScoredMove scored_move = generator.next_move<true>();
+    InformativeMove last_moves[LAST_MOVE_COUNTS] = {};
+
+    if (in_check) {
+        for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
+            int last_move_ply = LAST_MOVE_PLIES[last_move_index];
+
+            last_moves[last_move_index] = thread_state.search_ply >= last_move_ply ?
+                                          position.state_stack[thread_state.search_ply - last_move_ply].move : NO_INFORMATIVE_MOVE;
+        }
+    }
+
+    for (in_check ? generator.reset_negamax(tt_move, last_moves) : generator.reset_qsearch(tt_move);
+         generator.stage != Stage::Terminated;) {
+        ScoredMove scored_move = in_check ? generator.next_move<false>() : generator.next_move<true>();
         Move move = scored_move.move;
 
         bool winning_capture = scored_move.winning_capture;
 
         if (move == NO_MOVE) break; // No legal moves
-        if (!winning_capture) break; // Gainer on god
+        if (move.is_capture(position) && !winning_capture) break; // Gainer on god
 
         // SEE pruning
         if (static_eval + 60 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
@@ -486,6 +508,10 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             }
         }
 
+    }
+
+    if (in_check && legal_moves == 0) {
+        return -MATE_SCORE + thread_state.search_ply;
     }
 
     engine.record_tt_entry_q(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, static_eval);
