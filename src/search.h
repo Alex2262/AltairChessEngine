@@ -14,8 +14,8 @@ constexpr double learning_rate = 0.002;
 
 constexpr int psc_size = 4096;
 constexpr SCORE_TYPE psc_scale = 128;
-constexpr SCORE_TYPE psc_blend = 256;
-constexpr double psc_adjustment_scale = 0.4;
+constexpr SCORE_TYPE psc_blend = 128;
+constexpr double psc_adjustment_scale = 0.25;
 
 struct TT_Entry {
     HASH_TYPE key = 0;
