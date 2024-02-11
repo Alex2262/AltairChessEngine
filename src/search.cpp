@@ -493,10 +493,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                                          [position.board[move.target()]]
                                          [move.target()],
                                          bonus);
-                } else {
-                    update_history_entry(thread_state.history_moves
-                                         [position.board[move.origin()]][move.target()],
-                                         bonus);
                 }
 
                 if (return_eval >= beta) {
