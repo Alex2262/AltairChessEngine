@@ -432,18 +432,22 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     for (in_check ? generator.reset_negamax(tt_move, last_moves) : generator.reset_qsearch(tt_move);
          generator.stage != Stage::Terminated;) {
+
         ScoredMove scored_move = in_check ? generator.next_move<false>() : generator.next_move<true>();
         Move move = scored_move.move;
 
         bool winning_capture = scored_move.winning_capture;
 
         if (move == NO_MOVE) break; // No legal moves
-        if (move.is_capture(position) && !winning_capture) break; // Gainer on god
 
-        // SEE pruning
-        if (static_eval + 60 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
-            best_score = std::max(best_score, static_eval + 60);
-            continue;
+        if (best_score > -MATE_BOUND) {
+            if (!winning_capture) break; // Gainer on god
+
+            // SEE pruning
+            if (static_eval + 60 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
+                best_score = std::max(best_score, static_eval + 60);
+                continue;
+            }
         }
 
         // Attempt the current pseudo-legal move
