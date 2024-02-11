@@ -8,7 +8,7 @@
 #include "position.h"
 #include "move_ordering.h"
 
-#define DO_SEARCH_TUNING
+// #define DO_SEARCH_TUNING
 
 constexpr double learning_rate = 0.002;
 
