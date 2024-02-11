@@ -13,7 +13,7 @@
 #include "see.h"
 
 void UCI::initialize_uci() const {
-    engine->transposition_table.resize(DEFAULT_TT_SIZE * 1048576 / 24);
+    engine->resize_tt(DEFAULT_TT_SIZE);
 
     engine->initialize_lmr_reductions();
 
@@ -274,10 +274,9 @@ void UCI::uci_loop() {
         else if (tokens[0] == "setoption" && tokens.size() >= 5) {
             if (tokens[2] == "Hash") {
                 int mb = std::stoi(tokens[4]);
-                mb = std::clamp<int>(mb, 1, 24576);
+                mb = std::clamp<int>(mb, 1, 32768);
 
-                size_t entries = static_cast<size_t>(mb) * 1048576 / 24;
-                engine->transposition_table.resize(entries);
+                engine->resize_tt(mb);
                 std::cout << engine->transposition_table.size() << " number of hash entries initialized" << std::endl;
             }
 

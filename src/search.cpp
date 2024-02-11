@@ -28,6 +28,18 @@ void Engine::initialize_lmr_reductions() {
 }
 
 
+void Engine::resize_tt(uint64_t mb) {
+    size_t entries = static_cast<size_t>(mb) * 1048576 / 24;
+
+    uint64_t exponent = std::floor(std::log2(entries));
+    size_t new_entries = std::pow(2, exponent);
+
+    transposition_table.resize(new_entries);
+
+    // std::cout << new_entries << std::endl;
+}
+
+
 // Clear the transposition table
 void Engine::clear_tt() {
     for (TT_Entry& tt_entry : transposition_table) {
@@ -131,7 +143,7 @@ SCORE_TYPE& Thread_State::get_continuation_history_entry(InformativeMove last_mo
 // Probes the transposition table for a matching entry based on the position's hash key and other factors.
 short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
                              TT_Entry& return_entry) {
-    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
+    TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (tt_entry.key == hash_key) {
         return_entry.move = tt_entry.move;
@@ -162,7 +174,7 @@ short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha
 void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move, PLY_TYPE depth,
                              SCORE_TYPE static_eval, bool pv_node) {
 
-    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
+    TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (score < -MATE_BOUND) score -= thread_states[thread_id].search_ply;
     else if (score > MATE_BOUND) score += thread_states[thread_id].search_ply;
@@ -186,7 +198,7 @@ void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score
 // Probes the transposition table for a matching entry (only for quiescence search)
 short Engine::probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
                                SCORE_TYPE& return_score, Move& tt_move) {
-    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
+    TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (tt_entry.key == hash_key) {
         tt_move = tt_entry.move;
@@ -210,7 +222,7 @@ short Engine::probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alp
 // Records an entry to the transposition table (only for quiescence search)
 void Engine::record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move,
                                SCORE_TYPE static_eval) {
-    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
+    TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (score < -MATE_BOUND) score -= thread_states[thread_id].search_ply;
     else if (score > MATE_BOUND) score += thread_states[thread_id].search_ply;
