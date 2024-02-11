@@ -119,7 +119,6 @@ void Position::compute_hash_key() {
 
     if (side) {
         hash_key ^= ZobristHashKeys.side_hash_key;
-        pawn_hash_key ^= ZobristHashKeys.side_hash_key;
     }
 }
 
@@ -751,7 +750,6 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
     hash_key ^= ZobristHashKeys.side_hash_key;
-    pawn_hash_key ^= ZobristHashKeys.side_hash_key;
     side = ~side;
 
     BITBOARD temp_our_pieces = our_pieces;

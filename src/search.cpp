@@ -141,11 +141,12 @@ SCORE_TYPE& Thread_State::get_continuation_history_entry(InformativeMove last_mo
 
 SCORE_TYPE Thread_State::get_eval_correction() {
     const HASH_TYPE pawn_index = position.pawn_hash_key & (psc_size - 1);
-    return pawn_structure_correction[pawn_index] / psc_scale;
+    return (position.side * -2 + 1) * (pawn_structure_correction[pawn_index] / psc_scale);
 }
 
 void Thread_State::update_eval_correction(SCORE_TYPE static_eval, SCORE_TYPE search_score) {
-    const SCORE_TYPE eval_diff = std::clamp((static_eval - search_score) * psc_scale, -32000, 32000);
+    const SCORE_TYPE eval_diff = (position.side * -2 + 1) *
+                                 std::clamp((static_eval - search_score) * psc_scale, -32000, 32000);
     const HASH_TYPE pawn_index = position.pawn_hash_key & (psc_size - 1);
 
     SCORE_TYPE& psc = pawn_structure_correction[pawn_index];
