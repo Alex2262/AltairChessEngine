@@ -12,10 +12,8 @@
 
 constexpr double learning_rate = 0.002;
 
+constexpr int psc_limit = 1024;
 constexpr int psc_size = 4096;
-constexpr SCORE_TYPE psc_scale = 128;
-constexpr SCORE_TYPE psc_blend = 128;
-constexpr double psc_adjustment_scale = 0.25;
 
 struct TT_Entry {
     HASH_TYPE key = 0;
@@ -140,7 +138,7 @@ public:
     SCORE_TYPE history_moves[12][64]{}; // piece | target_square
     SCORE_TYPE capture_history[2][12][12][64]{};
     SCORE_TYPE continuation_history[12][64][12][64]{};
-    SCORE_TYPE pawn_structure_correction[psc_size]{};
+    SCORE_TYPE pawn_structure_correction[2][psc_size]{};
 
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH + 512] = {0};
 
@@ -156,8 +154,8 @@ public:
 
     SCORE_TYPE& get_continuation_history_entry(InformativeMove last_move, InformativeMove informative_move);
 
-    SCORE_TYPE get_eval_correction();
-    void update_eval_correction(SCORE_TYPE static_eval, SCORE_TYPE search_score);
+    SCORE_TYPE get_eval_correction(SCORE_TYPE static_eval);
+    void update_eval_correction(SCORE_TYPE bonus);
 
     inline void reset_generators() {
         for (int ply = 0; ply < static_cast<int>(generators.size()); ply++) {

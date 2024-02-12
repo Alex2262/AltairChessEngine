@@ -139,19 +139,22 @@ SCORE_TYPE& Thread_State::get_continuation_history_entry(InformativeMove last_mo
                                [informative_move.target()];
 }
 
-SCORE_TYPE Thread_State::get_eval_correction() {
+SCORE_TYPE Thread_State::get_eval_correction(SCORE_TYPE static_eval) {
     const HASH_TYPE pawn_index = position.pawn_hash_key & (psc_size - 1);
-    return (position.side * -2 + 1) * (pawn_structure_correction[pawn_index] / psc_scale);
+    SCORE_TYPE psc = pawn_structure_correction[position.side][pawn_index];
+
+    SCORE_TYPE adjusted_eval = static_eval + (psc * std::abs(psc)) / 16384;
+    adjusted_eval = std::clamp(adjusted_eval, -MATE_SCORE + 1, MATE_SCORE - 1);
+
+    return adjusted_eval;
 }
 
-void Thread_State::update_eval_correction(SCORE_TYPE static_eval, SCORE_TYPE search_score) {
-    const SCORE_TYPE eval_diff = (position.side * -2 + 1) *
-                                 std::clamp((static_eval - search_score) * psc_scale, -32000, 32000);
+void Thread_State::update_eval_correction(SCORE_TYPE bonus) {
     const HASH_TYPE pawn_index = position.pawn_hash_key & (psc_size - 1);
+    SCORE_TYPE& psc = pawn_structure_correction[position.side][pawn_index];
+    SCORE_TYPE new_bonus = bonus - psc * std::abs(bonus) / psc_limit;
 
-    SCORE_TYPE& psc = pawn_structure_correction[pawn_index];
-
-    psc = static_cast<SCORE_TYPE>((psc * (psc_blend - 1) + eval_diff) / psc_blend);
+    psc += new_bonus;
 }
 
 // Probes the transposition table for a matching entry based on the position's hash key and other factors.
@@ -415,7 +418,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
     if (static_eval == NO_EVALUATION) static_eval = engine.evaluate<NNUE>(thread_id);
 
-    SCORE_TYPE adjusted_eval = static_eval + static_cast<SCORE_TYPE>(thread_state.get_eval_correction() * psc_adjustment_scale);
+    SCORE_TYPE adjusted_eval = thread_state.get_eval_correction(static_eval);
     SCORE_TYPE best_score = adjusted_eval;
 
     // Return the best score if we have reached a stand-pat, or we have reached the maximum depth
@@ -1030,12 +1033,17 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval, pv_node);
 
-    if (!in_check && !best_move.is_capture(position) && best_move.type() != MOVE_TYPE_EP &&
-        (tt_hash_flag == HASH_FLAG_EXACT ||
-        (tt_hash_flag == HASH_FLAG_ALPHA && best_score >= static_eval) ||
-        (tt_hash_flag == HASH_FLAG_BETA  && best_score <= static_eval)
-        )) {
-        thread_state.update_eval_correction(static_eval, best_score);
+    // Evaluation Correction Updates
+    // 1. Must not be in check
+    // 2. The best move either does not exist or it is quiet (not capture and not EP)
+    // 3. If it is a fail high, static eval must be within (less than) the best score's bound
+    // 4. If it is a fail low (best move is none), static eval must be within (greater than) the best score's bound
+    if (!in_check && (best_move == NO_MOVE || (!best_move.is_capture(position) && best_move.type() != MOVE_TYPE_EP)) &&
+        !(best_score >= beta && best_score <= static_eval) &&
+        !(best_move != NO_MOVE && best_score >= static_eval)) {
+
+        SCORE_TYPE bonus = std::clamp((best_score - static_eval) * depth / 8, -psc_limit / 4, psc_limit / 4);
+        thread_state.update_eval_correction(bonus);
     }
 
     return best_score;
