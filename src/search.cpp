@@ -95,7 +95,6 @@ void Engine::new_game() {
 
         thread_state.game_ply = 0;
         thread_state.fifty_move = 0;
-
     }
 
     stopped = true;
