@@ -91,6 +91,7 @@ void Engine::new_game() {
         std::memset(thread_state.history_moves, 0, sizeof(thread_state.history_moves));
         std::memset(thread_state.capture_history, 0, sizeof(thread_state.capture_history));
         std::memset(thread_state.continuation_history, 0, sizeof(thread_state.continuation_history));
+        std::memset(thread_state.pawn_structure_correction, 0, sizeof(thread_state.pawn_structure_correction));
 
         thread_state.game_ply = 0;
         thread_state.fifty_move = 0;
