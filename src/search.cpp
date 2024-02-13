@@ -602,11 +602,12 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         position.state_stack[thread_state.search_ply].static_eval = eval;
 
         // TT Eval correction
-        // 1. TT move must exist, implying the score exists
-        // 2. If tt_entry.flag == HASH_FLAG_EXACT then the condition is passed in all cases
-        // 3. If tt_value >= eval then tt_entry.flag must equal HASH_FLAG_LOWER to be true
-        // 4. If tt_value <  eval then tt_entry.flag must equal HASH_FLAG_UPPER to be true
-        if (tt_value != SCORE_NONE &&
+        // 1. TT probe must have succeeded
+        // 2. TT value must exist
+        // 3. If tt_entry.flag == HASH_FLAG_EXACT then the condition is passed in all cases
+        // 4. If tt_value >= eval then tt_entry.flag must equal HASH_FLAG_LOWER to be true
+        // 5. If tt_value <  eval then tt_entry.flag must equal HASH_FLAG_UPPER to be true
+        if (tt_return_type != NO_HASH_ENTRY && tt_value != SCORE_NONE &&
             tt_entry.flag & (tt_value >= eval ? HASH_FLAG_LOWER : HASH_FLAG_UPPER)) {
             eval = tt_value;
         }
@@ -749,7 +750,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // Futility Pruning
             if (!pv_node && quiet && depth <= search_params.FP_depth.v &&
-                eval + (depth - !improving) * search_params.FP_multiplier.v + search_params.FP_margin.v <= alpha) break;
+                position.state_stack[thread_state.search_ply].static_eval +
+                (depth - !improving) * search_params.FP_multiplier.v + search_params.FP_margin.v <= alpha) break;
 
             // History Pruning
             if ((quiet || !winning_capture) && !pv_node && depth <= search_params.history_pruning_depth.v &&
