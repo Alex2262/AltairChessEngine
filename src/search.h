@@ -14,7 +14,7 @@ constexpr double learning_rate = 0.002;
 
 struct TT_Entry {
     HASH_TYPE key = 0;
-    SCORE_TYPE score = 0;
+    SCORE_TYPE score = SCORE_NONE;
     SCORE_TYPE evaluation = NO_EVALUATION;
     Move move = NO_MOVE;
     PLY_TYPE depth = 0;

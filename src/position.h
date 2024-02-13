@@ -50,7 +50,7 @@ struct State {
     InformativeMove move = NO_INFORMATIVE_MOVE;
     Move excluded_move = NO_MOVE;
 
-    SCORE_TYPE evaluation = NO_EVALUATION;
+    SCORE_TYPE static_eval = NO_EVALUATION;
 
     int double_extensions = 0;
     int in_check = -1;
