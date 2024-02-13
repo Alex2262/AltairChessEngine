@@ -637,7 +637,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // We give the opponent an extra move and if they are not able to make their position
         // any better, then our position is too good, and we don't need to search any deeper.
         if (depth >= search_params.NMP_depth.v && do_null &&
-            eval >= beta + 108 - (12 + improving * 7) * depth &&
+            eval >= position.state_stack[thread_state.search_ply].static_eval &&
+            eval >= beta &&
+            position.state_stack[thread_state.search_ply].static_eval >= beta + 108 - (12 + improving * 7) * depth &&
             position.get_non_pawn_material_count() >= 1 + (depth >= 10)) {
 
             // Adaptive NMP
