@@ -144,7 +144,7 @@ SCORE_TYPE Thread_State::get_eval_correction(SCORE_TYPE static_eval) {
     SCORE_TYPE psc = pawn_structure_correction[position.side][pawn_index];
 
     SCORE_TYPE adjusted_eval = static_eval + (psc * std::abs(psc)) / 16384;
-    adjusted_eval = std::clamp(adjusted_eval, -MATE_SCORE + 1, MATE_SCORE - 1);
+    adjusted_eval = std::clamp(adjusted_eval, -MATE_BOUND + 1, MATE_BOUND - 1);
 
     return adjusted_eval;
 }
