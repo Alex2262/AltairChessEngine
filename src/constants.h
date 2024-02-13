@@ -27,6 +27,7 @@
 
 constexpr SCORE_TYPE SCORE_INF = 1000000;
 constexpr SCORE_TYPE NO_EVALUATION = 500000;
+constexpr SCORE_TYPE SCORE_NONE = 150000;
 constexpr SCORE_TYPE MATE_SCORE = 100000;
 constexpr SCORE_TYPE MATE_BOUND = 99000;
 
@@ -34,9 +35,10 @@ constexpr SCORE_TYPE MATE_BOUND = 99000;
 #define TOTAL_MAX_DEPTH     512
 #define DEFAULT_TT_SIZE     16
 
-#define HASH_FLAG_EXACT     0
-#define HASH_FLAG_ALPHA     1
-#define HASH_FLAG_BETA      2
+#define HASH_FLAG_NONE      0
+#define HASH_FLAG_UPPER     1
+#define HASH_FLAG_LOWER     2
+#define HASH_FLAG_EXACT     3
 
 #define MINIMUM_ASP_DEPTH   6
 

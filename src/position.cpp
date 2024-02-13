@@ -16,7 +16,7 @@ void Position::clear_state_stack() {
         state.current_hash_key = 0ULL;
         state.current_pawn_hash_key = 0ULL;
         state.move = NO_INFORMATIVE_MOVE;
-        state.evaluation = NO_EVALUATION;
+        state.static_eval = NO_EVALUATION;
         state.current_ep_square = NO_SQUARE;
         state.current_castle_ability_bits = 0;
         state.current_fifty_move = 0;

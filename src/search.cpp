@@ -44,7 +44,7 @@ void Engine::resize_tt(uint64_t mb) {
 void Engine::clear_tt() {
     for (TT_Entry& tt_entry : transposition_table) {
         tt_entry.key = 0;
-        tt_entry.score = 0;
+        tt_entry.score = SCORE_NONE;
         tt_entry.evaluation = NO_EVALUATION;
         tt_entry.move = NO_MOVE;
         tt_entry.depth = 0;
@@ -159,8 +159,8 @@ short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha
         if (tt_entry.depth >= depth) {
 
             if (tt_entry.flag == HASH_FLAG_EXACT) return RETURN_HASH_SCORE;
-            if (tt_entry.flag == HASH_FLAG_ALPHA && return_entry.score <= alpha) return RETURN_HASH_SCORE;
-            if (tt_entry.flag == HASH_FLAG_BETA && return_entry.score >= beta) return RETURN_HASH_SCORE;
+            if (tt_entry.flag == HASH_FLAG_UPPER && return_entry.score <= alpha) return RETURN_HASH_SCORE;
+            if (tt_entry.flag == HASH_FLAG_LOWER && return_entry.score >= beta) return RETURN_HASH_SCORE;
         }
 
         return USE_HASH_MOVE;
@@ -188,7 +188,7 @@ void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score
         tt_entry.score = score;
         tt_entry.evaluation = static_eval;
 
-        if (tt_flag != HASH_FLAG_ALPHA || tt_entry.key != hash_key || tt_entry.move == NO_MOVE) {
+        if (tt_flag != HASH_FLAG_UPPER || tt_entry.key != hash_key || tt_entry.move == NO_MOVE) {
             tt_entry.move = move;
         }
     }
@@ -208,8 +208,8 @@ short Engine::probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alp
         else if (return_score > MATE_BOUND) return_score -= thread_states[thread_id].search_ply;
 
         if (tt_entry.flag == HASH_FLAG_EXACT) return RETURN_HASH_SCORE;
-        if (tt_entry.flag == HASH_FLAG_ALPHA && return_score <= alpha) return RETURN_HASH_SCORE;
-        if (tt_entry.flag == HASH_FLAG_BETA && return_score >= beta) return RETURN_HASH_SCORE;
+        if (tt_entry.flag == HASH_FLAG_UPPER && return_score <= alpha) return RETURN_HASH_SCORE;
+        if (tt_entry.flag == HASH_FLAG_LOWER && return_score >= beta) return RETURN_HASH_SCORE;
 
 
         return USE_HASH_MOVE;
@@ -234,7 +234,7 @@ void Engine::record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE sco
         tt_entry.score = score;
         tt_entry.evaluation = static_eval;
 
-        if (tt_flag != HASH_FLAG_ALPHA || tt_entry.key != hash_key || tt_entry.move == NO_MOVE) {
+        if (tt_flag != HASH_FLAG_UPPER || tt_entry.key != hash_key || tt_entry.move == NO_MOVE) {
             tt_entry.move = move;
         }
     }
@@ -398,24 +398,24 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     // Get the static evaluation of the position
-    SCORE_TYPE static_eval = engine.probe_tt_evaluation(position.hash_key);
-    if (static_eval == NO_EVALUATION) static_eval = engine.evaluate<NNUE>(thread_id);
+    SCORE_TYPE eval = engine.probe_tt_evaluation(position.hash_key);
+    if (eval == NO_EVALUATION) eval = engine.evaluate<NNUE>(thread_id);
 
     // Return the evaluation if we have reached a stand-pat, or we have reached the maximum depth
-    if (depth == 0 || static_eval >= beta) return static_eval;
+    if (depth == 0 || eval >= beta) return eval;
 
     // Set alpha to the greatest of either alpha or the evaluation
-    alpha = std::max(alpha, static_eval);
+    alpha = std::max(alpha, eval);
 
     // Variable to record the hash flag
-    short tt_hash_flag = HASH_FLAG_ALPHA;
+    short tt_hash_flag = HASH_FLAG_UPPER;
 
     // Set values for State
     position.set_state(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
-    position.state_stack[thread_state.search_ply].evaluation = static_eval;
+    position.state_stack[thread_state.search_ply].static_eval = eval;
 
     // Variables for getting information about the best score / best move
-    SCORE_TYPE best_score = static_eval;
+    SCORE_TYPE best_score = eval;
     Move best_move = NO_MOVE;
 
     // Search loop
@@ -431,8 +431,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (!winning_capture) break; // Gainer on god
 
         // SEE pruning
-        if (static_eval + 60 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
-            best_score = std::max(best_score, static_eval + 60);
+        if (eval + 60 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
+            best_score = std::max(best_score, eval + 60);
             continue;
         }
 
@@ -492,7 +492,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                         }
                     }
 
-                    engine.record_tt_entry_q(thread_id, position.hash_key, best_score, HASH_FLAG_BETA, best_move, static_eval);
+                    engine.record_tt_entry_q(thread_id, position.hash_key, best_score, HASH_FLAG_LOWER, best_move,
+                                             position.state_stack[thread_state.search_ply].static_eval);
                     return best_score;
                 }
             }
@@ -500,7 +501,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     }
 
-    engine.record_tt_entry_q(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, static_eval);
+    engine.record_tt_entry_q(thread_id, position.hash_key, best_score, tt_hash_flag, best_move,
+                             position.state_stack[thread_state.search_ply].static_eval);
 
     return best_score;
 }
@@ -526,7 +528,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     bool null_search = !do_null && !root;
     bool in_check;
 
-    SCORE_TYPE static_eval = NO_EVALUATION;
+    SCORE_TYPE eval = NO_EVALUATION;
 
     thread_state.selective_depth = std::max(thread_state.search_ply, thread_state.selective_depth);
 
@@ -571,7 +573,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     short tt_return_type = engine.probe_tt_entry(thread_id, position.hash_key, alpha, beta, depth, tt_entry);
     SCORE_TYPE tt_value = tt_entry.score;
     Move tt_move = tt_entry.move;
-    short tt_hash_flag = HASH_FLAG_ALPHA;
+    short tt_hash_flag = HASH_FLAG_UPPER;
 
     // TT cutoffs
     if (tt_return_type == RETURN_HASH_SCORE && !pv_node && !singular_search) return tt_value;
@@ -594,17 +596,29 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Save the current evaluation
     if (!in_check) {
-        static_eval = engine.probe_tt_evaluation(position.hash_key);
-        if (singular_search) static_eval = position.state_stack[thread_state.search_ply - 1].evaluation;
-        if (static_eval == NO_EVALUATION) static_eval = engine.evaluate<NNUE>(thread_id);
-        position.state_stack[thread_state.search_ply].evaluation = static_eval;
+        eval = engine.probe_tt_evaluation(position.hash_key);
+        if (singular_search) eval = position.state_stack[thread_state.search_ply - 1].static_eval;
+        if (eval == NO_EVALUATION) eval = engine.evaluate<NNUE>(thread_id);
+        position.state_stack[thread_state.search_ply].static_eval = eval;
+
+        // TT Eval correction
+        // 1. TT probe must have succeeded
+        // 2. TT value must exist
+        // 3. If tt_entry.flag == HASH_FLAG_EXACT then the condition is passed in all cases
+        // 4. If tt_value >= eval then tt_entry.flag must equal HASH_FLAG_LOWER to be true
+        // 5. If tt_value <  eval then tt_entry.flag must equal HASH_FLAG_UPPER to be true
+        if (tt_return_type != NO_HASH_ENTRY && tt_value != SCORE_NONE &&
+            tt_entry.flag & (tt_value >= eval ? HASH_FLAG_LOWER : HASH_FLAG_UPPER)) {
+            eval = tt_value;
+        }
 
         // Calculate if we are "improving", or "failing"
         if (thread_state.search_ply >= 2) {
-            SCORE_TYPE past_eval = position.state_stack[thread_state.search_ply - 2].evaluation;
+            SCORE_TYPE past_eval = position.state_stack[thread_state.search_ply - 2].static_eval;
+
             if (past_eval != NO_EVALUATION) {
-                improving = static_eval > past_eval;
-                failing = !pv_node && static_eval < past_eval - (60 + 40 * depth);
+                improving = position.state_stack[thread_state.search_ply].static_eval > past_eval;
+                failing = !pv_node && position.state_stack[thread_state.search_ply].static_eval < past_eval - (60 + 40 * depth);
             }
         }
     }
@@ -615,22 +629,24 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Reverse Futility Pruning
         // If the last move was very bad, such that the static evaluation - a margin is still greater
         // than the opponent's best score, then return the static evaluation.
-        if (depth <= search_params.RFP_depth.v && static_eval -
+        if (depth <= search_params.RFP_depth.v && eval -
             search_params.RFP_margin.v * (depth - improving) >= beta) {
-            return static_eval;
+            return eval;
         }
 
         // Null move pruning
         // We give the opponent an extra move and if they are not able to make their position
         // any better, then our position is too good, and we don't need to search any deeper.
         if (depth >= search_params.NMP_depth.v && do_null &&
-            static_eval >= beta + 108 - (12 + improving * 7) * depth &&
+            eval >= position.state_stack[thread_state.search_ply].static_eval &&
+            eval >= beta &&
+            position.state_stack[thread_state.search_ply].static_eval >= beta + 108 - (12 + improving * 7) * depth &&
             position.get_non_pawn_material_count() >= 1 + (depth >= 10)) {
 
             // Adaptive NMP
             int reduction = search_params.NMP_base.v +
                             depth / search_params.NMP_depth_divisor.v +
-                            std::clamp((static_eval - beta) / search_params.NMP_eval_divisor.v, -1, 3);
+                            std::clamp((eval - beta) / search_params.NMP_eval_divisor.v, -1, 3);
 
             position.make_null_move(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
@@ -734,7 +750,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // Futility Pruning
             if (!pv_node && quiet && depth <= search_params.FP_depth.v &&
-                static_eval + (depth - !improving) * search_params.FP_multiplier.v + search_params.FP_margin.v <= alpha) break;
+                position.state_stack[thread_state.search_ply].static_eval +
+                (depth - !improving) * search_params.FP_multiplier.v + search_params.FP_margin.v <= alpha) break;
 
             // History Pruning
             if ((quiet || !winning_capture) && !pv_node && depth <= search_params.history_pruning_depth.v &&
@@ -779,7 +796,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             depth >= 6 &&
             move == tt_move &&
             tt_entry.depth >= depth - 2 &&
-            tt_entry.flag != HASH_FLAG_ALPHA &&
+            tt_entry.flag != HASH_FLAG_UPPER &&
             position.state_stack[thread_state.search_ply].excluded_move == NO_MOVE &&
             abs(tt_entry.score) < MATE_BOUND) {
 
@@ -996,7 +1013,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                         }
                     }
 
-                    tt_hash_flag = HASH_FLAG_BETA;
+                    tt_hash_flag = HASH_FLAG_LOWER;
                     break;
                 }
             }
@@ -1009,7 +1026,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         else return -MATE_SCORE + thread_state.search_ply;
     }
 
-    engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth, static_eval, pv_node);
+    engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth,
+                           position.state_stack[thread_state.search_ply].static_eval, pv_node);
 
     return best_score;
 }
