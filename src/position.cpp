@@ -355,6 +355,12 @@ void Position::set_dfrc(int index) {
     nnue_state.reset_nnue(*this);
 }
 
+
+void Position::ensure_stable() {
+    nnue_state.reset_nnue(*this);
+}
+
+
 std::ostream& operator << (std::ostream& os, const Position& position) {
     std::string new_board;
 
@@ -836,9 +842,6 @@ void Position::update_nnue(State& state) {
     Color bucket_side = state.king_bucket_update.side;
 
     if (state.king_bucket_update.update_necessary) {
-        auto& accumulator_our = bucket_side == WHITE ? nnue_state.current_accumulator->white :
-                                nnue_state.current_accumulator->black;
-
         nnue_state.current_accumulator->king_buckets[bucket_side] = state.king_bucket_update.bucket;
         nnue_state.reset_side(*this, bucket_side);
     }
