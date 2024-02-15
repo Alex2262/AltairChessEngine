@@ -160,6 +160,8 @@ public:
     void set_frc_side(Color color, int index);
     void set_dfrc(int index);
 
+    void ensure_stable();
+
     friend std::ostream& operator<<(std::ostream& os, const Position& position);
 
     template<Movegen movegen>
