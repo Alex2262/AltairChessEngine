@@ -419,8 +419,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     Move best_move = NO_MOVE;
 
     // Search loop
-    int legal_moves = 0;
-
     for (generator.reset_qsearch(tt_move); generator.stage != Stage::Terminated;) {
         ScoredMove scored_move = generator.next_move<true>();
         Move move = scored_move.move;

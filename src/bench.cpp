@@ -73,7 +73,6 @@ void run_bench(Engine& engine, PLY_TYPE depth) {
 
     // Used for calculating statistics
     uint64_t total_nodes = 0;
-    Search_Results bench_res{};
 
     // Loop through the 50 fens
     for (int fen_count = 0; fen_count < static_cast<int>(fens.size()); fen_count++) {
