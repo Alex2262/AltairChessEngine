@@ -459,8 +459,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         if (engine.stopped) return 0;
 
-        legal_moves++;
-
         // Update information
         if (return_eval > best_score) {
             best_score = return_eval;
