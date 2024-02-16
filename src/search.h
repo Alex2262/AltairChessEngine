@@ -9,6 +9,7 @@
 #include "move_ordering.h"
 
 // #define DO_SEARCH_TUNING
+// #define SHOW_STATISTICS
 
 constexpr double learning_rate = 0.002;
 
@@ -174,7 +175,6 @@ public:
     bool print_thinking = true;
     bool datagen = false;
     bool show_wdl = false;
-    bool show_stats = false;
 
     int multi_pv = 1;
 

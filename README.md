@@ -62,7 +62,8 @@ You can also play against Altair on lichess [here](https://lichess.org/@/Altair_
 Note: Lichess BOT ratings are deflated compared to their actual human relative strengths.
 
 ## Analysis
-Altair can be used for analyzing positions with software such as ChessBase and other GUIs. \ 
+Altair can be used for analyzing positions with software such as ChessBase and other GUIs.
+
 It can also be used in lichess using its APIs with the [external-engine](https://github.com/lichess-org/external-engine) repository.
 
 Altair supports a configurable hash size, thread number, and MultiPV for analyzing multiple variations.
@@ -130,19 +131,23 @@ Altair's neural networks are trained on completely original data. \
 The data was originally trained from Altair's classical evaluation, which was specifically tuned from zero values from 5.0.0 and onwards. \
 The current data has been repeatedly trained on previous data in a cycle of reinforcement learning of sorts from an initial state of zero knowledge.
 
-#### Current Net (Trappist):
-Trappist, named after the Trappist-1 system, is a neural network
-trained on over 700M FENs including a portion of standard data and DFRC (Double Fischer Random Chess) data.
+#### Current Net (Solaris):
+Solaris is a neural network 
+trained on over 2B FENs including a portion of standard data and DFRC (Double Fischer Random Chess) data.
+Altair currently has king buckets in the input layer, and material output buckets in the output layer.
 
 Architecture:
 ```
-+--------+----------+--------+ 
-| Input  | Hidden   | Output | 
-| 768 -> | 768*2 -> |   1    | 
-+--------+----------+--------+
++----------+----------+----------+ 
+| Input    | Hidden   | Output   | 
+| 768x4 -> | 768*2 -> | 1x8      | 
++----------+----------+----------+
 ```
 
-*The `*2` in the Hidden Layer indicates perspective*
+
+*The `x4` in the input layer indicates input buckets, 
+`*2` in the Hidden Layer for perspective, 
+and `x8` in the Output for output buckets.*
 
 ### Classical Evaluation
 

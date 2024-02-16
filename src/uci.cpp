@@ -234,9 +234,6 @@ void UCI::uci_loop() {
             std::cout << "option name Hash type spin default " << DEFAULT_TT_SIZE << " min " << 1 << " max " << 24576
                       << std::endl;
 
-            std::cout << "option name nodes type spin default " << 0 << " min " << 0 << " max " << 2147483647
-                      << std::endl;
-
             std::cout << "option name Threads type spin default " << 1 << " min " << 1 << " max " << 1024
                       << std::endl;
 
@@ -247,9 +244,6 @@ void UCI::uci_loop() {
                       << std::endl;
 
             std::cout << "option name UseNNUE type check default true"
-                      << std::endl;
-
-            std::cout << "option name Statistics type check default false"
                       << std::endl;
 
             std::cout << "option name MultiPV type spin default " << 1 << " min " << 1 << " max " << 256
@@ -285,13 +279,6 @@ void UCI::uci_loop() {
                 engine->thread_states.resize(engine->num_threads);
             }
 
-            else if (tokens[2] == "nodes") {
-                uint64_t max_nodes = std::stoi(tokens[4]);
-                engine->hard_node_limit = max_nodes;
-                engine->soft_node_limit = max_nodes;
-                std::cout << "max nodes set to " << max_nodes << std::endl;
-            }
-
             else if (tokens[2] == "UCI_Chess960") {
                 engine->thread_states[0].position.fischer_random_chess = tokens[4] == "true";
             }
@@ -302,10 +289,6 @@ void UCI::uci_loop() {
 
             else if (tokens[2] == "UseNNUE") {
                 engine->use_nnue = tokens[4] == "true";
-            }
-
-            else if (tokens[2] == "Statistics") {
-                engine->show_stats = tokens[4] == "true";
             }
 
             else if (tokens[2] == "MultiPV") {
@@ -356,12 +339,10 @@ void UCI::uci_loop() {
         }
 
         else if (tokens[0] == "stats") {
-            if (!engine->show_stats) {
-                std::cout << "Statistics UCI option has not been enabled" << std::endl;
-                continue;
-            }
 
+#ifdef SHOW_STATISTICS
             print_statistics(engine->search_results);
+#endif
         }
 
         else if (tokens[0] == "search_tune_config") {

@@ -7,10 +7,9 @@
 #include "types.h"
 
 #define ENGINE_NAME                 "Altair"
-#define ENGINE_VERSION              "6.1.5"
+#define ENGINE_VERSION              "7.0.0"
 #define ENGINE_AUTHOR               "Alexander Tian"
 
-#define N_TUNING_PARAMETERS         19
 #define FAIL_HIGH_STATS_COUNT       5
 #define ALPHA_RAISE_STATS_COUNT     5
 

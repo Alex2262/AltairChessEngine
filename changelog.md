@@ -6571,3 +6571,56 @@ LLR   | 2.90 (-2.25, 2.89) [0.00, 4.00]
 Games | N: 1416 W: 425 L: 284 D: 707
 Penta | [3, 113, 348, 228, 16]
 ```
+
+### 6.1.6
+Fixed FRC bugs.
+Issues were previously in movegen and NNUE handling in FRC.
+
+No ELO change can be calculated as a fixed version cannot be tested against a broken version.
+
+### 6.1.6
+SPSA Tune at 160K Games, ~10K Iterations
+
+20+0.2
+```
+Elo   | 14.78 +- 8.04 (95%)
+SPRT  | 20.0+0.20s Threads=1 Hash=32MB
+LLR   | 2.93 (-2.25, 2.89) [0.00, 4.00]
+Games | N: 3292 W: 826 L: 686 D: 1780
+Penta | [5, 330, 852, 438, 21]
+https://antares2262.pythonanywhere.com/test/123/
+```
+
+40+0.4
+```
+Elo   | 20.06 +- 12.98 (95%)
+SPRT  | 40.0+0.40s Threads=1 Hash=128MB
+LLR   | 2.90 (-2.25, 2.89) [0.00, 8.00]
+Games | N: 1266 W: 327 L: 254 D: 685
+Penta | [0, 129, 312, 182, 10]
+https://antares2262.pythonanywhere.com/test/124/
+```
+
+### 6.1.7
+Use power of 2 sizes for the transposition table.
+Speed gain patch with a small sample size test to ensure no regression
+
+```
+Elo   | 6.42 +- 7.90 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 1.14 (-2.25, 2.89) [0.00, 4.00]
+Games | N: 3520 W: 868 L: 803 D: 1849
+Penta | [24, 391, 868, 450, 27]
+```
+
+### 6.1.8 (7.0.0)
+Use the TT value in place of the static evaluation when it is more accurate (Negamax only)
+
+```
+Elo   | 7.13 +- 5.30 (95%)
+SPRT  | 20.0+0.20s Threads=1 Hash=128MB
+LLR   | 2.91 (-2.25, 2.89) [0.00, 4.00]
+Games | N: 7608 W: 1835 L: 1679 D: 4094
+Penta | [34, 834, 1917, 980, 39]
+https://antares2262.pythonanywhere.com/test/178/
+```

@@ -93,32 +93,32 @@ void run_bench(Engine& engine, PLY_TYPE depth) {
             total_nodes += thread_state_i.node_count;
         }
 
-        if (engine.show_stats) {
-            for (int i = 0; i < FAIL_HIGH_STATS_COUNT; i++) {
-                bench_res.qsearch_fail_highs[i] += engine.search_results.qsearch_fail_highs[i];
-                bench_res.search_fail_highs[i] += engine.search_results.search_fail_highs[i];
-            }
-
-            for (int i = 0; i < 6; i++) {
-                bench_res.search_fail_high_types[i] += engine.search_results.search_fail_high_types[i];
-            }
-
-            for (int i = 0; i < ALPHA_RAISE_STATS_COUNT; i++) {
-                bench_res.search_alpha_raises[i] += engine.search_results.search_alpha_raises[i];
-            }
-
-            bench_res.alpha_raised_count += engine.search_results.alpha_raised_count;
+#ifdef SHOW_STATISTICS
+        for (int i = 0; i < FAIL_HIGH_STATS_COUNT; i++) {
+            bench_res.qsearch_fail_highs[i] += engine.search_results.qsearch_fail_highs[i];
+            bench_res.search_fail_highs[i] += engine.search_results.search_fail_highs[i];
         }
+
+        for (int i = 0; i < 6; i++) {
+            bench_res.search_fail_high_types[i] += engine.search_results.search_fail_high_types[i];
+        }
+
+        for (int i = 0; i < ALPHA_RAISE_STATS_COUNT; i++) {
+            bench_res.search_alpha_raises[i] += engine.search_results.search_alpha_raises[i];
+        }
+
+        bench_res.alpha_raised_count += engine.search_results.alpha_raised_count;
+#endif
     }
 
     // Print certain statistics if instructed
-    if (engine.show_stats) {
-        bench_res.num_searches = fens.size();
-        bench_res.node_count = total_nodes;
-        bench_res.depth_reached = depth;
+#ifdef SHOW_STATISTICS
+    bench_res.num_searches = fens.size();
+    bench_res.node_count = total_nodes;
+    bench_res.depth_reached = depth;
 
-        print_statistics(bench_res);
-    }
+    print_statistics(bench_res);
+#endif
 
     // Calculate elapsed time and NPS
     auto end_time = std::chrono::high_resolution_clock::now();

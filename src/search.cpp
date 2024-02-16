@@ -70,12 +70,12 @@ void Engine::reset() {
     std::memset(pv_length, 0, sizeof(pv_length));
     std::memset(pv_table, 0, sizeof(pv_table));
 
-    if (show_stats) {
-        search_results.alpha_raised_count = 0;
-        std::memset(search_results.qsearch_fail_highs, 0, sizeof(search_results.qsearch_fail_highs));
-        std::memset(search_results.search_fail_highs, 0, sizeof(search_results.search_fail_highs));
-        std::memset(search_results.search_fail_high_types, 0, sizeof(search_results.search_fail_high_types));
-    }
+#ifdef SHOW_STATISTICS
+    search_results.alpha_raised_count = 0;
+    std::memset(search_results.qsearch_fail_highs, 0, sizeof(search_results.qsearch_fail_highs));
+    std::memset(search_results.search_fail_highs, 0, sizeof(search_results.search_fail_highs));
+    std::memset(search_results.search_fail_high_types, 0, sizeof(search_results.search_fail_high_types));
+#endif
 
     root_moves.clear();
 }
@@ -486,11 +486,12 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 }
 
                 if (return_eval >= beta) {
-                    if (engine.show_stats) {
-                        if (legal_moves <= FAIL_HIGH_STATS_COUNT) {
-                            engine.search_results.qsearch_fail_highs[legal_moves - 1]++;
-                        }
+
+#ifdef SHOW_STATISTICS
+                    if (legal_moves <= FAIL_HIGH_STATS_COUNT) {
+                        engine.search_results.qsearch_fail_highs[legal_moves - 1]++;
                     }
+#endif
 
                     engine.record_tt_entry_q(thread_id, position.hash_key, best_score, HASH_FLAG_LOWER, best_move,
                                              position.state_stack[thread_state.search_ply].static_eval);
@@ -984,24 +985,25 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
                 update_histories(thread_state, informative_move, last_moves, quiet, winning_capture, bonus);
 
-                if (engine.show_stats) {
-                    engine.search_results.alpha_raised_count++;
-                    if (legal_moves <= ALPHA_RAISE_STATS_COUNT) {
-                        engine.search_results.search_alpha_raises[legal_moves-1]++;
-                    }
+#ifdef SHOW_STATISTICS
+                engine.search_results.alpha_raised_count++;
+                if (legal_moves <= ALPHA_RAISE_STATS_COUNT) {
+                    engine.search_results.search_alpha_raises[legal_moves-1]++;
                 }
+#endif
 
                 // Alpha - Beta cutoff. We have failed high here.
                 if (return_eval >= beta) {
-                    if (engine.show_stats) {
-                        if (legal_moves <= FAIL_HIGH_STATS_COUNT) engine.search_results.search_fail_highs[legal_moves-1]++;
-                        if (move == tt_move) engine.search_results.search_fail_high_types[0]++;
-                        else if (informative_move == thread_state.killer_moves[0][thread_state.search_ply]) engine.search_results.search_fail_high_types[1]++;
-                        else if (informative_move == thread_state.killer_moves[1][thread_state.search_ply]) engine.search_results.search_fail_high_types[2]++;
-                        else if (quiet) engine.search_results.search_fail_high_types[3]++;
-                        else if (!winning_capture) engine.search_results.search_fail_high_types[4]++;
-                        else engine.search_results.search_fail_high_types[5]++;
-                    }
+
+#ifdef SHOW_STATISTICS
+                    if (legal_moves <= FAIL_HIGH_STATS_COUNT) engine.search_results.search_fail_highs[legal_moves-1]++;
+                    if (move == tt_move) engine.search_results.search_fail_high_types[0]++;
+                    else if (informative_move == thread_state.killer_moves[0][thread_state.search_ply]) engine.search_results.search_fail_high_types[1]++;
+                    else if (informative_move == thread_state.killer_moves[1][thread_state.search_ply]) engine.search_results.search_fail_high_types[2]++;
+                    else if (quiet) engine.search_results.search_fail_high_types[3]++;
+                    else if (!winning_capture) engine.search_results.search_fail_high_types[4]++;
+                    else engine.search_results.search_fail_high_types[5]++;
+#endif
 
                     // Killer Heuristic for move ordering
                     if (quiet) {
@@ -1360,7 +1362,10 @@ void lazy_smp_search(Engine& engine) {
         // std::cout << "Helper Thread #" << thread_id << " closed." << std::endl;
     }
 
-    if (engine.show_stats) print_statistics(engine.search_results);
+#ifdef SHOW_STATISTICS
+    print_statistics(engine.search_results);
+#endif
+
 }
 
 template void lazy_smp_search<USE_NNUE>(Engine& engine);
