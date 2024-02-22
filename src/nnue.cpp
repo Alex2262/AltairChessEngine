@@ -102,20 +102,18 @@ int32_t NNUE_State::screlu_flatten_simd(const std::array<int16_t, LAYER1_SIZE> &
         // OUR perspective
         auto our_weight = SIMD::int16_load(&our[i]);
         our_weight      = SIMD::vec_int16_clamp(our_weight, CRELU_MIN_VEC, QA_VEC);
-        our_weight      = SIMD::vec_int16_multiply(our_weight, our_weight);
 
         auto out_weight_1 = SIMD::int16_load(&weights[offset_1 + i]);
-        auto our_product  = SIMD::vec_int16_madd_int32(our_weight, out_weight_1);
+        auto our_product  = SIMD::vec_int16_madd_int32(our_weight, SIMD::vec_int16_multiply(our_weight, out_weight_1));
 
         sum = SIMD::vec_int32_add(sum, our_product);
 
         // OPP perspective
         auto opp_weight = SIMD::int16_load(&opp[i]);
         opp_weight      = SIMD::vec_int16_clamp(opp_weight, CRELU_MIN_VEC, QA_VEC);
-        opp_weight      = SIMD::vec_int16_multiply(opp_weight, opp_weight);
 
         auto out_weight_2 = SIMD::int16_load(&weights[offset_2 + i]);
-        auto opp_product  = SIMD::vec_int16_madd_int32(opp_weight, out_weight_2);
+        auto opp_product  = SIMD::vec_int16_madd_int32(opp_weight, SIMD::vec_int16_multiply(opp_weight, out_weight_2));
 
         sum = SIMD::vec_int32_add(sum, opp_product);
 
