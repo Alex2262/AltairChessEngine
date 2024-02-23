@@ -27,7 +27,7 @@ constexpr int16_t CRELU_MIN = 0;
 
 constexpr SCORE_TYPE SCALE = 400;
 
-constexpr int16_t QA = 181;
+constexpr int16_t QA = 255;
 constexpr int16_t QB = 64;
 
 constexpr int16_t QAB = QA * QB;
@@ -98,8 +98,8 @@ struct alignas(64) Accumulator {
     }
 };
 
-constexpr int16_t screlu(int16_t x) {
-    const auto clipped = std::clamp(static_cast<int16_t>(x), CRELU_MIN, QA);
+constexpr int32_t screlu(int16_t x) {
+    const auto clipped = std::clamp<int16_t>(static_cast<int16_t>(x), CRELU_MIN, QA);
     return clipped * clipped;
 }
 
