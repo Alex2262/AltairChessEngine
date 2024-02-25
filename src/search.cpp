@@ -325,31 +325,31 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
             }
         }
 
+        // Deduct bonus for moves that don't raise alpha
+        for (int failed_index = 0; failed_index < static_cast<int>(searched_quiets.size()) - 1; failed_index++) {
+            ScoredMove& temp_scored_move = searched_quiets[failed_index];
+            Move temp_move = temp_scored_move.move;
+
+            update_history_entry(thread_state.history_moves
+                                 [position.board[temp_move.origin()]]
+                                 [temp_move.target()],
+                                 -bonus);
+
+
+            InformativeMove temp_move_informative = InformativeMove(temp_move, position.board[temp_move.origin()], position.board[temp_move.target()]);
+            for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
+                if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
+                    update_history_entry(thread_state.get_continuation_history_entry(last_moves[last_move_index], temp_move_informative),
+                                         -bonus);
+                }
+            }
+
+        }
+
     } else {
         update_history_entry(thread_state.capture_history[winning_capture][position.board[move.origin()]]
                              [position.board[move.target()]][move.target()],
                              bonus);
-    }
-
-    // Deduct bonus for moves that don't raise alpha
-    for (int failed_index = 0; failed_index < static_cast<int>(searched_quiets.size()) - 1; failed_index++) {
-        ScoredMove& temp_scored_move = searched_quiets[failed_index];
-        Move temp_move = temp_scored_move.move;
-
-        update_history_entry(thread_state.history_moves
-                             [position.board[temp_move.origin()]]
-                             [temp_move.target()],
-                             -bonus);
-
-
-        InformativeMove temp_move_informative = InformativeMove(temp_move, position.board[temp_move.origin()], position.board[temp_move.target()]);
-        for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
-            if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
-                update_history_entry(thread_state.get_continuation_history_entry(last_moves[last_move_index], temp_move_informative),
-                                     -bonus);
-            }
-        }
-
     }
 
 
