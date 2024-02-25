@@ -52,6 +52,7 @@ struct State {
 
     SCORE_TYPE static_eval = NO_EVALUATION;
 
+    int cutoffs = 0;
     int double_extensions = 0;
     int in_check = -1;
 

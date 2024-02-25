@@ -839,19 +839,20 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         PLY_TYPE new_depth = depth + extension - 1;
 
+        position.state_stack[thread_state.search_ply + 1].cutoffs = 0;
+
+        bool is_killer_move = informative_move == thread_state.killer_moves[0][thread_state.search_ply] ||
+                              informative_move == thread_state.killer_moves[1][thread_state.search_ply];
+
+        bool move_gives_check = position.is_attacked(position.get_king_pos(position.side), position.side);
+        position.state_stack[thread_state.search_ply + 1].in_check = static_cast<int>(move_gives_check);
+
         // Prepare for recursive searching
         position.update_nnue(position.state_stack[thread_state.search_ply]);
 
         thread_state.search_ply++;
         thread_state.game_ply++;
         thread_state.repetition_table[thread_state.game_ply] = position.hash_key;
-
-        bool move_gives_check = position.is_attacked(position.get_king_pos(position.side), position.side);
-        position.state_stack[thread_state.search_ply].in_check = static_cast<int>(move_gives_check);
-
-
-        bool is_killer_move = informative_move == thread_state.killer_moves[0][thread_state.search_ply - 1] ||
-                              informative_move == thread_state.killer_moves[1][thread_state.search_ply - 1];
 
         bool interesting = passed_pawn || queen_promotion || move_gives_check || is_killer_move;
 
@@ -899,6 +900,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // Reduce more on cutnodes
             reduction += cutnode;
+
+            // Reduce if the child node has more cutoffs
+            reduction += position.state_stack[thread_state.search_ply - 1].cutoffs >= 4;
 
             // Clamp the LMR depth
             reduction = std::clamp<PLY_TYPE>(reduction, 0, new_depth - 1);
