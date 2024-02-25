@@ -995,6 +995,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 // Alpha - Beta cutoff. We have failed high here.
                 if (return_eval >= beta) {
 
+                    position.state_stack[thread_state.search_ply].cutoffs++;
+
 #ifdef SHOW_STATISTICS
                     if (legal_moves <= FAIL_HIGH_STATS_COUNT) engine.search_results.search_fail_highs[legal_moves-1]++;
                     if (move == tt_move) engine.search_results.search_fail_high_types[0]++;
