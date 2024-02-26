@@ -859,7 +859,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         uint64_t current_nodes = thread_state.node_count;
 
-        int reduction;
+        int reduction = 0;
         bool full_depth_zero_window;
 
         // Late Move Reductions (LMR)
@@ -930,7 +930,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         // Search to a full depth at normal bounds if necessary
         if (return_eval == -SCORE_INF || (pv_node && ((return_eval > alpha && return_eval < beta) || legal_moves == 0))) {
-            return_eval = -negamax<NNUE>(engine, -beta, -alpha, new_depth, true, false, thread_id);
+            return_eval = -negamax<NNUE>(engine, -beta, -alpha, new_depth - (reduction > 3), true, false, thread_id);
         }
 
         // Undo the move and other changes
