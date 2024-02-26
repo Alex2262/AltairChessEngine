@@ -865,7 +865,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // Late Move Reductions (LMR)
         // The idea that if moves are ordered well, then moves that are searched
         // later shouldn't be as good, and therefore we don't need to search them to a very high depth
-        if (legal_moves >= 2 + 2 * root + pv_node
+        if (legal_moves >= 2 + pv_node
             && depth >= 3
             && (quiet || !winning_capture)
             ){
@@ -930,7 +930,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         // Search to a full depth at normal bounds if necessary
         if (return_eval == -SCORE_INF || (pv_node && ((return_eval > alpha && return_eval < beta) || legal_moves == 0))) {
-            return_eval = -negamax<NNUE>(engine, -beta, -alpha, new_depth - (reduction > 3), true, false, thread_id);
+            return_eval = -negamax<NNUE>(engine, -beta, -alpha, new_depth, true, false, thread_id);
         }
 
         // Undo the move and other changes
