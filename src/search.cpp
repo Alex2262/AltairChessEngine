@@ -903,6 +903,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             // Reduce more on cutnodes
             reduction += cutnode;
 
+            // Odd-Even effect handling
+            reduction += !pv_node && legal_moves >= 5 && move_history_score < 0 && !improving && !interesting &&
+                          thread_state.search_ply % 2 == 0;
+
             // Clamp the LMR depth
             reduction = std::clamp<PLY_TYPE>(reduction, 0, new_depth - 1);
             auto lmr_depth = new_depth - reduction;
