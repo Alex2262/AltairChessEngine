@@ -12,7 +12,13 @@
 // #define SHOW_STATISTICS
 
 constexpr double learning_rate = 0.002;
-constexpr int pawn_history_size = 128;
+
+constexpr int pawn_history_size = 1024;
+
+constexpr int max_quiet_history = 6144;
+constexpr int max_pawn_history  = 10368;
+constexpr int max_cont_history  = 16384;
+constexpr int max_noisy_history = 16384;
 
 struct TT_Entry {
     HASH_TYPE key = 0;
@@ -234,7 +240,7 @@ public:
     SCORE_TYPE evaluate(int thread_id);
 };
 
-void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus);
+void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus, SCORE_TYPE max_score);
 void update_histories(Thread_State& thread_state, InformativeMove informative_move,
                       InformativeMove last_moves[], bool quiet, bool winning_capture,
                       int bonus);

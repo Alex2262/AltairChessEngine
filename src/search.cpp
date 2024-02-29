@@ -298,9 +298,8 @@ template SCORE_TYPE Engine::evaluate<NO_NNUE >(int thread_id);
 
 
 // History entry updates with scaling
-void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus) {
-    score -= (score * abs(bonus)) / 324;
-    score += bonus * 32;
+void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus, SCORE_TYPE max_score) {
+    score += 32 * bonus - (score * abs(32 * bonus)) / max_score;
 }
 
 
@@ -317,23 +316,23 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
     if (quiet) {
         update_history_entry(thread_state.history_moves
                              [position.board[move.origin()]][move.target()],
-                             bonus);
+                             bonus, max_quiet_history);
 
         update_history_entry(thread_state.pawn_history
                              [position.pawn_hash_key % pawn_history_size][position.board[move.origin()]][move.target()],
-                             bonus);
+                             bonus, max_pawn_history);
 
         for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
             if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
                 update_history_entry(thread_state.get_continuation_history_entry(last_moves[last_move_index], informative_move),
-                                     bonus);
+                                     bonus, max_cont_history);
             }
         }
 
     } else {
         update_history_entry(thread_state.capture_history[winning_capture][position.board[move.origin()]]
                              [position.board[move.target()]][move.target()],
-                             bonus);
+                             bonus, max_noisy_history);
     }
 
     // Deduct bonus for moves that don't raise alpha
@@ -343,18 +342,18 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
 
         update_history_entry(thread_state.history_moves
                              [position.board[temp_move.origin()]][temp_move.target()],
-                             -bonus);
+                             -bonus, max_quiet_history);
 
         update_history_entry(thread_state.pawn_history
                              [position.pawn_hash_key % pawn_history_size][position.board[move.origin()]][move.target()],
-                             -bonus);
+                             -bonus, max_pawn_history);
 
 
         InformativeMove temp_move_informative = InformativeMove(temp_move, position.board[temp_move.origin()], position.board[temp_move.target()]);
         for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
             if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
                 update_history_entry(thread_state.get_continuation_history_entry(last_moves[last_move_index], temp_move_informative),
-                                     -bonus);
+                                     -bonus, max_cont_history);
             }
         }
 
@@ -372,7 +371,7 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
                                  [position.board[temp_move.origin()]]
                                  [position.board[temp_move.target()]]
                                  [temp_move.target()],
-                                 -bonus);
+                                 -bonus, max_noisy_history);
         }
     }
 }
@@ -482,15 +481,15 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                                          [position.board[move.origin()]]
                                          [position.board[move.target()]]
                                          [move.target()],
-                                         bonus);
+                                         bonus, max_noisy_history);
                 } else {
                     update_history_entry(thread_state.history_moves
                                          [position.board[move.origin()]][move.target()],
-                                         bonus);
+                                         bonus, max_quiet_history);
 
                     update_history_entry(thread_state.pawn_history
                                          [position.pawn_hash_key % pawn_history_size][position.board[move.origin()]][move.target()],
-                                         bonus);
+                                         bonus, max_pawn_history);
                 }
 
                 if (return_eval >= beta) {
@@ -906,7 +905,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             reduction -= in_check;
 
             // Scale the reduction based on the move's history score
-            reduction -= move_history_score / 8192;
+            reduction -= move_history_score / 10368;
 
             // Scale reductions based on how many moves have already raised alpha
             reduction += static_cast<int>(static_cast<double>(alpha_raised_count) * (0.5 + 0.5 * tt_move_noisy));
