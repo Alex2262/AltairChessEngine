@@ -89,6 +89,7 @@ void Engine::new_game() {
         std::memset(thread_state.repetition_table, 0, sizeof(thread_state.repetition_table));
         std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
         std::memset(thread_state.history_moves, 0, sizeof(thread_state.history_moves));
+        std::memset(thread_state.pawn_history, 0, sizeof(thread_state.pawn_history));
         std::memset(thread_state.capture_history, 0, sizeof(thread_state.capture_history));
         std::memset(thread_state.continuation_history, 0, sizeof(thread_state.continuation_history));
 
@@ -318,6 +319,10 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
                              [position.board[move.origin()]][move.target()],
                              bonus);
 
+        update_history_entry(thread_state.pawn_history
+                             [position.pawn_hash_key % pawn_history_size][position.board[move.origin()]][move.target()],
+                             bonus);
+
         for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
             if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
                 update_history_entry(thread_state.get_continuation_history_entry(last_moves[last_move_index], informative_move),
@@ -337,8 +342,11 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
         Move temp_move = temp_scored_move.move;
 
         update_history_entry(thread_state.history_moves
-                             [position.board[temp_move.origin()]]
-                             [temp_move.target()],
+                             [position.board[temp_move.origin()]][temp_move.target()],
+                             -bonus);
+
+        update_history_entry(thread_state.pawn_history
+                             [position.pawn_hash_key % pawn_history_size][position.board[move.origin()]][move.target()],
                              -bonus);
 
 
@@ -478,6 +486,10 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 } else {
                     update_history_entry(thread_state.history_moves
                                          [position.board[move.origin()]][move.target()],
+                                         bonus);
+
+                    update_history_entry(thread_state.pawn_history
+                                         [position.pawn_hash_key % pawn_history_size][position.board[move.origin()]][move.target()],
                                          bonus);
                 }
 
@@ -723,9 +735,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (quiet) searched_quiets.push_back(scored_move);
         else searched_noisy.push_back(scored_move);
 
-        SCORE_TYPE move_history_score = quiet ?
+        SCORE_TYPE move_history_score = quiet   ?
                                         // Quiet Histories
-                                        thread_state.history_moves[position.board[move.origin()]][move.target()] :
+                                        thread_state.history_moves[position.board[move.origin()]][move.target()] +
+                                        thread_state.pawn_history[position.pawn_hash_key % pawn_history_size][position.board[move.origin()]][move.target()]
+                                                :
                                         // Capture Histories
                                         thread_state.capture_history
                                         [winning_capture][position.board[move.origin()]][position.board[move.target()]][move.target()];

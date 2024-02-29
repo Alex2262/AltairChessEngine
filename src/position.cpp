@@ -117,10 +117,7 @@ void Position::compute_hash_key() {
 
     hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
-    if (side) {
-        hash_key ^= ZobristHashKeys.side_hash_key;
-        pawn_hash_key ^= ZobristHashKeys.side_hash_key;
-    }
+    if (side) hash_key ^= ZobristHashKeys.side_hash_key;
 }
 
 FenInfo Position::set_fen(const std::string& fen_string) {
@@ -529,7 +526,7 @@ bool Position::is_pseudo_legal(Move move) {
 void Position::make_null_move(State& state, PLY_TYPE& fifty_move) {
     side = ~side;
     hash_key ^= ZobristHashKeys.side_hash_key;
-    pawn_hash_key ^= ZobristHashKeys.side_hash_key;
+
     state.move = NO_INFORMATIVE_MOVE;
     state.NNUE_pushed = false;
 
@@ -549,7 +546,7 @@ void Position::undo_null_move(State& state, PLY_TYPE& fifty_move) {
     side = ~side;
     ep_square = state.current_ep_square;
     hash_key = state.current_hash_key;
-    pawn_hash_key = state.current_pawn_hash_key;
+
     fifty_move = state.current_fifty_move;
 
     BITBOARD temp_our_pieces = our_pieces;
@@ -757,7 +754,6 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
     hash_key ^= ZobristHashKeys.side_hash_key;
-    pawn_hash_key ^= ZobristHashKeys.side_hash_key;
     side = ~side;
 
     BITBOARD temp_our_pieces = our_pieces;

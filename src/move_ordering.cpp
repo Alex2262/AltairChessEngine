@@ -55,6 +55,7 @@ SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
                 static_cast<SCORE_TYPE>(MO_Margin::killer_2);
 
         score += thread_state.history_moves[selected][move.target()];
+        score += thread_state.pawn_history[position.pawn_hash_key % pawn_history_size][selected][move.target()];
 
         for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
             if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {

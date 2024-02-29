@@ -12,6 +12,7 @@
 // #define SHOW_STATISTICS
 
 constexpr double learning_rate = 0.002;
+constexpr int pawn_history_size = 1024;
 
 struct TT_Entry {
     HASH_TYPE key = 0;
@@ -136,6 +137,7 @@ public:
     SCORE_TYPE history_moves[12][64]{}; // piece | target_square
     SCORE_TYPE capture_history[2][12][12][64]{};
     SCORE_TYPE continuation_history[12][64][12][64]{};
+    SCORE_TYPE pawn_history[pawn_history_size][12][64]{};
 
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH + 512] = {0};
 
