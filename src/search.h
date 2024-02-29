@@ -12,7 +12,7 @@
 // #define SHOW_STATISTICS
 
 constexpr double learning_rate = 0.002;
-constexpr int pawn_history_size = 1024;
+constexpr int pawn_history_size = 128;
 
 struct TT_Entry {
     HASH_TYPE key = 0;
