@@ -429,8 +429,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (!winning_capture) break; // Gainer on god
 
         // SEE pruning
-        if (eval + 60 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
-            best_score = std::max(best_score, eval + 60);
+        if (eval + 90 <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
+            best_score = std::max(best_score, eval + 90);
             continue;
         }
 
