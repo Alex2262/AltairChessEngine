@@ -27,14 +27,15 @@ ratings without rankings are either old versions or on lists where the best engi
 [CEGT Rating List](http://www.cegt.net) \
 [MCERL Rating list](https://www.chessengeria.eu/mcerl)
 
-|  Version  | CCRL Blitz 2+1 |  CCRL 40/15  | CCRL FRC 40/2 |  CEGT 40/4   |  MCERL   |
-|:---------:|:--------------:|:------------:|:-------------:|:------------:|:--------:|
-| **6.0.0** |  #33 **3522**  | #36 **3430** | #18 **3656**  | **#37 3397** | **3502** |
-|   5.0.0   |      3207      |     3170     |     3229      |     3043     |   3209   |
-|   4.0.0   |      3069      |     3077     |     3082      |     2924     |   3069   |
-|   3.0.0   |      3000      |     3036     |     ----      |     2874     |   ----   |
-|   2.0.0   |      2854      |     2820     |     ----      |     2674     |   2649   |
-|   1.0.0   |      ----      |     2372     |     ----      |     2205     |   ----   |
+|  Version  | CCRL Blitz 2+1 |  CCRL 40/15  | CCRL FRC 40/2 | CEGT 40/4 |  MCERL   |
+|:---------:|:--------------:|:------------:|:-------------:|:---------:|:--------:|
+| **7.0.0** |  #24 **3582**  | #28 **3476** | #12 **3779**  | **----**  | **3602** |
+|   6.0.0   |      3524      |     3430     |     3655      |   3398    |   3504   |
+|   5.0.0   |      3207      |     3172     |     3230      |   3043    |   3210   |
+|   4.0.0   |      3069      |     3079     |     3082      |   2924    |   3071   |
+|   3.0.0   |      3000      |     3038     |     ----      |   2874    |   2988   |
+|   2.0.0   |      2854      |     2822     |     ----      |   2674    |   2656   |
+|   1.0.0   |      ----      |     2374     |     ----      |   2205    |   2469   |
 
 
 ## Download
@@ -131,21 +132,21 @@ Altair's neural networks are trained on completely original data. \
 The data was originally trained from Altair's classical evaluation, which was specifically tuned from zero values from 5.0.0 and onwards. \
 The current data has been repeatedly trained on previous data in a cycle of reinforcement learning of sorts from an initial state of zero knowledge.
 
-#### Current Net (Solaris):
-Solaris is a neural network 
-trained on over 2B FENs including a portion of standard data and DFRC (Double Fischer Random Chess) data.
+#### Current Net (Europa):
+Europa is a neural network 
+trained on over 3.1B FENs including a portion of standard data and DFRC (Double Fischer Random Chess) data.
 Altair currently has king buckets in the input layer, and material output buckets in the output layer.
 
 Architecture:
 ```
 +----------+----------+----------+ 
 | Input    | Hidden   | Output   | 
-| 768x4 -> | 768*2 -> | 1x8      | 
+| 768x5 -> | 768*2 -> | 1x8      | 
 +----------+----------+----------+
 ```
 
 
-*The `x4` in the input layer indicates input buckets, 
+*The `x5` in the input layer indicates input buckets, 
 `*2` in the Hidden Layer for perspective, 
 and `x8` in the Output for output buckets.*
 
