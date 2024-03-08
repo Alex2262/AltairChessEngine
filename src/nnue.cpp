@@ -12,8 +12,8 @@
 
 #include "incbin.h"
 
-INCBIN(nnue, "src/solaris-net.bin");
-// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/solaris-net.bin");
+INCBIN(nnue, "src/europa-net.bin");
+// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/europa-net.bin");
 
 const NNUE_Params &original_nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 

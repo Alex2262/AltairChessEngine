@@ -19,7 +19,7 @@ class Position;
 constexpr size_t INPUT_SIZE = 768;
 constexpr size_t LAYER1_SIZE = 768;
 
-constexpr size_t KING_INPUT_BUCKETS = 4;
+constexpr size_t KING_INPUT_BUCKETS = 5;
 constexpr size_t MATERIAL_OUTPUT_BUCKETS = 8;
 constexpr int    MATERIAL_OUTPUT_BUCKET_DIVISOR = 32 / MATERIAL_OUTPUT_BUCKETS;
 
@@ -38,12 +38,12 @@ const auto QA_VEC        = SIMD::get_int16_vec(QA);
 const int KING_BUCKET_MAP[64] = {
         0, 0, 0, 1, 1, 2, 2, 2,
         0, 0, 1, 1, 1, 1, 2, 2,
-        0, 3, 3, 3, 3, 3, 3, 2,
-        3, 3, 3, 3, 3, 3, 3, 3,
-        3, 3, 3, 3, 3, 3, 3, 3,
-        3, 3, 3, 3, 3, 3, 3, 3,
-        3, 3, 3, 3, 3, 3, 3, 3,
-        3, 3, 3, 3, 3, 3, 3, 3
+        0, 3, 3, 3, 4, 4, 4, 2,
+        3, 3, 3, 3, 4, 4, 4, 4,
+        3, 3, 3, 3, 4, 4, 4, 4,
+        3, 3, 3, 3, 4, 4, 4, 4,
+        3, 3, 3, 3, 4, 4, 4, 4,
+        3, 3, 3, 3, 4, 4, 4, 4,
 };
 
 struct alignas(64) NNUE_Params {
