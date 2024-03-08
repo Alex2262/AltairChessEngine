@@ -6624,3 +6624,40 @@ Games | N: 7608 W: 1835 L: 1679 D: 4094
 Penta | [34, 834, 1917, 980, 39]
 https://antares2262.pythonanywhere.com/test/178/
 ```
+
+### 7.0.1
+Use QA = 255 while keeping int16 by switching order of operations
+
+```
+Elo   | 6.39 +- 5.20 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 3.00 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 8324 W: 2104 L: 1951 D: 4269
+Penta | [73, 972, 1931, 1101, 85]
+https://chess.swehosting.se/test/5579/
+```
+
+### 7.0.2
+LMR changes
+
+```
+Elo   | 3.43 +- 3.40 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 19564 W: 4877 L: 4684 D: 10003
+Penta | [173, 2248, 4754, 2427, 180]
+https://chess.swehosting.se/test/5618/
+```
+
+### 7.0.3
+Europa Net
+Over 3.1B FENs, 5 king buckets, 768 HL
+
+```
+Elo   | 22.94 +- 10.97 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 1896 W: 528 L: 403 D: 965
+Penta | [15, 172, 461, 273, 27]
+https://chess.swehosting.se/test/5708/
+```
