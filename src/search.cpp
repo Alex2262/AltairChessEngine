@@ -762,7 +762,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                           search_params.SEE_noisy_depth.v * !quiet +
                           search_params.SEE_pv_depth.v * pv_node)
                  && legal_moves >= 3 && move_history_score <= 5000 &&
-                 !get_static_exchange_evaluation(position, move, (quiet ? -50 : -90) * depth))
+                 !get_static_exchange_evaluation(position, move, (quiet ? -26 * depth * depth : -82 * depth)))
                 continue;
 
         }
