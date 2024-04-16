@@ -64,7 +64,6 @@ double position_time_scale(Position& position) {
 
 
 void time_handler(Engine& engine, double self_time, double inc, double movetime, long movestogo) {
-    double rate = 20;
     double time_amt;
 
     Position& position = engine.thread_states[0].position;
