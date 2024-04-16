@@ -184,7 +184,7 @@ public:
     PLY_TYPE max_q_depth = TOTAL_MAX_DEPTH - MAX_AB_DEPTH;
     PLY_TYPE min_depth = 1;
 
-    int move_overhead = 10;
+    int move_overhead = 50;
     uint64_t hard_time_limit = 60000;
     uint64_t soft_time_limit = 60000;
     uint64_t start_time = 0;
