@@ -87,10 +87,12 @@ void time_handler(Engine& engine, double self_time, double inc, double movetime,
     }
 
     if (movestogo > 0 && inc == 0) {
-        time_amt = self_time * 0.9 / static_cast<double>(movestogo);
-        if (time_amt > self_time * 0.9) time_amt = self_time * 0.95;
+        time_amt = self_time * 0.95 / static_cast<double>(movestogo);
+        if (time_amt > self_time * 0.95) time_amt = self_time * 0.95;
 
-        time_amt *= (0.6 + 0.4 * pts);
+        if (movestogo == 1) time_amt = self_time;
+        else time_amt *= (0.6 + 0.4 * pts);
+
         goto update;
     }
 
@@ -101,20 +103,25 @@ void time_handler(Engine& engine, double self_time, double inc, double movetime,
     }
 
     if (movestogo > 0 && inc > 0) {
-        time_amt = self_time * 0.9 / static_cast<double>(movestogo) + inc * 0.75;
-        if (time_amt > self_time * 0.9) time_amt = self_time * 0.85 + inc * 0.75;
+        time_amt = self_time * 0.95 / static_cast<double>(movestogo) + inc * 0.75;
+        if (time_amt > self_time * 0.95) time_amt = std::min(self_time * 0.85 + inc * 0.75, self_time * 0.95);
 
-        time_amt *= (0.6 + 0.4 * pts);
+        if (movestogo == 1) time_amt = self_time;
+        else time_amt *= (0.6 + 0.4 * pts);
+
         goto update;
     }
 
     time_amt = 100;
 
 update:
+
+    if (self_time) time_amt = std::min(time_amt, self_time * 0.95);
+
     engine.hard_time_limit = std::max(static_cast<uint64_t>(time_amt),
                                       static_cast<uint64_t>(time_amt * 2.64) - engine.move_overhead);
 
-    engine.soft_time_limit = static_cast<uint64_t>(time_amt * 0.76);
+    engine.soft_time_limit = std::min(static_cast<uint64_t>(time_amt * 0.76), static_cast<uint64_t>(self_time * 0.7));
 
     if (engine.hard_time_limit > static_cast<uint64_t>(self_time * 0.8) && self_time > 0) {
         engine.hard_time_limit = static_cast<uint64_t>(self_time * 0.8);
@@ -124,6 +131,6 @@ update:
         engine.hard_time_limit = static_cast<uint64_t>(time_amt);
     }
 
-    std::cout << engine.soft_time_limit << " " << engine.hard_time_limit << std::endl;
+    std::cout << time_amt << " " << engine.soft_time_limit << " " << engine.hard_time_limit << std::endl;
 }
 
