@@ -2,6 +2,7 @@
 // Created by Alexander Tian on 4/16/24.
 //
 
+#include <cmath>
 #include "timeman.h"
 
 double position_time_scale(Position& position) {
@@ -66,6 +67,8 @@ double position_time_scale(Position& position) {
 void time_handler(Engine& engine, double self_time, double inc, double movetime, long movestogo) {
     double time_amt;
 
+    double movestogo_ratio = movestogo == 0 ? 0 : std::clamp(std::asin((movestogo + 14) / 18.0), 0.75, 1.05);
+
     Position& position = engine.thread_states[0].position;
 
     double pts = position_time_scale(position);
@@ -87,10 +90,10 @@ void time_handler(Engine& engine, double self_time, double inc, double movetime,
     }
 
     if (movestogo > 0 && inc == 0) {
-        time_amt = self_time * 0.95 / static_cast<double>(movestogo);
-        if (time_amt > self_time * 0.95) time_amt = self_time * 0.95;
+        time_amt = self_time * movestogo_ratio / static_cast<double>(movestogo);
+        if (time_amt > self_time * 0.9) time_amt = self_time * 0.9;
 
-        if (movestogo == 1) time_amt = self_time;
+        if (movestogo == 1) time_amt = self_time * 0.9;
         else time_amt *= (0.6 + 0.4 * pts);
 
         goto update;
@@ -103,10 +106,10 @@ void time_handler(Engine& engine, double self_time, double inc, double movetime,
     }
 
     if (movestogo > 0 && inc > 0) {
-        time_amt = self_time * 0.95 / static_cast<double>(movestogo) + inc * 0.75;
-        if (time_amt > self_time * 0.95) time_amt = std::min(self_time * 0.85 + inc * 0.75, self_time * 0.95);
+        time_amt = self_time * movestogo_ratio / static_cast<double>(movestogo) + inc * 0.75;
+        if (time_amt > self_time * 0.9) time_amt = std::min(self_time * 0.85 + inc * 0.75, self_time * 0.9);
 
-        if (movestogo == 1) time_amt = self_time;
+        if (movestogo == 1) time_amt = self_time * 0.9;
         else time_amt *= (0.6 + 0.4 * pts);
 
         goto update;
@@ -131,6 +134,6 @@ update:
         engine.hard_time_limit = static_cast<uint64_t>(time_amt);
     }
 
-    std::cout << time_amt << " " << engine.soft_time_limit << " " << engine.hard_time_limit << std::endl;
+    // std::cout << time_amt << " " << engine.soft_time_limit << " " << engine.hard_time_limit << std::endl;
 }
 
