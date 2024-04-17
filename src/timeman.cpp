@@ -67,7 +67,7 @@ double position_time_scale(Position& position) {
 void time_handler(Engine& engine, double self_time, double inc, double movetime, long movestogo) {
     double time_amt;
 
-    double movestogo_ratio = movestogo == 0 ? 0 : std::clamp(std::asin((movestogo + 14) / 18.0), 0.75, 1.05);
+    double movestogo_ratio = movestogo == 0 ? 0 : std::clamp(std::atan((movestogo + 14) / 18.0), 0.75, 1.05);
 
     Position& position = engine.thread_states[0].position;
 
