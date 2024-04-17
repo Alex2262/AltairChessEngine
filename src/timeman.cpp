@@ -124,7 +124,7 @@ update:
     engine.hard_time_limit = std::max(static_cast<uint64_t>(time_amt),
                                       static_cast<uint64_t>(time_amt * 2.64) - engine.move_overhead);
 
-    engine.soft_time_limit = std::min(static_cast<uint64_t>(time_amt * 0.76), static_cast<uint64_t>(self_time * 0.7));
+    engine.soft_time_limit = std::min(static_cast<uint64_t>(time_amt * 0.76), static_cast<uint64_t>(self_time * 0.8));
 
     if (engine.hard_time_limit > static_cast<uint64_t>(self_time * 0.8) && self_time > 0) {
         engine.hard_time_limit = static_cast<uint64_t>(self_time * 0.8);
