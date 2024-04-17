@@ -67,7 +67,7 @@ double position_time_scale(Position& position) {
 void time_handler(Engine& engine, double self_time, double inc, double movetime, long movestogo) {
     double time_amt;
 
-    double movestogo_ratio = movestogo == 0 ? 0 : std::clamp(std::atan((movestogo + 14) / 18.0), 0.75, 0.9);
+    double movestogo_ratio = movestogo == 0 ? 0 : std::clamp(std::atan((movestogo + 20) / 24.0), 0.84, 1.1);
 
     Position& position = engine.thread_states[0].position;
 
@@ -94,7 +94,7 @@ void time_handler(Engine& engine, double self_time, double inc, double movetime,
         if (time_amt > self_time * 0.9) time_amt = self_time * 0.9;
 
         if (movestogo == 1) time_amt = self_time * 0.9;
-        else time_amt *= (0.6 + 0.4 * pts);
+        else time_amt *= (0.7 + 0.3 * pts);
 
         goto update;
     }
@@ -110,7 +110,7 @@ void time_handler(Engine& engine, double self_time, double inc, double movetime,
         if (time_amt > self_time * 0.9) time_amt = std::min(self_time * 0.85 + inc * 0.75, self_time * 0.9);
 
         if (movestogo == 1) time_amt = self_time * 0.9;
-        else time_amt *= (0.6 + 0.4 * pts);
+        else time_amt *= (0.7 + 0.3 * pts);
 
         goto update;
     }
