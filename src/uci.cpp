@@ -11,6 +11,7 @@
 #include "perft.h"
 #include "bench.h"
 #include "see.h"
+#include "timeman.h"
 
 void UCI::initialize_uci() const {
     engine->resize_tt(DEFAULT_TT_SIZE);
@@ -21,57 +22,6 @@ void UCI::initialize_uci() const {
 
     Position& position = engine->thread_states[0].position;
     position.set_fen(START_FEN);
-}
-
-
-void  UCI::time_handler(double self_time, double inc, double movetime, long movestogo) const {
-    double rate = 20;
-    double time_amt;
-
-    Position& position = engine->thread_states[0].position;
-
-    if (position.is_attacked(position.get_king_pos(position.side), position.side)) rate -= 2;
-
-    if (movetime > 0) time_amt = movetime * 0.9;
-    else if (inc > 0 && movestogo > 0) {
-        time_amt = (self_time * 0.8 / static_cast<double>(movestogo)) * (20 / rate) + (inc / 2.0);
-        if (time_amt > self_time * 0.8) time_amt = self_time * 0.85 + (inc / 2.0);
-    }
-    else if (inc > 0) {
-
-        // we always want to have more time than our increment.
-        // This ensures we use a lot of our remaining time, but
-        // since our increment is larger, it doesn't matter.
-        if (self_time < inc) time_amt = self_time / (rate / 10);
-        else {
-            // If our remaining time is less than the boundary, we should use less time than our increment
-            // to get back above the boundary.
-            double bound = inc / 2.5 * sqrt(60000.0 / inc);
-            if (inc > bound / 2.5) bound = inc * sqrt(90000.0 / inc);
-            if (inc > bound / 2.5) bound = 1.5 * inc * sqrt(200000.0 / inc);
-            time_amt = std::max(inc * 0.975 + (self_time - bound) / (rate * 1.8), self_time / (rate * 10));
-        }
-    }
-    else if (movestogo > 0) {
-        time_amt = (self_time * 0.9 / static_cast<double>(movestogo)) * (20 / rate);
-        if (time_amt > self_time * 0.9) time_amt = self_time * 0.95;
-    }
-    else if (self_time > 0) time_amt = self_time / (rate + 6);
-    else time_amt = static_cast<double>(engine->hard_time_limit);
-
-    engine->hard_time_limit = static_cast<uint64_t>(time_amt * 2.54);
-    engine->soft_time_limit = static_cast<uint64_t>(time_amt * 0.66);
-
-    if (engine->hard_time_limit > static_cast<uint64_t>(self_time * 0.7)) {
-        for (int multiplier = 18; multiplier >= 10; multiplier -= 1) {
-            engine->hard_time_limit = static_cast<uint64_t>(time_amt * (multiplier / 10.0));
-            if (engine->hard_time_limit <= static_cast<uint64_t>(self_time * 0.7)) break;
-        }
-    }
-
-    if (engine->hard_time_limit > static_cast<uint64_t>(movetime) && movetime != 0.0) {
-        engine->hard_time_limit = static_cast<uint64_t>(time_amt);
-    }
 }
 
 
@@ -186,7 +136,7 @@ void UCI::parse_go() {
         double self_time = (position.side == 0) ? wtime : btime;
         double inc = (position.side == 0) ? winc : binc;
 
-        time_handler(std::max<double>(self_time - engine->move_overhead, 0.0), inc, movetime, movestogo);
+        time_handler(*engine, std::max<double>(self_time, 0.0), inc, movetime, movestogo);
     }
 
     if (d) engine->max_depth = d;
@@ -249,7 +199,7 @@ void UCI::uci_loop() {
             std::cout << "option name MultiPV type spin default " << 1 << " min " << 1 << " max " << 256
                       << std::endl;
 
-            std::cout << "option name Move Overhead type spin default " << 10 << " min " << 0 << " max " << 1000
+            std::cout << "option name Move Overhead type spin default " << 50 << " min " << 0 << " max " << 1000
                       << std::endl;
 
 #ifdef DO_SEARCH_TUNING
