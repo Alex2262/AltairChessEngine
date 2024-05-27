@@ -76,7 +76,7 @@ inline const NNUE_Params get_nnue_parameters() {
     return parameters;
 }
 
-const NNUE_Params nnue_parameters = get_nnue_parameters();
+extern const NNUE_Params nnue_parameters;
 
 template <size_t hidden_size>
 struct alignas(64) Accumulator {
