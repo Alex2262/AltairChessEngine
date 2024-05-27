@@ -6661,3 +6661,39 @@ Games | N: 1896 W: 528 L: 403 D: 965
 Penta | [15, 172, 461, 273, 27]
 https://chess.swehosting.se/test/5708/
 ```
+
+### 7.0.4
+Revamped Altair's time management
+
+STC:
+```
+Elo   | 5.53 +- 4.84 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 3.03 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 9430 W: 2325 L: 2175 D: 4930
+Penta | [66, 1020, 2401, 1154, 74]
+https://chess.swehosting.se/test/6143/
+```
+
+LTC:
+```
+Elo   | 9.22 +- 6.94 (95%)
+SPRT  | 40.0+0.40s Threads=1 Hash=128MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 4446 W: 1088 L: 970 D: 2388
+Penta | [10, 445, 1202, 549, 17]
+https://chess.swehosting.se/test/6148/
+```
+
+Cyclic TM:
+```
+Elo   | -2.39 +- 4.60 (95%)
+SPRT  | 40/15.0+0.00s Threads=1 Hash=32MB
+LLR   | -2.96 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 10026 W: 2268 L: 2337 D: 5421
+Penta | [49, 1195, 2580, 1154, 35]
+https://chess.swehosting.se/test/6167/
+```
+
+Although Cyclic TM did not gain, it had relatively smaller losses compared to the gains of STC and LTC, 
+and is relatively unimportant in general.
