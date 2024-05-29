@@ -12,8 +12,8 @@
 
 #include "incbin.h"
 
-INCBIN(nnue, "src/altair-20240524-800.bin");
-// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/altair-20240524-800.bin");
+INCBIN(nnue, "src/altair-20240524-987.bin");
+// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/altair-20240524-987.bin");
 
 const NNUE_Params &original_nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 const NNUE_Params nnue_parameters = get_nnue_parameters();
