@@ -17,7 +17,7 @@
 class Position;
 
 constexpr size_t INPUT_SIZE = 768;
-constexpr size_t LAYER1_SIZE = 768;
+constexpr size_t LAYER1_SIZE = 1024;
 
 constexpr size_t KING_INPUT_BUCKETS = 5;
 constexpr size_t MATERIAL_OUTPUT_BUCKETS = 8;
