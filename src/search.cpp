@@ -63,6 +63,13 @@ void Engine::reset() {
         thread_state.search_ply = 0;
         thread_state.selective_depth = 0;
 
+        for (auto& in : thread_state.history_confidence) {
+            for (auto& c : in) {
+                c.bonus_count = 0;
+                c.malus_count = 0;
+            }
+        }
+
         thread_state.node_count = 0;
         std::memset(thread_state.killer_moves, 0, sizeof(thread_state.killer_moves));
     }
@@ -318,6 +325,8 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
                              [position.board[move.origin()]][move.target()],
                              bonus);
 
+        thread_state.history_confidence[position.board[move.origin()]][move.target()].bonus_count++;
+
         for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
             if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
                 update_history_entry(thread_state.get_continuation_history_entry(last_moves[last_move_index], informative_move),
@@ -331,7 +340,7 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
                              bonus);
     }
 
-    // Deduct bonus for moves that don't raise alpha
+    // Deduct bonus for quiet moves that don't raise alpha
     for (int failed_index = 0; failed_index < static_cast<int>(searched_quiets.size()) - 1; failed_index++) {
         ScoredMove& temp_scored_move = searched_quiets[failed_index];
         Move temp_move = temp_scored_move.move;
@@ -340,6 +349,8 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
                              [position.board[temp_move.origin()]]
                              [temp_move.target()],
                              -bonus);
+
+        thread_state.history_confidence[position.board[temp_move.origin()]][temp_move.target()].malus_count++;
 
 
         InformativeMove temp_move_informative = InformativeMove(temp_move, position.board[temp_move.origin()], position.board[temp_move.target()]);
@@ -352,7 +363,7 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
 
     }
 
-
+    // Deduct bonus for noisy moves that don't raise alpha
     for (int failed_index = 0; failed_index < static_cast<int>(searched_noisy.size()) - 1; failed_index++) {
         ScoredMove& temp_scored_move = searched_noisy[failed_index];
         Move temp_move = temp_scored_move.move;

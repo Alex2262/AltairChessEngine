@@ -13,6 +13,11 @@
 
 constexpr double learning_rate = 0.002;
 
+struct Confidence {
+    uint64_t bonus_count = 0;
+    uint64_t malus_count = 0;
+};
+
 struct TT_Entry {
     HASH_TYPE key = 0;
     SCORE_TYPE score = SCORE_NONE;
@@ -136,6 +141,8 @@ public:
     SCORE_TYPE history_moves[12][64]{}; // piece | target_square
     SCORE_TYPE capture_history[2][12][12][64]{};
     SCORE_TYPE continuation_history[12][64][12][64]{};
+
+    Confidence history_confidence[12][64]{}; // piece | target_square
 
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH + 512] = {0};
 

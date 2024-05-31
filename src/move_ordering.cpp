@@ -54,7 +54,18 @@ SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
         else if (thread_state.killer_moves[1][thread_state.search_ply] == informative_move) score +=
                 static_cast<SCORE_TYPE>(MO_Margin::killer_2);
 
-        score += thread_state.history_moves[selected][move.target()];
+        uint64_t update_count = thread_state.history_confidence[selected][move.target()].bonus_count +
+                                thread_state.history_confidence[selected][move.target()].malus_count;
+
+        double base_scalar = 0.8;
+        double count_scalar = base_scalar + (1.0 - base_scalar) * std::min<double>(static_cast<double>(update_count) / 1000.0, 1.0);
+        double confidence_scalar = std::abs(thread_state.history_confidence[selected][move.target()].bonus_count /
+                                            static_cast<double>(update_count) - 0.5) * 2.5;
+
+        score += confidence_scalar * count_scalar * thread_state.history_moves[selected][move.target()] +
+                 (1 - count_scalar) * thread_state.history_moves[selected][move.target()];
+
+        // std::cout << update_count << " " << count_scalar << " " << confidence_scalar << std::endl;
 
         for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
             if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
