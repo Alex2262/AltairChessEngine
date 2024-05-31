@@ -20,6 +20,8 @@ void UCI::initialize_uci() const {
 
     engine->thread_states.emplace_back();
 
+    engine->new_game();
+
     Position& position = engine->thread_states[0].position;
     position.set_fen(START_FEN);
 }
