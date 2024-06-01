@@ -57,8 +57,8 @@ SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
         uint64_t update_count = thread_state.history_confidence[selected][move.target()].bonus_count +
                                 thread_state.history_confidence[selected][move.target()].malus_count;
 
-        double base_scalar = 0.8;
-        double count_scalar = base_scalar + (1.0 - base_scalar) * std::min<double>(static_cast<double>(update_count) / 1000.0, 1.0);
+        double base_scalar = 0.4;
+        double count_scalar = base_scalar + (1.0 - base_scalar) * std::min<double>(static_cast<double>(update_count) / 10000.0, 1.0);
         double confidence_scalar = std::abs(thread_state.history_confidence[selected][move.target()].bonus_count /
                                             static_cast<double>(update_count + 1.0) - 0.5) * 2.5;
 
