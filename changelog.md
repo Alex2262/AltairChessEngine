@@ -6697,3 +6697,26 @@ https://chess.swehosting.se/test/6167/
 
 Although Cyclic TM did not gain, it had relatively smaller losses compared to the gains of STC and LTC, 
 and is relatively unimportant in general.
+
+### 7.0.5
+New 1024 HL Net: Ceres
+
+LTC
+```
+Elo   | 4.44 +- 3.27 (95%)
+SPRT  | 40.0+0.40s Threads=1 Hash=128MB
+LLR   | 2.97 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 12040 W: 3028 L: 2874 D: 6138
+Penta | [48, 1372, 3053, 1472, 75]
+https://chess.swehosting.se/test/6858/
+```
+
+STC
+```
+Elo   | 8.52 +- 5.19 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.98 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 6078 W: 1667 L: 1518 D: 2893
+Penta | [72, 682, 1410, 775, 100]
+https://chess.swehosting.se/test/6856/
+```
