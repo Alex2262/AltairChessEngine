@@ -172,14 +172,16 @@ short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha
 
 // Records an entry to the transposition table
 void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move, PLY_TYPE depth,
-                             SCORE_TYPE static_eval, bool pv_node) {
+                             SCORE_TYPE static_eval, bool pv_node, bool singular) {
 
     TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (score < -MATE_BOUND) score -= thread_states[thread_id].search_ply;
     else if (score > MATE_BOUND) score += thread_states[thread_id].search_ply;
 
-    PLY_TYPE artificial_depth = depth + 3 + 2 * pv_node;
+    PLY_TYPE artificial_depth = depth + 3 + 2 * pv_node
+            - 3 * (tt_entry.singular && !singular)
+            + 3 * (!tt_entry.singular && singular);
 
     if (tt_entry.key != hash_key || artificial_depth >= tt_entry.depth || tt_flag == HASH_FLAG_EXACT) {
         tt_entry.key = hash_key;
@@ -187,10 +189,13 @@ void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score
         tt_entry.flag = tt_flag;
         tt_entry.score = score;
         tt_entry.evaluation = static_eval;
+        tt_entry.singular = singular;
 
         if (tt_flag != HASH_FLAG_UPPER || tt_entry.key != hash_key || tt_entry.move == NO_MOVE) {
             tt_entry.move = move;
         }
+
+        if (tt_entry.move == NO_MOVE) tt_entry.singular = false;
     }
 }
 
@@ -414,6 +419,22 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // 4. If tt_value >= eval then tt_entry.flag must equal HASH_FLAG_LOWER to be true
         // 5. If tt_value <  eval then tt_entry.flag must equal HASH_FLAG_UPPER to be true
         if (tt_return_type == NO_HASH_ENTRY) return eval;
+
+        /*
+        if (tt_entry.singular) {
+
+            bool attempt = position.make_move<NNUE>(tt_move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+
+            if (attempt) {
+                eval = engine.probe_tt_evaluation(position.hash_key);
+                if (eval == NO_EVALUATION) eval = engine.evaluate<NNUE>(thread_id);
+            }
+
+            position.undo_move<NNUE>(tt_move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+
+            return eval;
+        }
+        */
 
         if (tt_value != SCORE_NONE && tt_entry.flag & (tt_value >= eval ? HASH_FLAG_LOWER : HASH_FLAG_UPPER)) {
             return tt_value;
@@ -715,6 +736,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     SCORE_TYPE best_score = -SCORE_INF;
     Move best_move = NO_MOVE;
 
+    bool singular = false;
+
     // Other information for pruning / reductions
     int alpha_raised_count = 0;
     int legal_moves = 0;
@@ -833,6 +856,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // Singular Extensions
             if (return_eval < singular_beta) {
+                singular = true;
                 extension++;
                 if (!pv_node && return_eval < singular_beta - 16 && double_extensions <= 7) extension++;
             }
@@ -972,6 +996,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             best_score = return_eval;
             best_move = move;
 
+            if (best_move != tt_move) singular = false;
+
             // Calculate nodes for each move for time management scaling
             if (root && thread_id == 0) {
                 engine.node_table[position.board[best_move.origin()]][best_move.target()]
@@ -1046,7 +1072,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth,
-                           position.state_stack[thread_state.search_ply].static_eval, pv_node);
+                           position.state_stack[thread_state.search_ply].static_eval, pv_node, singular);
 
     return best_score;
 }

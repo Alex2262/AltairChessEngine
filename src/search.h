@@ -20,6 +20,7 @@ struct TT_Entry {
     Move move = NO_MOVE;
     PLY_TYPE depth = 0;
     short flag = 0;
+    bool singular = false;
 };
 
 
@@ -216,7 +217,7 @@ public:
     short probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
                          TT_Entry& return_entry);
     void record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move, PLY_TYPE depth,
-                         SCORE_TYPE static_eval, bool pv_node);
+                         SCORE_TYPE static_eval, bool pv_node, bool singular);
     short probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
                            TT_Entry& return_entry);
     void record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move,
