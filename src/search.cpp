@@ -197,19 +197,22 @@ void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score
 
 // Probes the transposition table for a matching entry (only for quiescence search)
 short Engine::probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
-                               SCORE_TYPE& return_score, Move& tt_move) {
+                               TT_Entry& return_entry) {
     TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (tt_entry.key == hash_key) {
-        tt_move = tt_entry.move;
+        return_entry.move = tt_entry.move;
+        return_entry.depth = tt_entry.depth;
+        return_entry.flag = tt_entry.flag;
 
-        return_score = tt_entry.score;
-        if (return_score < -MATE_BOUND) return_score += thread_states[thread_id].search_ply;
-        else if (return_score > MATE_BOUND) return_score -= thread_states[thread_id].search_ply;
+        return_entry.score = tt_entry.score;
+
+        if (return_entry.score < -MATE_BOUND) return_entry.score += thread_states[thread_id].search_ply;
+        else if (return_entry.score > MATE_BOUND) return_entry.score -= thread_states[thread_id].search_ply;
 
         if (tt_entry.flag == HASH_FLAG_EXACT) return RETURN_HASH_SCORE;
-        if (tt_entry.flag == HASH_FLAG_UPPER && return_score <= alpha) return RETURN_HASH_SCORE;
-        if (tt_entry.flag == HASH_FLAG_LOWER && return_score >= beta) return RETURN_HASH_SCORE;
+        if (tt_entry.flag == HASH_FLAG_UPPER && return_entry.score <= alpha) return RETURN_HASH_SCORE;
+        if (tt_entry.flag == HASH_FLAG_LOWER && return_entry.score >= beta) return RETURN_HASH_SCORE;
 
 
         return USE_HASH_MOVE;
@@ -389,9 +392,10 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     // Probe the transposition table
-    SCORE_TYPE tt_value = 0;
-    Move tt_move = NO_MOVE;
-    short tt_return_type = engine.probe_tt_entry_q(thread_id, position.hash_key, alpha, beta, tt_value, tt_move);
+    TT_Entry tt_entry{};
+    short tt_return_type = engine.probe_tt_entry_q(thread_id, position.hash_key, alpha, beta, tt_entry);
+    SCORE_TYPE tt_value = tt_entry.score;
+    Move tt_move = tt_entry.move;
 
     if (tt_return_type == RETURN_HASH_SCORE) {
         return tt_value;
@@ -402,7 +406,21 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     if (eval == NO_EVALUATION) eval = engine.evaluate<NNUE>(thread_id);
 
     // Return the evaluation if we have reached a stand-pat, or we have reached the maximum depth
-    if (depth == 0 || eval >= beta) return eval;
+    if (depth == 0 || eval >= beta) {
+        // TT Eval correction
+        // 1. TT probe must have succeeded
+        // 2. TT value must exist
+        // 3. If tt_entry.flag == HASH_FLAG_EXACT then the condition is passed in all cases
+        // 4. If tt_value >= eval then tt_entry.flag must equal HASH_FLAG_LOWER to be true
+        // 5. If tt_value <  eval then tt_entry.flag must equal HASH_FLAG_UPPER to be true
+        if (tt_return_type == NO_HASH_ENTRY) return eval;
+
+        if (tt_value != SCORE_NONE && tt_entry.flag & (tt_value >= eval ? HASH_FLAG_LOWER : HASH_FLAG_UPPER)) {
+            return tt_value;
+        }
+
+        return eval;
+    }
 
     // Set alpha to the greatest of either alpha or the evaluation
     alpha = std::max(alpha, eval);

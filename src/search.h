@@ -218,7 +218,7 @@ public:
     void record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move, PLY_TYPE depth,
                          SCORE_TYPE static_eval, bool pv_node);
     short probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
-                           SCORE_TYPE& return_score, Move& tt_move);
+                           TT_Entry& return_entry);
     void record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move,
                            SCORE_TYPE static_eval);
     SCORE_TYPE probe_tt_evaluation(HASH_TYPE hash_key);
