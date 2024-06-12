@@ -6720,3 +6720,15 @@ Games | N: 6078 W: 1667 L: 1518 D: 2893
 Penta | [72, 682, 1410, 775, 100]
 https://chess.swehosting.se/test/6856/
 ```
+
+### 7.0.6
+Qsearch TT eval
+
+```
+Elo | 3.91 +- 3.02 (95%)
+SPRT | 8.0+0.08s Threads=1 Hash=32MB
+LLR | 2.95 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 15654 W: 3901 L: 3725 D: 8028
+Penta | [138, 1764, 3846, 1942, 137]
+https://chess.swehosting.se/test/7002/
+```
