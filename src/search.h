@@ -13,6 +13,12 @@
 
 constexpr double learning_rate = 0.002;
 
+constexpr int correction_history_grain = 256;
+constexpr int correction_history_weight_scale = 256;
+constexpr int correction_history_size = 16384;
+constexpr int correction_history_max = correction_history_grain * 32;
+
+
 struct TT_Entry {
     HASH_TYPE key = 0;
     SCORE_TYPE score = SCORE_NONE;
@@ -136,6 +142,7 @@ public:
     SCORE_TYPE history_moves[12][64]{}; // piece | target_square
     SCORE_TYPE capture_history[2][12][12][64]{};
     SCORE_TYPE continuation_history[12][64][12][64]{};
+    SCORE_TYPE correction_history[2][correction_history_size]{};
 
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH + 512] = {0};
 
@@ -150,6 +157,9 @@ public:
     bool detect_repetition_3();
 
     SCORE_TYPE& get_continuation_history_entry(InformativeMove last_move, InformativeMove informative_move);
+
+    void update_correction_history_score(PLY_TYPE depth, SCORE_TYPE diff);
+    int correct_evaluation(SCORE_TYPE evaluation);
 
     inline void reset_generators() {
         for (int ply = 0; ply < static_cast<int>(generators.size()); ply++) {
