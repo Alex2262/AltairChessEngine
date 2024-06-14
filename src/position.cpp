@@ -570,7 +570,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     MoveType move_type = move.type();
 
     PieceType selected_type = get_piece_type(selected, side);
-    PieceType occupied_type = occupied == EMPTY ? NONE : get_piece_type(selected, ~side);
+    PieceType occupied_type = occupied == EMPTY ? NONE : get_piece_type(occupied, ~side);
 
     state.move = InformativeMove(move, selected, occupied);
 
