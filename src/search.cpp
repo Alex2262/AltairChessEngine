@@ -439,20 +439,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             return tt_value;
         }
 
-        if (tt_move == NO_MOVE || tt_move.is_capture(position) || tt_move.type() == MOVE_TYPE_EP ||
-            !position.is_pseudo_legal(tt_move)) {
-            return eval;
-        }
-
-        bool attempt = position.make_move<NNUE>(tt_move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
-
-        if (attempt) {
-            eval = engine.probe_tt_evaluation(position.hash_key);
-            if (eval == NO_EVALUATION) eval = engine.evaluate<NNUE>(thread_id);
-        }
-
-        position.undo_move<NNUE>(tt_move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
-
         return eval;
     }
 
