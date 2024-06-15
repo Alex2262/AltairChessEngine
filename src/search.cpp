@@ -930,7 +930,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             reduction -= in_check;
 
             // Scale the reduction based on the move's history score
-            reduction -= move_history_score / 8192;
+            reduction -= move_history_score / 6144;
 
             // Scale reductions based on how many moves have already raised alpha
             reduction += static_cast<int>(static_cast<double>(alpha_raised_count) * (0.5 + 0.5 * tt_move_noisy));
