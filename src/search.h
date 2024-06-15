@@ -13,6 +13,11 @@
 
 constexpr double learning_rate = 0.002;
 
+constexpr int max_quiet_history = 10368;
+// constexpr int max_pawn_history  = 10368;
+constexpr int max_cont_history  = 10368;
+constexpr int max_noisy_history = 10368;
+
 constexpr int correction_history_grain = 256;
 constexpr int correction_history_weight_scale = 256;
 constexpr int correction_history_size = 16384;
@@ -242,7 +247,7 @@ public:
     SCORE_TYPE evaluate(int thread_id);
 };
 
-void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus);
+void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus, SCORE_TYPE max_score);
 void update_histories(Thread_State& thread_state, InformativeMove informative_move,
                       InformativeMove last_moves[], bool quiet, bool winning_capture,
                       int bonus);
