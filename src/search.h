@@ -13,9 +13,9 @@
 
 constexpr double learning_rate = 0.002;
 
-constexpr int max_quiet_history = 8192;
+constexpr int max_quiet_history = 10368;
 // constexpr int max_pawn_history  = 10368;
-constexpr int max_cont_history  = 16384;
+constexpr int max_cont_history  = 10368;
 constexpr int max_noisy_history = 10368;
 
 constexpr int correction_history_grain = 256;

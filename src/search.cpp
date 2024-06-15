@@ -319,7 +319,8 @@ template SCORE_TYPE Engine::evaluate<NO_NNUE >(int thread_id);
 
 // History entry updates with scaling
 void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus, SCORE_TYPE max_score) {
-    score += 32 * bonus - (score * abs(32 * bonus)) / max_score;
+    bonus *= 32;
+    score += bonus - (score * abs(bonus)) / max_score;
 }
 
 
@@ -930,7 +931,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             reduction -= in_check;
 
             // Scale the reduction based on the move's history score
-            reduction -= move_history_score / 6144;
+            reduction -= move_history_score / 8192;
 
             // Scale reductions based on how many moves have already raised alpha
             reduction += static_cast<int>(static_cast<double>(alpha_raised_count) * (0.5 + 0.5 * tt_move_noisy));
