@@ -163,7 +163,7 @@ public:
 
     SCORE_TYPE& get_continuation_history_entry(InformativeMove last_move, InformativeMove informative_move);
 
-    void update_correction_history_score(PLY_TYPE depth, SCORE_TYPE diff);
+    void update_correction_history_score(PLY_TYPE depth, SCORE_TYPE diff, bool pv_node);
     int correct_evaluation(SCORE_TYPE evaluation);
 
     inline void reset_generators() {
