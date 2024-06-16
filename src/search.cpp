@@ -141,8 +141,19 @@ SCORE_TYPE& Thread_State::get_continuation_history_entry(InformativeMove last_mo
 }
 
 
+int Thread_State::material_bucket_chist() {
+    int bucket = 0;
+    bucket += 9 * popcount(position.get_pieces(WHITE_QUEEN) | position.get_pieces(BLACK_QUEEN));
+    bucket += 5 * popcount(position.get_pieces(WHITE_ROOK) | position.get_pieces(BLACK_ROOK));
+    bucket += 3 * popcount(position.get_pieces(WHITE_BISHOP) | position.get_pieces(BLACK_BISHOP));
+    bucket += 3 * popcount(position.get_pieces(WHITE_KNIGHT) | position.get_pieces(BLACK_KNIGHT));
+
+    return bucket / 6.0;
+}
+
+
 void Thread_State::update_correction_history_score(PLY_TYPE depth, SCORE_TYPE diff) {
-    auto& c_hist_entry = correction_history[position.side][position.pawn_hash_key % correction_history_size];
+    auto& c_hist_entry = correction_history[position.side][material_bucket_chist()][position.pawn_hash_key % correction_history_size];
     int scaled_diff = diff * correction_history_grain;
     int new_weight = std::min(1 + depth, 16);
 
@@ -152,8 +163,8 @@ void Thread_State::update_correction_history_score(PLY_TYPE depth, SCORE_TYPE di
     c_hist_entry = std::clamp(c_hist_entry, -correction_history_max, correction_history_max);
 }
 
-int Thread_State::correct_evaluation(SCORE_TYPE evaluation) {
-    auto& c_hist_entry = correction_history[position.side][position.pawn_hash_key % correction_history_size];
+SCORE_TYPE Thread_State::correct_evaluation(SCORE_TYPE evaluation) {
+    auto& c_hist_entry = correction_history[position.side][material_bucket_chist()][position.pawn_hash_key % correction_history_size];
     return evaluation + c_hist_entry / correction_history_grain;
 }
 
