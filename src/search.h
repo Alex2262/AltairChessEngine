@@ -147,7 +147,7 @@ public:
     SCORE_TYPE history_moves[12][64]{}; // piece | target_square
     SCORE_TYPE capture_history[2][12][12][64]{};
     SCORE_TYPE continuation_history[12][64][12][64]{};
-    SCORE_TYPE correction_history[2][11][correction_history_size]{};
+    SCORE_TYPE correction_history[2][8][correction_history_size]{};
 
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH + 512] = {0};
 

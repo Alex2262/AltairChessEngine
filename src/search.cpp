@@ -148,7 +148,7 @@ int Thread_State::material_bucket_chist() {
     bucket += 3 * popcount(position.get_pieces(WHITE_BISHOP) | position.get_pieces(BLACK_BISHOP));
     bucket += 3 * popcount(position.get_pieces(WHITE_KNIGHT) | position.get_pieces(BLACK_KNIGHT));
 
-    return bucket / 6.0;
+    return std::min(bucket / 8, 7);
 }
 
 
