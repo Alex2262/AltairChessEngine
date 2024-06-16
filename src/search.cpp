@@ -420,8 +420,10 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     // Get the static evaluation of the position
-    SCORE_TYPE eval = engine.probe_tt_evaluation(position.hash_key);
-    if (eval == NO_EVALUATION) eval = engine.evaluate<NNUE>(thread_id);
+    SCORE_TYPE raw_eval = engine.probe_tt_evaluation(position.hash_key);
+    if (raw_eval == NO_EVALUATION) raw_eval = engine.evaluate<NNUE>(thread_id);
+
+    SCORE_TYPE eval = thread_state.correct_evaluation(raw_eval);
 
     // Return the evaluation if we have reached a stand-pat, or we have reached the maximum depth
     if (depth == 0 || eval >= beta) {
@@ -526,7 +528,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 #endif
 
                     engine.record_tt_entry_q(thread_id, position.hash_key, best_score, HASH_FLAG_LOWER, best_move,
-                                             position.state_stack[thread_state.search_ply].static_eval);
+                                             raw_eval);
                     return best_score;
                 }
             }
@@ -535,7 +537,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     engine.record_tt_entry_q(thread_id, position.hash_key, best_score, tt_hash_flag, best_move,
-                             position.state_stack[thread_state.search_ply].static_eval);
+                             raw_eval);
 
     return best_score;
 }
