@@ -745,12 +745,12 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     // Rook moves or is captured
     if (origin_square == starting_rook_pos[WHITE][0] ||
         target_square == starting_rook_pos[WHITE][0]) castle_ability_bits &= ~(1 << 0);
-    else if (origin_square == starting_rook_pos[WHITE][1] ||
-             target_square == starting_rook_pos[WHITE][1]) castle_ability_bits &= ~(1 << 1);
-    else if (origin_square == starting_rook_pos[BLACK][0] ||
-             target_square == starting_rook_pos[BLACK][0]) castle_ability_bits &= ~(1 << 2);
-    else if (origin_square == starting_rook_pos[BLACK][1] ||
-             target_square == starting_rook_pos[BLACK][1]) castle_ability_bits &= ~(1 << 3);
+    if (origin_square == starting_rook_pos[WHITE][1] ||
+        target_square == starting_rook_pos[WHITE][1]) castle_ability_bits &= ~(1 << 1);
+    if (origin_square == starting_rook_pos[BLACK][0] ||
+        target_square == starting_rook_pos[BLACK][0]) castle_ability_bits &= ~(1 << 2);
+    if (origin_square == starting_rook_pos[BLACK][1] ||
+        target_square == starting_rook_pos[BLACK][1]) castle_ability_bits &= ~(1 << 3);
 
     // Hash it back
     hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
