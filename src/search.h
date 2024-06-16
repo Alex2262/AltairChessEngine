@@ -19,9 +19,9 @@ constexpr int max_cont_history  = 10368;
 constexpr int max_noisy_history = 10368;
 
 constexpr int correction_history_grain = 256;
-constexpr int correction_history_weight_scale = 256;
+constexpr int correction_history_weight_scale = 1024;
 constexpr int correction_history_size = 16384;
-constexpr int correction_history_max = correction_history_grain * 32;
+constexpr int correction_history_max = correction_history_grain * 64;
 
 
 struct TT_Entry {
