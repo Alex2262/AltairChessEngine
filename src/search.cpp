@@ -965,7 +965,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // which is why the bounds are [-alpha - 1, -alpha] instead of [-beta, -alpha]
         if (full_depth_zero_window) {
             if (return_eval != -SCORE_INF) {
-                new_depth += return_eval >= best_score + 85;        // Deeper Search
+                new_depth += return_eval >= best_score + 75;        // Deeper Search
+                new_depth += return_eval >= beta + 100 + 6 * depth && new_depth <= depth && pv_node;
+
+                //if (new_depth >= depth)
+                //    std::cout << return_eval << " " << best_score << " " << beta << std::endl;
                 new_depth -= return_eval <  best_score + new_depth; // Shallower Search
             }
 
