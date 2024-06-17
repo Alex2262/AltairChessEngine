@@ -550,7 +550,7 @@ template SCORE_TYPE qsearch<NO_NNUE >(Engine& engine, SCORE_TYPE alpha, SCORE_TY
 // This is a recursive search function based on the minimax algorithm that uses alpha-beta pruning
 // among other heuristics.
 template<bool NNUE>
-SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, bool cutnode, int thread_id) {
+SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, SCORE_TYPE correction, bool do_null, bool cutnode, int thread_id) {
 
     // Initialize Variables
     Thread_State& thread_state = engine.thread_states[thread_id];
@@ -653,6 +653,10 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             eval = tt_value;
         }
 
+        else {
+            eval += correction;
+        }
+
         // Calculate if we are "improving", or "failing"
         if (thread_state.search_ply >= 2) {
             SCORE_TYPE past_eval = position.state_stack[thread_state.search_ply - 2].static_eval;
@@ -662,7 +666,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 failing = !pv_node && position.state_stack[thread_state.search_ply].static_eval < past_eval - (60 + 40 * depth);
             }
         }
+
+        correction = eval - position.state_stack[thread_state.search_ply].static_eval;
     }
+
+    else correction = 0;
 
     // Forward Pruning Methods
     if (!pv_node && !in_check && !singular_search && abs(beta) < MATE_BOUND) {
@@ -695,7 +703,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             thread_state.game_ply++;
 
             // zero window search with reduced depth
-            SCORE_TYPE return_eval = -negamax<NNUE>(engine, -beta, -beta + 1, depth - reduction, false, !cutnode, thread_id);
+            SCORE_TYPE return_eval = -negamax<NNUE>(engine, -beta, -beta + 1, depth - reduction, -correction, false, !cutnode, thread_id);
 
             thread_state.game_ply--;
             thread_state.search_ply--;
@@ -704,7 +712,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             if (return_eval >= beta) {
                 if (return_eval >= MATE_BOUND) return beta;
                 if (depth <= 15) return return_eval;
-                SCORE_TYPE verification_eval = negamax<NNUE>(engine, beta - 1, beta, depth - reduction, false, cutnode, thread_id);
+                SCORE_TYPE verification_eval = negamax<NNUE>(engine, beta - 1, beta, depth - reduction, correction, false, cutnode, thread_id);
                 if (verification_eval > beta) return return_eval;
             }
         }
@@ -849,7 +857,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             position.state_stack[thread_state.search_ply].excluded_move = move;
             SCORE_TYPE return_eval = negamax<NNUE>(engine, singular_beta - 1, singular_beta, (depth - 1) / 2,
-                                                   false, cutnode, thread_id);
+                                                   correction, false, cutnode, thread_id);
             position.state_stack[thread_state.search_ply].excluded_move = NO_MOVE;
 
             thread_state.search_ply--;
@@ -903,6 +911,11 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         uint64_t current_nodes = thread_state.node_count;
 
+        SCORE_TYPE new_correction = -correction / 3;
+        if (interesting || in_check || !quiet) new_correction = 0;
+
+        // std::cout << correction << " " << new_correction << std::endl;
+
         int reduction = 0;
         bool full_depth_zero_window;
 
@@ -949,7 +962,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             auto lmr_depth = new_depth - reduction;
 
             // Recursively search
-            return_eval = -negamax<NNUE>(engine, -alpha - 1, -alpha, lmr_depth, true, true, thread_id);
+            return_eval = -negamax<NNUE>(engine, -alpha - 1, -alpha, lmr_depth, new_correction, true, true, thread_id);
 
             // Check if we need to search at full depth with a zero window
             full_depth_zero_window = return_eval > alpha && lmr_depth != new_depth;
@@ -969,12 +982,12 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 new_depth -= return_eval <  best_score + new_depth; // Shallower Search
             }
 
-            return_eval = -negamax<NNUE>(engine, -alpha - 1, -alpha, new_depth, true, !cutnode, thread_id);
+            return_eval = -negamax<NNUE>(engine, -alpha - 1, -alpha, new_depth, new_correction, true, !cutnode, thread_id);
         }
 
         // Search to a full depth at normal bounds if necessary
         if (return_eval == -SCORE_INF || (pv_node && ((return_eval > alpha && return_eval < beta) || legal_moves == 0))) {
-            return_eval = -negamax<NNUE>(engine, -beta, -alpha, new_depth, true, false, thread_id);
+            return_eval = -negamax<NNUE>(engine, -beta, -alpha, new_depth, new_correction, true, false, thread_id);
         }
 
         // Undo the move and other changes
@@ -1083,8 +1096,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     return best_score;
 }
 
-template SCORE_TYPE negamax<USE_NNUE>(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, bool cutnode, int thread_id);
-template SCORE_TYPE negamax<NO_NNUE >(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, bool cutnode, int thread_id);
+template SCORE_TYPE negamax<USE_NNUE>(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, SCORE_TYPE correction, bool do_null, bool cutnode, int thread_id);
+template SCORE_TYPE negamax<NO_NNUE >(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, SCORE_TYPE correction, bool do_null, bool cutnode, int thread_id);
 
 
 void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int pv_number, int thread_id) {
@@ -1193,7 +1206,7 @@ SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE
         if (alpha <= -1000) alpha = -SCORE_INF;
         if (beta  >=  1000) beta  =  SCORE_INF;
 
-        return_eval = negamax<NNUE>(engine, alpha, beta, depth, false, false, thread_id);
+        return_eval = negamax<NNUE>(engine, alpha, beta, depth, 0, false, false, thread_id);
 
         if (engine.stopped) break;
 
@@ -1264,7 +1277,7 @@ SCORE_TYPE multi_pv_search(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& 
 
     int alternate_pvs = std::min(engine.multi_pv, static_cast<int>(engine.root_moves.size()));
     for (int i = 1; i < alternate_pvs; i++) {
-        int pv_score = negamax<NNUE>(engine, -SCORE_INF, SCORE_INF, depth, false, false, thread_id);
+        int pv_score = negamax<NNUE>(engine, -SCORE_INF, SCORE_INF, depth, 0, false, false, thread_id);
         if (engine.stopped) break;
 
         if (thread_id == 0) print_thinking(engine, Exact_Node, pv_score, i, thread_id);
