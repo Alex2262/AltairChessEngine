@@ -861,8 +861,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             }
 
             // Multi-cut Pruning
-            else if (singular_beta >= beta) {
-                return singular_beta;
+            else if (return_eval >= beta) {
+                return return_eval;
             }
 
             else if (tt_entry.score >= beta || tt_entry.score <= alpha) {
