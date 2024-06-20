@@ -15,6 +15,7 @@
 INCBIN(nnue, "src/ceres-net.bin");
 // INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/ceres-net.bin");
 
+
 const NNUE_Params &original_nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 const NNUE_Params nnue_parameters = get_nnue_parameters();
 
