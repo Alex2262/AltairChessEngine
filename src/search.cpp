@@ -903,6 +903,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         uint64_t current_nodes = thread_state.node_count;
 
+        bool likely_fail_low = tt_entry.depth >= depth - 2 && tt_entry.flag == HASH_FLAG_UPPER;
+
         int reduction = 0;
         bool full_depth_zero_window;
 
@@ -943,6 +945,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // Reduce more on cutnodes
             reduction += cutnode;
+
+            reduction += !pv_node && likely_fail_low;
 
             // Clamp the LMR depth
             reduction = std::clamp<PLY_TYPE>(reduction, 0, new_depth - 1);
