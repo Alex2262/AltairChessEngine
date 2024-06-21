@@ -73,13 +73,15 @@ void time_handler(Engine& engine, double self_time, double inc, double movetime,
 
     double pts = position_time_scale(position);
 
+    std::cout << movetime << std::endl;
+
     if (movetime > 0) {
         time_amt = movetime * 0.9;
         goto update;
     }
 
     if (self_time == 0) {
-        time_amt = 100;
+        time_amt = 10000;
         goto update;
     }
 
@@ -115,7 +117,7 @@ void time_handler(Engine& engine, double self_time, double inc, double movetime,
         goto update;
     }
 
-    time_amt = 100;
+    time_amt = 10000;
 
 update:
 
@@ -124,7 +126,11 @@ update:
     engine.hard_time_limit = std::max(static_cast<uint64_t>(time_amt),
                                       static_cast<uint64_t>(time_amt * 2.64) - engine.move_overhead);
 
-    engine.soft_time_limit = std::min(static_cast<uint64_t>(time_amt * 0.76), static_cast<uint64_t>(self_time * 0.8));
+    engine.soft_time_limit = static_cast<uint64_t>(time_amt * 0.76);
+
+    if (self_time) {
+        engine.soft_time_limit = std::min(engine.soft_time_limit, static_cast<uint64_t>(self_time * 0.8));
+    }
 
     if (engine.hard_time_limit > static_cast<uint64_t>(self_time * 0.8) && self_time > 0) {
         engine.hard_time_limit = static_cast<uint64_t>(self_time * 0.8);
@@ -134,6 +140,6 @@ update:
         engine.hard_time_limit = static_cast<uint64_t>(time_amt);
     }
 
-    // std::cout << time_amt << " " << engine.soft_time_limit << " " << engine.hard_time_limit << std::endl;
+    std::cout << time_amt << " " << engine.soft_time_limit << " " << engine.hard_time_limit << std::endl;
 }
 
