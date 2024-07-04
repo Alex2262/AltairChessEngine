@@ -83,7 +83,7 @@ SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Mo
     Piece occupied = position.board[move.target()];
     MoveType move_type = move.type();
 
-    bool winning_capture = get_static_exchange_evaluation(position, move, SEE_MOVE_ORDERING_THRESHOLD);
+    bool winning_capture = get_static_exchange_evaluation(position, move, -search_params.SEE_MO_threshold.v);
 
     if (winning_capture) {
         score += static_cast<SCORE_TYPE>(MO_Margin::winning_capture);

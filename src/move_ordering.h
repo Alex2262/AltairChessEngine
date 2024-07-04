@@ -22,9 +22,6 @@ enum class MO_Margin : SCORE_TYPE {
     castle = 1200
 };
 
-
-constexpr SCORE_TYPE SEE_MOVE_ORDERING_THRESHOLD = -85;
-
 SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
                       InformativeMove last_moves[]);
 

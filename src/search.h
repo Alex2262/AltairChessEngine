@@ -8,15 +8,10 @@
 #include "position.h"
 #include "move_ordering.h"
 
-// #define DO_SEARCH_TUNING
+#define DO_SEARCH_TUNING
 // #define SHOW_STATISTICS
 
 constexpr double learning_rate = 0.002;
-
-constexpr int max_quiet_history = 10368;
-// constexpr int max_pawn_history  = 10368;
-constexpr int max_cont_history  = 10368;
-constexpr int max_noisy_history = 10368;
 
 constexpr int correction_history_grain = 256;
 constexpr int correction_history_weight_scale = 1024;
@@ -62,36 +57,80 @@ struct T {
 
 struct SearchParameters {
 
-    T LMR_divisor_quiet = {224, 150, 230, 20, "LMR_divisor_quiet"};
-    T LMR_base_quiet    = {111, 100, 170, 20, "LMR_base_quiet"};
+    //                             v   min  max step        name
+    T LMR_divisor_quiet       = { 224, 150, 230, 20, "LMR_divisor_quiet"};
+    T LMR_base_quiet          = { 111, 100, 170, 20, "LMR_base_quiet"};
+    T LMR_history_divisor     = {8192, 4000, 14000, 1000, "LMR_history_divisor"};
 
-    T RFP_depth  = {  8,   5,  11,   2, "RFP_depth"};
-    T RFP_margin = {103,  50, 200,  30, "RFP_margin"};
+    T RFP_depth               = {   8,   5,  11,   2, "RFP_depth"};
+    T RFP_margin              = { 103,  50, 200,  30, "RFP_margin"};
 
-    T LMP_depth  = { 5,  1,  5,  1, "LMP_depth"};
-    T LMP_margin = {10,  5, 15,  1, "LMP_margin"};
+    T LMP_depth               = {   5,   1,   5,   1, "LMP_depth"};
+    T LMP_margin              = {  10,   5,  15,   1, "LMP_margin"};
 
-    T history_pruning_depth   = {9,  3, 20, 2, "history_pruning_depth"};
+    T history_pruning_depth   = {   9,   3,  20,   2, "history_pruning_depth"};
     T history_pruning_divisor = {6594, 1000, 20000, 1800, "history_pruning_divisor"};
 
-    T NMP_depth = {1, 0, 4, 1, "NMP_depth"};
-    T NMP_base  = {4, 1, 5, 1, "NMP_base"};
-    T NMP_depth_divisor = {4, 2, 6, 1, "NMP_depth_divisor"};
-    T NMP_eval_divisor  = {345, 100, 400, 40, "NMP_eval_divisor"};
+    T NMP_depth               = {   1,   0,   4,   1, "NMP_depth"};
+    T NMP_base                = {   4,   1,   5,   1, "NMP_base"};
+    T NMP_depth_divisor       = {   4,   2,   6,   1, "NMP_depth_divisor"};
+    T NMP_eval_divisor        = { 345, 100, 400,  40, "NMP_eval_divisor"};
+    T NMP_condition_base      = { 108,   0, 200,  10, "NMP_condition_base"};
+    T NMP_condition_depth     = {  12,   0,  20,   2, "NMP_condition_depth"};
+    T NMP_condition_improving = {   7,   0,  20,   2, "NMP_condition_improving"};
 
-    T SEE_base_depth  = {2,  1, 10,  1, "SEE_base_depth"};
-    T SEE_noisy_depth = {2,  0,  4,  1, "SEE_noisy_depth"};
-    T SEE_pv_depth    = {5,  0,  5,  1, "SEE_pv_depth"};
+    T SEE_base_depth          = {   2,   1,  10,   1, "SEE_base_depth"};
+    T SEE_noisy_depth         = {   2,   0,   4,   1, "SEE_noisy_depth"};
+    T SEE_pv_depth            = {   5,   0,   5,   1, "SEE_pv_depth"};
+    T SEE_base_moves          = {   3,   1,   5,   1, "SEE_base_moves"};
+    T SEE_base_history        = {5000, 1000, 10000, 1000, "SEE_base_history"};
+    T SEE_quiet_multiplier    = {  50,  20,  80,   8, "SEE_quiet_multiplier"};
+    T SEE_noisy_multiplier    = {  90,  50, 150,  10, "SEE_noisy_multiplier"};
 
-    T LMP_margin_quiet = {2, 1, 4, 1, "LMP_margin_quiet"};
+    T SEE_MO_threshold        = {  85,  60, 120,   5, "SEE_MO_threshold"};
 
-    T FP_depth      = {7, 1, 8, 1, "FP_depth"};
-    T FP_multiplier = {197, 80, 220, 20, "FP_multiplier"};
-    T FP_margin     = { 45, 40, 150, 20, "FP_margin"};
+    T LMP_margin_quiet        = {   2,   1,   4,   1, "LMP_margin_quiet"};
 
-    T* all_parameters[19] = {
+    T FP_depth                = {   7,   1,   8,   1, "FP_depth"};
+    T FP_multiplier           = { 197,  80, 220,  20, "FP_multiplier"};
+    T FP_margin               = {  45,  40, 150,  20, "FP_margin"};
+
+    T QSEE_base               = {  60,  40, 200,  10, "QSEE_base"};
+
+    T IIR_base_depth          = {   4,   1,   8,   1, "IIR_base_depth"};
+
+    T SE_base_depth           = {   6,   3,   9,   1, "SE_base_depth"};
+    T SE_dext_margin          = {  16,   6,  25,   2, "SE_dext_margin"};
+    T SE_dext_limit           = {   7,   4,  12,   1, "SE_dext_limit"};
+
+    T deeper_margin           = {  85,  50, 130,   8, "deeper_margin"};
+
+    T ASP_beta_scaler         = {   3,   1,  10,   1, "ASP_beta_scaler"};
+    T ASP_alpha_scaler        = {   1,   1,  10,   1, "ASP_alpha_scaler"};
+    T ASP_delta_scaler        = {   2,   1,  10,   1, "ASP_delta_scaler"};
+    T ASP_delta_divisor       = {   3,   1,  10,   1, "ASP_delta_divisor"};
+    T ASP_delta_min           = {  10,   4,  15,   1, "ASP_delta_min"};
+
+    T H_max_quiet             = { 10368, 5000, 18000, 600, "H_max_quiet"};
+    T H_max_noisy             = { 10368, 5000, 18000, 600, "H_max_noisy"};
+    T H_max_cont              = { 10368, 5000, 18000, 600, "H_max_cont"};
+
+    T TM_node_margin          = { 145, 100, 200,   8, "TM_node_margin"};
+    T TM_node_scalar          = { 171, 140, 200,   6, "TM_node_scalar"};
+
+    T TM_score_min            = { 300, 100, 500,  30, "TM_score_min"};
+    T TM_score_max            = { 150,  50, 400,  30, "TM_score_max"};
+    T TM_score_base           = {  98,  70, 100,   5, "TM_score_base"};
+    T TM_score_divisor        = { 350, 150, 500,  25, "TM_score_divisor"};
+
+    T TM_hard_scalar          = { 264, 150, 400,  20, "TM_hard_scalar"};
+    T TM_soft_scalar          = {  76,  40, 150,  10, "TM_soft_scalar"};
+
+
+    T* all_parameters[50] = {
             &LMR_divisor_quiet,
             &LMR_base_quiet,
+            &LMR_history_divisor,
 
             &RFP_depth,
             &RFP_margin,
@@ -106,16 +145,56 @@ struct SearchParameters {
             &NMP_base,
             &NMP_depth_divisor,
             &NMP_eval_divisor,
+            &NMP_condition_base,
+            &NMP_condition_depth,
+            &NMP_condition_improving,
 
             &SEE_base_depth,
             &SEE_noisy_depth,
             &SEE_pv_depth,
+            &SEE_base_moves,
+            &SEE_base_history,
+            &SEE_quiet_multiplier,
+            &SEE_noisy_multiplier,
+
+            &SEE_MO_threshold,
 
             &LMP_margin_quiet,
 
             &FP_depth,
             &FP_multiplier,
-            &FP_margin
+            &FP_margin,
+
+            &QSEE_base,
+
+            &IIR_base_depth,
+
+            &SE_base_depth,
+            &SE_dext_margin,
+            &SE_dext_limit,
+
+            &deeper_margin,
+
+            &ASP_beta_scaler,
+            &ASP_alpha_scaler,
+            &ASP_delta_scaler,
+            &ASP_delta_divisor,
+            &ASP_delta_min,
+
+            &H_max_quiet,
+            &H_max_noisy,
+            &H_max_cont,
+
+            &TM_node_margin,
+            &TM_node_scalar,
+
+            &TM_score_min,
+            &TM_score_max,
+            &TM_score_base,
+            &TM_score_divisor,
+
+            &TM_hard_scalar,
+            &TM_soft_scalar
     };
 };
 
