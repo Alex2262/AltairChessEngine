@@ -114,9 +114,9 @@ namespace SIMD {
         return _mm256_madd_epi16(vec1, vec2);
 #elif defined(__ARM_NEON)
         int32x4_t low_product  = vmull_s16(vget_low_s16 (vec1), vget_low_s16 (vec2));
-        int32x4_t high_product = vmull_s16(vget_high_s16(vec1), vget_high_s16(vec2));
+        int32x4_t high_product = vmull_high_s16(vec1, vec2);
 
-        return vaddq_s32(low_product, high_product);
+        return vpaddq_s32(low_product, high_product);
 #else
         return 0;
 #endif

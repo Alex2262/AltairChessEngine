@@ -47,7 +47,7 @@ SCORE_TYPE NNUE_State::evaluate(Position& position, Color color) {
     const int output_bucket = (popcount(position.all_pieces) - 2) / MATERIAL_OUTPUT_BUCKET_DIVISOR;
 
     const auto flatten = []() {
-        if constexpr (SIMD::ARCH == SIMD::Arch::AUTO || SIMD::ARCH == SIMD::Arch::NEON) return screlu_flatten;
+        if constexpr (SIMD::ARCH == SIMD::Arch::AUTO) return screlu_flatten;
         return screlu_flatten_simd;
     }();
 
