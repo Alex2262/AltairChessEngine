@@ -76,7 +76,52 @@ inline const NNUE_Params get_nnue_parameters() {
     return parameters;
 }
 
+inline const std::array<int, KING_INPUT_BUCKETS * INPUT_SIZE * LAYER1_SIZE> get_next_index_array(const NNUE_Params& params) {
+    std::array<int, KING_INPUT_BUCKETS * INPUT_SIZE * LAYER1_SIZE> next_index;
+
+    int total_hops = 0;
+
+    for (int bucket = 0; bucket < KING_INPUT_BUCKETS; bucket++) {
+        for (int input = 0; input < INPUT_SIZE; input++) {
+            int zeroes = 0;
+            for (int i = 0; i < LAYER1_SIZE; i++) {
+                // std::cout << bucket << " " << input << " " << i << std::endl;
+                int common_idx = bucket * INPUT_SIZE * LAYER1_SIZE + input * LAYER1_SIZE;
+                auto& param = params.feature_weights[common_idx + i];
+
+                next_index[common_idx + i] = common_idx + i + SIMD::REGISTER_SIZE - (i % SIMD::REGISTER_SIZE);
+
+                if (param == 0 && (i % SIMD::REGISTER_SIZE == 0 || zeroes)) {
+                    zeroes++;
+                    continue;
+                }
+
+                int hops = zeroes / SIMD::REGISTER_SIZE;
+                zeroes = 0;
+
+                if (hops == 0) continue;
+
+                int last = i - i % SIMD::REGISTER_SIZE;
+
+                for (int j = last - 1; j >= last - static_cast<int>(hops * SIMD::REGISTER_SIZE); j--) {
+                    // std::cout << j << " " << i << " " << last << " " << hops << std::endl;
+                    // std::cout << last - hops * SIMD::REGISTER_SIZE << std::endl;
+                    assert(j >= 0);
+                    next_index[common_idx + j] = common_idx + last;
+                }
+
+                total_hops += hops;
+            }
+        }
+    }
+
+    std::cout << total_hops << std::endl;
+
+    return next_index;
+}
+
 extern const NNUE_Params nnue_parameters;
+extern const std::array<int, KING_INPUT_BUCKETS * INPUT_SIZE * LAYER1_SIZE> next_index;
 
 template <size_t hidden_size>
 struct alignas(64) Accumulator {
@@ -167,8 +212,12 @@ public:
     }
 
     static inline void activate_all(std::array<int16_t, LAYER1_SIZE>& input, size_t offset) {
-        for (size_t i = 0; i < LAYER1_SIZE; ++i) input[i] +=
-                nnue_parameters.feature_weights[offset + i];
+        for (size_t i = 0; i < LAYER1_SIZE; i = next_index[i]) {
+            auto input_vec   = SIMD::int16_load(&input[i]);
+            auto weights_vec = SIMD::int16_load(&nnue_parameters.feature_weights[offset + i]);
+            auto result_vec  = SIMD::vec_int16_add(input_vec, weights_vec);
+            SIMD::int16_store(&input[i], result_vec);
+        }
     }
 
     static inline void deactivate_all(std::array<int16_t, LAYER1_SIZE>& input, size_t offset) {

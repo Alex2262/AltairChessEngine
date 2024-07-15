@@ -12,11 +12,12 @@
 
 #include "incbin.h"
 
-INCBIN(nnue, "src/ceres-net.bin");
-// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/ceres-net.bin");
+// INCBIN(nnue, "src/ceres-net.bin");
+INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/ceres-net.bin");
 
 const NNUE_Params &original_nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 const NNUE_Params nnue_parameters = get_nnue_parameters();
+const std::array<int, KING_INPUT_BUCKETS * INPUT_SIZE * LAYER1_SIZE> next_index = get_next_index_array(nnue_parameters);
 
 void NNUE_State::push() {
     accumulator_stack.push_back(*current_accumulator);

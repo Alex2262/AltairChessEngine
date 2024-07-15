@@ -45,6 +45,18 @@ namespace SIMD {
 
     }
 
+    auto inline int16_store(auto address, auto data) {
+
+#if defined(__AVX2__)
+        return _mm256_storeu_si256(reinterpret_cast<const __m256i*>(address), data);
+#elif defined(__ARM_NEON)
+        return vst1q_s16(address, data);
+#else
+        return 0;
+#endif
+
+    }
+
     auto inline get_int16_vec(auto data) {
 
 #if defined(__AVX2__)
@@ -72,6 +84,17 @@ namespace SIMD {
         return 0;
 #endif
 
+    }
+
+    auto inline vec_int16_add(auto vec1, auto vec2) {
+
+#if defined(__AVX2__)
+        return _mm256_add_epi16(vec1, vec2);
+#elif defined(__ARM_NEON)
+        return vaddq_s16(vec1, vec2);
+#else
+        return 0;
+#endif
     }
 
     auto inline vec_int16_multiply(auto vec1, auto vec2) {
