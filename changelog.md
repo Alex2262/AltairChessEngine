@@ -6732,3 +6732,88 @@ Games | N: 15654 W: 3901 L: 3725 D: 8028
 Penta | [138, 1764, 3846, 1942, 137]
 https://chess.swehosting.se/test/7002/
 ```
+
+### 7.0.7
+Pawn key indexed correction history
+
+```
+Elo   | 3.52 +- 2.77 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 18246 W: 4509 L: 4324 D: 9413
+Penta | [130, 2129, 4441, 2272, 151]
+https://chess.swehosting.se/test/7063/
+```
+
+### 7.0.8
+Pawn key fixed
+Merged for being relatively equal at high game count while being a bug that is imperative to fix.
+
+```
+Elo   | -0.61 +- 3.33 (95%)
+SPRT  | 40.0+0.40s Threads=1 Hash=128MB
+LLR   | 0.12 (-2.94, 2.94) [-4.00, 1.00]
+Games | N: 10304 W: 2417 L: 2435 D: 5452
+Penta | [34, 1157, 2773, 1169, 19]
+https://chess.swehosting.se/test/7091/
+```
+
+### 7.0.9
+Qsearch pawn correction history
+
+```
+Elo   | 3.51 +- 2.77 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.96 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 18980 W: 4776 L: 4584 D: 9620
+Penta | [179, 2173, 4589, 2375, 174]
+https://chess.swehosting.se/test/7139/
+```
+
+### 7.1.0
+Squared depth correction history
+
+```
+Elo   | 2.70 +- 2.16 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.99 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 29710 W: 7330 L: 7099 D: 15281
+Penta | [228, 3452, 7241, 3729, 205]
+https://chess.swehosting.se/test/7145/
+```
+
+### 7.1.1
+Multicut use return eval
+
+```
+Elo   | 3.95 +- 3.04 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.96 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 15674 W: 3943 L: 3765 D: 7966
+Penta | [120, 1865, 3705, 2011, 136]
+https://chess.swehosting.se/test/7169/
+```
+
+### 7.1.2
+SPSA tune at 6K iterations.
+
+STC
+```
+Elo   | 12.29 +- 6.29 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.96 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 3678 W: 946 L: 816 D: 1916
+Penta | [22, 407, 871, 497, 42]
+https://chess.swehosting.se/test/7407/
+```
+
+LTC
+```
+Elo   | 2.38 +- 2.81 (95%)
+SPRT  | 60.0+0.60s Threads=1 Hash=128MB
+LLR   | 1.38 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 14734 W: 3547 L: 3446 D: 7741
+Penta | [34, 1658, 3883, 1757, 35]
+https://chess.swehosting.se/test/7409/
+```
+

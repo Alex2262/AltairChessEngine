@@ -7,7 +7,7 @@
 #include "types.h"
 
 #define ENGINE_NAME                 "Altair"
-#define ENGINE_VERSION              "7.0.6"
+#define ENGINE_VERSION              "7.1.2"
 #define ENGINE_AUTHOR               "Alexander Tian"
 
 #define FAIL_HIGH_STATS_COUNT       5
