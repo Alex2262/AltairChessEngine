@@ -1033,7 +1033,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 tt_hash_flag = HASH_FLAG_EXACT;
 
                 // History Heuristic for move ordering
-                SCORE_TYPE bonus = depth * (depth + 1 + null_search + pv_node + improving) - 1;
+                int depth_adjusted = depth + (alpha >= eval);
+                SCORE_TYPE bonus = depth_adjusted * (depth_adjusted + 1 + null_search + pv_node + improving) - 1;
 
                 update_histories(thread_state, informative_move, last_moves, quiet, winning_capture, bonus);
 
