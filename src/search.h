@@ -19,13 +19,14 @@ constexpr int correction_history_size = 16384;
 constexpr int correction_history_max = correction_history_grain * 64;
 
 
-struct TT_Entry {
-    HASH_TYPE key = 0;
-    SCORE_TYPE score = SCORE_NONE;
-    SCORE_TYPE evaluation = NO_EVALUATION;
-    Move move = NO_MOVE;
-    PLY_TYPE depth = 0;
-    short flag = 0;
+struct TT_Entry {                          // 22 bytes --> 24 bytes
+    HASH_TYPE  key        = 0;             // 8 bytes
+    SCORE_TYPE score      = SCORE_NONE;    // 4 bytes
+    SCORE_TYPE evaluation = NO_EVALUATION; // 4 bytes
+    Move       move       = NO_MOVE;       // 2 bytes
+    PLY_TYPE   depth      = 0;             // 2 bytes
+    short      flag       = 0;             // 1 byte
+    bool       pv_node    = false;         // 1 byte
 };
 
 
@@ -310,11 +311,11 @@ public:
     short probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
                          TT_Entry& return_entry);
     void record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move, PLY_TYPE depth,
-                         SCORE_TYPE static_eval, bool pv_node);
+                         SCORE_TYPE static_eval, bool tt_pv);
     short probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
                            TT_Entry& return_entry);
     void record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move,
-                           SCORE_TYPE static_eval);
+                           SCORE_TYPE static_eval, bool tt_pv);
     SCORE_TYPE probe_tt_evaluation(HASH_TYPE hash_key);
 
     void tt_prefetch_read(HASH_TYPE hash_key);
@@ -334,7 +335,7 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
 template<bool NNUE>
 SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id);
 template<bool NNUE>
-SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,  bool do_null, bool cutnode, int thread_id);
+SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, bool cutnode, int thread_id);
 
 void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int pv_number, int thread_id);
 
