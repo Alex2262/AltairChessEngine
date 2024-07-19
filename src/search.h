@@ -60,7 +60,7 @@ struct SearchParameters {
 
     //                             v   min  max step        name
     T LMR_divisor_quiet       = { 230, 150, 230, 20, "LMR_divisor_quiet"};
-    T LMR_base_quiet          = { 115, 100, 170, 20, "LMR_base_quiet"};
+    T LMR_base_quiet          = { 140, 100, 170, 20, "LMR_base_quiet"};
     T LMR_history_divisor     = {10000, 4000, 14000, 1000, "LMR_history_divisor"};
 
     T RFP_depth               = {   7,   5,  11,   2, "RFP_depth"};
