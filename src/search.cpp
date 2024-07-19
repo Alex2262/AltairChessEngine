@@ -49,6 +49,7 @@ void Engine::clear_tt() {
         tt_entry.move = NO_MOVE;
         tt_entry.depth = 0;
         tt_entry.flag = 0;
+        tt_entry.pv_node = false;
     }
 }
 
@@ -190,14 +191,14 @@ short Engine::probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha
 
 // Records an entry to the transposition table
 void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move, PLY_TYPE depth,
-                             SCORE_TYPE static_eval, bool pv_node) {
+                             SCORE_TYPE static_eval, bool tt_pv) {
 
     TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (score < -MATE_BOUND) score -= thread_states[thread_id].search_ply;
     else if (score > MATE_BOUND) score += thread_states[thread_id].search_ply;
 
-    PLY_TYPE artificial_depth = depth + 3 + 2 * pv_node;
+    PLY_TYPE artificial_depth = depth + 3 + 2 * tt_pv;
 
     if (tt_entry.key != hash_key || artificial_depth >= tt_entry.depth || tt_flag == HASH_FLAG_EXACT) {
         tt_entry.key = hash_key;
@@ -205,6 +206,7 @@ void Engine::record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score
         tt_entry.flag = tt_flag;
         tt_entry.score = score;
         tt_entry.evaluation = static_eval;
+        tt_entry.pv_node = tt_pv;
 
         if (tt_flag != HASH_FLAG_UPPER || tt_entry.key != hash_key || tt_entry.move == NO_MOVE) {
             tt_entry.move = move;
@@ -242,7 +244,7 @@ short Engine::probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alp
 
 // Records an entry to the transposition table (only for quiescence search)
 void Engine::record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move,
-                               SCORE_TYPE static_eval) {
+                               SCORE_TYPE static_eval, bool tt_pv) {
     TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (score < -MATE_BOUND) score -= thread_states[thread_id].search_ply;
@@ -254,6 +256,7 @@ void Engine::record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE sco
         tt_entry.flag = tt_flag;
         tt_entry.score = score;
         tt_entry.evaluation = static_eval;
+        tt_entry.pv_node = tt_pv;
 
         if (tt_flag != HASH_FLAG_UPPER || tt_entry.key != hash_key || tt_entry.move == NO_MOVE) {
             tt_entry.move = move;
@@ -402,6 +405,8 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     Position& position = thread_state.position;
     Generator& generator = thread_state.generators[thread_state.search_ply];
 
+    bool pv_node = alpha != beta - 1;
+
     // Check the remaining time
     if (engine.stopped || (thread_id == 0 && thread_state.current_search_depth >= engine.min_depth &&
         (thread_state.node_count & 2047) == 0 &&
@@ -410,10 +415,11 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     // Probe the transposition table
-    TT_Entry tt_entry{};
-    short tt_return_type = engine.probe_tt_entry_q(thread_id, position.hash_key, alpha, beta, tt_entry);
-    SCORE_TYPE tt_value = tt_entry.score;
-    Move tt_move = tt_entry.move;
+    TT_Entry   tt_entry{};
+    short      tt_return_type = engine.probe_tt_entry_q(thread_id, position.hash_key, alpha, beta, tt_entry);
+    Move       tt_move        = tt_entry.move;
+    bool       tt_pv          = tt_entry.pv_node || pv_node;
+    SCORE_TYPE tt_value       = tt_entry.score;
 
     if (tt_return_type == RETURN_HASH_SCORE) {
         return tt_value;
@@ -528,7 +534,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 #endif
 
                     engine.record_tt_entry_q(thread_id, position.hash_key, best_score, HASH_FLAG_LOWER, best_move,
-                                             raw_eval);
+                                             raw_eval, tt_pv);
                     return best_score;
                 }
             }
@@ -537,7 +543,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     engine.record_tt_entry_q(thread_id, position.hash_key, best_score, tt_hash_flag, best_move,
-                             raw_eval);
+                             raw_eval, tt_pv);
 
     return best_score;
 }
@@ -605,11 +611,12 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     position.set_state(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
     // TT probing
-    TT_Entry tt_entry{};
-    short tt_return_type = engine.probe_tt_entry(thread_id, position.hash_key, alpha, beta, depth, tt_entry);
-    SCORE_TYPE tt_value = tt_entry.score;
-    Move tt_move = tt_entry.move;
-    short tt_hash_flag = HASH_FLAG_UPPER;
+    TT_Entry   tt_entry{};
+    short      tt_hash_flag   = HASH_FLAG_UPPER;
+    short      tt_return_type = engine.probe_tt_entry(thread_id, position.hash_key, alpha, beta, depth, tt_entry);
+    Move       tt_move        = tt_entry.move;
+    bool       tt_pv          = tt_entry.pv_node || pv_node;
+    SCORE_TYPE tt_value       = tt_entry.score;
 
     // TT cutoffs
     // 1. Probing must result in the flag that allows for returning the hash score
@@ -931,6 +938,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
             // Fewer reductions if we are in a pv node, since moves are likely to be better and more important
             reduction -= pv_node;
+            reduction -= tt_pv;
 
             // Fewer reductions when improving, since the current node and moves searched in it are more important
             reduction -= improving;
@@ -1090,7 +1098,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         }
 
         engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth,
-                               raw_eval, pv_node);
+                               raw_eval, tt_pv);
     }
 
     return best_score;
