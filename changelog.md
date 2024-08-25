@@ -6817,3 +6817,38 @@ Penta | [34, 1658, 3883, 1757, 35]
 https://chess.swehosting.se/test/7409/
 ```
 
+### 7.1.3
+Hand-tuned values
+
+```
+Elo   | 4.50 +- 3.26 (95%)
+SPRT  | 40.0+0.40s Threads=1 Hash=128MB
+LLR   | 2.95 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 11110 W: 2719 L: 2575 D: 5816
+Penta | [26, 1232, 2905, 1356, 36]
+https://chess.swehosting.se/test/7421/
+```
+
+### 7.1.4
+history depth bonus
+
+```
+Elo   | 5.61 +- 3.85 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 3.01 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 9422 W: 2323 L: 2171 D: 4928
+Penta | [73, 1044, 2330, 1186, 78]
+https://chess.swehosting.se/test/7457/
+```
+
+### 7.1.5
+tt-pv
+
+```
+Elo   | 6.22 +- 4.14 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.97 (-2.94, 2.94) [0.00, 5.00]
+Games | N: 8048 W: 2067 L: 1923 D: 4058
+Penta | [43, 927, 1968, 1015, 71]
+https://chess.swehosting.se/test/7467/
+```
