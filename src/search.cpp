@@ -337,9 +337,12 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
     Position& position = thread_state.position;
     Move move = informative_move.normal_move();
 
+    BITBOARD threats = position.threats;
+
     if (quiet) {
         update_history_entry(thread_state.history_moves
-                             [position.board[move.origin()]][move.target()],
+                             [position.board[move.origin()]][move.target()]
+                             [(threats >> move.origin()) & 1][(threats >> move.target()) & 1],
                              bonus, search_params.H_max_quiet.v);
 
         for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
@@ -361,8 +364,8 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
         Move temp_move = temp_scored_move.move;
 
         update_history_entry(thread_state.history_moves
-                             [position.board[temp_move.origin()]]
-                             [temp_move.target()],
+                             [position.board[temp_move.origin()]][temp_move.target()]
+                             [(threats >> temp_move.origin()) & 1][(threats >> temp_move.target()) & 1],
                              -bonus, search_params.H_max_quiet.v);
 
 
@@ -521,7 +524,9 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                                          bonus, search_params.H_max_noisy.v);
                 } else {
                     update_history_entry(thread_state.history_moves
-                                         [position.board[move.origin()]][move.target()],
+                                         [position.board[move.origin()]][move.target()]
+                                         [(position.threats >> move.origin()) & 1]
+                                         [(position.threats >> move.target()) & 1],
                                          bonus, search_params.H_max_quiet.v);
                 }
 
@@ -775,7 +780,9 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
         SCORE_TYPE move_history_score = quiet ?
                                         // Quiet Histories
-                                        thread_state.history_moves[position.board[move.origin()]][move.target()] :
+                                        thread_state.history_moves[position.board[move.origin()]][move.target()]
+                                                                  [(position.threats >> move.origin()) & 1]
+                                                                  [(position.threats >> move.target()) & 1] :
                                         // Capture Histories
                                         thread_state.capture_history
                                         [winning_capture][position.board[move.origin()]][position.board[move.target()]][move.target()];

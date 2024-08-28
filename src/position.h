@@ -87,6 +87,7 @@ public:
     BITBOARD our_pieces{};
     BITBOARD opp_pieces{};
     BITBOARD empty_squares{};
+    BITBOARD threats{};
 
     BITBOARD pieces[12]{};
 
@@ -161,6 +162,8 @@ public:
     void set_dfrc(int index);
 
     void ensure_stable();
+
+    void compute_threats();
 
     friend std::ostream& operator<<(std::ostream& os, const Position& position);
 

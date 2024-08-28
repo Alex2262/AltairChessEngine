@@ -54,7 +54,9 @@ SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
         else if (thread_state.killer_moves[1][thread_state.search_ply] == informative_move) score +=
                 static_cast<SCORE_TYPE>(MO_Margin::killer_2);
 
-        score += thread_state.history_moves[selected][move.target()];
+        score += thread_state.history_moves[selected][move.target()]
+                                           [(position.threats >> move.origin()) & 1]
+                                           [(position.threats >> move.target()) & 1];
 
         for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
             if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
