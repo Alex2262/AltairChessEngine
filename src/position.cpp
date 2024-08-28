@@ -15,6 +15,7 @@ void Position::clear_state_stack() {
         state.in_check = -1;
         state.current_hash_key = 0ULL;
         state.current_pawn_hash_key = 0ULL;
+        state.threats = 0ULL;
         state.move = NO_INFORMATIVE_MOVE;
         state.static_eval = NO_EVALUATION;
         state.current_ep_square = NO_SQUARE;
@@ -35,6 +36,7 @@ void Position::set_state(State& state, PLY_TYPE fifty_move) const {
     state.current_hash_key = hash_key;
     state.current_pawn_hash_key = pawn_hash_key;
     state.current_fifty_move = fifty_move;
+    state.threats = threats;
 }
 
 [[nodiscard]] BITBOARD Position::get_attacked_squares(Color color) const {
@@ -577,6 +579,8 @@ void Position::make_null_move(State& state, PLY_TYPE& fifty_move) {
     BITBOARD temp_our_pieces = our_pieces;
     our_pieces = opp_pieces;
     opp_pieces = temp_our_pieces;
+
+    compute_threats();
 }
 
 void Position::undo_null_move(State& state, PLY_TYPE& fifty_move) {
@@ -584,6 +588,7 @@ void Position::undo_null_move(State& state, PLY_TYPE& fifty_move) {
     ep_square = state.current_ep_square;
     hash_key = state.current_hash_key;
     pawn_hash_key = state.current_pawn_hash_key;
+    threats = state.threats;
     fifty_move = state.current_fifty_move;
 
     BITBOARD temp_our_pieces = our_pieces;
@@ -824,6 +829,7 @@ void Position::undo_move(Move move, State& state, PLY_TYPE& fifty_move) {
 
     hash_key            = state.current_hash_key;
     pawn_hash_key       = state.current_pawn_hash_key;
+    threats             = state.threats;
     fifty_move          = state.current_fifty_move;
     ep_square           = state.current_ep_square;
     castle_ability_bits = state.current_castle_ability_bits;
