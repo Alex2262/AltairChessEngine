@@ -18,6 +18,9 @@ SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
     Piece selected = position.board[move.origin()];
     Piece occupied = position.board[move.target()];
 
+    const bool threat_origin = (position.threats >> move.origin()) & 1;
+    const bool threat_target = (position.threats >> move.target()) & 1;
+
     auto selected_type = get_piece_type(selected, position.side);
 
     MoveType move_type = move.type();
@@ -40,7 +43,7 @@ SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
                  MVV_LVA_VALUES[selected_type];
 
         // All captures are not winning in Q_BN;
-        score += thread_state.capture_history[false][selected][occupied][move.target()];
+        score += thread_state.capture_history[false][selected][occupied][move.target()][threat_origin][threat_target];
         score += static_cast<SCORE_TYPE>(MO_Margin::base_capture);
     }
 
@@ -55,8 +58,7 @@ SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
                 static_cast<SCORE_TYPE>(MO_Margin::killer_2);
 
         score += thread_state.history_moves[selected][move.target()]
-                                           [(position.threats >> move.origin()) & 1]
-                                           [(position.threats >> move.target()) & 1];
+                                           [threat_origin][threat_target];
 
         for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
             if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
@@ -85,6 +87,9 @@ SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Mo
     Piece occupied = position.board[move.target()];
     MoveType move_type = move.type();
 
+    const bool threat_origin = (position.threats >> move.origin()) & 1;
+    const bool threat_target = (position.threats >> move.target()) & 1;
+
     bool winning_capture = get_static_exchange_evaluation(position, move, -search_params.SEE_MO_threshold.v);
 
     if (winning_capture) {
@@ -98,7 +103,7 @@ SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Mo
         if constexpr (!qsearch) return -1000000;  // Skip scoring the bad capture currently, as it will be scored fully later
     }
 
-    score += thread_state.capture_history[winning_capture][selected][occupied][move.target()];
+    score += thread_state.capture_history[winning_capture][selected][occupied][move.target()][threat_origin][threat_target];
 
     if (move_type == MOVE_TYPE_EP) return score +
         static_cast<SCORE_TYPE>(MO_Margin::winning_capture) +

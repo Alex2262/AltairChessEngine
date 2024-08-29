@@ -337,12 +337,13 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
     Position& position = thread_state.position;
     Move move = informative_move.normal_move();
 
-    BITBOARD threats = position.threats;
+    const bool threat_origin = (position.threats >> move.origin()) & 1;
+    const bool threat_target = (position.threats >> move.target()) & 1;
 
     if (quiet) {
         update_history_entry(thread_state.history_moves
                              [position.board[move.origin()]][move.target()]
-                             [(threats >> move.origin()) & 1][(threats >> move.target()) & 1],
+                             [threat_origin][threat_target],
                              bonus, search_params.H_max_quiet.v);
 
         for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
@@ -353,8 +354,10 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
         }
 
     } else {
-        update_history_entry(thread_state.capture_history[winning_capture][position.board[move.origin()]]
-                             [position.board[move.target()]][move.target()],
+        update_history_entry(thread_state.capture_history
+                             [winning_capture][position.board[move.origin()]]
+                             [position.board[move.target()]][move.target()]
+                             [threat_origin][threat_target],
                              bonus, search_params.H_max_noisy.v);
     }
 
@@ -363,9 +366,12 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
         ScoredMove& temp_scored_move = searched_quiets[failed_index];
         Move temp_move = temp_scored_move.move;
 
+        const bool temp_threat_origin = (position.threats >> temp_move.origin()) & 1;
+        const bool temp_threat_target = (position.threats >> temp_move.target()) & 1;
+
         update_history_entry(thread_state.history_moves
                              [position.board[temp_move.origin()]][temp_move.target()]
-                             [(threats >> temp_move.origin()) & 1][(threats >> temp_move.target()) & 1],
+                             [temp_threat_origin][temp_threat_target],
                              -bonus, search_params.H_max_quiet.v);
 
 
@@ -386,11 +392,15 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
 
         assert(temp_move != move);
 
+        const bool temp_threat_origin = (position.threats >> temp_move.origin()) & 1;
+        const bool temp_threat_target = (position.threats >> temp_move.target()) & 1;
+
         if (temp_scored_move.winning_capture == winning_capture) {
             update_history_entry(thread_state.capture_history[temp_scored_move.winning_capture]
                                  [position.board[temp_move.origin()]]
                                  [position.board[temp_move.target()]]
-                                 [temp_move.target()],
+                                 [temp_move.target()]
+                                 [temp_threat_origin][temp_threat_target],
                                  -bonus, search_params.H_max_noisy.v);
         }
     }
@@ -515,18 +525,20 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 alpha = return_eval;
                 tt_hash_flag = HASH_FLAG_EXACT;
 
+                const bool threat_origin = (position.threats >> move.origin()) & 1;
+                const bool threat_target = (position.threats >> move.target()) & 1;
+
                 SCORE_TYPE bonus = 2;
                 if (move.is_capture(position) || move.type() == MOVE_TYPE_EP) {
                     update_history_entry(thread_state.capture_history[winning_capture]
                                          [position.board[move.origin()]]
                                          [position.board[move.target()]]
-                                         [move.target()],
+                                         [move.target()][threat_origin][threat_target],
                                          bonus, search_params.H_max_noisy.v);
                 } else {
                     update_history_entry(thread_state.history_moves
                                          [position.board[move.origin()]][move.target()]
-                                         [(position.threats >> move.origin()) & 1]
-                                         [(position.threats >> move.target()) & 1],
+                                         [threat_origin][threat_target],
                                          bonus, search_params.H_max_quiet.v);
                 }
 
@@ -778,14 +790,18 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (quiet) searched_quiets.push_back(scored_move);
         else searched_noisy.push_back(scored_move);
 
+        const bool threat_origin = (position.threats >> move.origin()) & 1;
+        const bool threat_target = (position.threats >> move.target()) & 1;
+
         SCORE_TYPE move_history_score = quiet ?
                                         // Quiet Histories
                                         thread_state.history_moves[position.board[move.origin()]][move.target()]
-                                                                  [(position.threats >> move.origin()) & 1]
-                                                                  [(position.threats >> move.target()) & 1] :
+                                                                  [threat_origin][threat_target] :
                                         // Capture Histories
                                         thread_state.capture_history
-                                        [winning_capture][position.board[move.origin()]][position.board[move.target()]][move.target()];
+                                        [winning_capture][position.board[move.origin()]]
+                                        [position.board[move.target()]][move.target()]
+                                        [threat_origin][threat_target];
 
         if (quiet) {
             for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
