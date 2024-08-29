@@ -693,7 +693,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         // than the opponent's best score, then return the static evaluation.
         if (   depth <= search_params.RFP_depth.v
             && eval - search_params.RFP_margin.v * (depth - improving) >= beta) {
-            return eval;
+            return (eval + beta) / 2;
         }
 
         // Null move pruning
