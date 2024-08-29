@@ -43,6 +43,8 @@ struct State {
     HASH_TYPE current_hash_key = 0ULL;
     HASH_TYPE current_pawn_hash_key = 0ULL;
 
+    BITBOARD threats = 0ULL;
+
     Square current_ep_square = NO_SQUARE;
     uint8_t current_castle_ability_bits = 0;
     PLY_TYPE current_fifty_move = 0;
@@ -87,6 +89,7 @@ public:
     BITBOARD our_pieces{};
     BITBOARD opp_pieces{};
     BITBOARD empty_squares{};
+    BITBOARD threats{};
 
     BITBOARD pieces[12]{};
 
@@ -161,6 +164,8 @@ public:
     void set_dfrc(int index);
 
     void ensure_stable();
+
+    void compute_threats();
 
     friend std::ostream& operator<<(std::ostream& os, const Position& position);
 

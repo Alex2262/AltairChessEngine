@@ -224,7 +224,7 @@ public:
     std::unordered_set<uint16_t> excluded_root_moves{};
 
     InformativeMove killer_moves[2][MAX_AB_DEPTH]{};  // killer moves (2) | max_depth (64)
-    SCORE_TYPE history_moves[12][64]{}; // piece | target_square
+    SCORE_TYPE history_moves[12][64][2][2]{}; // piece | target_square | origin_threat | target_threat
     SCORE_TYPE capture_history[2][12][12][64]{};
     SCORE_TYPE continuation_history[12][64][12][64]{};
     SCORE_TYPE correction_history[2][correction_history_size]{};

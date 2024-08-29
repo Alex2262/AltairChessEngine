@@ -15,6 +15,7 @@ void Position::clear_state_stack() {
         state.in_check = -1;
         state.current_hash_key = 0ULL;
         state.current_pawn_hash_key = 0ULL;
+        state.threats = 0ULL;
         state.move = NO_INFORMATIVE_MOVE;
         state.static_eval = NO_EVALUATION;
         state.current_ep_square = NO_SQUARE;
@@ -35,6 +36,7 @@ void Position::set_state(State& state, PLY_TYPE fifty_move) const {
     state.current_hash_key = hash_key;
     state.current_pawn_hash_key = pawn_hash_key;
     state.current_fifty_move = fifty_move;
+    state.threats = threats;
 }
 
 [[nodiscard]] BITBOARD Position::get_attacked_squares(Color color) const {
@@ -232,6 +234,7 @@ FenInfo Position::set_fen(const std::string& fen_string) {
     empty_squares = get_empty_squares();
 
     compute_hash_key();
+    compute_threats();
 
     nnue_state.reset_nnue(*this);
 
@@ -357,6 +360,40 @@ void Position::set_dfrc(int index) {
 
 void Position::ensure_stable() {
     nnue_state.reset_nnue(*this);
+}
+
+
+void Position::compute_threats() {
+    threats = 0;
+
+    const Color opp = ~side;
+
+    const BITBOARD occupancy = get_all_pieces();
+
+    BITBOARD pawns      = get_pieces(PAWN, opp);
+    BITBOARD knights    = get_pieces(KNIGHT, opp);
+    BITBOARD diagonal   = get_pieces(QUEEN, opp) | get_pieces(BISHOP, opp);
+    BITBOARD horizontal = get_pieces(QUEEN, opp) | get_pieces(ROOK, opp);
+
+    BITBOARD pawn_forward_squares = opp == WHITE ? shift<NORTH>(pawns) : shift<SOUTH>(pawns);
+    threats |= shift<WEST>(pawn_forward_squares) | shift<EAST>(pawn_forward_squares);
+
+    while (knights) {
+        const Square square = poplsb(knights);
+        threats |= get_regular_piece_type_attacks<KNIGHT>(square, occupancy);
+    }
+
+    while (diagonal) {
+        const Square square = poplsb(diagonal);
+        threats |= get_regular_piece_type_attacks<BISHOP>(square, occupancy);
+    }
+
+    while (horizontal) {
+        const Square square = poplsb(horizontal);
+        threats |= get_regular_piece_type_attacks<ROOK>(square, occupancy);
+    }
+
+    threats |= get_regular_piece_type_attacks<KING>(get_king_pos(opp), occupancy);
 }
 
 
@@ -542,6 +579,8 @@ void Position::make_null_move(State& state, PLY_TYPE& fifty_move) {
     BITBOARD temp_our_pieces = our_pieces;
     our_pieces = opp_pieces;
     opp_pieces = temp_our_pieces;
+
+    compute_threats();
 }
 
 void Position::undo_null_move(State& state, PLY_TYPE& fifty_move) {
@@ -549,6 +588,7 @@ void Position::undo_null_move(State& state, PLY_TYPE& fifty_move) {
     ep_square = state.current_ep_square;
     hash_key = state.current_hash_key;
     pawn_hash_key = state.current_pawn_hash_key;
+    threats = state.threats;
     fifty_move = state.current_fifty_move;
 
     BITBOARD temp_our_pieces = our_pieces;
@@ -762,6 +802,8 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     our_pieces = opp_pieces;
     opp_pieces = temp_our_pieces;
 
+    compute_threats();
+
     return true;
 }
 
@@ -787,6 +829,7 @@ void Position::undo_move(Move move, State& state, PLY_TYPE& fifty_move) {
 
     hash_key            = state.current_hash_key;
     pawn_hash_key       = state.current_pawn_hash_key;
+    threats             = state.threats;
     fifty_move          = state.current_fifty_move;
     ep_square           = state.current_ep_square;
     castle_ability_bits = state.current_castle_ability_bits;
