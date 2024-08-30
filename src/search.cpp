@@ -90,7 +90,6 @@ void Engine::new_game() {
         std::memset(thread_state.history_moves, 0, sizeof(thread_state.history_moves));
         std::memset(thread_state.capture_history, 0, sizeof(thread_state.capture_history));
         std::memset(thread_state.continuation_history, 0, sizeof(thread_state.continuation_history));
-        std::memset(thread_state.correction_history, 0, sizeof(thread_state.correction_history));
 
         thread_state.game_ply = 0;
         thread_state.fifty_move = 0;
@@ -99,6 +98,7 @@ void Engine::new_game() {
 
     stopped = true;
 
+    std::memset(correction_history, 0, sizeof(correction_history));
     std::memset(pv_length, 0, sizeof(pv_length));
     std::memset(pv_table, 0, sizeof(pv_table));
     clear_tt();
@@ -137,23 +137,6 @@ SCORE_TYPE& Thread_State::get_continuation_history_entry(InformativeMove last_mo
                                [last_move.target()]
                                [position.board[informative_move.origin()]]
                                [informative_move.target()];
-}
-
-
-void Thread_State::update_correction_history_score(PLY_TYPE depth, SCORE_TYPE diff) {
-    auto& c_hist_entry = correction_history[position.side][position.pawn_hash_key % correction_history_size];
-    int scaled_diff = diff * correction_history_grain;
-    int new_weight = std::min((1 + depth) * (1 + depth), 144);
-
-    c_hist_entry = (c_hist_entry * (correction_history_weight_scale - new_weight) + scaled_diff * new_weight) /
-                    correction_history_weight_scale;
-
-    c_hist_entry = std::clamp(c_hist_entry, -correction_history_max, correction_history_max);
-}
-
-int Thread_State::correct_evaluation(SCORE_TYPE evaluation) {
-    auto& c_hist_entry = correction_history[position.side][position.pawn_hash_key % correction_history_size];
-    return evaluation + c_hist_entry / correction_history_grain;
 }
 
 
@@ -272,6 +255,23 @@ SCORE_TYPE Engine::probe_tt_evaluation(HASH_TYPE hash_key) {
 // Prefetching for cache
 void Engine::tt_prefetch_read(HASH_TYPE hash_key) {
     __builtin_prefetch(&transposition_table[hash_key % transposition_table.size()]);
+}
+
+
+void Engine::update_correction_history_score(Position& position, PLY_TYPE depth, SCORE_TYPE diff) {
+    auto& c_hist_entry = correction_history[position.side][position.pawn_hash_key % correction_history_size];
+    int scaled_diff = diff * correction_history_grain;
+    int new_weight = std::min((1 + depth) * (1 + depth), 144);
+
+    c_hist_entry = (c_hist_entry * (correction_history_weight_scale - new_weight) + scaled_diff * new_weight) /
+                   correction_history_weight_scale;
+
+    c_hist_entry = std::clamp(c_hist_entry, -correction_history_max, correction_history_max);
+}
+
+int Engine::correct_evaluation(Position& position, SCORE_TYPE evaluation) {
+    auto& c_hist_entry = correction_history[position.side][position.pawn_hash_key % correction_history_size];
+    return evaluation + c_hist_entry / correction_history_grain;
 }
 
 
@@ -431,7 +431,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     SCORE_TYPE raw_eval = engine.probe_tt_evaluation(position.hash_key);
     if (raw_eval == NO_EVALUATION) raw_eval = engine.evaluate<NNUE>(thread_id);
 
-    SCORE_TYPE eval = thread_state.correct_evaluation(raw_eval);
+    SCORE_TYPE eval = engine.correct_evaluation(position, raw_eval);
 
     // Return the evaluation if we have reached a stand-pat, or we have reached the maximum depth
     if (depth == 0 || eval >= beta) {
@@ -656,7 +656,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (singular_search) raw_eval = position.state_stack[thread_state.search_ply - 1].static_eval;
         if (eval == NO_EVALUATION) raw_eval = engine.evaluate<NNUE>(thread_id);
 
-        eval = thread_state.correct_evaluation(raw_eval);
+        eval = engine.correct_evaluation(position, raw_eval);
         position.state_stack[thread_state.search_ply].static_eval = eval;
 
         /*
@@ -1112,7 +1112,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             && (best_move == NO_MOVE || !(best_move.is_capture(position) || best_move.type() == MOVE_TYPE_EP))
             && !(tt_hash_flag == HASH_FLAG_LOWER && best_score <= position.state_stack[thread_state.search_ply].static_eval)
             && !(tt_hash_flag == HASH_FLAG_UPPER && best_score >= position.state_stack[thread_state.search_ply].static_eval)) {
-            thread_state.update_correction_history_score(depth, best_score - position.state_stack[thread_state.search_ply].static_eval);
+            engine.update_correction_history_score(position, depth, best_score - position.state_stack[thread_state.search_ply].static_eval);
         }
 
         engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth,

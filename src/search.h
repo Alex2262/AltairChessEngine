@@ -15,7 +15,7 @@ constexpr double learning_rate = 0.002;
 
 constexpr int correction_history_grain = 256;
 constexpr int correction_history_weight_scale = 1024;
-constexpr int correction_history_size = 16384;
+constexpr int correction_history_size = 65536;
 constexpr int correction_history_max = correction_history_grain * 64;
 
 
@@ -227,7 +227,6 @@ public:
     SCORE_TYPE history_moves[12][64][2][2]{}; // piece | target_square | origin_threat | target_threat
     SCORE_TYPE capture_history[2][12][12][64]{};
     SCORE_TYPE continuation_history[12][64][12][64]{};
-    SCORE_TYPE correction_history[2][correction_history_size]{};
 
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH + 512] = {0};
 
@@ -242,9 +241,6 @@ public:
     bool detect_repetition_3();
 
     SCORE_TYPE& get_continuation_history_entry(InformativeMove last_move, InformativeMove informative_move);
-
-    void update_correction_history_score(PLY_TYPE depth, SCORE_TYPE diff);
-    int correct_evaluation(SCORE_TYPE evaluation);
 
     inline void reset_generators() {
         for (int ply = 0; ply < static_cast<int>(generators.size()); ply++) {
@@ -299,6 +295,8 @@ public:
 
     std::unordered_set<uint16_t> root_moves{};
 
+    SCORE_TYPE correction_history[2][correction_history_size]{};
+
     void clear_tt();
 
     void reset();
@@ -319,6 +317,9 @@ public:
     SCORE_TYPE probe_tt_evaluation(HASH_TYPE hash_key);
 
     void tt_prefetch_read(HASH_TYPE hash_key);
+
+    void update_correction_history_score(Position& position, PLY_TYPE depth, SCORE_TYPE diff);
+    int correct_evaluation(Position& position, SCORE_TYPE evaluation);
 
     bool check_time();
     bool check_nodes();
