@@ -736,7 +736,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
     }
 
     // Internal Iterative Reduction. Based on Rebel's idea
-    if (tt_move == NO_MOVE && depth >= search_params.IIR_base_depth.v) {
+    if (tt_move == NO_MOVE && depth >= search_params.IIR_base_depth.v && (pv_node || cutnode)) {
         depth -= 1 + pv_node;
     }
 
