@@ -156,6 +156,7 @@ public:
     void place_piece(Piece piece, Square square);
 
     void compute_hash_key();
+    bool is_passed(Color color, Square square);
 
     FenInfo set_fen(const std::string& fen);
     std::string get_fen(PLY_TYPE fifty_move);

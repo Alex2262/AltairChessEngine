@@ -335,11 +335,13 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
 
     const bool threat_origin = (position.threats >> move.origin()) & 1;
     const bool threat_target = (position.threats >> move.target()) & 1;
+    const bool passed_pawn   = get_piece_type(position.board[move.origin()], position.side) == PAWN &&
+                               position.is_passed(position.side, move.target());
 
     if (quiet) {
         update_history_entry(thread_state.history_moves
                              [position.board[move.origin()]][move.target()]
-                             [threat_origin][threat_target],
+                             [threat_origin][threat_target][passed_pawn],
                              bonus, search_params.H_max_quiet.v);
 
         for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
@@ -362,10 +364,12 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
 
         const bool temp_threat_origin = (position.threats >> temp_move.origin()) & 1;
         const bool temp_threat_target = (position.threats >> temp_move.target()) & 1;
+        const bool temp_passed_pawn   = get_piece_type(position.board[temp_move.origin()], position.side) == PAWN &&
+                                        position.is_passed(position.side, temp_move.target());
 
         update_history_entry(thread_state.history_moves
                              [position.board[temp_move.origin()]][temp_move.target()]
-                             [temp_threat_origin][temp_threat_target],
+                             [temp_threat_origin][temp_threat_target][temp_passed_pawn],
                              -bonus, search_params.H_max_quiet.v);
 
         InformativeMove temp_move_informative = InformativeMove(temp_move, position.board[temp_move.origin()], position.board[temp_move.target()]);
@@ -522,10 +526,14 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                                          [move.target()],
                                          bonus, search_params.H_max_noisy.v);
                 } else {
+                    const bool passed_pawn = get_piece_type(position.board[move.origin()], position.side) == PAWN &&
+                                             position.is_passed(position.side, move.target());
+
                     update_history_entry(thread_state.history_moves
                                          [position.board[move.origin()]][move.target()]
                                          [(position.threats >> move.origin()) & 1]
-                                         [(position.threats >> move.target()) & 1],
+                                         [(position.threats >> move.target()) & 1]
+                                         [passed_pawn],
                                          bonus, search_params.H_max_quiet.v);
                 }
 
@@ -791,11 +799,15 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         if (quiet) searched_quiets.push_back(scored_move);
         else searched_noisy.push_back(scored_move);
 
+        const bool passed_pawn = get_piece_type(position.board[move.origin()], position.side) == PAWN &&
+                                 position.is_passed(position.side, move.target());
+
         SCORE_TYPE move_history_score = quiet ?
                                         // Quiet Histories
                                         thread_state.history_moves[position.board[move.origin()]][move.target()]
                                                                   [(position.threats >> move.origin()) & 1]
-                                                                  [(position.threats >> move.target()) & 1] :
+                                                                  [(position.threats >> move.target()) & 1]
+                                                                  [passed_pawn] :
                                         // Capture Histories
                                         thread_state.capture_history
                                         [winning_capture][position.board[move.origin()]][position.board[move.target()]][move.target()];
@@ -861,8 +873,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         PLY_TYPE extension = 0;
 
         // Pawn going to 7th rank must be passed
-        bool passed_pawn = get_piece_type(informative_move.selected(), original_side) == PAWN
-                           && static_cast<int>(rank_of(move.target())) == 6 - 5 * original_side;
+        bool passed_pawn_6   = get_piece_type(informative_move.selected(), original_side) == PAWN
+                               && static_cast<int>(rank_of(move.target())) == 6 - 5 * original_side;
         bool queen_promotion = move.type() == MOVE_TYPE_PROMOTION
                                && static_cast<PieceType>(move.promotion_type() + 1) == QUEEN;
 
@@ -913,7 +925,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             position.make_move<NO_NNUE>(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
         }
 
-        else if (move_score >= 0 && (passed_pawn || queen_promotion)) extension++;
+        else if (move_score >= 0 && (passed_pawn_6 || queen_promotion)) extension++;
 
         else if (in_check) extension++;
 
@@ -930,7 +942,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
         bool move_gives_check = position.is_attacked(position.get_king_pos(position.side), position.side);
         bool is_killer_move   = informative_move == thread_state.killer_moves[0][thread_state.search_ply] ||
                                 informative_move == thread_state.killer_moves[1][thread_state.search_ply];
-        bool interesting      = passed_pawn || queen_promotion || move_gives_check || is_killer_move;
+        bool interesting      = passed_pawn_6 || queen_promotion || move_gives_check || is_killer_move;
 
         position.state_stack[thread_state.search_ply + 1].in_check = static_cast<int>(move_gives_check);
         thread_state.search_ply++;

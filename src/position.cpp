@@ -397,6 +397,12 @@ void Position::compute_threats() {
 }
 
 
+bool Position::is_passed(Color color, Square square) {
+    // BITBOARD mask = passed_pawn_masks[color][square] & (~from_square(square));
+    return !(passed_pawn_masks[color][square] & get_pieces(PAWN, ~color));
+}
+
+
 std::ostream& operator << (std::ostream& os, const Position& position) {
     std::string new_board;
 
