@@ -899,4 +899,3 @@ void Position::update_nnue(State& state) {
         else nnue_state.update_feature<DEACTIVATE>(nn_update.piece, nn_update.square);
     }
 }
-
