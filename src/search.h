@@ -244,8 +244,10 @@ public:
 
     SCORE_TYPE& get_continuation_history_entry(InformativeMove last_move, InformativeMove informative_move);
 
+    void update_correction_history_entry(SCORE_TYPE& c_hist_entry, PLY_TYPE depth, SCORE_TYPE diff);
     void update_correction_history_score(PLY_TYPE depth, SCORE_TYPE diff);
-    int correct_evaluation(SCORE_TYPE evaluation);
+    SCORE_TYPE get_correction_score(SCORE_TYPE& c_hist_entry);
+    SCORE_TYPE correct_evaluation(SCORE_TYPE evaluation);
 
     inline void reset_generators() {
         for (int ply = 0; ply < static_cast<int>(generators.size()); ply++) {

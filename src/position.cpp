@@ -575,8 +575,6 @@ bool Position::is_pseudo_legal(Move move) {
 void Position::make_null_move(State& state, PLY_TYPE& fifty_move) {
     side = ~side;
     hash_key ^= ZobristHashKeys.side_hash_key;
-    pawn_hash_key ^= ZobristHashKeys.side_hash_key;
-    np_hash_key ^= ZobristHashKeys.side_hash_key;
 
     state.move = NO_INFORMATIVE_MOVE;
     state.NNUE_pushed = false;
@@ -848,6 +846,7 @@ void Position::undo_move(Move move, State& state, PLY_TYPE& fifty_move) {
 
     hash_key            = state.current_hash_key;
     pawn_hash_key       = state.current_pawn_hash_key;
+    np_hash_key         = state.current_np_hash_key;
     threats             = state.threats;
     fifty_move          = state.current_fifty_move;
     ep_square           = state.current_ep_square;
