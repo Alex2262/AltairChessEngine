@@ -42,6 +42,7 @@ struct KingBucketUpdate {
 struct State {
     HASH_TYPE current_hash_key = 0ULL;
     HASH_TYPE current_pawn_hash_key = 0ULL;
+    HASH_TYPE current_np_hash_key = 0ULL;
 
     BITBOARD threats = 0ULL;
 
@@ -103,6 +104,7 @@ public:
     Square ep_square = NO_SQUARE;
     HASH_TYPE hash_key = 0;
     HASH_TYPE pawn_hash_key = 0;
+    HASH_TYPE np_hash_key = 0;
 
     std::array<State, TOTAL_MAX_DEPTH> state_stack{};
 
