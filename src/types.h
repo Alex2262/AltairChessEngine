@@ -73,6 +73,11 @@ constexpr inline bool is_major(Piece piece) {
     return get_piece_type(piece, get_color(piece)) >= ROOK;
 }
 
+constexpr inline bool is_minor(Piece piece) {
+    PieceType piece_type = get_piece_type(piece, get_color(piece));
+    return piece_type == KNIGHT || piece_type == BISHOP;
+}
+
 constexpr uint32_t N_DIRS = 8;
 enum Direction : int32_t {
     NORTH = 8, NORTH_EAST = 9, EAST = 1, SOUTH_EAST = -7,
