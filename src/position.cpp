@@ -13,8 +13,11 @@
 void Position::clear_state_stack() {
     for (auto& state : state_stack) {
         state.in_check = -1;
+
         state.current_hash_key = 0ULL;
         state.current_pawn_hash_key = 0ULL;
+        state.current_np_hash_key = 0ULL;
+
         state.threats = 0ULL;
         state.move = NO_INFORMATIVE_MOVE;
         state.static_eval = NO_EVALUATION;
@@ -35,6 +38,7 @@ void Position::set_state(State& state, PLY_TYPE fifty_move) const {
     state.current_castle_ability_bits = castle_ability_bits;
     state.current_hash_key = hash_key;
     state.current_pawn_hash_key = pawn_hash_key;
+    state.current_np_hash_key = np_hash_key;
     state.current_fifty_move = fifty_move;
     state.threats = threats;
 }
@@ -102,6 +106,7 @@ void Position::place_piece(Piece piece, Square square) {
 void Position::compute_hash_key() {
     hash_key = 0;
     pawn_hash_key = 0;
+    np_hash_key = 0;
 
     for (int piece = 0; piece < static_cast<int>(EMPTY); piece++) {
         BITBOARD piece_bitboard = get_pieces(static_cast<Piece>(piece));
@@ -112,12 +117,17 @@ void Position::compute_hash_key() {
             if (get_piece_type(static_cast<Piece>(piece), get_color(static_cast<Piece>(piece))) == PAWN) {
                 pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[piece][square];
             }
+
+            else {
+                np_hash_key ^= ZobristHashKeys.piece_hash_keys[piece][square];
+            }
         }
     }
 
     if (ep_square != NO_SQUARE) hash_key ^= ZobristHashKeys.ep_hash_keys[ep_square];
 
     hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    np_hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
     if (side) {
         hash_key ^= ZobristHashKeys.side_hash_key;
@@ -565,7 +575,7 @@ bool Position::is_pseudo_legal(Move move) {
 void Position::make_null_move(State& state, PLY_TYPE& fifty_move) {
     side = ~side;
     hash_key ^= ZobristHashKeys.side_hash_key;
-    pawn_hash_key ^= ZobristHashKeys.side_hash_key;
+
     state.move = NO_INFORMATIVE_MOVE;
     state.NNUE_pushed = false;
 
@@ -588,6 +598,8 @@ void Position::undo_null_move(State& state, PLY_TYPE& fifty_move) {
     ep_square = state.current_ep_square;
     hash_key = state.current_hash_key;
     pawn_hash_key = state.current_pawn_hash_key;
+    np_hash_key = state.current_np_hash_key;
+
     threats = state.threats;
     fifty_move = state.current_fifty_move;
 
@@ -632,6 +644,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
         if constexpr (NNUE) state.deactivations.push_back({occupied, target_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
         if (occupied_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
+        else np_hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
 
         fifty_move = 0;
     }
@@ -642,6 +655,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
         if constexpr (NNUE) state.activations.push_back({selected, target_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
         if (selected_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
+        else np_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
     }
 
     else if (move_type == MOVE_TYPE_EP) {
@@ -703,6 +717,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
         if constexpr (NNUE) state.deactivations.push_back({selected, origin_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
         if (selected_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
+        else np_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
 
         // The rook and king have swapped in FRC, and we just removed the piece on the rook's target square,
         // so we need to set the rook back onto this location
@@ -757,6 +772,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     // -- Update Castling Rights --
     // Reset the castling rights first
     hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    np_hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
     // King moves
     if (selected == WHITE_KING) {
@@ -794,6 +810,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
 
     // Hash it back
     hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    np_hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
     hash_key ^= ZobristHashKeys.side_hash_key;
     side = ~side;
@@ -829,6 +846,7 @@ void Position::undo_move(Move move, State& state, PLY_TYPE& fifty_move) {
 
     hash_key            = state.current_hash_key;
     pawn_hash_key       = state.current_pawn_hash_key;
+    np_hash_key         = state.current_np_hash_key;
     threats             = state.threats;
     fifty_move          = state.current_fifty_move;
     ep_square           = state.current_ep_square;

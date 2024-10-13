@@ -91,6 +91,7 @@ void Engine::new_game() {
         std::memset(thread_state.capture_history, 0, sizeof(thread_state.capture_history));
         std::memset(thread_state.continuation_history, 0, sizeof(thread_state.continuation_history));
         std::memset(thread_state.correction_history, 0, sizeof(thread_state.correction_history));
+        std::memset(thread_state.correction_history_np, 0, sizeof(thread_state.correction_history_np));
 
         thread_state.game_ply = 0;
         thread_state.fifty_move = 0;
@@ -140,20 +141,36 @@ SCORE_TYPE& Thread_State::get_continuation_history_entry(InformativeMove last_mo
 }
 
 
-void Thread_State::update_correction_history_score(PLY_TYPE depth, SCORE_TYPE diff) {
-    auto& c_hist_entry = correction_history[position.side][position.pawn_hash_key % correction_history_size];
+void Thread_State::update_correction_history_entry(SCORE_TYPE& c_hist_entry, PLY_TYPE depth, SCORE_TYPE diff) {
     int scaled_diff = diff * correction_history_grain;
     int new_weight = std::min((1 + depth) * (1 + depth), 144);
 
     c_hist_entry = (c_hist_entry * (correction_history_weight_scale - new_weight) + scaled_diff * new_weight) /
-                    correction_history_weight_scale;
+                   correction_history_weight_scale;
 
     c_hist_entry = std::clamp(c_hist_entry, -correction_history_max, correction_history_max);
 }
 
-int Thread_State::correct_evaluation(SCORE_TYPE evaluation) {
-    auto& c_hist_entry = correction_history[position.side][position.pawn_hash_key % correction_history_size];
-    return evaluation + c_hist_entry / correction_history_grain;
+
+void Thread_State::update_correction_history_score(PLY_TYPE depth, SCORE_TYPE diff) {
+    update_correction_history_entry(correction_history[position.side][position.pawn_hash_key % correction_history_size],
+                                    depth, diff);
+
+    update_correction_history_entry(correction_history_np[position.side][position.np_hash_key % correction_history_size],
+                                    depth, diff);
+}
+
+SCORE_TYPE Thread_State::get_correction_score(SCORE_TYPE& c_hist_entry) {
+    return c_hist_entry / correction_history_grain;
+}
+
+SCORE_TYPE Thread_State::correct_evaluation(SCORE_TYPE evaluation) {
+    SCORE_TYPE corrected = evaluation;
+
+    corrected += get_correction_score(correction_history[position.side][position.pawn_hash_key % correction_history_size]);
+    corrected += get_correction_score(correction_history_np[position.side][position.np_hash_key % correction_history_size]);
+
+    return corrected;
 }
 
 
