@@ -837,6 +837,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     hash_key       ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
     np_hash_key    ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
     major_hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    ks_hash_key    ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
     // King moves
     if (selected == WHITE_KING) {
@@ -876,6 +877,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     hash_key       ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
     np_hash_key    ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
     major_hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    ks_hash_key    ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
     hash_key ^= ZobristHashKeys.side_hash_key;
     side = ~side;
