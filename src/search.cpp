@@ -93,6 +93,7 @@ void Engine::new_game() {
         std::memset(thread_state.correction_history, 0, sizeof(thread_state.correction_history));
         std::memset(thread_state.correction_history_np, 0, sizeof(thread_state.correction_history_np));
         std::memset(thread_state.correction_history_major, 0, sizeof(thread_state.correction_history_major));
+        std::memset(thread_state.correction_history_minor, 0, sizeof(thread_state.correction_history_minor));
 
         thread_state.game_ply = 0;
         thread_state.fifty_move = 0;
@@ -162,6 +163,9 @@ void Thread_State::update_correction_history_score(PLY_TYPE depth, SCORE_TYPE di
 
     update_correction_history_entry(correction_history_major[position.side][position.major_hash_key % correction_history_size],
                                     depth, diff);
+
+    update_correction_history_entry(correction_history_minor[position.side][position.minor_hash_key % correction_history_size],
+                                    depth, diff);
 }
 
 SCORE_TYPE Thread_State::get_correction_score(SCORE_TYPE& c_hist_entry) {
@@ -174,6 +178,7 @@ SCORE_TYPE Thread_State::correct_evaluation(SCORE_TYPE evaluation) {
     corrected += get_correction_score(correction_history[position.side][position.pawn_hash_key % correction_history_size]);
     corrected += get_correction_score(correction_history_np[position.side][position.np_hash_key % correction_history_size]);
     corrected += get_correction_score(correction_history_major[position.side][position.major_hash_key % correction_history_size]);
+    corrected += get_correction_score(correction_history_minor[position.side][position.minor_hash_key % correction_history_size]);
 
     return corrected;
 }

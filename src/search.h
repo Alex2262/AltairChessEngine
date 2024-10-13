@@ -230,6 +230,7 @@ public:
     SCORE_TYPE correction_history[2][correction_history_size]{};
     SCORE_TYPE correction_history_np[2][correction_history_size]{};
     SCORE_TYPE correction_history_major[2][correction_history_size]{};
+    SCORE_TYPE correction_history_minor[2][correction_history_size]{};
 
     HASH_TYPE repetition_table[TOTAL_MAX_DEPTH + 512] = {0};
 
