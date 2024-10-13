@@ -100,6 +100,14 @@ constexpr inline BITBOARD fill(Direction D, BITBOARD b) {
     return b;
 }
 
+constexpr inline BITBOARD get_3x3(Square square) {
+    BITBOARD temp = from_square(square);
+    temp |= shift<WEST >(temp) | shift<EAST >(temp);
+    temp |= shift<NORTH>(temp) | shift<SOUTH>(temp);
+
+    return temp;
+}
+
 constexpr Square operator+(Square s, Direction d) {
     return Square(static_cast<int32_t>(s) + static_cast<int32_t>(d));
 }
