@@ -17,6 +17,7 @@ void Position::clear_state_stack() {
         state.current_hash_key = 0ULL;
         state.current_pawn_hash_key = 0ULL;
         state.current_np_hash_key = 0ULL;
+        state.current_major_hash_key = 0ULL;
 
         state.threats = 0ULL;
         state.move = NO_INFORMATIVE_MOVE;
@@ -39,6 +40,7 @@ void Position::set_state(State& state, PLY_TYPE fifty_move) const {
     state.current_hash_key = hash_key;
     state.current_pawn_hash_key = pawn_hash_key;
     state.current_np_hash_key = np_hash_key;
+    state.current_major_hash_key = major_hash_key;
     state.current_fifty_move = fifty_move;
     state.threats = threats;
 }
@@ -107,6 +109,7 @@ void Position::compute_hash_key() {
     hash_key = 0;
     pawn_hash_key = 0;
     np_hash_key = 0;
+    major_hash_key = 0;
 
     for (int piece = 0; piece < static_cast<int>(EMPTY); piece++) {
         BITBOARD piece_bitboard = get_pieces(static_cast<Piece>(piece));
@@ -119,6 +122,10 @@ void Position::compute_hash_key() {
             }
 
             else {
+                if (is_major(static_cast<Piece>(piece))) {
+                    major_hash_key ^= ZobristHashKeys.piece_hash_keys[piece][square];
+                }
+
                 np_hash_key ^= ZobristHashKeys.piece_hash_keys[piece][square];
             }
         }
@@ -126,8 +133,9 @@ void Position::compute_hash_key() {
 
     if (ep_square != NO_SQUARE) hash_key ^= ZobristHashKeys.ep_hash_keys[ep_square];
 
-    hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
-    np_hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    hash_key       ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    np_hash_key    ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    major_hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
     if (side) {
         hash_key ^= ZobristHashKeys.side_hash_key;
@@ -594,14 +602,15 @@ void Position::make_null_move(State& state, PLY_TYPE& fifty_move) {
 }
 
 void Position::undo_null_move(State& state, PLY_TYPE& fifty_move) {
-    side = ~side;
-    ep_square = state.current_ep_square;
-    hash_key = state.current_hash_key;
-    pawn_hash_key = state.current_pawn_hash_key;
-    np_hash_key = state.current_np_hash_key;
-
-    threats = state.threats;
+    side       = ~side;
+    ep_square  = state.current_ep_square;
+    threats    = state.threats;
     fifty_move = state.current_fifty_move;
+
+    hash_key       = state.current_hash_key;
+    pawn_hash_key  = state.current_pawn_hash_key;
+    np_hash_key    = state.current_np_hash_key;
+    major_hash_key = state.current_major_hash_key;
 
     BITBOARD temp_our_pieces = our_pieces;
     our_pieces = opp_pieces;
@@ -645,6 +654,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
         hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
         if (occupied_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
         else np_hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
+        if (is_major(occupied)) major_hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
 
         fifty_move = 0;
     }
@@ -656,6 +666,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
         if (selected_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
         else np_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
+        if (is_major(selected)) major_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
     }
 
     else if (move_type == MOVE_TYPE_EP) {
@@ -718,6 +729,7 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
         if (selected_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
         else np_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
+        if (is_major(selected)) major_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
 
         // The rook and king have swapped in FRC, and we just removed the piece on the rook's target square,
         // so we need to set the rook back onto this location
@@ -771,8 +783,9 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
 
     // -- Update Castling Rights --
     // Reset the castling rights first
-    hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
-    np_hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    hash_key       ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    np_hash_key    ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    major_hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
     // King moves
     if (selected == WHITE_KING) {
@@ -809,8 +822,9 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
         target_square == starting_rook_pos[BLACK][1]) castle_ability_bits &= ~(1 << 3);
 
     // Hash it back
-    hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
-    np_hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    hash_key       ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    np_hash_key    ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    major_hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
 
     hash_key ^= ZobristHashKeys.side_hash_key;
     side = ~side;
@@ -847,6 +861,7 @@ void Position::undo_move(Move move, State& state, PLY_TYPE& fifty_move) {
     hash_key            = state.current_hash_key;
     pawn_hash_key       = state.current_pawn_hash_key;
     np_hash_key         = state.current_np_hash_key;
+    major_hash_key      = state.current_major_hash_key;
     threats             = state.threats;
     fifty_move          = state.current_fifty_move;
     ep_square           = state.current_ep_square;
