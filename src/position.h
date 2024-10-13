@@ -43,6 +43,7 @@ struct State {
     HASH_TYPE current_hash_key = 0ULL;
     HASH_TYPE current_pawn_hash_key = 0ULL;
     HASH_TYPE current_np_hash_key = 0ULL;
+    HASH_TYPE current_major_hash_key = 0ULL;
 
     BITBOARD threats = 0ULL;
 
@@ -101,10 +102,11 @@ public:
     uint8_t castle_ability_bits = 0;
     Square starting_rook_pos[2][2]{};
 
-    Square ep_square = NO_SQUARE;
-    HASH_TYPE hash_key = 0;
-    HASH_TYPE pawn_hash_key = 0;
-    HASH_TYPE np_hash_key = 0;
+    Square ep_square         = NO_SQUARE;
+    HASH_TYPE hash_key       = 0;
+    HASH_TYPE pawn_hash_key  = 0;
+    HASH_TYPE np_hash_key    = 0;
+    HASH_TYPE major_hash_key = 0;
 
     std::array<State, TOTAL_MAX_DEPTH> state_stack{};
 

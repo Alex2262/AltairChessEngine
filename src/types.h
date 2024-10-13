@@ -69,6 +69,10 @@ constexpr inline Color get_color(Piece piece) {
     return static_cast<Color>(piece / COLOR_OFFSET);
 }
 
+constexpr inline bool is_major(Piece piece) {
+    return get_piece_type(piece, get_color(piece)) >= ROOK;
+}
+
 constexpr uint32_t N_DIRS = 8;
 enum Direction : int32_t {
     NORTH = 8, NORTH_EAST = 9, EAST = 1, SOUTH_EAST = -7,
