@@ -711,6 +711,10 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
             if constexpr (NNUE) state.activations.push_back({board[castled_pos[0]], castled_pos[1]});
             hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[0]];
             hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[1]];
+            np_hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[0]];
+            np_hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[1]];
+            major_hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[0]];
+            major_hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[1]];
             remove_piece(board[castled_pos[0]], castled_pos[0]);
             place_piece(get_piece(ROOK, side), castled_pos[1]);
         }
@@ -720,6 +724,8 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
             place_piece(selected, target_square);
             if constexpr (NNUE) state.activations.push_back({selected, target_square});
             hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
+            np_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
+            major_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
         }
     }
 
@@ -728,6 +734,9 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
         place_piece(promotion_piece, target_square);
         if constexpr (NNUE) state.activations.push_back({promotion_piece, target_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[promotion_piece][target_square];
+        np_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
+        if (is_major(promotion_piece)) major_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
+        else if (is_minor(promotion_piece)) minor_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
     }
 
     // Remove the piece from the source square except for some FRC edge cases
