@@ -9,7 +9,6 @@
 #include "bitboard.h"
 #include "attacks.h"
 #include "move.h"
-#include "nnue.h"
 
 
 constexpr int bishop_ordering_1[2][4] = {
@@ -28,16 +27,6 @@ struct ScoredMove {
     bool winning_capture = false;
 };
 
-struct NNUpdate {
-    Piece  piece;
-    Square square;
-};
-
-struct KingBucketUpdate {
-    bool update_necessary = false;
-    Color side = WHITE;
-    int bucket = 0;
-};
 
 struct State {
     HASH_TYPE current_hash_key = 0ULL;
@@ -59,11 +48,6 @@ struct State {
 
     int double_extensions = 0;
     int in_check = -1;
-
-    FixedVector<NNUpdate, 4> activations{};
-    FixedVector<NNUpdate, 4> deactivations{};
-    KingBucketUpdate king_bucket_update{};
-    bool NNUE_pushed = false;
 };
 
 struct FenInfo {
@@ -83,8 +67,6 @@ class Position {
 public:
 
     Position() = default;
-
-    NNUE_State nnue_state{};
 
     bool fischer_random_chess = false;
 
@@ -168,8 +150,6 @@ public:
 
     void set_frc_side(Color color, int index);
     void set_dfrc(int index);
-
-    void ensure_stable();
 
     void compute_threats();
 
@@ -525,12 +505,9 @@ public:
     void make_null_move(State& state, PLY_TYPE& fifty_move);
     void undo_null_move(State& state, PLY_TYPE& fifty_move);
 
-    template<bool NNUE>
     bool make_move(Move move, State& state, PLY_TYPE& fifty_move);
-    template<bool NNUE>
     void undo_move(Move move, State& state, PLY_TYPE& fifty_move);
 
-    void update_nnue(State& state);
 };
 
 

@@ -64,12 +64,10 @@ double position_time_scale(Position& position) {
 }
 
 
-void time_handler(Engine& engine, double self_time, double inc, double movetime, long movestogo) {
+void time_handler(Engine& engine, double self_time, double inc, double movetime) {
     double time_amt;
 
-    double movestogo_ratio = movestogo == 0 ? 0 : std::clamp(std::atan((movestogo + 20) / 24.0), 0.84, 1.1);
-
-    Position& position = engine.thread_states[0].position;
+    Position& position = engine.main_thread.position;
 
     double pts = position_time_scale(position);
 
@@ -85,35 +83,15 @@ void time_handler(Engine& engine, double self_time, double inc, double movetime,
         goto update;
     }
 
-    if (movestogo == 0 && inc == 0) {
+    if (inc == 0) {
         time_amt = self_time / 24;
         time_amt *= (0.8 + 0.2 * pts);
         goto update;
     }
 
-    if (movestogo > 0 && inc == 0) {
-        time_amt = self_time * movestogo_ratio / static_cast<double>(movestogo);
-        if (time_amt > self_time * 0.9) time_amt = self_time * 0.9;
-
-        if (movestogo == 1) time_amt = self_time * 0.9;
-        else time_amt *= (0.7 + 0.3 * pts);
-
-        goto update;
-    }
-
-    if (inc > 0 && movestogo == 0) {
+    if (inc > 0) {
         time_amt = self_time / 20 + inc * 0.75;
         time_amt *= (0.7 + 0.3 * pts);
-        goto update;
-    }
-
-    if (movestogo > 0 && inc > 0) {
-        time_amt = self_time * movestogo_ratio / static_cast<double>(movestogo) + inc * 0.75;
-        if (time_amt > self_time * 0.9) time_amt = std::min(self_time * 0.85 + inc * 0.75, self_time * 0.9);
-
-        if (movestogo == 1) time_amt = self_time * 0.9;
-        else time_amt *= (0.7 + 0.3 * pts);
-
         goto update;
     }
 

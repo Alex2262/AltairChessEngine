@@ -8,8 +8,6 @@
 #include "move.h"
 #include "search.h"
 #include "evaluation.h"
-#include "perft.h"
-#include "bench.h"
 #include "see.h"
 #include "timeman.h"
 
@@ -18,9 +16,7 @@ void UCI::initialize_uci() const {
 
     engine->initialize_lmr_reductions();
 
-    engine->thread_states.emplace_back();
-
-    Position& position = engine->thread_states[0].position;
+    Position& position = engine->main_thread.position;
     position.set_fen(START_FEN);
 }
 
@@ -28,10 +24,10 @@ void UCI::initialize_uci() const {
 void UCI::parse_position() {
     if (tokens.size() < 2) return;
 
-    Position& position = engine->thread_states[0].position;
+    Position& position = engine->main_thread.position;
 
     int next_idx;
-    engine->thread_states[0].game_ply = 0;
+    engine->main_thread.game_ply = 0;
 
     FenInfo fen_info;
 
@@ -68,8 +64,8 @@ void UCI::parse_position() {
 
     else return;
 
-    engine->thread_states[0].fifty_move = fen_info.fifty_move_counter;
-    engine->thread_states[0].base_full_moves = fen_info.full_move_counter;
+    engine->main_thread.fifty_move = fen_info.fifty_move_counter;
+    engine->main_thread.base_full_moves = fen_info.full_move_counter;
 
     if (static_cast<int>(tokens.size()) <= next_idx || tokens[next_idx] != "moves") return;
 
@@ -77,22 +73,20 @@ void UCI::parse_position() {
         Move move = Move(position, tokens[i]);
         last_move = move;
 
-        position.make_move<USE_NNUE>(move, position.state_stack[0], engine->thread_states[0].fifty_move);
-        position.update_nnue(position.state_stack[0]);
+        position.make_move(move, position.state_stack[0], engine->main_thread.fifty_move);
 
-        engine->thread_states[0].game_ply++;
-        engine->thread_states[0].repetition_table[engine->thread_states[0].game_ply] = position.hash_key;
+        engine->main_thread.game_ply++;
+        engine->main_thread.repetition_table[engine->main_thread.game_ply] = position.hash_key;
     }
 }
 
 
 void UCI::parse_go() {
 
-    Position& position = engine->thread_states[0].position;
+    Position& position = engine->main_thread.position;
 
     PLY_TYPE d = 0, perft_depth = 0;
     double wtime = 0, btime = 0, winc = 0, binc = 0, movetime = 0;
-    long movestogo = 0;
     bool infinite = false;
 
     for (int i = 1; i < static_cast<int>(tokens.size()); i += 2) {
@@ -103,8 +97,6 @@ void UCI::parse_go() {
         if (static_cast<int>(tokens.size()) > i + 1) value = std::stoi(tokens[i + 1]);
 
         if (type == "depth") d = static_cast<PLY_TYPE>(value);
-
-        else if (type == "perft") perft_depth = static_cast<PLY_TYPE>(value);
 
         else if (type == "nodes") {
             engine->hard_node_limit = value;
@@ -119,15 +111,10 @@ void UCI::parse_go() {
         else if (type == "winc") winc = static_cast<double>(value);
         else if (type == "binc") binc = static_cast<double>(value);
 
-        else if (type == "movestogo") movestogo = static_cast<long>(value);
         else if (type == "infinite") infinite = true;
 
     }
 
-    if (perft_depth > 0) {
-        uci_perft(position, perft_depth, 0);
-        return;
-    }
     if (infinite || (d && tokens.size() == 3)) {
         engine->hard_time_limit = TIME_INF;
         engine->soft_time_limit = TIME_INF;
@@ -136,7 +123,7 @@ void UCI::parse_go() {
         double self_time = (position.side == 0) ? wtime : btime;
         double inc = (position.side == 0) ? winc : binc;
 
-        time_handler(*engine, std::max<double>(self_time, 0.0), inc, movetime, movestogo);
+        time_handler(*engine, std::max<double>(self_time, 0.0), inc, movetime);
     }
 
     if (d) engine->max_depth = d;
@@ -145,8 +132,8 @@ void UCI::parse_go() {
     if (!search_threads.empty()) {
         search_threads[0].join();
 
-        while (!engine->thread_states[0].terminated);  // to prevent some stupid exceptions
-        if (engine->thread_states[0].terminated) search_threads.erase(search_threads.end() - 1);
+        while (!engine->main_thread.terminated);  // to prevent some stupid exceptions
+        if (engine->main_thread.terminated) search_threads.erase(search_threads.end() - 1);
     }
 
     search_threads.emplace_back(search, std::ref(*engine));
@@ -172,8 +159,8 @@ void UCI::uci_loop() {
             if (!search_threads.empty()) {
                 search_threads[0].join();
 
-                while (!engine->thread_states[0].terminated);  // to prevent some stupid exceptions
-                if (engine->thread_states[0].terminated) search_threads.erase(search_threads.end() - 1);
+                while (!engine->main_thread.terminated);  // to prevent some stupid exceptions
+                if (engine->main_thread.terminated) search_threads.erase(search_threads.end() - 1);
             }
         }
 
@@ -224,27 +211,6 @@ void UCI::uci_loop() {
                 std::cout << engine->transposition_table.size() << " number of hash entries initialized" << std::endl;
             }
 
-            else if (tokens[2] == "Threads") {
-                engine->num_threads = std::clamp(std::stoi(tokens[4]), 1, 1024);
-                engine->thread_states.resize(engine->num_threads);
-            }
-
-            else if (tokens[2] == "UCI_Chess960") {
-                engine->thread_states[0].position.fischer_random_chess = tokens[4] == "true";
-            }
-
-            else if (tokens[2] == "UCI_ShowWDL") {
-                engine->show_wdl = tokens[4] == "true";
-            }
-
-            else if (tokens[2] == "UseNNUE") {
-                engine->use_nnue = tokens[4] == "true";
-            }
-
-            else if (tokens[2] == "MultiPV") {
-                engine->multi_pv = std::clamp(std::stoi(tokens[4]), 1, 256);
-            }
-
             else if (tokens[2] == "Move" && tokens[3] == "Overhead") {
                 engine->move_overhead = std::stoi(tokens[5]);
             }
@@ -271,7 +237,7 @@ void UCI::uci_loop() {
         }
 
         else if (msg == "ucinewgame") {
-            Position& position = engine->thread_states[0].position;
+            Position& position = engine->main_thread.position;
             position.set_fen(START_FEN);
             engine->new_game();
         }
@@ -284,17 +250,6 @@ void UCI::uci_loop() {
             parse_go();
         }
 
-        else if (tokens[0] == "bench") {
-            run_bench(*engine, BENCH_DEPTH);
-        }
-
-        else if (tokens[0] == "stats") {
-
-#ifdef SHOW_STATISTICS
-            print_statistics(engine->search_results);
-#endif
-        }
-
         else if (tokens[0] == "search_tune_config") {
 #ifdef DO_SEARCH_TUNING
             print_search_tuning_config();
@@ -302,19 +257,13 @@ void UCI::uci_loop() {
         }
 
         else if (tokens[0] == "evaluate") {
-            SCORE_TYPE evaluation = engine->use_nnue ? engine->evaluate<USE_NNUE>(0) :
-                                                       engine->evaluate<NO_NNUE >(0);
+            SCORE_TYPE evaluation = engine->evaluate();
             std::cout << evaluation << std::endl;
         }
 
-        else if (tokens[0] == "see") {
-            Position& position = engine->thread_states[0].position;
-            std::cout << get_static_exchange_evaluation(position, Move(position, tokens[1]), 1) << std::endl;
-        }
-
         else if (tokens[0] == "fen") {
-            Position& position = engine->thread_states[0].position;
-            std::cout << position.get_fen(engine->thread_states[0].fifty_move) << std::endl;
+            Position& position = engine->main_thread.position;
+            std::cout << position.get_fen(engine->main_thread.fifty_move) << std::endl;
         }
     }
 }

@@ -6,9 +6,6 @@
 #include <array>
 #include "bitboard.h"
 
-constexpr size_t ROOK_TABLE_SIZE = 4096;
-constexpr size_t BISHOP_TABLE_SIZE = 512;
-
 static constexpr std::array<BITBOARD, N_SQUARES> WHITE_PAWN_ATTACKS = {
         0x200, 0x500, 0xa00, 0x1400,
         0x2800, 0x5000, 0xa000, 0x4000,
@@ -86,73 +83,6 @@ static constexpr std::array<BITBOARD, N_SQUARES> KING_ATTACKS = {
 };
 
 
-
-// Shifts used in slider attack table generation
-static constexpr std::array<int32_t, N_SQUARES> BISHOP_SHIFTS = {
-        58, 59, 59, 59, 59, 59, 59, 58,
-        59, 59, 59, 59, 59, 59, 59, 59,
-        59, 59, 57, 57, 57, 57, 59, 59,
-        59, 59, 57, 55, 55, 57, 59, 59,
-        59, 59, 57, 55, 55, 57, 59, 59,
-        59, 59, 57, 57, 57, 57, 59, 59,
-        59, 59, 59, 59, 59, 59, 59, 59,
-        58, 59, 59, 59, 59, 59, 59, 58,
-};
-
-static constexpr std::array<int32_t, N_SQUARES> ROOK_SHIFTS = {
-        52, 53, 53, 53, 53, 53, 53, 52,
-        53, 54, 54, 54, 54, 54, 54, 53,
-        53, 54, 54, 54, 54, 54, 54, 53,
-        53, 54, 54, 54, 54, 54, 54, 53,
-        53, 54, 54, 54, 54, 54, 54, 53,
-        53, 54, 54, 54, 54, 54, 54, 53,
-        53, 54, 54, 54, 54, 54, 54, 53,
-        52, 53, 53, 53, 53, 53, 53, 52,
-};
-
-
-
-// Magic hashes for bishops
-static constexpr std::array<BITBOARD, N_SQUARES> BISHOP_MAGICS = {
-        0x0002020202020200, 0x0002020202020000, 0x0004010202000000, 0x0004040080000000,
-        0x0001104000000000, 0x0000821040000000, 0x0000410410400000, 0x0000104104104000,
-        0x0000040404040400, 0x0000020202020200, 0x0000040102020000, 0x0000040400800000,
-        0x0000011040000000, 0x0000008210400000, 0x0000004104104000, 0x0000002082082000,
-        0x0004000808080800, 0x0002000404040400, 0x0001000202020200, 0x0000800802004000,
-        0x0000800400A00000, 0x0000200100884000, 0x0000400082082000, 0x0000200041041000,
-        0x0002080010101000, 0x0001040008080800, 0x0000208004010400, 0x0000404004010200,
-        0x0000840000802000, 0x0000404002011000, 0x0000808001041000, 0x0000404000820800,
-        0x0001041000202000, 0x0000820800101000, 0x0000104400080800, 0x0000020080080080,
-        0x0000404040040100, 0x0000808100020100, 0x0001010100020800, 0x0000808080010400,
-        0x0000820820004000, 0x0000410410002000, 0x0000082088001000, 0x0000002011000800,
-        0x0000080100400400, 0x0001010101000200, 0x0002020202000400, 0x0001010101000200,
-        0x0000410410400000, 0x0000208208200000, 0x0000002084100000, 0x0000000020880000,
-        0x0000001002020000, 0x0000040408020000, 0x0004040404040000, 0x0002020202020000,
-        0x0000104104104000, 0x0000002082082000, 0x0000000020841000, 0x0000000000208800,
-        0x0000000010020200, 0x0000000404080200, 0x0000040404040400, 0x0002020202020200
-};
-
-// Magic hashes for rooks
-static constexpr std::array<BITBOARD, N_SQUARES> ROOK_MAGICS = {
-        0x0080001020400080, 0x0040001000200040, 0x0080081000200080, 0x0080040800100080,
-        0x0080020400080080, 0x0080010200040080, 0x0080008001000200, 0x0080002040800100,
-        0x0000800020400080, 0x0000400020005000, 0x0000801000200080, 0x0000800800100080,
-        0x0000800400080080, 0x0000800200040080, 0x0000800100020080, 0x0000800040800100,
-        0x0000208000400080, 0x0000404000201000, 0x0000808010002000, 0x0000808008001000,
-        0x0000808004000800, 0x0000808002000400, 0x0000010100020004, 0x0000020000408104,
-        0x0000208080004000, 0x0000200040005000, 0x0000100080200080, 0x0000080080100080,
-        0x0000040080080080, 0x0000020080040080, 0x0000010080800200, 0x0000800080004100,
-        0x0000204000800080, 0x0000200040401000, 0x0000100080802000, 0x0000080080801000,
-        0x0000040080800800, 0x0000020080800400, 0x0000020001010004, 0x0000800040800100,
-        0x0000204000808000, 0x0000200040008080, 0x0000100020008080, 0x0000080010008080,
-        0x0000040008008080, 0x0000020004008080, 0x0000010002008080, 0x0000004081020004,
-        0x0000204000800080, 0x0000200040008080, 0x0000100020008080, 0x0000080010008080,
-        0x0000040008008080, 0x0000020004008080, 0x0000800100020080, 0x0000800041000080,
-        0x00FFFCDDFCED714A, 0x007FFCDDFCED714A, 0x003FFFCDFFD88096, 0x0000040810002101,
-        0x0001000204080011, 0x0001000204000801, 0x0001000082000401, 0x0001FFFAABFAD1A2
-};
-
-
 // Get the edge opposite of a direction for calculating
 [[nodiscard]] constexpr BITBOARD board_edge(Direction D) {
     if (D == NORTH) return MASK_RANK[RANK_8];
@@ -187,99 +117,19 @@ template<Direction D>
     return attacks;
 }
 
-[[nodiscard]] constexpr std::array<BITBOARD, N_SQUARES> generate_bishop_relevant_blockers() {
-    std::array<BITBOARD, N_SQUARES> bishop_attack_masks{};
-    for (int square = a1; square < N_SQUARES; square++) {
-        BITBOARD edges = board_edge(NORTH) | board_edge(SOUTH) | board_edge(EAST) | board_edge(WEST);
 
-        BITBOARD empty_board_bishop_attacks = MASK_DIAGONAL[diagonal_of(static_cast<Square>(square))] ^
-                                              MASK_ANTI_DIAGONAL[anti_diagonal_of(static_cast<Square>(square))];
-
-        bishop_attack_masks[square] = empty_board_bishop_attacks & ~edges;
-    }
-    return bishop_attack_masks;
-}
-
-[[nodiscard]] constexpr std::array<BITBOARD, N_SQUARES> generate_rook_relevant_blockers() {
-    std::array<BITBOARD, N_SQUARES> rook_attack_masks{};
-    for (int square = a1; square < N_SQUARES; square++) {
-        BITBOARD edges = 	((board_edge(NORTH) | board_edge(SOUTH)) & ~MASK_RANK[rank_of(static_cast<Square>(square))]) |
-                            ((board_edge(EAST)  | board_edge(WEST))  & ~MASK_FILE[file_of(static_cast<Square>(square))]);
-
-        BITBOARD empty_board_rook_attacks = MASK_RANK[rank_of(static_cast<Square>(square))] ^
-                                            MASK_FILE[file_of(static_cast<Square>(square))];
-
-        rook_attack_masks[square] = empty_board_rook_attacks & ~edges;
-    }
-    return rook_attack_masks;
-}
-
-static constexpr auto bishop_relevant_blockers = generate_bishop_relevant_blockers();
-static constexpr auto rook_relevant_blockers = generate_rook_relevant_blockers();
-
-[[nodiscard]] constexpr BITBOARD generate_slow_bishop_attacks(Square square, BITBOARD occupancy) {
+[[nodiscard]] constexpr BITBOARD get_bishop_attacks(Square square, BITBOARD occupancy) {
     return generate_slow_sliding_attacks<NORTH_EAST>(square, occupancy) |
            generate_slow_sliding_attacks<NORTH_WEST>(square, occupancy) |
            generate_slow_sliding_attacks<SOUTH_EAST>(square, occupancy) |
            generate_slow_sliding_attacks<SOUTH_WEST>(square, occupancy);
 }
 
-[[nodiscard]] constexpr BITBOARD generate_slow_rook_attacks(Square square, BITBOARD occupancy) {
+[[nodiscard]] constexpr BITBOARD get_rook_attacks(Square square, BITBOARD occupancy) {
     return generate_slow_sliding_attacks<NORTH>(square, occupancy) |
            generate_slow_sliding_attacks<SOUTH>(square, occupancy) |
            generate_slow_sliding_attacks<EAST>(square, occupancy) |
            generate_slow_sliding_attacks<WEST>(square, occupancy);
-}
-
-[[nodiscard]] constexpr std::array<std::array<BITBOARD, BISHOP_TABLE_SIZE>, N_SQUARES> generate_bishop_attack_table() {
-    std::array<std::array<BITBOARD, BISHOP_TABLE_SIZE>, N_SQUARES> bishop_attack_table{};
-    BITBOARD subset{}, index{};
-
-    for (int square = a1; square < N_SQUARES; square++) {
-
-        // Find subsets using the Carry-Rippler method
-        subset = 0;
-        do {
-            index = subset;
-            index = index * BISHOP_MAGICS[square];
-            index = index >> BISHOP_SHIFTS[square];
-            bishop_attack_table[square][index] = generate_slow_bishop_attacks(static_cast<Square>(square), subset);
-            subset = (subset - bishop_relevant_blockers[square]) & bishop_relevant_blockers[square];
-        } while (subset);
-    }
-    return bishop_attack_table;
-}
-
-[[nodiscard]] constexpr std::array<std::array<BITBOARD, ROOK_TABLE_SIZE>, N_SQUARES> generate_rook_attack_table() {
-    std::array<std::array<BITBOARD, ROOK_TABLE_SIZE>, N_SQUARES> rook_attack_table{};
-    BITBOARD subset{}, index{};
-
-    for (int square = a1; square < N_SQUARES; square++) {
-
-        // Find subsets using the Carry-Rippler method
-        subset = 0;
-        do {
-            index = subset;
-            index = index * ROOK_MAGICS[square];
-            index = index >> ROOK_SHIFTS[square];
-            rook_attack_table[square][index] = generate_slow_rook_attacks(static_cast<Square>(square), subset);
-            subset = (subset - rook_relevant_blockers[square]) & rook_relevant_blockers[square];
-        } while (subset);
-    }
-    return rook_attack_table;
-}
-
-static const auto bishop_attack_table = generate_bishop_attack_table();
-static const auto rook_attack_table = generate_rook_attack_table();
-
-constexpr BITBOARD get_bishop_attacks(Square square, BITBOARD occupancy) {
-    size_t index = ((occupancy & bishop_relevant_blockers[square]) * BISHOP_MAGICS[square]) >> BISHOP_SHIFTS[square];
-    return bishop_attack_table[square][index];
-}
-
-constexpr BITBOARD get_rook_attacks(Square square, BITBOARD occupancy) {
-    size_t index = ((occupancy & rook_relevant_blockers[square]) * ROOK_MAGICS[square]) >> ROOK_SHIFTS[square];
-    return rook_attack_table[square][index];
 }
 
 constexpr BITBOARD get_queen_attacks(Square square, BITBOARD occupancy) {

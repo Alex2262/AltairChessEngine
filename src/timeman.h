@@ -12,4 +12,4 @@
 
 double position_time_scale(Position& position);
 
-void time_handler(Engine& engine, double self_time, double inc, double movetime, long movestogo);
+void time_handler(Engine& engine, double self_time, double inc, double movetime);

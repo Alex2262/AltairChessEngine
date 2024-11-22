@@ -22,14 +22,13 @@ enum class MO_Margin : SCORE_TYPE {
     castle = 1200
 };
 
-SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
-                      InformativeMove last_moves[]);
+SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move);
 
 template<bool qsearch>
 SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, int& good_capture_count);
 
 void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
-                     Move tt_move, InformativeMove last_moves[], int start_index);
+                     Move tt_move, int start_index);
 
 template<bool qsearch>
 void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
@@ -65,7 +64,6 @@ public:
 
     Thread_State *thread_state;
     Position *position;
-    InformativeMove last_moves[LAST_MOVE_COUNTS]{};
 
     int stage = Stage::TT_probe;
     int move_index = 0;
@@ -75,7 +73,7 @@ public:
     PLY_TYPE search_ply = 0;
 
     void reset_qsearch(Move tt_move_passed);
-    void reset_negamax(Move tt_move_passed, InformativeMove last_moves_passed[]);
+    void reset_negamax(Move tt_move_passed);
 
     template<Filter filter>
     inline ScoredMove sort_next_move() {
@@ -162,7 +160,7 @@ public:
             assert(!qsearch);
 
             position->get_pseudo_legal_moves<Movegen::Quiet, false>(current_scored_moves);
-            get_q_bn_scores(*thread_state, current_scored_moves, tt_move, last_moves, move_index);
+            get_q_bn_scores(*thread_state, current_scored_moves, tt_move, move_index);
 
             stage = Stage::Q_BN;
         }

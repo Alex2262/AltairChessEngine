@@ -1,7 +1,6 @@
 
 #include <stdexcept>
 #include <iostream>
-#include <bitset>
 #include <regex>
 #include "position.h"
 #include "useful.h"
@@ -27,11 +26,6 @@ void Position::clear_state_stack() {
         state.current_castle_ability_bits = 0;
         state.current_fifty_move = 0;
         state.excluded_move = NO_MOVE;
-
-        state.activations.clear();
-        state.deactivations.clear();
-        state.king_bucket_update = {};
-        state.NNUE_pushed = false;
     }
 }
 
@@ -261,8 +255,6 @@ FenInfo Position::set_fen(const std::string& fen_string) {
     compute_hash_key();
     compute_threats();
 
-    nnue_state.reset_nnue(*this);
-
     FenInfo fen_info = FenInfo{static_cast<PLY_TYPE>(std::stoi(half_move_clock)),
                                static_cast<PLY_TYPE>(std::stoi(full_move_counter))};
 
@@ -379,12 +371,6 @@ void Position::set_dfrc(int index) {
     set_frc_side(BLACK, index / 960);
 
     compute_hash_key();
-    nnue_state.reset_nnue(*this);
-}
-
-
-void Position::ensure_stable() {
-    nnue_state.reset_nnue(*this);
 }
 
 
@@ -592,7 +578,6 @@ void Position::make_null_move(State& state, PLY_TYPE& fifty_move) {
     hash_key ^= ZobristHashKeys.side_hash_key;
 
     state.move = NO_INFORMATIVE_MOVE;
-    state.NNUE_pushed = false;
 
     if (ep_square != NO_SQUARE) {
         hash_key ^= ZobristHashKeys.ep_hash_keys[ep_square];
@@ -626,7 +611,6 @@ void Position::undo_null_move(State& state, PLY_TYPE& fifty_move) {
 }
 
 
-template<bool NNUE>
 bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
 
     Square castled_pos[2] = {NO_SQUARE, NO_SQUARE};
@@ -643,14 +627,6 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
 
     state.move = InformativeMove(move, selected, occupied);
 
-    state.NNUE_pushed = false;
-
-    if constexpr (NNUE) {
-        state.activations.clear();
-        state.deactivations.clear();
-        state.king_bucket_update = {};
-    }
-
     bool legal = true;
 
     fifty_move++;
@@ -658,7 +634,6 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     // Handle captures
     if (move.is_capture(*this)) {
         remove_piece(occupied, target_square);
-        if constexpr (NNUE) state.deactivations.push_back({occupied, target_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
         if (occupied_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
         else np_hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
@@ -671,7 +646,6 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     // -- Make the actual pseudo-legal move --
     if (move_type == MOVE_TYPE_NORMAL) {
         place_piece(selected, target_square);
-        if constexpr (NNUE) state.activations.push_back({selected, target_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
         if (selected_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
         else np_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
@@ -681,13 +655,11 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
 
     else if (move_type == MOVE_TYPE_EP) {
         place_piece(selected, target_square);
-        if constexpr (NNUE) state.activations.push_back({selected, target_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
         pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
 
         // Find and remove the captured EP pawn
         auto captured_square = static_cast<Square>(target_square + static_cast<Square>(side == WHITE ? SOUTH : NORTH));
-        if constexpr (NNUE) state.deactivations.push_back({board[captured_square], captured_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[board[captured_square]][captured_square];
         pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[board[captured_square]][captured_square];
         remove_piece(board[captured_square], captured_square);
@@ -707,8 +679,6 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
 
         // Move the Rook
         if (castled_pos[0] != castled_pos[1]) {
-            if constexpr (NNUE) state.deactivations.push_back({board[castled_pos[0]], castled_pos[0]});
-            if constexpr (NNUE) state.activations.push_back({board[castled_pos[0]], castled_pos[1]});
             hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[0]];
             hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[1]];
             np_hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[0]];
@@ -722,7 +692,6 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
         // Move the king now (after moving the rook due to FRC edge-cases where the king and rook swap places)
         if (origin_square != target_square) {
             place_piece(selected, target_square);
-            if constexpr (NNUE) state.activations.push_back({selected, target_square});
             hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
             np_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
             major_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
@@ -732,7 +701,6 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     else if (move_type == MOVE_TYPE_PROMOTION) {
         auto promotion_piece = static_cast<Piece>(move.promotion_type() + 1 + side * COLOR_OFFSET);
         place_piece(promotion_piece, target_square);
-        if constexpr (NNUE) state.activations.push_back({promotion_piece, target_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[promotion_piece][target_square];
         np_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
         if (is_major(promotion_piece)) major_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
@@ -744,7 +712,6 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     if (target_square != origin_square) {
         remove_piece(selected, origin_square);
 
-        if constexpr (NNUE) state.deactivations.push_back({selected, origin_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
         if (selected_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
         else np_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
@@ -811,24 +778,9 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     if (selected == WHITE_KING) {
         castle_ability_bits &= ~(1 << 0);
         castle_ability_bits &= ~(1 << 1);
-
-        int king_bucket = KING_BUCKET_MAP[target_square];
-        if (king_bucket != nnue_state.current_accumulator->king_buckets[side]) {
-            state.king_bucket_update.update_necessary = true;
-            state.king_bucket_update.side = WHITE;
-            state.king_bucket_update.bucket = king_bucket;
-        }
-
     } else if (selected == BLACK_KING) {
         castle_ability_bits &= ~(1 << 2);
         castle_ability_bits &= ~(1 << 3);
-
-        int king_bucket = KING_BUCKET_MAP[target_square ^ 56];
-        if (king_bucket != nnue_state.current_accumulator->king_buckets[side]) {
-            state.king_bucket_update.update_necessary = true;
-            state.king_bucket_update.side = BLACK;
-            state.king_bucket_update.bucket = king_bucket;
-        }
     }
 
     // Rook moves or is captured
@@ -858,10 +810,6 @@ bool Position::make_move(Move move, State& state, PLY_TYPE& fifty_move) {
     return true;
 }
 
-template bool Position::make_move<USE_NNUE>(Move move, State& state, PLY_TYPE& fifty_move);
-template bool Position::make_move<NO_NNUE >(Move move, State& state, PLY_TYPE& fifty_move);
-
-template<bool NNUE>
 void Position::undo_move(Move move, State& state, PLY_TYPE& fifty_move) {
 
     Square castled_pos[2] = {NO_SQUARE, NO_SQUARE};
@@ -872,8 +820,6 @@ void Position::undo_move(Move move, State& state, PLY_TYPE& fifty_move) {
     Piece selected = state.move.selected();
     Piece occupied = state.move.occupied();
     MoveType move_type = move.type();
-
-    if (state.NNUE_pushed) nnue_state.pop();
 
     // Reset certain information
     side = get_color(selected);
@@ -926,31 +872,3 @@ void Position::undo_move(Move move, State& state, PLY_TYPE& fifty_move) {
     all_pieces = get_all_pieces();
     empty_squares = get_empty_squares();
 }
-
-template void Position::undo_move<USE_NNUE>(Move move, State& state, PLY_TYPE& fifty_move);
-template void Position::undo_move<NO_NNUE >(Move move, State& state, PLY_TYPE& fifty_move);
-
-void Position::update_nnue(State& state) {
-    state.NNUE_pushed = true;
-    nnue_state.push();
-
-    Color bucket_side = state.king_bucket_update.side;
-
-    if (state.king_bucket_update.update_necessary) {
-        nnue_state.current_accumulator->king_buckets[bucket_side] = state.king_bucket_update.bucket;
-        nnue_state.reset_side(*this, bucket_side);
-    }
-
-    for (NNUpdate& nn_update : state.activations) {
-        if (state.king_bucket_update.update_necessary)
-            nnue_state.update_feature_side<ACTIVATE>(nn_update.piece, nn_update.square, ~bucket_side);
-        else nnue_state.update_feature<ACTIVATE>(nn_update.piece, nn_update.square);
-    }
-
-    for (NNUpdate& nn_update : state.deactivations) {
-        if (state.king_bucket_update.update_necessary)
-            nnue_state.update_feature_side<DEACTIVATE>(nn_update.piece, nn_update.square, ~bucket_side);
-        else nnue_state.update_feature<DEACTIVATE>(nn_update.piece, nn_update.square);
-    }
-}
-

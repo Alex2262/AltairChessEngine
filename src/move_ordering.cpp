@@ -5,8 +5,7 @@
 #include "see.h"
 #include "search.h"
 
-SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
-                      InformativeMove last_moves[]) {
+SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move) {
     assert(move != NO_MOVE);
 
     if (move == tt_move) return static_cast<SCORE_TYPE>(MO_Margin::TT);
@@ -57,12 +56,6 @@ SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
         score += thread_state.history_moves[selected][move.target()]
                                            [(position.threats >> move.origin()) & 1]
                                            [(position.threats >> move.target()) & 1];
-
-        for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
-            if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
-                score += thread_state.get_continuation_history_entry(last_moves[last_move_index], informative_move);
-            }
-        }
     }
 
     return score;
@@ -124,10 +117,10 @@ template SCORE_TYPE score_capture<true >(Thread_State& thread_state, ScoredMove&
 template SCORE_TYPE score_capture<false>(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, int& good_capture_count);
 
 void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
-                     Move tt_move, InformativeMove last_moves[], int start_index) {
+                     Move tt_move, int start_index) {
     for (int i = start_index; i < static_cast<int>(current_scored_moves.size()); i++) {
         ScoredMove& scored_move = current_scored_moves[i];
-        scored_move.score = score_q_bn(thread_state, scored_move.move, tt_move, last_moves);
+        scored_move.score = score_q_bn(thread_state, scored_move.move, tt_move);
     }
 }
 
@@ -158,14 +151,10 @@ void Generator::reset_qsearch(Move tt_move_passed) {
     move_index = 0;
 }
 
-void Generator::reset_negamax(Move tt_move_passed, InformativeMove last_moves_passed[]) {
+void Generator::reset_negamax(Move tt_move_passed) {
 
     stage = Stage::TT_probe;
     tt_move = tt_move_passed;
 
     move_index = 0;
-
-    for (int last_move_i = 0; last_move_i < LAST_MOVE_COUNTS; last_move_i++) {
-        last_moves[last_move_i] = last_moves_passed[last_move_i];
-    }
 }
