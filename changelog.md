@@ -6852,3 +6852,70 @@ Games | N: 8048 W: 2067 L: 1923 D: 4058
 Penta | [43, 927, 1968, 1015, 71]
 https://chess.swehosting.se/test/7467/
 ```
+
+### 7.1.6
+Threat History
+
+```
+Elo   | 5.87 +- 4.79 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.90 (-2.25, 2.89) [0.00, 4.00]
+Games | N: 9880 W: 2504 L: 2337 D: 5039
+Penta | [51, 1134, 2427, 1253, 75]
+```
+
+### 7.1.7
+Fail Firm RFP
+
+```
+Elo   | 2.93 +- 2.96 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.91 (-2.25, 2.89) [0.00, 4.00]
+Games | N: 25636 W: 6336 L: 6120 D: 13180
+Penta | [143, 3010, 6337, 3144, 184]
+```
+
+### 7.1.8
+Non-pawn Correction History
+
+```
+Elo   | 3.30 +- 3.25 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.91 (-2.25, 2.89) [0.00, 4.00]
+Games | N: 20922 W: 5113 L: 4914 D: 10895
+Penta | [122, 2385, 5242, 2596, 116]
+```
+
+### 7.1.9
+Major Piece Correction History
+
+```
+Elo   | 6.84 +- 5.23 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.93 (-2.25, 2.89) [0.00, 4.00]
+Games | N: 8280 W: 2110 L: 1947 D: 4223
+Penta | [48, 914, 2069, 1045, 64]
+```
+
+### 7.2.0
+Minor Piece Correction History
+
+```
+Elo   | 7.74 +- 5.71 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.94 (-2.25, 2.89) [0.00, 4.00]
+Games | N: 7008 W: 1805 L: 1649 D: 3554
+Penta | [30, 767, 1762, 907, 38]
+```
+
+### 7.2.1
+Hash Key Fixes
+
+```
+Elo   | 0.25 +- 3.10 (95%)
+SPRT  | 8.0+0.08s Threads=1 Hash=32MB
+LLR   | 2.90 (-2.25, 2.89) [-5.00, 0.00]
+Games | N: 23564 W: 5792 L: 5775 D: 11997
+Penta | [135, 2781, 5941, 2782, 143]
+```
+
