@@ -1001,9 +1001,6 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
             // Scale reductions based on how many moves have already raised alpha
             reduction += static_cast<int>(static_cast<double>(alpha_raised_count) * (0.5 + 0.5 * tt_move_noisy));
 
-            // My idea that in a null move search you can be more aggressive with LMR
-            reduction += null_search;
-
             // Reduce more on cutnodes
             reduction += cutnode;
 
