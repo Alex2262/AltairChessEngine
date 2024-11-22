@@ -43,19 +43,19 @@ struct Datagen_Thread {
 
 class Datagen {
 
-    const int max_fens          = 1'000'000'000;
-    const int soft_node_limit   =         6'800;
-    const int hard_node_limit   =        80'000;
-    const int max_time_per_move =           200;
+    const uint64_t max_fens     = 10'000'000'000;
+    const int soft_node_limit   =          6'000;
+    const int hard_node_limit   =        800'000;
+    const int max_time_per_move =            500;
 
-    const int initial_random_moves_dfrc     =     6;
+    const int initial_random_moves_dfrc     =     8;
     const int initial_random_moves_standard =     8;
     const int opening_max_score             =  1100;
     const int dfrc_chance                   =    80; // Out of 100
     // const uint64_t opening_chance        =   100;  // Out of 100
 
-    const int win_adjudication_score   = 2000;
-    const int win_adjudication_length  =    3;
+    const int win_adjudication_score   = 2500;
+    const int win_adjudication_length  =    5;
 
     const int minimum_game_length = 15;
     const int fens_per_game       =  0;  // 0 for using all fens
