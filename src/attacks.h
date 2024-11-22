@@ -121,7 +121,7 @@ constexpr BITBOARD get_regular_piece_type_attacks(Square square, BITBOARD occupa
 }
 
 
-consteval std::array<std::array<BITBOARD, 64>, 2> generate_passed_pawn_masks() {
+constexpr std::array<std::array<BITBOARD, 64>, 2> generate_passed_pawn_masks() {
     std::array<std::array<BITBOARD, 64>, 2> masks{};
 
     for (int i = 0; i < 64; i++) {
