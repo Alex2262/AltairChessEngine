@@ -3,6 +3,7 @@
 #ifndef ALTAIR_UCI_H
 #define ALTAIR_UCI_H
 
+#include <memory>
 #include <vector>
 #include "position.h"
 #include "search.h"
