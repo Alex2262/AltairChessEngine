@@ -33,9 +33,6 @@ Square get_black_relative_square(Square square, Color color);
 
 SCORE_TYPE evaluate_king_pawn(File file, Color color, EvaluationInformation& evaluation_information);
 
-SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color, int& game_phase);
-SCORE_TYPE evaluate_pieces(Position& position, int& game_phase);
-
 double evaluate_drawishness(Position& position, EvaluationInformation& evaluation_information);
 double evaluate_opposite_colored_bishop_endgames(Position& position, EvaluationInformation& evaluation_information);
 

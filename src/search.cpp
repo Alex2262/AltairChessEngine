@@ -434,7 +434,7 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     // Search loop
     for (generator.reset_qsearch(tt_move); generator.stage != Stage::Terminated;) {
-        ScoredMove scored_move = generator.next_move<true>();
+        ScoredMove scored_move = generator.next_move(true);
         Move move = scored_move.move;
 
         bool winning_capture = scored_move.winning_capture;
@@ -713,7 +713,7 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
     for (generator.reset_negamax(tt_move); generator.stage != Stage::Terminated;) {
 
-        ScoredMove scored_move = generator.next_move<false>();
+        ScoredMove scored_move = generator.next_move(false);
         Move       move        = scored_move.move;
 
         if (move == NO_MOVE) break;
