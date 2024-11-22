@@ -8,7 +8,6 @@
 #include "move.h"
 #include "search.h"
 #include "evaluation.h"
-#include "see.h"
 #include "timeman.h"
 
 void UCI::initialize_uci() const {
@@ -128,17 +127,7 @@ void UCI::parse_go() {
 
     if (d) engine->max_depth = d;
 
-    engine->stopped = true;
-    if (!search_threads.empty()) {
-        search_threads[0].join();
-
-        while (!engine->main_thread.terminated);  // to prevent some stupid exceptions
-        if (engine->main_thread.terminated) search_threads.erase(search_threads.end() - 1);
-    }
-
-    search_threads.emplace_back(search, std::ref(*engine));
-
-    //iterative_search(engine, position);
+    search(*engine);
 }
 
 
@@ -156,12 +145,6 @@ void UCI::uci_loop() {
 
         if (msg == "stop") {
             engine->stopped = true;
-            if (!search_threads.empty()) {
-                search_threads[0].join();
-
-                while (!engine->main_thread.terminated);  // to prevent some stupid exceptions
-                if (engine->main_thread.terminated) search_threads.erase(search_threads.end() - 1);
-            }
         }
 
         else if (msg == "uci") {

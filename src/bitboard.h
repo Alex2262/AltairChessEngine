@@ -62,8 +62,8 @@ template<Direction D>
 constexpr BITBOARD shift(BITBOARD b) {
     if constexpr (D == NORTH) return b << 8;
     else if constexpr (D == SOUTH) return b >> 8;
-    else if constexpr (D == NORTH + NORTH) return b << 16;
-    else if constexpr (D == SOUTH + SOUTH) return b >> 16;
+    else if constexpr (D == NORTH_NORTH) return b << 16;
+    else if constexpr (D == SOUTH_SOUTH) return b >> 16;
     else if constexpr (D == EAST) return (b & ~MASK_FILE[FILE_H]) << 1;
     else if constexpr (D == WEST) return (b & ~MASK_FILE[FILE_A]) >> 1;
     else if constexpr (D == NORTH_EAST) return (b & ~MASK_FILE[FILE_H]) << 9;

@@ -8,11 +8,11 @@
 BITBOARD get_all_attackers(Position& position, Square square) {
 
     // Treat square like a pawn
-    BITBOARD pawn_attackers = (WHITE_PAWN_ATTACKS[square] & position.get_pieces(PAWN, BLACK)) |
-            (BLACK_PAWN_ATTACKS[square] & position.get_pieces(PAWN, WHITE));
+    BITBOARD pawn_attackers = (get_pawn_attacks(square, WHITE) & position.get_pieces(PAWN, BLACK)) |
+            (get_pawn_attacks(square, BLACK)& position.get_pieces(PAWN, WHITE));
 
     // Treat square like a knight
-    BITBOARD knight_attackers = KNIGHT_ATTACKS[square] &
+    BITBOARD knight_attackers = get_knight_attacks(square) &
             (position.get_pieces(WHITE_KNIGHT) | position.get_pieces(BLACK_KNIGHT));
 
     // Treat square like a bishop
@@ -28,7 +28,7 @@ BITBOARD get_all_attackers(Position& position, Square square) {
     BITBOARD queen_attackers = (bishop_attacks | rook_attacks) &
             (position.get_pieces(WHITE_QUEEN) | position.get_pieces(BLACK_QUEEN));
 
-    BITBOARD king_attackers = KING_ATTACKS[square] &
+    BITBOARD king_attackers = get_king_attacks(square) &
             (position.get_pieces(WHITE_KING) | position.get_pieces(BLACK_KING));
 
     return pawn_attackers | knight_attackers | bishop_attackers | rook_attackers | queen_attackers | king_attackers;

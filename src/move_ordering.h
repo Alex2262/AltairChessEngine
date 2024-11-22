@@ -131,8 +131,8 @@ public:
             good_capture_count = 0;
             good_capture_found = 0;
 
-            if constexpr (qsearch) position->get_pseudo_legal_moves<Movegen::Qsearch, true>(current_scored_moves);
-            else position->get_pseudo_legal_moves<Movegen::Noisy, true>(current_scored_moves);
+            if constexpr (qsearch) position->get_pseudo_legal_moves(current_scored_moves, Movegen::Qsearch, true);
+            else position->get_pseudo_legal_moves(current_scored_moves, Movegen::Noisy, true);
 
             get_capture_scores<qsearch>(*thread_state, current_scored_moves, tt_move, good_capture_count);
             stage = Stage::Noisy;
@@ -159,7 +159,7 @@ public:
         if (stage == Stage::GenQ_BN) {
             assert(!qsearch);
 
-            position->get_pseudo_legal_moves<Movegen::Quiet, false>(current_scored_moves);
+            position->get_pseudo_legal_moves(current_scored_moves, Movegen::Quiet, false);
             get_q_bn_scores(*thread_state, current_scored_moves, tt_move, move_index);
 
             stage = Stage::Q_BN;

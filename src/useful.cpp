@@ -3,7 +3,6 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
-#include <cassert>
 #include "constants.h"
 #include "types.h"
 

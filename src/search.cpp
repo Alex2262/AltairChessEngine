@@ -1,12 +1,10 @@
 
 
-#include <thread>
 #include <chrono>
 #include <iostream>
 #include <cstring>
 #include <cmath>
 #include <algorithm>
-#include <cassert>
 #include "search.h"
 #include "evaluation.h"
 #include "move.h"
@@ -1280,7 +1278,7 @@ void search(Engine& engine) {
     engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
 
-    position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[0]);
+    position.get_pseudo_legal_moves(position.scored_moves[0], Movegen::All, true);
     position.set_state(position.state_stack[0], thread_state.fifty_move);
 
     for (ScoredMove scored_move : position.scored_moves[0]) {
