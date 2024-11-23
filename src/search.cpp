@@ -1104,6 +1104,7 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int pv
     printf(" pv ");
     printf(pv_line.c_str());
     printf("\n");
+    fflush(stdout);
 }
 
 SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move) {
@@ -1262,6 +1263,8 @@ void iterative_search(Engine& engine) {
 
     printf("bestmove ");
     printf(best_move_str.c_str());
+    printf("\n");
+    fflush(stdout);
 
     thread_state.terminated = true;
 }

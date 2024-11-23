@@ -111,6 +111,7 @@ void UCI::parse_go() {
 
     if (d) engine->max_depth = d;
 
+    engine->stopped = true;
     search(*engine);
 }
 
