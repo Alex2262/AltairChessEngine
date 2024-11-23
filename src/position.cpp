@@ -1,5 +1,8 @@
 
 #include <stdexcept>
+#include <algorithm>
+#include <string>
+#include <cctype>
 #include "position.h"
 #include "useful.h"
 #include "bitboard.h"
