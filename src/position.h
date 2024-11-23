@@ -150,8 +150,6 @@ public:
 
     void compute_threats();
 
-    friend std::ostream& operator<<(std::ostream& os, const Position& position);
-
 
     bool is_pseudo_legal(Move move);
 

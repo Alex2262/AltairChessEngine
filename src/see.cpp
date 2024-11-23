@@ -1,8 +1,6 @@
 
 
 #include <vector>
-#include <utility>
-#include <iostream>
 #include "see.h"
 
 BITBOARD get_all_attackers(Position& position, Square square) {

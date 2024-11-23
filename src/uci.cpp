@@ -1,6 +1,5 @@
 
 
-#include <iostream>
 #include <algorithm>
 #include <cmath>
 #include "uci.h"
@@ -33,21 +32,6 @@ void UCI::parse_position() {
     if (tokens[1] == "startpos") {
         fen_info = position.set_fen(START_FEN);
         next_idx = 2;
-    }
-
-    else if (tokens[1] == "dfrc") {
-        if (!position.fischer_random_chess) {
-            std::cout << "Fischer Random Chess not enabled" << std::endl;
-            return;
-        }
-
-        fen_info = position.set_fen(START_FEN);
-
-        int dfrc_index = std::stoi(tokens[2]);
-        position.set_dfrc(dfrc_index);
-        next_idx = 3;
-
-        std::cout << position << std::endl;
     }
 
     else if (tokens[1] == "fen") {
@@ -133,8 +117,17 @@ void UCI::parse_go() {
 
 void UCI::uci_loop() {
 
-    std::cout << std::string(ENGINE_NAME) + " " + std::string(ENGINE_VERSION) + " by " + std::string(ENGINE_AUTHOR) << std::endl;
-    while (getline(std::cin, msg)) {
+    printf(ENGINE_NAME);
+    printf(" ");
+    printf(ENGINE_VERSION);
+    printf(" by ");
+    printf(ENGINE_AUTHOR);
+    printf("\n");
+
+    char buffer[1024];
+
+    while (std::scanf(" %[^\n]", buffer) != EOF) {
+        msg = buffer;
         tokens.clear();
 
         tokens = split(msg, ' ');
@@ -145,78 +138,6 @@ void UCI::uci_loop() {
 
         if (msg == "stop") {
             engine->stopped = true;
-        }
-
-        else if (msg == "uci") {
-            std::cout << "id name " + std::string(ENGINE_NAME) + " " + std::string(ENGINE_VERSION) << std::endl;
-            std::cout << "id author Alexander Tian" << std::endl;
-
-            std::cout << "option name Hash type spin default " << DEFAULT_TT_SIZE << " min " << 1 << " max " << 24576
-                      << std::endl;
-
-            std::cout << "option name Threads type spin default " << 1 << " min " << 1 << " max " << 1024
-                      << std::endl;
-
-            std::cout << "option name UCI_Chess960 type check default false"
-                      << std::endl;
-
-            std::cout << "option name UCI_ShowWDL type check default false"
-                      << std::endl;
-
-            std::cout << "option name UseNNUE type check default true"
-                      << std::endl;
-
-            std::cout << "option name MultiPV type spin default " << 1 << " min " << 1 << " max " << 256
-                      << std::endl;
-
-            std::cout << "option name Move Overhead type spin default " << 50 << " min " << 0 << " max " << 1000
-                      << std::endl;
-
-#ifdef DO_SEARCH_TUNING
-            for (auto& param : search_params.all_parameters) {
-                std::cout << "option name " << param->name
-                          << " type spin default " << param->v
-                          << " min " << param->min
-                          << " max " << param->max
-                          << std::endl;
-
-            }
-#endif
-            std::cout << "uciok" << std::endl;
-        }
-
-        else if (tokens[0] == "setoption" && tokens.size() >= 5) {
-            if (tokens[2] == "Hash") {
-                int mb = std::stoi(tokens[4]);
-                mb = std::clamp<int>(mb, 1, 32768);
-
-                engine->resize_tt(mb);
-                std::cout << engine->transposition_table.size() << " number of hash entries initialized" << std::endl;
-            }
-
-            else if (tokens[2] == "Move" && tokens[3] == "Overhead") {
-                engine->move_overhead = std::stoi(tokens[5]);
-            }
-
-            else {
-#ifdef DO_SEARCH_TUNING
-                bool param_changed = false;
-                for (auto& param : search_params.all_parameters) {
-                    if (tokens[2] == param->name) {
-                        param->v = std::stoi(tokens[4]);
-                        param_changed = true;
-                    }
-                }
-
-                if (param_changed) {
-                    engine->initialize_lmr_reductions();
-                }
-#endif
-            }
-        }
-
-        else if (msg == "isready") {
-            std::cout << "readyok" << std::endl;
         }
 
         else if (msg == "ucinewgame") {
@@ -231,22 +152,6 @@ void UCI::uci_loop() {
 
         else if (tokens[0] == "go") {
             parse_go();
-        }
-
-        else if (tokens[0] == "search_tune_config") {
-#ifdef DO_SEARCH_TUNING
-            print_search_tuning_config();
-#endif
-        }
-
-        else if (tokens[0] == "evaluate") {
-            SCORE_TYPE evaluation = engine->evaluate();
-            std::cout << evaluation << std::endl;
-        }
-
-        else if (tokens[0] == "fen") {
-            Position& position = engine->main_thread.position;
-            std::cout << position.get_fen(engine->main_thread.fifty_move) << std::endl;
         }
     }
 }

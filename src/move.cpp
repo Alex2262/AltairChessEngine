@@ -1,5 +1,4 @@
 
-#include <iostream>
 #include "position.h"
 #include "move.h"
 

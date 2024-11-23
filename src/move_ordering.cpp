@@ -1,5 +1,4 @@
 
-#include <iostream>
 #include "evaluation_constants.h"
 #include "move_ordering.h"
 #include "see.h"

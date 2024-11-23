@@ -1,7 +1,6 @@
 
 
 #include <chrono>
-#include <iostream>
 #include <cstring>
 #include <cmath>
 #include <algorithm>
@@ -1098,14 +1097,13 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int pv
     position.side = original_side;
 
     // Print the UCI search information
-    std::cout << "info multipv " << pv_number + 1
-              << " depth " << depth
-              << " score " << string_score;
-
-    std::cout << " time " << elapsed_time
-              << " nodes " << total_nodes << " nps " << nps
-              << " pv " << pv_line << std::endl;
-
+    printf("info multipv %d depth %d", pv_number + 1, depth);
+    printf(" score ");
+    printf(string_score.c_str());
+    printf(" time %llu nodes %llu nps %llu", elapsed_time, total_nodes, nps);
+    printf(" pv ");
+    printf(pv_line.c_str());
+    printf("\n");
 }
 
 SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move) {
@@ -1261,7 +1259,9 @@ void iterative_search(Engine& engine) {
     uint64_t total_nodes = thread_state.node_count;
 
     std::string best_move_str = best_move.get_uci(position);
-    std::cout << "bestmove " << best_move_str << std::endl;
+
+    printf("bestmove ");
+    printf(best_move_str.c_str());
 
     thread_state.terminated = true;
 }
@@ -1290,18 +1290,3 @@ void search(Engine& engine) {
 
     iterative_search(engine);
 }
-
-
-
-void print_search_tuning_config() {
-    for (auto& param : search_params.all_parameters) {
-        std::cout << param->name << ", "
-                  << "int, "
-                  << param->v << ", "
-                  << param->min << ", "
-                  << param->max << ", "
-                  << param->step << ", "
-                  << learning_rate << std::endl;
-    }
-}
-

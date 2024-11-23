@@ -90,7 +90,6 @@ struct KingRing {
                             }
                         }
                     }
-                    //std::cout << i * 8 + j << " " << masks[rings-1][i * 8 + j] << std::endl;
                 }
             }
         }

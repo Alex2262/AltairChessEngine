@@ -3,7 +3,6 @@
 #ifndef ALTAIR_TYPES_H
 #define ALTAIR_TYPES_H
 
-#include <iostream>
 #include <cstdint>
 
 enum Color : int {

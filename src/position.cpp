@@ -1,7 +1,5 @@
 
 #include <stdexcept>
-#include <iostream>
-#include <regex>
 #include "position.h"
 #include "useful.h"
 #include "bitboard.h"
@@ -108,9 +106,28 @@ void Position::compute_hash_key() {
     }
 }
 
+std::string reduce_fen_string(const std::string &fen_string) {
+    std::string result = fen_string;
+
+    result.erase(result.begin(), std::find_if(result.begin(), result.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
+
+    result.erase(std::find_if(result.rbegin(), result.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), result.end());
+
+    auto new_end = std::unique(result.begin(), result.end(), [](char left, char right) {
+        return std::isspace(left) && std::isspace(right);
+    });
+    result.erase(new_end, result.end());
+
+    return result;
+}
+
 FenInfo Position::set_fen(const std::string& fen_string) {
 
-    std::string reduced_fen_string = std::regex_replace(fen_string, std::regex("^ +| +$|( ) +"), "$1");
+    std::string reduced_fen_string = reduce_fen_string(fen_string);
     std::vector<std::string> fen_tokens = split(reduced_fen_string, ' ');
 
     if (fen_tokens.size() < 4) {
@@ -370,46 +387,6 @@ void Position::compute_threats() {
     }
 
     threats |= get_regular_piece_type_attacks<KING>(get_king_pos(opp), occupancy);
-}
-
-
-std::ostream& operator << (std::ostream& os, const Position& position) {
-    std::string new_board;
-
-    auto pos = static_cast<Square>(56);
-    for (int i = 0; i < 64; i++) {
-        if (i != 0 && i % 8 == 0) {
-            new_board += '\n';
-            pos = static_cast<Square>(pos - 16);
-        }
-
-        Piece piece = position.board[pos];
-        pos = static_cast<Square>(pos + 1);
-
-        if (piece == EMPTY) {
-            new_board += ". ";
-            continue;
-        }
-
-        //assert((pieces[piece] & (1ULL << MAILBOX_TO_STANDARD[pos]) >> MAILBOX_TO_STANDARD[pos]) == 1);
-
-        new_board += PIECE_MATCHER[piece];
-        new_board += ' ';
-
-    }
-
-    os << new_board << std::endl << std::endl;
-    os << "side: " << position.side << " ep: " << position.ep_square << " castle: " << position.castle_ability_bits
-       << " hash: " << position.hash_key << std::endl << std::endl;
-
-    /*
-    for (int piece = WHITE_PAWN; piece < EMPTY; piece++) {
-        os << "Piece: " << piece << " bitboard: \n";
-        print_bitboard(position.pieces[piece]);
-    }
-    */
-
-    return os;
 }
 
 

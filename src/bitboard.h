@@ -36,8 +36,6 @@ constexpr std::array<BITBOARD, 15> MASK_ANTI_DIAGONAL= {
 };
 
 
-void print_bitboard(BITBOARD bitboard);
-
 constexpr inline BITBOARD from_square(Square square) {
     return 1ULL << square;
 }
