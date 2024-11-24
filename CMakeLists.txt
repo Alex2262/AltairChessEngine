@@ -3,7 +3,7 @@ project(AltairChessEngine)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Os -std=c++20 -DNDEBUG -flto -ffunction-sections -fdata-sections -fvisibility=hidden -fno-rtti -fno-exceptions -g0 -fmerge-all-constants -fshort-enums -fomit-frame-pointer -fno-asynchronous-unwind-tables -falign-functions=1 -fno-ident")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -std=c++20 -DNDEBUG -flto -ffunction-sections -fdata-sections -fvisibility=hidden -fno-rtti -fno-exceptions -g0 -fmerge-all-constants -fshort-enums -fomit-frame-pointer -fno-asynchronous-unwind-tables -falign-functions=1 -fno-ident")
 
 # Default build type
 if(NOT CMAKE_BUILD_TYPE)

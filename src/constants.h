@@ -31,7 +31,7 @@ constexpr SCORE_TYPE MATE_BOUND = 99000;
 
 #define MAX_AB_DEPTH        64
 #define TOTAL_MAX_DEPTH     128
-#define DEFAULT_TT_SIZE     2
+#define DEFAULT_TT_SIZE     3
 
 #define HASH_FLAG_NONE      0
 #define HASH_FLAG_UPPER     1

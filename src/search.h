@@ -14,7 +14,7 @@ constexpr double learning_rate = 0.002;
 
 constexpr int correction_history_grain = 256;
 constexpr int correction_history_weight_scale = 1024;
-constexpr int correction_history_size = 4096;
+constexpr int correction_history_size = 8192;
 constexpr int correction_history_max = correction_history_grain * 64;
 
 
