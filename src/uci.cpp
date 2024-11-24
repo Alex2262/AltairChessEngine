@@ -291,9 +291,7 @@ void UCI::uci_loop() {
         }
 
         else if (tokens[0] == "bench") {
-            printf("info time 1000\n");
-            printf("100000 nodes 1000000 nps\n");
-            fflush(stdout);
+            run_bench(*engine);
         }
     }
 }

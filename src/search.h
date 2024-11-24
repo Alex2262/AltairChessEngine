@@ -309,6 +309,8 @@ void search(Engine& engine);
 
 void print_search_tuning_config();
 
+void run_bench(Engine& engine);
+
 inline SearchParameters search_params{};
 
 #endif //ALTAIR_SEARCH_H

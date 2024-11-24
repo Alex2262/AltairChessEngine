@@ -1258,6 +1258,68 @@ void search(Engine& engine) {
     iterative_search(engine);
 }
 
+
+void run_bench(Engine& engine) {
+    std::array fens {
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ",
+            "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ",
+            "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
+            "r1r3k1/pb1nbppp/4p3/1p1pP2P/3p1B2/3P2P1/qPP1QPBN/2R1R1K1 w - - 0 18",
+            "r4bk1/pp4p1/2p5/4P1p1/4B3/2P1P2P/PP3K2/R7 w - - 0 1",
+            "r4rk1/1pq1bppp/p1bppn2/8/P3PP2/2NBB3/1PPQ2PP/R4R1K b - - 0 1",
+            "1B6/8/7P/4p3/3b3k/8/8/2K5 w - - 0 1"
+    };
+
+    PLY_TYPE depth = 14;
+
+    Position& position = engine.main_thread.position;
+
+    PLY_TYPE old_depth = engine.max_depth;
+    uint64_t old_soft = engine.soft_time_limit;
+    uint64_t old_hard = engine.hard_time_limit;
+
+    engine.max_depth = depth;
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+    engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
+
+    // Used for calculating statistics
+    uint64_t total_nodes = 0;
+
+    for (int fen_count = 0; fen_count < static_cast<int>(fens.size()); fen_count++) {
+
+        std::string fen = fens[fen_count];
+
+        engine.new_game();
+        position.set_fen(fen);
+
+        engine.soft_time_limit = TIME_INF;
+        engine.hard_time_limit = TIME_INF;
+
+        search(engine);
+
+        total_nodes += engine.main_thread.node_count;
+    }
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time
+                                                                        - start_time);
+    uint64_t elapsed_time = ms_int.count();
+    elapsed_time = std::max<uint64_t>(elapsed_time, 1);
+
+    printf("info time %llu\n", elapsed_time);
+    printf("%llu nodes %d nps\n", total_nodes, int(static_cast<double>(total_nodes) / (static_cast<double>(elapsed_time) / 1000.0)));
+    fflush(stdout);
+
+    engine.max_depth = old_depth;
+    engine.soft_time_limit = old_soft;
+    engine.hard_time_limit = old_hard;
+
+    position.set_fen(START_FEN);
+}
+
 void print_search_tuning_config() {
     for (auto& param : search_params.all_parameters) {
         printf("%s, int, %d, %d, %d, %d, %f\n", param->name.c_str(), param->v, param->min, param->max, param->step, learning_rate);
