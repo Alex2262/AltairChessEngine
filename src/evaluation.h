@@ -43,37 +43,15 @@ constexpr SCORE_TYPE S(int mg, int eg) {
     return static_cast<SCORE_TYPE>(static_cast<unsigned int>(eg) << 16) + mg;
 }
 
-inline int eg_score(SCORE_TYPE s) {
-    const auto eg = static_cast<uint16_t>(static_cast<uint32_t>(s + 0x8000) >> 16);
+int eg_score(SCORE_TYPE s);
 
-    int16_t v;
-    std::memcpy(&v, &eg, sizeof(eg));
+int mg_score(SCORE_TYPE s);
 
-    return static_cast<int>(v);
-}
+int get_manhattan_distance(Square square_1, Square square_2);
 
-inline int mg_score(SCORE_TYPE s) {
-    const auto mg = static_cast<uint16_t>(s);
+int get_chebyshev_distance(Square square_1, Square square_2);
 
-    int16_t v;
-    std::memcpy(&v, &mg, sizeof(mg));
-
-    return static_cast<int>(v);
-}
-
-inline int get_manhattan_distance(Square square_1, Square square_2) {
-    return abs(static_cast<int>(rank_of(square_1)) - static_cast<int>(rank_of(square_2))) +
-           abs(static_cast<int>(file_of(square_1)) - static_cast<int>(file_of(square_2)));
-}
-
-inline int get_chebyshev_distance(Square square_1, Square square_2) {
-    return std::max(abs(static_cast<int>(rank_of(square_1)) - static_cast<int>(rank_of(square_2))),
-                    abs(static_cast<int>(file_of(square_1)) - static_cast<int>(file_of(square_2))));
-}
-
-inline bool same_color (Square square_1, Square square_2) {
-    return (( 9 * (square_1 ^ square_2)) & 8) == 0;
-}
+bool same_color(Square square_1, Square square_2);
 
 template<int n>
 struct KingRing {

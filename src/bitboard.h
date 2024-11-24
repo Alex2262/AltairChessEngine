@@ -36,23 +36,23 @@ constexpr std::array<BITBOARD, 15> MASK_ANTI_DIAGONAL= {
 };
 
 
-constexpr inline BITBOARD from_square(Square square) {
+constexpr BITBOARD from_square(Square square) {
     return 1ULL << square;
 }
 
-constexpr inline File file_of(Square square) {
+constexpr File file_of(Square square) {
     return File(square & 0b111);  // square % 8
 }
 
-constexpr inline Rank rank_of(Square square) {
+constexpr Rank rank_of(Square square) {
     return Rank(square >> 3);  // square / 8
 }
 
-constexpr inline int32_t diagonal_of(Square s) {
+constexpr int32_t diagonal_of(Square s) {
     return 7 + rank_of(s) - file_of(s);
 }
 
-constexpr inline int32_t anti_diagonal_of(Square s) {
+constexpr int32_t anti_diagonal_of(Square s) {
     return rank_of(s) + file_of(s);
 }
 
@@ -84,7 +84,7 @@ constexpr BITBOARD fill(BITBOARD b) {
     }
 }
 
-constexpr inline BITBOARD fill(Direction D, BITBOARD b) {
+constexpr BITBOARD fill(Direction D, BITBOARD b) {
     if (D == NORTH) {
         b |= (b << 8);
         b |= (b << 16);

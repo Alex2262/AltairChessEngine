@@ -4,7 +4,6 @@
 #define ALTAIR_SEARCH_H
 
 #include <vector>
-#include <unordered_set>
 #include "position.h"
 #include "move_ordering.h"
 
@@ -185,7 +184,7 @@ class Thread_State {
 
 public:
 
-    inline Thread_State() {
+    Thread_State() {
         reset_generators();
     };
 
@@ -222,7 +221,7 @@ public:
     SCORE_TYPE get_correction_score(SCORE_TYPE& c_hist_entry);
     SCORE_TYPE correct_evaluation(SCORE_TYPE evaluation);
 
-    inline void reset_generators() {
+    void reset_generators() {
         for (int ply = 0; ply < static_cast<int>(generators.size()); ply++) {
             Generator& generator = generators[ply];
             generator = Generator(*this);
@@ -263,8 +262,6 @@ public:
 
     // TT_Entry transposition_table[MAX_TT_SIZE]{};
     std::vector<TT_Entry> transposition_table;
-
-    std::unordered_set<uint16_t> root_moves{};
 
     void clear_tt();
 

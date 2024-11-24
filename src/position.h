@@ -98,15 +98,15 @@ public:
 
     void set_state(State& state, PLY_TYPE fifty_move) const;
 
-    [[nodiscard]] inline BITBOARD get_pieces(Piece piece) const {
+    [[nodiscard]] BITBOARD get_pieces(Piece piece) const {
         return pieces[piece];
     }
 
-    [[nodiscard]] inline BITBOARD get_pieces(PieceType piece, Color color) const {
+    [[nodiscard]] BITBOARD get_pieces(PieceType piece, Color color) const {
         return pieces[piece + color * COLOR_OFFSET];
     }
 
-    [[nodiscard]] inline BITBOARD get_pieces(Color color) const {
+    [[nodiscard]] BITBOARD get_pieces(Color color) const {
         return get_pieces(PAWN, color) |
                get_pieces(KNIGHT, color) |
                get_pieces(BISHOP, color) |
@@ -115,19 +115,19 @@ public:
                get_pieces(KING, color);
     }
 
-    [[nodiscard]] inline BITBOARD get_our_pieces() const {
+    [[nodiscard]] BITBOARD get_our_pieces() const {
         return get_pieces(side);
     }
 
-    [[nodiscard]] inline BITBOARD get_opp_pieces() const {
+    [[nodiscard]] BITBOARD get_opp_pieces() const {
         return get_pieces(~side);
     }
 
-    [[nodiscard]] inline BITBOARD get_all_pieces() const {
+    [[nodiscard]] BITBOARD get_all_pieces() const {
         return our_pieces | opp_pieces;
     }
 
-    [[nodiscard]] inline BITBOARD get_empty_squares() const {
+    [[nodiscard]] BITBOARD get_empty_squares() const {
         return ~all_pieces;
     }
 

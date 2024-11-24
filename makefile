@@ -6,7 +6,9 @@ SOURCES      := src/evaluation.cpp src/main.cpp src/move.cpp src/position.cpp sr
 				src/useful.cpp src/uci.cpp src/see.cpp src/bitboard.cpp src/move_ordering.cpp \
 				src/timeman.cpp
 
-CXXFLAGS     := -O3 -std=c++20 -DNDEBUG -flto
+CXXFLAGS     := -O3 -Os -std=c++20 -DNDEBUG -flto -ffunction-sections \
+				-fdata-sections -fvisibility=hidden -fno-rtti -fno-exceptions -g0 -fmerge-all-constants -fshort-enums \
+				-fomit-frame-pointer -fno-asynchronous-unwind-tables -falign-functions=1 -fno-ident
 
 CXX          := clang++
 SUFFIX       :=
@@ -44,7 +46,6 @@ else
     else
     	override PGO := false
     endif
-	CXXFLAGS += -pthread
 
 endif
 

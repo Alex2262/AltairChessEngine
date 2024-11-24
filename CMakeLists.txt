@@ -10,8 +10,6 @@ if(NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE Release)
 endif()
 
-find_package(Threads REQUIRED)
-
 #set(GCC_COVERAGE_LINK_FLAGS "-static")
 
 #set(CMAKE_EXE_LINKER_FLAGS "${GCC_COVERAGE_LINK_FLAGS}")
@@ -45,4 +43,3 @@ add_executable(Altair
         src/move_ordering.h
         src/timeman.cpp src/timeman.h)
 
-target_link_libraries(Altair Threads::Threads)

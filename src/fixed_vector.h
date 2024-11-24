@@ -18,23 +18,23 @@ private:
 public:
     FixedVector() = default;
 
-    inline size_t size() { return current_index; }
-    inline bool empty() { return current_index == 0; }
+    size_t size() { return current_index; }
+    bool empty() { return current_index == 0; }
 
-    inline auto begin() { return fixed_vector.begin(); }
-    inline auto end() { return begin() + current_index; }
+    auto begin() { return fixed_vector.begin(); }
+    auto end() { return begin() + current_index; }
 
-    inline T& operator[](size_t index) { return fixed_vector[index]; }
-    inline const T& operator[](size_t index) const { return fixed_vector[index]; }
+    T& operator[](size_t index) { return fixed_vector[index]; }
+    const T& operator[](size_t index) const { return fixed_vector[index]; }
 
-    inline void clear() { current_index = 0; }
+    void clear() { current_index = 0; }
 
-    inline void push_back(T element) {
+    void push_back(T element) {
         fixed_vector[current_index] = element;
         current_index++;
     }
 
-    inline void pop(size_t index) {
+    void pop(size_t index) {
         current_index--;
         if (index == current_index) return;
 
@@ -43,7 +43,7 @@ public:
         }
     }
 
-    inline T pop() {
+    T pop() {
         current_index--;
         return fixed_vector[current_index];
     }

@@ -133,10 +133,6 @@ FenInfo Position::set_fen(const std::string& fen_string) {
     std::string reduced_fen_string = reduce_fen_string(fen_string);
     std::vector<std::string> fen_tokens = split(reduced_fen_string, ' ');
 
-    if (fen_tokens.size() < 4) {
-        throw std::invalid_argument("Fen is incorrect");
-    }
-
     const std::string position = fen_tokens[0];
     const std::string player = fen_tokens[1];
     const std::string castling = fen_tokens[2];

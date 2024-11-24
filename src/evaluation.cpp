@@ -3,6 +3,42 @@
 #include "evaluation.h"
 #include "evaluation_constants.h"
 
+
+int eg_score(SCORE_TYPE s) {
+    const auto eg = static_cast<uint16_t>(static_cast<uint32_t>(s + 0x8000) >> 16);
+
+    int16_t v;
+    std::memcpy(&v, &eg, sizeof(eg));
+
+    return static_cast<int>(v);
+}
+
+int mg_score(SCORE_TYPE s) {
+    const auto mg = static_cast<uint16_t>(s);
+
+    int16_t v;
+    std::memcpy(&v, &mg, sizeof(mg));
+
+    return static_cast<int>(v);
+}
+
+
+int get_manhattan_distance(Square square_1, Square square_2) {
+    return abs(static_cast<int>(rank_of(square_1)) - static_cast<int>(rank_of(square_2))) +
+           abs(static_cast<int>(file_of(square_1)) - static_cast<int>(file_of(square_2)));
+}
+
+int get_chebyshev_distance(Square square_1, Square square_2) {
+    return std::max(abs(static_cast<int>(rank_of(square_1)) - static_cast<int>(rank_of(square_2))),
+                    abs(static_cast<int>(file_of(square_1)) - static_cast<int>(file_of(square_2))));
+}
+
+
+bool same_color(Square square_1, Square square_2) {
+    return (( 9 * (square_1 ^ square_2)) & 8) == 0;
+}
+
+
 void initialize_evaluation_information(Position& position, EvaluationInformation& evaluation_information) {
     evaluation_information.game_phase = 0;
 

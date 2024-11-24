@@ -56,23 +56,23 @@ enum PieceType : uint32_t {
     NONE
 };
 
-constexpr inline PieceType get_piece_type(Piece piece, Color color) {
+constexpr PieceType get_piece_type(Piece piece, Color color) {
     return static_cast<PieceType>(static_cast<int>(piece) - static_cast<int>(color * COLOR_OFFSET));
 }
 
-constexpr inline Piece get_piece(PieceType piece_type, Color color) {
+constexpr Piece get_piece(PieceType piece_type, Color color) {
     return static_cast<Piece>(static_cast<int>(piece_type) + static_cast<int>(color * COLOR_OFFSET));
 }
 
-constexpr inline Color get_color(Piece piece) {
+constexpr Color get_color(Piece piece) {
     return static_cast<Color>(piece / COLOR_OFFSET);
 }
 
-constexpr inline bool is_major(Piece piece) {
+constexpr bool is_major(Piece piece) {
     return get_piece_type(piece, get_color(piece)) >= ROOK;
 }
 
-constexpr inline bool is_minor(Piece piece) {
+constexpr bool is_minor(Piece piece) {
     PieceType piece_type = get_piece_type(piece, get_color(piece));
     return piece_type == KNIGHT || piece_type == BISHOP;
 }

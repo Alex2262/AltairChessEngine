@@ -61,8 +61,6 @@ void Engine::reset() {
 
     std::memset(pv_length, 0, sizeof(pv_length));
     std::memset(pv_table, 0, sizeof(pv_table));
-
-    root_moves.clear();
 }
 
 
@@ -492,13 +490,6 @@ SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
                 }
 
                 if (return_eval >= beta) {
-
-#ifdef SHOW_STATISTICS
-                    if (legal_moves <= FAIL_HIGH_STATS_COUNT) {
-                        engine.search_results.qsearch_fail_highs[legal_moves - 1]++;
-                    }
-#endif
-
                     engine.record_tt_entry_q(position.hash_key, best_score, HASH_FLAG_LOWER, best_move,
                                              raw_eval, tt_pv);
                     return best_score;
@@ -989,25 +980,8 @@ SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE d
 
                 update_histories(thread_state, informative_move, quiet, winning_capture, bonus);
 
-#ifdef SHOW_STATISTICS
-                engine.search_results.alpha_raised_count++;
-                if (legal_moves <= ALPHA_RAISE_STATS_COUNT) {
-                    engine.search_results.search_alpha_raises[legal_moves-1]++;
-                }
-#endif
-
                 // Alpha - Beta cutoff. We have failed high here.
                 if (return_eval >= beta) {
-
-#ifdef SHOW_STATISTICS
-                    if (legal_moves <= FAIL_HIGH_STATS_COUNT) engine.search_results.search_fail_highs[legal_moves-1]++;
-                    if (move == tt_move) engine.search_results.search_fail_high_types[0]++;
-                    else if (informative_move == thread_state.killer_moves[0][thread_state.search_ply]) engine.search_results.search_fail_high_types[1]++;
-                    else if (informative_move == thread_state.killer_moves[1][thread_state.search_ply]) engine.search_results.search_fail_high_types[2]++;
-                    else if (quiet) engine.search_results.search_fail_high_types[3]++;
-                    else if (!winning_capture) engine.search_results.search_fail_high_types[4]++;
-                    else engine.search_results.search_fail_high_types[5]++;
-#endif
 
                     // Killer Heuristic for move ordering
                     if (quiet) {
@@ -1099,10 +1073,10 @@ void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int pv
     // Print the UCI search information
     printf("info multipv %d depth %d", pv_number + 1, depth);
     printf(" score ");
-    printf(string_score.c_str());
+    printf("%s", string_score.c_str());
     printf(" time %llu nodes %llu nps %llu", elapsed_time, total_nodes, nps);
     printf(" pv ");
-    printf(pv_line.c_str());
+    printf("%s", pv_line.c_str());
     printf("\n");
     fflush(stdout);
 }
@@ -1262,7 +1236,7 @@ void iterative_search(Engine& engine) {
     std::string best_move_str = best_move.get_uci(position);
 
     printf("bestmove ");
-    printf(best_move_str.c_str());
+    printf("%s", best_move_str.c_str());
     printf("\n");
     fflush(stdout);
 
@@ -1280,16 +1254,6 @@ void search(Engine& engine) {
     auto start_time   = std::chrono::high_resolution_clock::now();
     engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
-
-    position.get_pseudo_legal_moves(position.scored_moves[0], Movegen::All, true);
-    position.set_state(position.state_stack[0], thread_state.fifty_move);
-
-    for (ScoredMove scored_move : position.scored_moves[0]) {
-        bool attempt = position.make_move(scored_move.move, position.state_stack[0], thread_state.fifty_move);
-        position.undo_move(scored_move.move, position.state_stack[0], thread_state.fifty_move);
-
-        if (attempt) engine.root_moves.insert(scored_move.move.internal_move());
-    }
 
     iterative_search(engine);
 }
