@@ -6,17 +6,27 @@
 #include <array>
 #include "bitboard.h"
 
+#if defined(__APPLE__) && defined(__MACH__)
 
-constexpr BITBOARD reverse_bits(BITBOARD b) {
-    b = (b & 0x5555555555555555) << 1 | ((b >> 1) & 0x5555555555555555);
-    b = (b & 0x3333333333333333) << 2 | ((b >> 2) & 0x3333333333333333);
-    b = (b & 0x0f0f0f0f0f0f0f0f) << 4 | ((b >> 4) & 0x0f0f0f0f0f0f0f0f);
-    b = (b & 0x00ff00ff00ff00ff) << 8 | ((b >> 8) & 0x00ff00ff00ff00ff);
+    [[nodiscard]] inline BITBOARD reverse_bits(BITBOARD b) {
+        b = (b & 0x5555555555555555) << 1 | ((b >> 1) & 0x5555555555555555);
+        b = (b & 0x3333333333333333) << 2 | ((b >> 2) & 0x3333333333333333);
+        b = (b & 0x0f0f0f0f0f0f0f0f) << 4 | ((b >> 4) & 0x0f0f0f0f0f0f0f0f);
+        b = (b & 0x00ff00ff00ff00ff) << 8 | ((b >> 8) & 0x00ff00ff00ff00ff);
 
-    return (b << 48) | ((b & 0xffff0000) << 16) | ((b >> 16) & 0xffff0000) | (b >> 48);
-}
+        return (b << 48) | ((b & 0xffff0000) << 16) | ((b >> 16) & 0xffff0000) | (b >> 48);
+    }
 
-[[nodiscard]] constexpr BITBOARD hyperbola_quintessence(Square square, BITBOARD occupancy, BITBOARD mask) {
+#else
+
+    #include "immintrin.h"
+    [[nodiscard]] inline BITBOARD reverse_bits(BITBOARD b) {
+        return _pdep_u64(b, 0xFFFFFFFFFFFFFFFF);
+    }
+
+#endif
+
+[[nodiscard]] inline BITBOARD hyperbola_quintessence(Square square, BITBOARD occupancy, BITBOARD mask) {
     BITBOARD mask_occ = mask & occupancy;
     BITBOARD reversed = reverse_bits(mask_occ);
     BITBOARD from_sq_rev = reverse_bits(from_square(square));
@@ -27,17 +37,17 @@ constexpr BITBOARD reverse_bits(BITBOARD b) {
 
 
 // Generate attacks for bishops and rooks
-[[nodiscard]] constexpr BITBOARD get_bishop_attacks(Square square, BITBOARD occupancy) {
+[[nodiscard]] inline BITBOARD get_bishop_attacks(Square square, BITBOARD occupancy) {
     return hyperbola_quintessence(square, occupancy, MASK_DIAGONAL[diagonal_of(square)]) |
            hyperbola_quintessence(square, occupancy, MASK_ANTI_DIAGONAL[anti_diagonal_of(square)]);
 }
 
-[[nodiscard]] constexpr BITBOARD get_rook_attacks(Square square, BITBOARD occupancy) {
+[[nodiscard]] inline BITBOARD get_rook_attacks(Square square, BITBOARD occupancy) {
     return hyperbola_quintessence(square, occupancy, MASK_FILE[file_of(square)]) |
            hyperbola_quintessence(square, occupancy, MASK_RANK[rank_of(square)]);
 }
 
-constexpr BITBOARD get_queen_attacks(Square square, BITBOARD occupancy) {
+[[nodiscard]] inline BITBOARD get_queen_attacks(Square square, BITBOARD occupancy) {
     return get_bishop_attacks(square, occupancy) | get_rook_attacks(square, occupancy);
 }
 
@@ -71,7 +81,7 @@ constexpr BITBOARD get_pawn_attacks(Square square, Color color) {
     return shift<WEST>(res) | shift<EAST>(res);
 }
 
-constexpr BITBOARD get_piece_attacks(Piece piece, Square square, BITBOARD occupancy) {
+inline BITBOARD get_piece_attacks(Piece piece, Square square, BITBOARD occupancy) {
     auto piece_type = static_cast<PieceType>(piece % COLOR_OFFSET);
     if (piece == WHITE_PAWN) return get_pawn_attacks(square, WHITE);
     else if (piece == BLACK_PAWN) return get_pawn_attacks(square, BLACK);
@@ -82,7 +92,7 @@ constexpr BITBOARD get_piece_attacks(Piece piece, Square square, BITBOARD occupa
     else return get_king_attacks(square);
 }
 
-constexpr BITBOARD get_regular_piece_type_attacks_nt(PieceType piece_type, Square square, BITBOARD occupancy) {
+inline BITBOARD get_regular_piece_type_attacks_nt(PieceType piece_type, Square square, BITBOARD occupancy) {
 
     if (piece_type == KNIGHT) return get_knight_attacks(square);
     else if (piece_type == BISHOP) return get_bishop_attacks(square, occupancy);
@@ -92,7 +102,7 @@ constexpr BITBOARD get_regular_piece_type_attacks_nt(PieceType piece_type, Squar
 }
 
 template<PieceType piece_type>
-constexpr BITBOARD get_regular_piece_type_attacks(Square square, BITBOARD occupancy) {
+inline BITBOARD get_regular_piece_type_attacks(Square square, BITBOARD occupancy) {
 
     if constexpr (piece_type == KNIGHT) return get_knight_attacks(square);
     else if constexpr (piece_type == BISHOP) return get_bishop_attacks(square, occupancy);
