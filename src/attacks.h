@@ -11,12 +11,16 @@
 }
 
 [[nodiscard]] inline BITBOARD hyperbola_quintessence(Square square, BITBOARD occupancy, BITBOARD mask) {
+    BITBOARD from_sq = from_square(square);
     BITBOARD mask_occ = mask & occupancy;
-    BITBOARD reversed = reverse_bits(mask_occ);
-    BITBOARD from_sq_rev = reverse_bits(from_square(square));
 
-    return (((mask_occ - from_square(square) * 2) ^
-             reverse_bits(reversed - from_sq_rev * 2)) & mask);
+    BITBOARD rev_mask_occ = reverse_bits(mask_occ);
+    BITBOARD rev_from_sq = from_square(static_cast<Square>(square ^ 63));
+
+    BITBOARD temp1 = mask_occ - (from_sq << 1);
+    BITBOARD temp2 = rev_mask_occ - (rev_from_sq << 1);
+
+    return (temp1 ^ reverse_bits(temp2)) & mask;
 }
 
 
