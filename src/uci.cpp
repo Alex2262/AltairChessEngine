@@ -68,7 +68,7 @@ void UCI::parse_go() {
 
     Position& position = engine->main_thread.position;
 
-    PLY_TYPE d = 0, perft_depth = 0;
+    PLY_TYPE d = 0;
     double wtime = 0, btime = 0, winc = 0, binc = 0, movetime = 0;
     bool infinite = false;
 
@@ -139,6 +139,18 @@ void UCI::uci_loop() {
 
         if (msg == "stop") {
             engine->stopped = true;
+        }
+
+        else if (msg == "uci") {
+            printf("id name %s %s\n", ENGINE_NAME, ENGINE_VERSION);
+            printf("id author Alexander Tian\n");
+            printf("uciok\n");
+            fflush(stdout);
+        }
+
+        else if (msg == "isready") {
+            printf("readyok\n");
+            fflush(stdout);
         }
 
         else if (msg == "ucinewgame") {
