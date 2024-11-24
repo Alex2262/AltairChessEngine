@@ -17,8 +17,12 @@ constexpr BITBOARD reverse_bits(BITBOARD b) {
 }
 
 [[nodiscard]] constexpr BITBOARD hyperbola_quintessence(Square square, BITBOARD occupancy, BITBOARD mask) {
-    return (((mask & occupancy) - from_square(square) * 2) ^
-            reverse_bits(reverse_bits(mask & occupancy) - reverse_bits(from_square(square)) * 2)) & mask;
+    BITBOARD mask_occ = mask & occupancy;
+    BITBOARD reversed = reverse_bits(mask_occ);
+    BITBOARD from_sq_rev = reverse_bits(from_square(square));
+
+    return (((mask_occ - from_square(square) * 2) ^
+             reverse_bits(reversed - from_sq_rev * 2)) & mask);
 }
 
 
