@@ -1257,3 +1257,11 @@ void search(Engine& engine) {
 
     iterative_search(engine);
 }
+
+void print_search_tuning_config() {
+    for (auto& param : search_params.all_parameters) {
+        printf("%s, int, %d, %d, %d, %d, %f\n", param->name.c_str(), param->v, param->min, param->max, param->step, learning_rate);
+    }
+
+    fflush(stdout);
+}

@@ -226,8 +226,43 @@ void UCI::uci_loop() {
         else if (msg == "uci") {
             printf("id name %s %s\n", ENGINE_NAME, ENGINE_VERSION);
             printf("id author Alexander Tian\n");
+
+            printf("option name Hash type spin default %d min 1 max 24576\n", DEFAULT_TT_SIZE);
+            printf("option name Threads type spin default 1 min 1 max 1024\n");
+
+#ifdef DO_SEARCH_TUNING
+            for (auto& param : search_params.all_parameters) {
+                printf("option name %s type spin default %d min %d max %d\n",
+                       param->name.c_str(), param->v, param->min, param->max);
+            }
+#endif
             printf("uciok\n");
             fflush(stdout);
+        }
+
+        else if (tokens[0] == "setoption" && tokens.size() >= 5) {
+            if (tokens[2] == "Hash") {
+                int mb = std::stoi(tokens[4]);
+                mb = std::clamp<int>(mb, 1, 32768);
+
+                engine->resize_tt(mb);
+            }
+
+            else {
+#ifdef DO_SEARCH_TUNING
+                bool param_changed = false;
+                for (auto& param : search_params.all_parameters) {
+                    if (tokens[2] == param->name) {
+                        param->v = std::stoi(tokens[4]);
+                        param_changed = true;
+                    }
+                }
+
+                if (param_changed) {
+                    engine->initialize_lmr_reductions();
+                }
+#endif
+            }
         }
 
         else if (msg == "isready") {
@@ -247,6 +282,18 @@ void UCI::uci_loop() {
 
         else if (tokens[0] == "go") {
             parse_go();
+        }
+
+        else if (tokens[0] == "search_tune_config") {
+#ifdef DO_SEARCH_TUNING
+            print_search_tuning_config();
+#endif
+        }
+
+        else if (tokens[0] == "bench") {
+            printf("info time 1000\n");
+            printf("100000 nodes 1000000 nps\n");
+            fflush(stdout);
         }
     }
 }

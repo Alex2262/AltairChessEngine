@@ -10,6 +10,8 @@
 #define ENGINE_VERSION              "7.2.1"
 #define ENGINE_AUTHOR               "Alexander Tian"
 
+#define DO_SEARCH_TUNING
+
 #define FAIL_HIGH_STATS_COUNT       5
 #define ALPHA_RAISE_STATS_COUNT     5
 
