@@ -7,30 +7,46 @@
 #include "bitboard.h"
 
 
-constexpr BITBOARD reverse_bits(BITBOARD b) {
-    b = (b & 0x5555555555555555) << 1 | ((b >> 1) & 0x5555555555555555);
-    b = (b & 0x3333333333333333) << 2 | ((b >> 2) & 0x3333333333333333);
-    b = (b & 0x0f0f0f0f0f0f0f0f) << 4 | ((b >> 4) & 0x0f0f0f0f0f0f0f0f);
-    b = (b & 0x00ff00ff00ff00ff) << 8 | ((b >> 8) & 0x00ff00ff00ff00ff);
-
-    return (b << 48) | ((b & 0xffff0000) << 16) | ((b >> 16) & 0xffff0000) | (b >> 48);
+[[nodiscard]] constexpr BITBOARD board_edge(Direction D) {
+    if (D == NORTH) return MASK_RANK[RANK_8];
+    else if (D == SOUTH) return MASK_RANK[RANK_1];
+    else if (D == EAST) return MASK_FILE[FILE_H];
+    else if (D == WEST) return MASK_FILE[FILE_A];
+    else if (D == NORTH_EAST) return MASK_RANK[RANK_8] | MASK_FILE[FILE_H];
+    else if (D == NORTH_WEST) return MASK_RANK[RANK_8] | MASK_FILE[FILE_A];
+    else if (D == SOUTH_EAST) return MASK_RANK[RANK_1] | MASK_FILE[FILE_H];
+    else if (D == SOUTH_WEST) return MASK_RANK[RANK_1] | MASK_FILE[FILE_A];
+    return 0;
 }
 
-[[nodiscard]] constexpr BITBOARD hyperbola_quintessence(Square square, BITBOARD occupancy, BITBOARD mask) {
-    return (((mask & occupancy) - from_square(square) * 2) ^
-            reverse_bits(reverse_bits(mask & occupancy) - reverse_bits(from_square(square)) * 2)) & mask;
+template<Direction D>
+[[nodiscard]] constexpr BITBOARD generate_slow_sliding_attacks(Square square, BITBOARD occupancy) {
+    BITBOARD attacks{};
+    BITBOARD blockers = board_edge(D);
+    BITBOARD square_bb = from_square(square);
+
+    if ((blockers & square_bb) != 0) return attacks;
+    blockers |= occupancy;
+    do {
+        square_bb = shift<D>(square_bb);
+        attacks |= square_bb;
+    } while ((blockers & square_bb) == 0);
+
+    return attacks;
 }
 
-
-// Generate attacks for bishops and rooks
 [[nodiscard]] constexpr BITBOARD get_bishop_attacks(Square square, BITBOARD occupancy) {
-    return hyperbola_quintessence(square, occupancy, MASK_DIAGONAL[diagonal_of(square)]) |
-           hyperbola_quintessence(square, occupancy, MASK_ANTI_DIAGONAL[anti_diagonal_of(square)]);
+    return generate_slow_sliding_attacks<NORTH_EAST>(square, occupancy) |
+           generate_slow_sliding_attacks<NORTH_WEST>(square, occupancy) |
+           generate_slow_sliding_attacks<SOUTH_EAST>(square, occupancy) |
+           generate_slow_sliding_attacks<SOUTH_WEST>(square, occupancy);
 }
 
 [[nodiscard]] constexpr BITBOARD get_rook_attacks(Square square, BITBOARD occupancy) {
-    return hyperbola_quintessence(square, occupancy, MASK_FILE[file_of(square)]) |
-           hyperbola_quintessence(square, occupancy, MASK_RANK[rank_of(square)]);
+    return generate_slow_sliding_attacks<NORTH>(square, occupancy) |
+           generate_slow_sliding_attacks<SOUTH>(square, occupancy) |
+           generate_slow_sliding_attacks<EAST>(square, occupancy) |
+           generate_slow_sliding_attacks<WEST>(square, occupancy);
 }
 
 constexpr BITBOARD get_queen_attacks(Square square, BITBOARD occupancy) {
