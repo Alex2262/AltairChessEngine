@@ -109,25 +109,6 @@ void Position::compute_hash_key() {
     }
 }
 
-std::string reduce_fen_string(const std::string &fen_string) {
-    std::string result = fen_string;
-
-    result.erase(result.begin(), std::find_if(result.begin(), result.end(), [](unsigned char ch) {
-        return !std::isspace(ch);
-    }));
-
-    result.erase(std::find_if(result.rbegin(), result.rend(), [](unsigned char ch) {
-        return !std::isspace(ch);
-    }).base(), result.end());
-
-    auto new_end = std::unique(result.begin(), result.end(), [](char left, char right) {
-        return std::isspace(left) && std::isspace(right);
-    });
-    result.erase(new_end, result.end());
-
-    return result;
-}
-
 FenInfo Position::set_fen(const std::string& fen_string) {
 
     std::string reduced_fen_string = reduce_fen_string(fen_string);
