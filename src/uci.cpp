@@ -241,28 +241,20 @@ void UCI::uci_loop() {
         }
 
         else if (tokens[0] == "setoption" && tokens.size() >= 5) {
-            if (tokens[2] == "Hash") {
-                int mb = std::stoi(tokens[4]);
-                mb = std::clamp<int>(mb, 1, 32768);
 
-                engine->resize_tt(mb);
-            }
-
-            else {
 #ifdef DO_SEARCH_TUNING
-                bool param_changed = false;
-                for (auto& param : search_params.all_parameters) {
-                    if (tokens[2] == param->name) {
-                        param->v = std::stoi(tokens[4]);
-                        param_changed = true;
-                    }
+            bool param_changed = false;
+            for (auto& param : search_params.all_parameters) {
+                if (tokens[2] == param->name) {
+                    param->v = std::stoi(tokens[4]);
+                    param_changed = true;
                 }
-
-                if (param_changed) {
-                    engine->initialize_lmr_reductions();
-                }
-#endif
             }
+
+            if (param_changed) {
+                engine->initialize_lmr_reductions();
+            }
+#endif
         }
 
         else if (msg == "isready") {
