@@ -227,7 +227,7 @@ void UCI::uci_loop() {
             printf("id name %s %s\n", ENGINE_NAME, ENGINE_VERSION);
             printf("id author Alexander Tian\n");
 
-            printf("option name Hash type spin default %d min 1 max 24576\n", DEFAULT_TT_SIZE);
+            printf("option name Hash type spin default %d min %d max %d\n", DEFAULT_TT_SIZE, DEFAULT_TT_SIZE, DEFAULT_TT_SIZE);
             printf("option name Threads type spin default 1 min 1 max 1024\n");
 
 #ifdef DO_SEARCH_TUNING
