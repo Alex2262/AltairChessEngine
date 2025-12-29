@@ -1,7 +1,6 @@
 
 
-#ifndef ALTAIR_UCI_H
-#define ALTAIR_UCI_H
+#pragma once
 
 #include <thread>
 #include <vector>
@@ -27,7 +26,3 @@ public:
     void parse_go();
     void uci_loop();
 };
-
-
-
-#endif //ALTAIR_UCI_H

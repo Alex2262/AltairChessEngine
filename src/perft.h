@@ -1,6 +1,5 @@
 
-#ifndef ALTAIR_PERFT_H
-#define ALTAIR_PERFT_H
+#pragma once
 
 #include "position.h"
 
@@ -13,11 +12,8 @@ struct Perft_Result_Type {
     int check_amount;
 };
 
-void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY_TYPE ply);
+void debug_perft(Position& position, Perft_Result_Type& res, Ply depth, Ply ply);
 
-long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply);
+long long fast_perft(Position& position, Ply depth, Ply ply);
 
-long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply);
-
-
-#endif //ALTAIR_PERFT_H
+long long uci_perft(Position& position, Ply depth, Ply ply);

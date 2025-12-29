@@ -1,6 +1,5 @@
 
-#ifndef ALTAIR_CONSTANTS_H
-#define ALTAIR_CONSTANTS_H
+#pragma once
 
 #include <cstdint>
 #include <string>
@@ -24,11 +23,11 @@
 
 #define TIME_INF            86400000
 
-constexpr SCORE_TYPE SCORE_INF = 1000000;
-constexpr SCORE_TYPE NO_EVALUATION = 500000;
-constexpr SCORE_TYPE SCORE_NONE = 150000;
-constexpr SCORE_TYPE MATE_SCORE = 100000;
-constexpr SCORE_TYPE MATE_BOUND = 99000;
+constexpr Score SCORE_INF = 1000000;
+constexpr Score NO_EVALUATION = 500000;
+constexpr Score SCORE_NONE = 150000;
+constexpr Score MATE_SCORE = 100000;
+constexpr Score MATE_BOUND = 99000;
 
 #define MAX_AB_DEPTH        256
 #define TOTAL_MAX_DEPTH     1536
@@ -67,5 +66,3 @@ constexpr bool DEACTIVATE = false;
 
 constexpr bool USE_NNUE = true;
 constexpr bool NO_NNUE  = false;
-
-#endif //ALTAIR_CONSTANTS_H

@@ -1,9 +1,5 @@
-//
-// Created by Alexander Tian on 1/6/24.
-//
 
-#ifndef ALTAIRCHESSENGINE_SIMD_H
-#define ALTAIRCHESSENGINE_SIMD_H
+#pragma once
 
 #include <cstdint>
 #include <string>
@@ -142,7 +138,3 @@ namespace SIMD {
 #endif
     }
 }
-
-
-
-#endif //ALTAIRCHESSENGINE_SIMD_H

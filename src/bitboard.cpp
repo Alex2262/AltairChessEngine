@@ -6,7 +6,7 @@
 #include "types.h"
 #include "bitboard.h"
 
-void print_bitboard(BITBOARD bitboard) {
+void print_bitboard(Bitboard bitboard) {
     std::bitset<64> b(bitboard);
     std::string str_bitset = b.to_string();
     for (int i = 0; i < 64; i += 8) {
@@ -21,12 +21,12 @@ void print_bitboard(BITBOARD bitboard) {
 // Compiler specific functions, taken from Stockfish https://github.com/official-stockfish/Stockfish
 #if defined(__GNUC__) // GCC, Clang, ICC
 
-[[nodiscard]] Square lsb(BITBOARD bitboard) {
+[[nodiscard]] Square lsb(Bitboard bitboard) {
     assert(bitboard);
     return static_cast<Square>(__builtin_ctzll(bitboard));
 }
 
-[[nodiscard]] Square msb(BITBOARD bitboard) {
+[[nodiscard]] Square msb(Bitboard bitboard) {
     assert(bitboard);
     return static_cast<Square>(63 ^ __builtin_clzll(bitboard));
 }
@@ -35,50 +35,50 @@ void print_bitboard(BITBOARD bitboard) {
 
 #ifdef _WIN64 // MSVC, WIN64
 #include <intrin.h>
-Square lsb(uint64_t bitboard)
+Square lsb(uint64_t Bitboard)
 {
     unsigned long idx;
-    _BitScanForward64(&idx, bitboard);
+    _BitScanForward64(&idx, Bitboard);
     return (Square)idx;
 }
 
-Square msb(uint64_t bitboard)
+Square msb(uint64_t Bitboard)
 {
     unsigned long idx;
-    _BitScanReverse64(&idx, bitboard);
+    _BitScanReverse64(&idx, Bitboard);
     return (Square)idx;
 }
 
 #else // MSVC, WIN32
 #include <intrin.h>
-Square lsb(BITBOARD bitboard)
+Square lsb(Bitboard Bitboard)
 {
     unsigned long idx;
 
-    if (bitboard & 0xffffffff)
+    if (Bitboard & 0xffffffff)
     {
-        _BitScanForward(&idx, int32_t(bitboard));
+        _BitScanForward(&idx, int32_t(Bitboard));
         return Square(idx);
     }
     else
     {
-        _BitScanForward(&idx, int32_t(bitboard >> 32));
+        _BitScanForward(&idx, int32_t(Bitboard >> 32));
         return Square(idx + 32);
     }
 }
 
-Square msb(BITBOARD bitboard)
+Square msb(Bitboard Bitboard)
 {
     unsigned long idx;
 
-    if (bitboard >> 32)
+    if (Bitboard >> 32)
     {
-        _BitScanReverse(&idx, int32_t(bitboard >> 32));
+        _BitScanReverse(&idx, int32_t(Bitboard >> 32));
         return Square(idx + 32);
     }
     else
     {
-        _BitScanReverse(&idx, int32_t(bitboard));
+        _BitScanReverse(&idx, int32_t(Bitboard));
         return Square(idx);
     }
 }
@@ -91,11 +91,11 @@ Square msb(BITBOARD bitboard)
 
 #endif
 
-[[nodiscard]] uint32_t popcount(BITBOARD bitboard) {
+[[nodiscard]] uint32_t popcount(Bitboard bitboard) {
     return __builtin_popcountll(bitboard);
 }
 
-[[nodiscard]] Square poplsb(BITBOARD& bitboard) {
+[[nodiscard]] Square poplsb(Bitboard& bitboard) {
     Square s = lsb(bitboard);
     bitboard &= bitboard - 1; // compiler optimizes this to _blsr_u64
     return static_cast<Square>(s);

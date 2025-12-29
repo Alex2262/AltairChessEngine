@@ -1,6 +1,5 @@
 
-#ifndef ALTAIR_ZOBRIST_H
-#define ALTAIR_ZOBRIST_H
+#pragma once
 
 #include "random.h"
 #include "constants.h"
@@ -12,10 +11,10 @@ public:
 
     PRNG prng = PRNG(31415926); // 695848653836736222
 
-    HASH_TYPE piece_hash_keys[12][64] {};
-    HASH_TYPE ep_hash_keys[64] {};
-    HASH_TYPE castle_hash_keys[16] {};
-    HASH_TYPE side_hash_key = 0;
+    Hash piece_hash_keys[12][64] {};
+    Hash ep_hash_keys[64] {};
+    Hash castle_hash_keys[16] {};
+    Hash side_hash_key = 0;
 
     ZobristKeysClass() {
         for (auto & piece_hash_key : piece_hash_keys) {
@@ -39,4 +38,3 @@ public:
 
 ZobristKeysClass ZobristHashKeys = ZobristKeysClass();
 
-#endif //ALTAIR_ZOBRIST_H

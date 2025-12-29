@@ -5,37 +5,37 @@
 #include <iostream>
 #include "see.h"
 
-BITBOARD get_all_attackers(Position& position, Square square) {
+Bitboard get_all_attackers(Position& position, Square square) {
 
     // Treat square like a pawn
-    BITBOARD pawn_attackers = (WHITE_PAWN_ATTACKS[square] & position.get_pieces(PAWN, BLACK)) |
+    Bitboard pawn_attackers = (WHITE_PAWN_ATTACKS[square] & position.get_pieces(PAWN, BLACK)) |
             (BLACK_PAWN_ATTACKS[square] & position.get_pieces(PAWN, WHITE));
 
     // Treat square like a knight
-    BITBOARD knight_attackers = KNIGHT_ATTACKS[square] &
+    Bitboard knight_attackers = KNIGHT_ATTACKS[square] &
             (position.get_pieces(WHITE_KNIGHT) | position.get_pieces(BLACK_KNIGHT));
 
     // Treat square like a bishop
-    BITBOARD bishop_attacks = get_bishop_attacks(square, position.all_pieces);
-    BITBOARD bishop_attackers = bishop_attacks &
+    Bitboard bishop_attacks = get_bishop_attacks(square, position.all_pieces);
+    Bitboard bishop_attackers = bishop_attacks &
             (position.get_pieces(WHITE_BISHOP) | position.get_pieces(BLACK_BISHOP));
 
     // Treat square like a rook
-    BITBOARD rook_attacks = get_rook_attacks(square, position.all_pieces);
-    BITBOARD rook_attackers = rook_attacks &
+    Bitboard rook_attacks = get_rook_attacks(square, position.all_pieces);
+    Bitboard rook_attackers = rook_attacks &
             (position.get_pieces(WHITE_ROOK) | position.get_pieces(BLACK_ROOK));
 
-    BITBOARD queen_attackers = (bishop_attacks | rook_attacks) &
+    Bitboard queen_attackers = (bishop_attacks | rook_attacks) &
             (position.get_pieces(WHITE_QUEEN) | position.get_pieces(BLACK_QUEEN));
 
-    BITBOARD king_attackers = KING_ATTACKS[square] &
+    Bitboard king_attackers = KING_ATTACKS[square] &
             (position.get_pieces(WHITE_KING) | position.get_pieces(BLACK_KING));
 
     return pawn_attackers | knight_attackers | bishop_attackers | rook_attackers | queen_attackers | king_attackers;
 }
 
 
-SCORE_TYPE get_static_exchange_evaluation(Position& position, Move move, SCORE_TYPE threshold) {
+Score get_static_exchange_evaluation(Position& position, Move move, Score threshold) {
     assert(move != NO_MOVE);
 
     MoveType move_type = move.type();
@@ -49,19 +49,19 @@ SCORE_TYPE get_static_exchange_evaluation(Position& position, Move move, SCORE_T
     Piece selected = position.board[origin_square];
     Piece occupied = position.board[target_square];
 
-    SCORE_TYPE exchange_value = SEE_values[occupied] - threshold;
+    Score exchange_value = SEE_values[occupied] - threshold;
     if (exchange_value < 0) return false; // If taking the opponent's piece without any risk is still negative
 
     exchange_value -= SEE_values[selected];
     if (exchange_value >= 0) return true; // If we risk our piece being fully lost and the exchange value is still >= 0
 
-    BITBOARD occupancy = position.all_pieces ^ from_square(origin_square);
-    BITBOARD attackers = get_all_attackers(position, target_square);
+    Bitboard occupancy = position.all_pieces ^ from_square(origin_square);
+    Bitboard attackers = get_all_attackers(position, target_square);
 
-    BITBOARD diagonal_attackers = position.get_pieces(WHITE_BISHOP) | position.get_pieces(BLACK_BISHOP) |
+    Bitboard diagonal_attackers = position.get_pieces(WHITE_BISHOP) | position.get_pieces(BLACK_BISHOP) |
                                   position.get_pieces(WHITE_QUEEN) | position.get_pieces(BLACK_QUEEN);
 
-    BITBOARD horizontal_attackers = position.get_pieces(WHITE_ROOK) | position.get_pieces(BLACK_ROOK) |
+    Bitboard horizontal_attackers = position.get_pieces(WHITE_ROOK) | position.get_pieces(BLACK_ROOK) |
                                     position.get_pieces(WHITE_QUEEN) | position.get_pieces(BLACK_QUEEN);
 
     Color original_side = position.side;
@@ -72,7 +72,7 @@ SCORE_TYPE get_static_exchange_evaluation(Position& position, Move move, SCORE_T
         // Removed used pieces from attackers
         attackers &= occupancy;
 
-        BITBOARD our_attackers = attackers & position.get_our_pieces();
+        Bitboard our_attackers = attackers & position.get_our_pieces();
         if (!our_attackers) break; // No attacking piece was found
 
         PieceType cheapest_attacker = KING;

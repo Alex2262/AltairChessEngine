@@ -3,7 +3,7 @@
 EXE      = Altair
 
 SOURCES      := src/evaluation.cpp src/main.cpp src/move.cpp src/perft.cpp src/position.cpp src/search.cpp \
-				src/useful.cpp src/uci.cpp src/bench.cpp src/see.cpp src/bitboard.cpp src/move_ordering.cpp \
+				src/useful.cpp src/uci.cpp src/bench.cpp src/see.cpp src/Bitboard.cpp src/move_ordering.cpp \
 				src/datagen.cpp src/nnue.cpp src/timeman.cpp
 
 CXXFLAGS     := -O3 -std=c++20 -march=native -Wall -Wextra -pedantic -DNDEBUG -flto

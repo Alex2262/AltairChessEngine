@@ -5485,7 +5485,7 @@ https://chess.swehosting.se/test/2189/
 ```
 
 ### 3.2.2
-Speedup of around a factor of 15% based a PR by @archishou to Altair bitboards-rewrite branch for move picking
+Speedup of around a factor of 15% based a PR by @archishou to Altair Bitboards-rewrite branch for move picking
 
 ### 3.2.3
 Move ordering Changes
@@ -5543,7 +5543,7 @@ https://chess.swehosting.se/test/2389/
 ```
 
 ## --- Bitboards Rewrite ---
-Altair is now rewritten using bitboards as the internal board representation with magic bitboards
+Altair is now rewritten using Bitboards as the internal board representation with magic Bitboards
 for generating sliding attacks. Altair now has the same search, but the evaluation has been completely removed for
 the purpose of rewriting it. 
 
@@ -5561,7 +5561,7 @@ https://chess.swehosting.se/test/2031/
 ```
 
 ### 4.0.2
-Fixed SEE under a bitboards representation
+Fixed SEE under a Bitboards representation
 
 ```
 ELO   | 36.13 +- 13.62 (95%)
@@ -5627,7 +5627,7 @@ https://chess.swehosting.se/test/2096/
 ```
 
 ### 4.0.8
-Fix Extensions due to a bitboards bug
+Fix Extensions due to a Bitboards bug
 
 ```
 ELO   | 35.28 +- 17.09 (95%)
@@ -5905,7 +5905,7 @@ https://chess.swehosting.se/test/3282/
 ```
 
 ### 4.3.4
-Fischer Random Chess implemented for bitboards
+Fischer Random Chess implemented for Bitboards
 
 
 ### 4.3.5

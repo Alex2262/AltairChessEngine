@@ -1,7 +1,5 @@
 
-
-#ifndef ALTAIR_DATAGEN_H
-#define ALTAIR_DATAGEN_H
+#pragma once
 
 #include <chrono>
 #include <vector>
@@ -91,6 +89,3 @@ public:
 
     void merge();
 };
-
-
-#endif //ALTAIR_DATAGEN_H

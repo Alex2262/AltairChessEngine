@@ -1,7 +1,5 @@
 
-
-#ifndef ALTAIR_MOVE_ORDERING_H
-#define ALTAIR_MOVE_ORDERING_H
+#pragma once
 
 #include "types.h"
 #include "fixed_vector.h"
@@ -10,7 +8,7 @@
 class Thread_State;
 
 
-enum class MO_Margin : SCORE_TYPE {
+enum class MO_Margin : Score {
     TT = 500000,
     winning_capture = 50000,
     base_capture = -3000,
@@ -22,11 +20,11 @@ enum class MO_Margin : SCORE_TYPE {
     castle = 1200
 };
 
-SCORE_TYPE score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
+Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
                       InformativeMove last_moves[]);
 
 template<bool qsearch>
-SCORE_TYPE score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, int& good_capture_count);
+Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, int& good_capture_count);
 
 void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                      Move tt_move, InformativeMove last_moves[], int start_index);
@@ -72,7 +70,7 @@ public:
     int good_capture_count = 0;
     int good_capture_found = 0;
 
-    PLY_TYPE search_ply = 0;
+    Ply search_ply = 0;
 
     void reset_qsearch(Move tt_move_passed);
     void reset_negamax(Move tt_move_passed, InformativeMove last_moves_passed[]);
@@ -125,7 +123,7 @@ public:
 
         if (stage == Stage::TT_probe) {
             stage = Stage::GenNoisy;
-            if (position->is_pseudo_legal(tt_move)) return {tt_move, static_cast<SCORE_TYPE>(MO_Margin::TT), true};
+            if (position->is_pseudo_legal(tt_move)) return {tt_move, static_cast<Score>(MO_Margin::TT), true};
         }
 
         if (stage == Stage::GenNoisy) {
@@ -188,7 +186,3 @@ public:
         return picked;
     }
 };
-
-
-
-#endif //ALTAIR_MOVE_ORDERING_H

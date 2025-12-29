@@ -70,11 +70,11 @@ It can also be used in lichess using its APIs with the [external-engine](https:/
 Altair supports a configurable hash size, thread number, and MultiPV for analyzing multiple variations.
 
 ## Board Representation
-Altair currently uses bitboards, binary representations of the chessboard, as the internal board representation as of version 4.0.1 \
+Altair currently uses Bitboards, binary representations of the chessboard, as the internal board representation as of version 4.0.1 \
 Versions 4.0.0 and prior used a mailbox (12x10), array board representation
 
 ## Move Generation
-Altair uses the magic bitboard approach for decently fast move generation speeds.
+Altair uses the magic Bitboard approach for decently fast move generation speeds.
 
 ## Search
 Altair utilizes many techniques for its search—the calculation of moves and different positions. 
@@ -188,7 +188,7 @@ Versions 1.3.6 to 5.0.8 used [@GediminasMasaitis's](https://github.com/Gediminas
 [Texel Tuner](https://github.com/GediminasMasaitis/texel-tuner/tree/main/src) for tuning Altair's classical evaluation.
 
 #### People:
-- [@archishou](https://github.com/archishou) has supported me a lot in the development of my engine with many ideas and invaluable help in implementing bitboards.
+- [@archishou](https://github.com/archishou) has supported me a lot in the development of my engine with many ideas and invaluable help in implementing Bitboards.
 - [@Ciekce](https://github.com/Ciekce) has helped me fix many issues in my engine and improved my understanding of programming greatly.
   His engines [Polaris](https://github.com/Ciekce/Polaris) and [Stormphrax](https://github.com/Ciekce/Stormphrax) have also served as great resources.
   On top of this, he has also helped train Altair's latest neural network with his hardware.

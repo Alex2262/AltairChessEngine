@@ -1,6 +1,5 @@
 
-#ifndef ALTAIR_MOVE_H
-#define ALTAIR_MOVE_H
+#pragma once
 
 #include <cstdint>
 #include "types.h"
@@ -97,6 +96,3 @@ public:
 
 const Move NO_MOVE = Move();
 const InformativeMove NO_INFORMATIVE_MOVE = InformativeMove();
-
-
-#endif //ALTAIR_MOVE_H

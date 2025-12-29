@@ -18,11 +18,11 @@ struct EvaluationInformation {
 
     Square king_squares[2]{};
 
-    BITBOARD pawns[2]{};
-    BITBOARD pieces[2]{};
-    BITBOARD pawn_attacks[2]{};
+    Bitboard pawns[2]{};
+    Bitboard pieces[2]{};
+    Bitboard pawn_attacks[2]{};
 
-    BITBOARD piece_relative_occupancies[2][6]{};
+    Bitboard piece_relative_occupancies[2][6]{};
 };
 
 void initialize_evaluation_information(Position& position, EvaluationInformation& evaluation_information);
@@ -31,22 +31,22 @@ Square get_white_relative_square(Square square, Color color);
 Square get_black_relative_square(Square square, Color color);
 
 
-SCORE_TYPE evaluate_king_pawn(File file, Color color, EvaluationInformation& evaluation_information);
+Score evaluate_king_pawn(File file, Color color, EvaluationInformation& evaluation_information);
 
-SCORE_TYPE evaluate_piece(Position& position, PieceType piece_type, Color color, int& game_phase);
-SCORE_TYPE evaluate_pieces(Position& position, int& game_phase);
+Score evaluate_piece(Position& position, PieceType piece_type, Color color, int& game_phase);
+Score evaluate_pieces(Position& position, int& game_phase);
 
 double evaluate_drawishness(Position& position, EvaluationInformation& evaluation_information);
 double evaluate_opposite_colored_bishop_endgames(Position& position, EvaluationInformation& evaluation_information);
 
-SCORE_TYPE evaluate_classic(Position& position);
+Score evaluate_classic(Position& position);
 
 
-constexpr SCORE_TYPE S(int mg, int eg) {
-    return static_cast<SCORE_TYPE>(static_cast<unsigned int>(eg) << 16) + mg;
+constexpr Score S(int mg, int eg) {
+    return static_cast<Score>(static_cast<unsigned int>(eg) << 16) + mg;
 }
 
-inline int eg_score(SCORE_TYPE s) {
+inline int eg_score(Score s) {
     const auto eg = static_cast<uint16_t>(static_cast<uint32_t>(s + 0x8000) >> 16);
 
     int16_t v;
@@ -55,7 +55,7 @@ inline int eg_score(SCORE_TYPE s) {
     return static_cast<int>(v);
 }
 
-inline int mg_score(SCORE_TYPE s) {
+inline int mg_score(Score s) {
     const auto mg = static_cast<uint16_t>(s);
 
     int16_t v;

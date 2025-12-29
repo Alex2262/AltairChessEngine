@@ -38,8 +38,8 @@ add_executable(Altair
         src/see.cpp
         src/see.h
         src/types.h
-        src/bitboard.cpp
-        src/bitboard.h
+        src/Bitboard.cpp
+        src/Bitboard.h
         src/attacks.h
         src/fixed_vector.h
         src/evaluation.cpp

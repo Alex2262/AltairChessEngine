@@ -77,7 +77,7 @@ void UCI::parse_position() {
         Move move = Move(position, tokens[i]);
         last_move = move;
 
-        position.make_move<USE_NNUE>(move, position.state_stack[0], engine->thread_states[0].fifty_move);
+        position.make_move(move, position.state_stack[0], engine->thread_states[0].fifty_move);
         position.update_nnue(position.state_stack[0]);
 
         engine->thread_states[0].game_ply++;
@@ -90,7 +90,7 @@ void UCI::parse_go() {
 
     Position& position = engine->thread_states[0].position;
 
-    PLY_TYPE d = 0, perft_depth = 0;
+    Ply d = 0, perft_depth = 0;
     double wtime = 0, btime = 0, winc = 0, binc = 0, movetime = 0;
     long movestogo = 0;
     bool infinite = false;
@@ -102,9 +102,9 @@ void UCI::parse_go() {
 
         if (static_cast<int>(tokens.size()) > i + 1) value = std::stoi(tokens[i + 1]);
 
-        if (type == "depth") d = static_cast<PLY_TYPE>(value);
+        if (type == "depth") d = static_cast<Ply>(value);
 
-        else if (type == "perft") perft_depth = static_cast<PLY_TYPE>(value);
+        else if (type == "perft") perft_depth = static_cast<Ply>(value);
 
         else if (type == "nodes") {
             engine->hard_node_limit = value;
@@ -302,8 +302,7 @@ void UCI::uci_loop() {
         }
 
         else if (tokens[0] == "evaluate") {
-            SCORE_TYPE evaluation = engine->use_nnue ? engine->evaluate<USE_NNUE>(0) :
-                                                       engine->evaluate<NO_NNUE >(0);
+            Score evaluation = engine->evaluate(0);
             std::cout << evaluation << std::endl;
         }
 

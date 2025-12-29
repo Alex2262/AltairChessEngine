@@ -1,8 +1,5 @@
 
-
-#ifndef ALTAIR_FIXED_VECTOR_H
-#define ALTAIR_FIXED_VECTOR_H
-
+#pragma once
 
 #include <cstdint>
 #include <cstring>
@@ -48,5 +45,3 @@ public:
         return fixed_vector[current_index];
     }
 };
-
-#endif //ALTAIR_FIXED_VECTOR_H

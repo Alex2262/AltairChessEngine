@@ -28,7 +28,7 @@ double position_time_scale(Position& position) {
 
     int low_rank_pawns = 0;
 
-    BITBOARD white_pawns = position.pieces[WHITE_PAWN];
+    Bitboard white_pawns = position.pieces[WHITE_PAWN];
     while (white_pawns) {
         Square square = poplsb(white_pawns);
         Rank rank = rank_of(square);
@@ -36,7 +36,7 @@ double position_time_scale(Position& position) {
         if (rank <= 2) low_rank_pawns++;
     }
 
-    BITBOARD black_pawns = position.pieces[BLACK_PAWN];
+    Bitboard black_pawns = position.pieces[BLACK_PAWN];
     while (black_pawns) {
         Square square = poplsb(black_pawns);
         Rank rank = rank_of(square);

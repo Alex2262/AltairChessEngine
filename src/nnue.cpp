@@ -12,8 +12,8 @@
 
 #include "incbin.h"
 
-INCBIN(nnue, "src/ceres-net.bin");
-// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/ceres-net.bin");
+// INCBIN(nnue, "src/ceres-net.bin");
+INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/ceres-net.bin");
 
 const NNUE_Params &original_nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 const NNUE_Params nnue_parameters = get_nnue_parameters();
@@ -33,7 +33,7 @@ void NNUE_State::reset_side(Position& position, Color color) {
     current_accumulator->init_side(nnue_parameters.feature_bias, color);
 
     for (int piece = WHITE_PAWN; piece < static_cast<int>(EMPTY); piece++) {
-        BITBOARD piece_bb = position.pieces[piece];
+        Bitboard piece_bb = position.pieces[piece];
         while (piece_bb) {
             Square square = poplsb(piece_bb);
             update_feature_side<true>(static_cast<Piece>(piece), square, color);
@@ -42,7 +42,7 @@ void NNUE_State::reset_side(Position& position, Color color) {
 }
 
 
-SCORE_TYPE NNUE_State::evaluate(Position& position, Color color) {
+Score NNUE_State::evaluate(Position& position, Color color) {
 
     const int output_bucket = (popcount(position.all_pieces) - 2) / MATERIAL_OUTPUT_BUCKET_DIVISOR;
 

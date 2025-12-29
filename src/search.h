@@ -1,7 +1,5 @@
 
-
-#ifndef ALTAIR_SEARCH_H
-#define ALTAIR_SEARCH_H
+#pragma once
 
 #include <vector>
 #include <unordered_set>
@@ -20,11 +18,11 @@ constexpr int correction_history_max = correction_history_grain * 64;
 
 
 struct TT_Entry {                          // 22 bytes --> 24 bytes
-    HASH_TYPE  key        = 0;             // 8 bytes
-    SCORE_TYPE score      = SCORE_NONE;    // 4 bytes
-    SCORE_TYPE evaluation = NO_EVALUATION; // 4 bytes
+    Hash  key        = 0;             // 8 bytes
+    Score score      = SCORE_NONE;    // 4 bytes
+    Score evaluation = NO_EVALUATION; // 4 bytes
     Move       move       = NO_MOVE;       // 2 bytes
-    PLY_TYPE   depth      = 0;             // 2 bytes
+    Ply   depth      = 0;             // 2 bytes
     short      flag       = 0;             // 1 byte
     bool       pv_node    = false;         // 1 byte
 };
@@ -41,10 +39,10 @@ struct Search_Results {
     uint64_t alpha_raised_count = 0;
     uint64_t search_alpha_raises[ALPHA_RAISE_STATS_COUNT]{};
 
-    PLY_TYPE depth_reached = 0;
+    Ply depth_reached = 0;
 
     Move best_move = NO_MOVE;
-    SCORE_TYPE score = 0;
+    Score score = 0;
 };
 
 struct T {
@@ -209,30 +207,30 @@ public:
 
     int thread_id = 0;
 
-    PLY_TYPE selective_depth = 0;
+    Ply selective_depth = 0;
 
     Position position{};
 
-    PLY_TYPE current_search_depth = 0;
-    PLY_TYPE search_ply = 0;
-    PLY_TYPE base_full_moves = 1;
-    PLY_TYPE game_ply = 0;
-    PLY_TYPE fifty_move = 0;
+    Ply current_search_depth = 0;
+    Ply search_ply = 0;
+    Ply base_full_moves = 1;
+    Ply game_ply = 0;
+    Ply fifty_move = 0;
 
     uint64_t node_count = 0;
 
     std::unordered_set<uint16_t> excluded_root_moves{};
 
     InformativeMove killer_moves[2][MAX_AB_DEPTH]{};  // killer moves (2) | max_depth (64)
-    SCORE_TYPE history_moves[12][64][2][2]{}; // piece | target_square | origin_threat | target_threat
-    SCORE_TYPE capture_history[2][12][12][64]{};
-    SCORE_TYPE continuation_history[12][64][12][64]{};
-    SCORE_TYPE correction_history[2][correction_history_size]{};
-    SCORE_TYPE correction_history_np[2][correction_history_size]{};
-    SCORE_TYPE correction_history_major[2][correction_history_size]{};
-    SCORE_TYPE correction_history_minor[2][correction_history_size]{};
+    Score history_moves[12][64][2][2]{}; // piece | target_square | origin_threat | target_threat
+    Score capture_history[2][12][12][64]{};
+    Score continuation_history[12][64][12][64]{};
+    Score correction_history[2][correction_history_size]{};
+    Score correction_history_np[2][correction_history_size]{};
+    Score correction_history_major[2][correction_history_size]{};
+    Score correction_history_minor[2][correction_history_size]{};
 
-    HASH_TYPE repetition_table[TOTAL_MAX_DEPTH + 512] = {0};
+    Hash repetition_table[TOTAL_MAX_DEPTH + 512] = {0};
 
     bool terminated = true;
 
@@ -240,16 +238,16 @@ public:
     std::array<FixedVector<ScoredMove, MAX_MOVES>, TOTAL_MAX_DEPTH> searched_quiets{};
     std::array<FixedVector<ScoredMove, MAX_NOISY>, TOTAL_MAX_DEPTH> searched_noisy{};
 
-    inline PLY_TYPE get_full_game_ply() const { return base_full_moves * 2 + game_ply + position.side; }
+    inline Ply get_full_game_ply() const { return base_full_moves * 2 + game_ply + position.side; }
     bool detect_repetition();
     bool detect_repetition_3();
 
-    SCORE_TYPE& get_continuation_history_entry(InformativeMove last_move, InformativeMove informative_move);
+    Score& get_continuation_history_entry(InformativeMove last_move, InformativeMove informative_move);
 
-    void update_correction_history_entry(SCORE_TYPE& c_hist_entry, PLY_TYPE depth, SCORE_TYPE diff);
-    void update_correction_history_score(PLY_TYPE depth, SCORE_TYPE diff);
-    SCORE_TYPE get_correction_score(SCORE_TYPE& c_hist_entry);
-    SCORE_TYPE correct_evaluation(SCORE_TYPE evaluation);
+    void update_correction_history_entry(Score& c_hist_entry, Ply depth, Score diff);
+    void update_correction_history_score(Ply depth, Score diff);
+    Score get_correction_score(Score& c_hist_entry);
+    Score correct_evaluation(Score evaluation);
 
     inline void reset_generators() {
         for (int ply = 0; ply < static_cast<int>(generators.size()); ply++) {
@@ -280,9 +278,9 @@ public:
 
     int LMR_REDUCTIONS_QUIET[MAX_AB_DEPTH][64]{};
 
-    PLY_TYPE max_depth = MAX_AB_DEPTH - 1;
-    PLY_TYPE max_q_depth = TOTAL_MAX_DEPTH - MAX_AB_DEPTH;
-    PLY_TYPE min_depth = 1;
+    Ply max_depth = MAX_AB_DEPTH - 1;
+    Ply max_q_depth = TOTAL_MAX_DEPTH - MAX_AB_DEPTH;
+    Ply min_depth = 1;
 
     int move_overhead = 50;
     uint64_t hard_time_limit = 60000;
@@ -295,7 +293,7 @@ public:
     uint64_t node_table[12][64]{};
 
     Move pv_table[MAX_AB_DEPTH + 1][MAX_AB_DEPTH + 1]{};
-    PLY_TYPE pv_length[MAX_AB_DEPTH + 1] = {0};
+    Ply pv_length[MAX_AB_DEPTH + 1] = {0};
 
     // TT_Entry transposition_table[MAX_TT_SIZE]{};
     std::vector<TT_Entry> transposition_table;
@@ -313,44 +311,37 @@ public:
 
     void resize_tt(uint64_t mb);
 
-    short probe_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth,
+    short probe_tt_entry(int thread_id, Hash hash_key, Score alpha, Score beta, Ply depth,
                          TT_Entry& return_entry);
-    void record_tt_entry(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move, PLY_TYPE depth,
-                         SCORE_TYPE static_eval, bool tt_pv);
-    short probe_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE alpha, SCORE_TYPE beta,
+    void record_tt_entry(int thread_id, Hash hash_key, Score score, short tt_flag, Move move, Ply depth,
+                         Score static_eval, bool tt_pv);
+    short probe_tt_entry_q(int thread_id, Hash hash_key, Score alpha, Score beta,
                            TT_Entry& return_entry);
-    void record_tt_entry_q(int thread_id, HASH_TYPE hash_key, SCORE_TYPE score, short tt_flag, Move move,
-                           SCORE_TYPE static_eval, bool tt_pv);
-    SCORE_TYPE probe_tt_evaluation(HASH_TYPE hash_key);
+    void record_tt_entry_q(int thread_id, Hash hash_key, Score score, short tt_flag, Move move,
+                           Score static_eval, bool tt_pv);
+    Score probe_tt_evaluation(Hash hash_key);
 
-    void tt_prefetch_read(HASH_TYPE hash_key);
+    void tt_prefetch_read(Hash hash_key);
 
     bool check_time();
     bool check_nodes();
 
-    template<bool NNUE>
-    SCORE_TYPE evaluate(int thread_id);
+    Score evaluate(int thread_id);
 };
 
-void update_history_entry(SCORE_TYPE& score, SCORE_TYPE bonus, SCORE_TYPE max_score);
+void update_history_entry(Score& score, Score bonus, Score max_score);
 void update_histories(Thread_State& thread_state, InformativeMove informative_move,
                       InformativeMove last_moves[], bool quiet, bool winning_capture,
                       int bonus);
 
-template<bool NNUE>
-SCORE_TYPE qsearch(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, int thread_id);
-template<bool NNUE>
-SCORE_TYPE negamax(Engine& engine, SCORE_TYPE alpha, SCORE_TYPE beta, PLY_TYPE depth, bool do_null, bool cutnode, int thread_id);
+Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id);
+Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, bool cutnode, int thread_id);
 
-void print_thinking(Engine& engine, NodeType node, SCORE_TYPE best_score, int pv_number, int thread_id);
+void print_thinking(Engine& engine, NodeType node, Score best_score, int pv_number, int thread_id);
 
-template<bool NNUE>
-SCORE_TYPE aspiration_window(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id);
-template<bool NNUE>
-SCORE_TYPE multi_pv_search(Engine& engine, SCORE_TYPE previous_score, PLY_TYPE& asp_depth, Move& best_move, int thread_id);
-template<bool NNUE>
+Score aspiration_window(Engine& engine, Score previous_score, Ply& asp_depth, Move& best_move, int thread_id);
+Score multi_pv_search(Engine& engine, Score previous_score, Ply& asp_depth, Move& best_move, int thread_id);
 void iterative_search(Engine& engine, int thread_id);
-template<bool NNUE>
 void lazy_smp_search(Engine& engine);
 void search(Engine& engine);
 
@@ -359,5 +350,3 @@ void print_statistics(Search_Results& res);
 void print_search_tuning_config();
 
 inline SearchParameters search_params{};
-
-#endif //ALTAIR_SEARCH_H

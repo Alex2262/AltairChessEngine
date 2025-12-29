@@ -180,10 +180,10 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
 
         for (ScoredMove &scored_move: position.scored_moves[0]) {
             Move move = scored_move.move;
-            bool attempt = position.make_move<NO_NNUE>(move, position.state_stack[0],
+            bool attempt = position.make_move(move, position.state_stack[0],
                                                        datagen_thread.engine->thread_states[0].fifty_move);
 
-            position.undo_move<NO_NNUE>(move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+            position.undo_move(move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
 
             if (attempt) legal_moves.push_back(move);
         }
@@ -192,7 +192,7 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
 
         Move random_move = legal_moves[datagen_thread.prng.rand64() % legal_moves.size()];
 
-        position.make_move<USE_NNUE>(random_move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+        position.make_move(random_move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
         position.update_nnue(position.state_stack[0]);
         datagen_thread.game_length++;
     }
@@ -204,8 +204,8 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
     bool terminated = true;
 
     for (ScoredMove& scored_move : position.scored_moves[0]) {
-        bool attempt = position.make_move<NO_NNUE>(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
-        position.undo_move<NO_NNUE>(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+        bool attempt = position.make_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+        position.undo_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
 
         if (attempt) {
             terminated = false;
@@ -309,8 +309,8 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
             position.set_state(position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
             position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[0]);
             for (ScoredMove& scored_move : position.scored_moves[0]) {
-                bool attempt = position.make_move<NO_NNUE>(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
-                position.undo_move<NO_NNUE>(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+                bool attempt = position.make_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+                position.undo_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
                 if (attempt) {
                     terminated = false;
                     break;
@@ -329,12 +329,12 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
             Move best_move = datagen_thread.engine->search_results.best_move;
             if (best_move == NO_MOVE) break;
 
-            SCORE_TYPE score = datagen_thread.engine->search_results.score;
-            SCORE_TYPE objective_score = position.side == WHITE ? score : -score;
+            Score score = datagen_thread.engine->search_results.score;
+            Score objective_score = position.side == WHITE ? score : -score;
             bool noisy = best_move.is_capture(position) || best_move.type() == MOVE_TYPE_EP ||
                          best_move.type() == MOVE_TYPE_PROMOTION;
 
-            position.make_move<USE_NNUE>(best_move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
+            position.make_move(best_move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
             position.update_nnue(position.state_stack[0]);
 
             EvaluationInformation evaluation_information{};

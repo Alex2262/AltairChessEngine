@@ -1,9 +1,5 @@
-//
-// Created by Alexander Tian on 6/16/23.
-//
 
-#ifndef ALTAIR_NNUE_H
-#define ALTAIR_NNUE_H
+#pragma once
 
 #include <iostream>
 #include <cstring>
@@ -25,7 +21,7 @@ constexpr int    MATERIAL_OUTPUT_BUCKET_DIVISOR = 32 / MATERIAL_OUTPUT_BUCKETS;
 
 constexpr int16_t CRELU_MIN = 0;
 
-constexpr SCORE_TYPE SCALE = 400;
+constexpr Score SCALE = 400;
 
 constexpr int16_t QA = 255;
 constexpr int16_t QB = 64;
@@ -119,7 +115,7 @@ public:
 
     void reset_side(Position& position, Color color);
 
-    SCORE_TYPE evaluate(Position& position, Color color);
+    Score evaluate(Position& position, Color color);
 
     std::pair<size_t, size_t> get_feature_indices(Piece piece, Square sq);
 
@@ -176,6 +172,3 @@ public:
                 nnue_parameters.feature_weights[offset + i];
     }
 };
-
-
-#endif //ALTAIR_NNUE_H
