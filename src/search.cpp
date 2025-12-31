@@ -780,7 +780,7 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
         if (move == NO_MOVE) break;
 
         InformativeMove informative_move = InformativeMove(move, position.board[move.origin()], position.board[move.target()]);
-        Score      move_score       = move == tt_move ? static_cast<Score>(MO_Margin::TT) : scored_move.score;
+        Score           move_score       = move == tt_move ? static_cast<Score>(MO_Margin::TT) : scored_move.score;
         bool            winning_capture  = scored_move.winning_capture;
         bool            quiet            = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
 
@@ -1454,10 +1454,11 @@ void search(Engine& engine) {
     engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
 
-    position.get_pseudo_legal_moves<Movegen::All, true>(thread_state.generators[0].scored_moves);
+    FixedVector<ScoredMove, MAX_MOVES> scored_moves;
+    position.get_pseudo_legal_moves<Movegen::All, true>(scored_moves);
     position.set_state(position.state_stack[0], thread_state.fifty_move);
 
-    for (ScoredMove scored_move : thread_state.generators[0].scored_moves) {
+    for (ScoredMove scored_move : scored_moves) {
         bool attempt = position.make_move(scored_move.move, position.state_stack[0], thread_state.fifty_move);
         position.undo_move(scored_move.move, position.state_stack[0], thread_state.fifty_move);
 

@@ -104,6 +104,7 @@ public:
             Generator& generator = generators[ply];
             generator = Generator(*this);
             generator.search_ply = ply;
+            generator.scored_moves.clear();
         }
     }
 };

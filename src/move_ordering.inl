@@ -61,15 +61,12 @@ inline ScoredMove Generator::next_move() {
     }
 
     if (stage == Stage::Noisy) {
-
-        if (scored_moves[move_index].move == tt_move) move_index++;
+        if (move_index < scored_moves.size() && scored_moves[move_index].move == tt_move) move_index++;
 
         if (good_capture_found >= good_capture_count) {
             if constexpr (!qsearch) stage = Stage::GenQ_BN;
             else if (move_index >= static_cast<int>(scored_moves.size())) stage = Stage::Terminated;
-        }
-
-        if (stage == Stage::Noisy) {
+        } else {
             if constexpr (qsearch) picked = sort_next_move<Filter::None>();
             else picked = sort_next_move<Filter::Good>();
 
@@ -90,7 +87,7 @@ inline ScoredMove Generator::next_move() {
     if (stage == Stage::Q_BN) {
         assert(!qsearch);
 
-        if (scored_moves[move_index].move == tt_move) move_index++;
+        if (move_index < scored_moves.size() && scored_moves[move_index].move == tt_move) move_index++;
 
         if (move_index >= static_cast<int>(scored_moves.size())) {
             stage = Stage::Terminated;
