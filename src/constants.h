@@ -30,7 +30,9 @@ constexpr Score MATE_SCORE = 100000;
 constexpr Score MATE_BOUND = 99000;
 
 #define MAX_AB_DEPTH        256
-#define TOTAL_MAX_DEPTH     1536
+#define MAX_QS_DEPTH        64
+#define TOTAL_MAX_DEPTH     (MAX_AB_DEPTH + MAX_QS_DEPTH)
+#define MAX_GAME_LENGTH     1536
 #define DEFAULT_TT_SIZE     16
 
 #define HASH_FLAG_NONE      0

@@ -6,7 +6,7 @@
 #include "random.h"
 #include "search.h"
 
-constexpr int MAX_GAME_LENGTH = 600;
+constexpr int MAX_DG_GAME_LENGTH = 600;
 
 struct EvalFenStruct {
     std::string fen;

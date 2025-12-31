@@ -52,7 +52,10 @@ class Thread_State {
 
 public:
 
-    inline Thread_State() {
+    inline Thread_State() :
+        generators(TOTAL_MAX_DEPTH),
+        searched_quiets(TOTAL_MAX_DEPTH),
+        searched_noisy(TOTAL_MAX_DEPTH) {
         reset_generators();
     };
 
@@ -81,13 +84,13 @@ public:
     Score correction_history_major[2][correction_history_size]{};
     Score correction_history_minor[2][correction_history_size]{};
 
-    Hash repetition_table[TOTAL_MAX_DEPTH + 512]{};
+    Hash repetition_table[TOTAL_MAX_DEPTH + MAX_GAME_LENGTH + 5]{};
 
     bool terminated = true;
 
-    std::array<Generator, TOTAL_MAX_DEPTH> generators{};
-    std::array<FixedVector<ScoredMove, MAX_MOVES>, TOTAL_MAX_DEPTH> searched_quiets{};
-    std::array<FixedVector<ScoredMove, MAX_NOISY>, TOTAL_MAX_DEPTH> searched_noisy{};
+    std::vector<Generator> generators;
+    std::vector<FixedVector<ScoredMove, MAX_MOVES>> searched_quiets;
+    std::vector<FixedVector<ScoredMove, MAX_NOISY>> searched_noisy;
 
     inline Ply get_full_game_ply() const { return base_full_moves * 2 + game_ply + position.side; }
     bool detect_repetition();
@@ -129,7 +132,7 @@ public:
     int LMR_REDUCTIONS_QUIET[MAX_AB_DEPTH][64]{};
 
     Ply max_depth = MAX_AB_DEPTH - 1;
-    Ply max_q_depth = TOTAL_MAX_DEPTH - MAX_AB_DEPTH;
+    Ply max_q_depth = MAX_QS_DEPTH - 1;
     Ply min_depth = 1;
 
     int move_overhead = 50;
