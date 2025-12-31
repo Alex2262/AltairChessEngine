@@ -70,7 +70,7 @@ Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
 }
 
 template<bool qsearch>
-Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, int& good_capture_count) {
+Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count) {
 
     Move move = scored_move.move;
 
@@ -121,8 +121,8 @@ Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt
     return score;
 }
 
-template Score score_capture<true >(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, int& good_capture_count);
-template Score score_capture<false>(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, int& good_capture_count);
+template Score score_capture<true >(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count);
+template Score score_capture<false>(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count);
 
 void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                      Move tt_move, InformativeMove last_moves[], int start_index) {
@@ -134,7 +134,7 @@ void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOV
 
 template<bool qsearch>
 void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
-                        Move tt_move, int& good_capture_count) {
+                        Move tt_move, size_t& good_capture_count) {
     for (ScoredMove& scored_move : current_scored_moves) {
         assert(scored_move.move.type() != MOVE_TYPE_CASTLE);
         scored_move.score = score_capture<qsearch>(thread_state, scored_move, tt_move, good_capture_count);
@@ -142,9 +142,9 @@ void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_
 }
 
 template void get_capture_scores<true >(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
-                                        Move tt_move, int& good_capture_count);
+                                        Move tt_move, size_t& good_capture_count);
 template void get_capture_scores<false>(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
-                                        Move tt_move, int& good_capture_count);
+                                        Move tt_move, size_t& good_capture_count);
 
 Generator::Generator(Thread_State& thread_state_passed) {
     thread_state = &thread_state_passed;

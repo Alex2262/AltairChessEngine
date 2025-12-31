@@ -4,7 +4,7 @@ template<Filter filter>
 inline ScoredMove Generator::sort_next_move() {
     auto best_score = scored_moves[move_index].score;
     auto best_idx = move_index;
-    for (auto next_count = move_index + 1; next_count < static_cast<int>(scored_moves.size()); next_count++) {
+    for (size_t next_count = move_index + 1; next_count < scored_moves.size(); next_count++) {
         ScoredMove& scored_move = scored_moves[next_count];
 
         if constexpr (filter == Filter::Noisy) {
@@ -65,7 +65,7 @@ inline ScoredMove Generator::next_move() {
 
         if (good_capture_found >= good_capture_count) {
             if constexpr (!qsearch) stage = Stage::GenQ_BN;
-            else if (move_index >= static_cast<int>(scored_moves.size())) stage = Stage::Terminated;
+            else if (move_index >= scored_moves.size()) stage = Stage::Terminated;
         } else {
             if constexpr (qsearch) picked = sort_next_move<Filter::None>();
             else picked = sort_next_move<Filter::Good>();
@@ -89,7 +89,7 @@ inline ScoredMove Generator::next_move() {
 
         if (move_index < scored_moves.size() && scored_moves[move_index].move == tt_move) move_index++;
 
-        if (move_index >= static_cast<int>(scored_moves.size())) {
+        if (move_index >= scored_moves.size()) {
             stage = Stage::Terminated;
         } else {
             picked = sort_next_move<Filter::None>();
