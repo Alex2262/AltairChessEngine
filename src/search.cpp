@@ -1,18 +1,18 @@
 
 
 #include <thread>
-#include <chrono>
 #include <iostream>
 #include <cstring>
 #include <cmath>
 #include <algorithm>
 #include <cassert>
 #include "search.h"
-#include "evaluation.h"
+#include "evaluation_classic.h"
 #include "move.h"
 #include "useful.h"
 #include "see.h"
 #include "wdl.h"
+#include "search_parameters.h"
 
 
 // Initialize a table for Late Move Reductions, and the base reductions to be applied
@@ -114,20 +114,6 @@ bool Thread_State::detect_repetition() {
     for (Ply i = game_ply - 2; i >= std::max<Ply>(game_ply - fifty_move, 0); i--) {
         if (repetition_table[i] == repetition_table[game_ply]) {
             return true;
-        }
-    }
-
-    return false;
-}
-
-// Detects a repetition (Checks for 3 repetitions)
-bool Thread_State::detect_repetition_3() {
-
-    int count = 0;
-    for (Ply i = game_ply - 2; i >= std::max<Ply>(game_ply - fifty_move, 0); i--) {
-        if (repetition_table[i] == repetition_table[game_ply]) {
-            count++;
-            if (count >= 2) return true;
         }
     }
 
@@ -1468,10 +1454,10 @@ void search(Engine& engine) {
     engine.start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch()).count();
 
-    position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[0]);
+    position.get_pseudo_legal_moves<Movegen::All, true>(thread_state.generators[0].scored_moves);
     position.set_state(position.state_stack[0], thread_state.fifty_move);
 
-    for (ScoredMove scored_move : position.scored_moves[0]) {
+    for (ScoredMove scored_move : thread_state.generators[0].scored_moves) {
         bool attempt = position.make_move(scored_move.move, position.state_stack[0], thread_state.fifty_move);
         position.undo_move(scored_move.move, position.state_stack[0], thread_state.fifty_move);
 
@@ -1482,7 +1468,7 @@ void search(Engine& engine) {
 }
 
 
-void print_statistics(Search_Results& res) {
+void print_statistics(SearchResults& res) {
 
 
     std::cout << "------------------- SEARCH STATISTICS -------------------\n\n\n";

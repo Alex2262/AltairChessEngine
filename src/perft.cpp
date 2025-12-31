@@ -16,10 +16,11 @@ void debug_perft(Position& position, Perft_Result_Type& res, Ply depth, Ply ply)
 
     Ply fifty = 0;
 
+    FixedVector<ScoredMove, MAX_MOVES> scored_moves;
     position.set_state(position.state_stack[ply], fifty);
-    position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[ply]);
+    position.get_pseudo_legal_moves<Movegen::All, true>(scored_moves);
 
-    for (ScoredMove& scored_move : position.scored_moves[ply]) {
+    for (ScoredMove& scored_move : scored_moves) {
 
         Move move = scored_move.move;
         // std::cout << "move: " << get_uci_from_move(position, move) << std::endl;
@@ -55,8 +56,7 @@ void debug_perft(Position& position, Perft_Result_Type& res, Ply depth, Ply ply)
 }
 
 
-
-long long fast_perft(Position& position, Ply depth, Ply ply) {
+uint64_t fast_perft(Position& position, Ply depth, Ply ply) {
 
     // std::cout << position.state_stack[ply - 1].move.normal_move().get_uci(position) << std::endl;
     // std::cout << position;
@@ -69,12 +69,13 @@ long long fast_perft(Position& position, Ply depth, Ply ply) {
 
     Ply fifty = 0;
 
+    FixedVector<ScoredMove, MAX_MOVES> scored_moves;
     position.set_state(position.state_stack[ply], fifty);
-    position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[ply]);
+    position.get_pseudo_legal_moves<Movegen::All, true>(scored_moves);
 
     long long amt = 0;
 
-    for (ScoredMove& scored_move : position.scored_moves[ply]) {
+    for (ScoredMove& scored_move : scored_moves) {
 
         Move move = scored_move.move;
 
@@ -96,7 +97,7 @@ long long fast_perft(Position& position, Ply depth, Ply ply) {
 }
 
 
-long long uci_perft(Position& position, Ply depth, Ply ply) {
+uint64_t uci_perft(Position& position, Ply depth, Ply ply) {
 
     Ply fifty = 0;
 
@@ -106,12 +107,13 @@ long long uci_perft(Position& position, Ply depth, Ply ply) {
         return 1;
     }
 
+    FixedVector<ScoredMove, MAX_MOVES> scored_moves;
     position.set_state(position.state_stack[ply], fifty);
-    position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[ply]);
+    position.get_pseudo_legal_moves<Movegen::All, true>(scored_moves);
 
     long long total_amt = 0;
 
-    for (ScoredMove& scored_move : position.scored_moves[ply]) {
+    for (ScoredMove& scored_move : scored_moves) {
 
         Move move = scored_move.move;
 

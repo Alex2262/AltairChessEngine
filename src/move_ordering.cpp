@@ -4,6 +4,7 @@
 #include "move_ordering.h"
 #include "see.h"
 #include "search.h"
+#include "search_parameters.h"
 
 Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
                       InformativeMove last_moves[]) {
@@ -151,7 +152,6 @@ Generator::Generator(Thread_State& thread_state_passed) {
 }
 
 void Generator::reset_qsearch(Move tt_move_passed) {
-
     stage = Stage::TT_probe;
     tt_move = tt_move_passed;
 
@@ -159,7 +159,6 @@ void Generator::reset_qsearch(Move tt_move_passed) {
 }
 
 void Generator::reset_negamax(Move tt_move_passed, InformativeMove last_moves_passed[]) {
-
     stage = Stage::TT_probe;
     tt_move = tt_move_passed;
 

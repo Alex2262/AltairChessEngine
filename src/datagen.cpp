@@ -10,7 +10,7 @@
 #include <cmath>
 #include "datagen.h"
 #include "search.h"
-#include "evaluation.h"
+#include "evaluation_classic.h"
 #include "useful.h"
 
 
@@ -174,11 +174,11 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
     for (int random_move_count = 0; random_move_count < num_random_moves; random_move_count++) {
 
         position.set_state(position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
-        position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[0]);
+        position.get_pseudo_legal_moves<Movegen::All, true>(datagen_thread.scored_moves);
 
         legal_moves.clear();
 
-        for (ScoredMove &scored_move: position.scored_moves[0]) {
+        for (ScoredMove &scored_move: datagen_thread.scored_moves) {
             Move move = scored_move.move;
             bool attempt = position.make_move(move, position.state_stack[0],
                                                        datagen_thread.engine->thread_states[0].fifty_move);
@@ -199,11 +199,11 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
 
     // Verify the position has moves
     position.set_state(position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
-    position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[0]);
+    position.get_pseudo_legal_moves<Movegen::All, true>(datagen_thread.scored_moves);
 
     bool terminated = true;
 
-    for (ScoredMove& scored_move : position.scored_moves[0]) {
+    for (ScoredMove& scored_move : datagen_thread.scored_moves) {
         bool attempt = position.make_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
         position.undo_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
 
@@ -307,8 +307,8 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
             // Termination Check
             bool terminated = true;
             position.set_state(position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
-            position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[0]);
-            for (ScoredMove& scored_move : position.scored_moves[0]) {
+            position.get_pseudo_legal_moves<Movegen::All, true>(datagen_thread.scored_moves);
+            for (ScoredMove& scored_move : datagen_thread.scored_moves) {
                 bool attempt = position.make_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
                 position.undo_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
                 if (attempt) {

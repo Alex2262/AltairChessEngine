@@ -1,9 +1,7 @@
-//
-// Created by Alexander Tian on 4/16/24.
-//
 
 #include <cmath>
 #include "timeman.h"
+#include "search_parameters.h"
 
 double position_time_scale(Position& position) {
 
@@ -140,7 +138,5 @@ update:
     if (engine.hard_time_limit > static_cast<uint64_t>(movetime) && movetime != 0.0) {
         engine.hard_time_limit = static_cast<uint64_t>(time_amt);
     }
-
-    // std::cout << time_amt << " " << engine.soft_time_limit << " " << engine.hard_time_limit << std::endl;
 }
 

@@ -1,6 +1,6 @@
 
 #include <algorithm>
-#include "evaluation.h"
+#include "evaluation_classic.h"
 #include "evaluation_constants.h"
 
 void initialize_evaluation_information(Position& position, EvaluationInformation& evaluation_information) {

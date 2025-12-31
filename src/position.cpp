@@ -9,6 +9,37 @@
 #include "zobrist.h"
 
 
+std::ostream& operator << (std::ostream& os, const Position& position) {
+    std::string new_board;
+
+    auto pos = static_cast<Square>(56);
+    for (int i = 0; i < 64; i++) {
+        if (i != 0 && i % 8 == 0) {
+            new_board += '\n';
+            pos = static_cast<Square>(pos - 16);
+        }
+
+        Piece piece = position.board[pos];
+        pos = static_cast<Square>(pos + 1);
+
+        if (piece == EMPTY) {
+            new_board += ". ";
+            continue;
+        }
+
+        new_board += PIECE_MATCHER[piece];
+        new_board += ' ';
+
+    }
+
+    os << new_board << std::endl << std::endl;
+    os << "side: " << position.side << " ep: " << position.ep_square << " castle: " << position.castle_ability_bits
+       << " hash: " << position.hash_key << std::endl << std::endl;
+
+    return os;
+}
+
+
 void Position::clear_state_stack() {
     for (auto& state : state_stack) {
         state.in_check = -1;
@@ -46,64 +77,9 @@ void Position::set_state(State& state, Ply fifty_move) const {
     state.threats = threats;
 }
 
-Bitboard Position::get_attacked_squares(Color color) const {
-    Bitboard attacks{};
-    for (int piece = 0; piece < 6; piece++) {
-        Bitboard piece_bitboard = get_pieces(static_cast<PieceType>(piece), color);
-        while (piece_bitboard) {
-            Square square = poplsb(piece_bitboard);
-            attacks |= get_piece_attacks(static_cast<Piece>(piece + COLOR_OFFSET * color), square,
-                                         all_pieces & (~from_square(square)));
-        }
-    }
-
-    attacks &= ~(color == side ? our_pieces : opp_pieces);
-    return attacks;
-}
-
-Square Position::get_king_pos(Color color) const {
-    return lsb(get_pieces(KING, color));
-}
-
-bool Position::is_attacked(Square square, Color color) const {
-    Bitboard occupancy = all_pieces & (~from_square(square));
-
-    // Treat square like a pawn
-    Bitboard pawn_attacks = color == WHITE ? WHITE_PAWN_ATTACKS[square] : BLACK_PAWN_ATTACKS[square];
-    if (pawn_attacks & get_pieces(PAWN, ~color)) return true;
-
-    // Treat square like a knight
-    Bitboard knight_attacks = KNIGHT_ATTACKS[square];
-    if (knight_attacks & get_pieces(KNIGHT, ~color)) return true;
-
-    // Treat square like a bishop
-    Bitboard bishop_attacks = get_bishop_attacks(square, occupancy);
-    if (bishop_attacks & (get_pieces(BISHOP, ~color) | get_pieces(QUEEN, ~color))) return true;
-
-    // Treat square like a rook
-    Bitboard rook_attacks = get_rook_attacks(square, occupancy);
-    if (rook_attacks & (get_pieces(ROOK, ~color) | get_pieces(QUEEN, ~color))) return true;
-
-    // Treat square like a king
-    Bitboard king_attacks = KING_ATTACKS[square];
-    if (king_attacks & (get_pieces(KING, ~color))) return true;
-
-    return false;
-}
-
 uint32_t Position::get_non_pawn_material_count() const {
     return popcount(all_pieces ^
         (get_pieces(PAWN, WHITE) | get_pieces(PAWN, BLACK) | get_pieces(KING, WHITE) | get_pieces(KING, BLACK)));
-}
-
-void Position::remove_piece(Piece piece, Square square) {
-    pieces[piece] &= ~(1ULL << square);
-    board[square] = EMPTY;
-}
-
-void Position::place_piece(Piece piece, Square square) {
-    pieces[piece] |= (1ULL << square);
-    board[square] = piece;
 }
 
 void Position::compute_hash_key() {
@@ -147,6 +123,41 @@ void Position::compute_hash_key() {
         hash_key ^= ZobristHashKeys.side_hash_key;
     }
 }
+
+
+void Position::compute_threats() {
+    threats = 0;
+
+    const Color opp = ~side;
+
+    const Bitboard occupancy = get_all_pieces();
+
+    Bitboard pawns      = get_pieces(PAWN, opp);
+    Bitboard knights    = get_pieces(KNIGHT, opp);
+    Bitboard diagonal   = get_pieces(QUEEN, opp) | get_pieces(BISHOP, opp);
+    Bitboard horizontal = get_pieces(QUEEN, opp) | get_pieces(ROOK, opp);
+
+    Bitboard pawn_forward_squares = opp == WHITE ? shift<NORTH>(pawns) : shift<SOUTH>(pawns);
+    threats |= shift<WEST>(pawn_forward_squares) | shift<EAST>(pawn_forward_squares);
+
+    while (knights) {
+        const Square square = poplsb(knights);
+        threats |= get_regular_piece_type_attacks<KNIGHT>(square, occupancy);
+    }
+
+    while (diagonal) {
+        const Square square = poplsb(diagonal);
+        threats |= get_regular_piece_type_attacks<BISHOP>(square, occupancy);
+    }
+
+    while (horizontal) {
+        const Square square = poplsb(horizontal);
+        threats |= get_regular_piece_type_attacks<ROOK>(square, occupancy);
+    }
+
+    threats |= get_regular_piece_type_attacks<KING>(get_king_pos(opp), occupancy);
+}
+
 
 FenInfo Position::set_fen(const std::string& fen_string) {
 
@@ -379,85 +390,6 @@ void Position::set_dfrc(int index) {
 
     compute_hash_key();
     nnue_state.reset_nnue(*this);
-}
-
-
-void Position::ensure_stable() {
-    nnue_state.reset_nnue(*this);
-}
-
-
-void Position::compute_threats() {
-    threats = 0;
-
-    const Color opp = ~side;
-
-    const Bitboard occupancy = get_all_pieces();
-
-    Bitboard pawns      = get_pieces(PAWN, opp);
-    Bitboard knights    = get_pieces(KNIGHT, opp);
-    Bitboard diagonal   = get_pieces(QUEEN, opp) | get_pieces(BISHOP, opp);
-    Bitboard horizontal = get_pieces(QUEEN, opp) | get_pieces(ROOK, opp);
-
-    Bitboard pawn_forward_squares = opp == WHITE ? shift<NORTH>(pawns) : shift<SOUTH>(pawns);
-    threats |= shift<WEST>(pawn_forward_squares) | shift<EAST>(pawn_forward_squares);
-
-    while (knights) {
-        const Square square = poplsb(knights);
-        threats |= get_regular_piece_type_attacks<KNIGHT>(square, occupancy);
-    }
-
-    while (diagonal) {
-        const Square square = poplsb(diagonal);
-        threats |= get_regular_piece_type_attacks<BISHOP>(square, occupancy);
-    }
-
-    while (horizontal) {
-        const Square square = poplsb(horizontal);
-        threats |= get_regular_piece_type_attacks<ROOK>(square, occupancy);
-    }
-
-    threats |= get_regular_piece_type_attacks<KING>(get_king_pos(opp), occupancy);
-}
-
-
-std::ostream& operator << (std::ostream& os, const Position& position) {
-    std::string new_board;
-
-    auto pos = static_cast<Square>(56);
-    for (int i = 0; i < 64; i++) {
-        if (i != 0 && i % 8 == 0) {
-            new_board += '\n';
-            pos = static_cast<Square>(pos - 16);
-        }
-
-        Piece piece = position.board[pos];
-        pos = static_cast<Square>(pos + 1);
-
-        if (piece == EMPTY) {
-            new_board += ". ";
-            continue;
-        }
-
-        //assert((pieces[piece] & (1ULL << MAILBOX_TO_STANDARD[pos]) >> MAILBOX_TO_STANDARD[pos]) == 1);
-
-        new_board += PIECE_MATCHER[piece];
-        new_board += ' ';
-
-    }
-
-    os << new_board << std::endl << std::endl;
-    os << "side: " << position.side << " ep: " << position.ep_square << " castle: " << position.castle_ability_bits
-       << " hash: " << position.hash_key << std::endl << std::endl;
-
-    /*
-    for (int piece = WHITE_PAWN; piece < EMPTY; piece++) {
-        os << "Piece: " << piece << " Bitboard: \n";
-        print_bitboard(position.pieces[piece]);
-    }
-    */
-
-    return os;
 }
 
 

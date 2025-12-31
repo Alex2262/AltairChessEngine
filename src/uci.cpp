@@ -7,7 +7,7 @@
 #include "useful.h"
 #include "move.h"
 #include "search.h"
-#include "evaluation.h"
+#include "evaluation_classic.h"
 #include "perft.h"
 #include "bench.h"
 #include "see.h"

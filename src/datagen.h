@@ -24,9 +24,9 @@ struct Datagen_Thread {
 
     std::string current_stage = "none";
 
-
     PRNG prng = PRNG(0);
 
+    FixedVector<ScoredMove, MAX_MOVES> scored_moves;
     std::unique_ptr<Engine> engine = std::make_unique<Engine>();
 
     inline Datagen_Thread() {

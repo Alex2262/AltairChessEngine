@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "evaluation.h"
+#include "evaluation_classic.h"
 #include "types.h"
 
 constexpr int GAME_PHASE_SCORES[6] = {0, 1, 1, 2, 4, 0};
