@@ -1,9 +1,7 @@
-//
-// Created by Alexander Tian on 4/16/24.
-//
 
 #include <cmath>
 #include "timeman.h"
+#include "search_parameters.h"
 
 double position_time_scale(Position& position) {
 
@@ -28,7 +26,7 @@ double position_time_scale(Position& position) {
 
     int low_rank_pawns = 0;
 
-    BITBOARD white_pawns = position.pieces[WHITE_PAWN];
+    Bitboard white_pawns = position.pieces[WHITE_PAWN];
     while (white_pawns) {
         Square square = poplsb(white_pawns);
         Rank rank = rank_of(square);
@@ -36,7 +34,7 @@ double position_time_scale(Position& position) {
         if (rank <= 2) low_rank_pawns++;
     }
 
-    BITBOARD black_pawns = position.pieces[BLACK_PAWN];
+    Bitboard black_pawns = position.pieces[BLACK_PAWN];
     while (black_pawns) {
         Square square = poplsb(black_pawns);
         Rank rank = rank_of(square);
@@ -140,7 +138,5 @@ update:
     if (engine.hard_time_limit > static_cast<uint64_t>(movetime) && movetime != 0.0) {
         engine.hard_time_limit = static_cast<uint64_t>(time_amt);
     }
-
-    // std::cout << time_amt << " " << engine.soft_time_limit << " " << engine.hard_time_limit << std::endl;
 }
 

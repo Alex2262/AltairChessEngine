@@ -4,30 +4,26 @@
 #include "perft.h"
 #include "move.h"
 
-void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY_TYPE ply) {
 
-    // position.print_board();
-    // std::cout << depth << std::endl;
-
+void debug_perft(Perft& perft, Position& position, Perft_Result_Type& res, Ply depth, Ply ply) {
     if (depth == 0) {
         res.total_amount += 1;
         return;
     }
 
-    PLY_TYPE fifty = 0;
+    Ply fifty = 0;
 
     position.set_state(position.state_stack[ply], fifty);
-    position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[ply]);
+    position.get_pseudo_legal_moves<Movegen::All, true>(perft.scored_moves[ply]);
 
-    for (ScoredMove& scored_move : position.scored_moves[ply]) {
+    for (ScoredMove& scored_move : perft.scored_moves[ply]) {
 
         Move move = scored_move.move;
-        // std::cout << "move: " << get_uci_from_move(position, move) << std::endl;
 
-        bool attempt = position.make_move<NO_NNUE>(move, position.state_stack[ply], fifty);
+        bool attempt = position.make_move(move, position.state_stack[ply], fifty);
 
         if (!attempt) {
-            position.undo_move<NO_NNUE>(move, position.state_stack[ply], fifty);
+            position.undo_move(move, position.state_stack[ply], fifty);
             continue;
         }
 
@@ -47,48 +43,35 @@ void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY
             if (position.is_attacked(position.get_king_pos(position.side), position.side)) res.check_amount += 1;
         }
 
-        debug_perft(position, res, depth - 1, ply + 1);
+        debug_perft(perft, position, res, depth - 1, ply + 1);
 
-        position.undo_move<NO_NNUE>(move, position.state_stack[ply], fifty);
+        position.undo_move(move, position.state_stack[ply], fifty);
     }
 
 }
 
 
-
-long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
-
-    // std::cout << position.state_stack[ply - 1].move.normal_move().get_uci(position) << std::endl;
-    // std::cout << position;
-
-    /*
-    if (depth == 0) {
-        return 1;
-    }
-    */
-
-    PLY_TYPE fifty = 0;
+uint64_t fast_perft(Perft& perft, Position& position, Ply depth, Ply ply) {
+    Ply fifty = 0;
 
     position.set_state(position.state_stack[ply], fifty);
-    position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[ply]);
+    position.get_pseudo_legal_moves<Movegen::All, true>(perft.scored_moves[ply]);
 
     long long amt = 0;
 
-    for (ScoredMove& scored_move : position.scored_moves[ply]) {
+    for (ScoredMove& scored_move : perft.scored_moves[ply]) {
 
         Move move = scored_move.move;
 
-        bool attempt = position.make_move<NO_NNUE>(move, position.state_stack[ply], fifty);
+        bool attempt = position.make_move(move, position.state_stack[ply], fifty);
 
         if (!attempt) {
-            position.undo_move<NO_NNUE>(move, position.state_stack[ply], fifty);
+            position.undo_move(move, position.state_stack[ply], fifty);
             continue;
         }
 
-        amt += depth == 1 ? 1 : fast_perft(position, depth - 1, ply + 1);
-        // amt += fast_perft(position, depth - 1, ply + 1);
-
-        position.undo_move<NO_NNUE>(move, position.state_stack[ply], fifty);
+        amt += depth == 1 ? 1 : fast_perft(perft, position, depth - 1, ply + 1);
+        position.undo_move(move, position.state_stack[ply], fifty);
     }
 
     return amt;
@@ -96,9 +79,8 @@ long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
 }
 
 
-long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
-
-    PLY_TYPE fifty = 0;
+uint64_t uci_perft(Perft& perft, Position& position, Ply depth, Ply ply) {
+    Ply fifty = 0;
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -107,25 +89,25 @@ long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply) {
     }
 
     position.set_state(position.state_stack[ply], fifty);
-    position.get_pseudo_legal_moves<Movegen::All, true>(position.scored_moves[ply]);
+    position.get_pseudo_legal_moves<Movegen::All, true>(perft.scored_moves[ply]);
 
     long long total_amt = 0;
 
-    for (ScoredMove& scored_move : position.scored_moves[ply]) {
+    for (ScoredMove& scored_move : perft.scored_moves[ply]) {
 
         Move move = scored_move.move;
 
-        bool attempt = position.make_move<NO_NNUE>(move, position.state_stack[ply], fifty);
+        bool attempt = position.make_move(move, position.state_stack[ply], fifty);
 
         if (!attempt) {
-            position.undo_move<NO_NNUE>(move, position.state_stack[ply], fifty);
+            position.undo_move(move, position.state_stack[ply], fifty);
             continue;
         }
 
-        long long amt = depth == 1 ? 1 : fast_perft(position, depth - 1, ply + 1);
+        long long amt = depth == 1 ? 1 : fast_perft(perft, position, depth - 1, ply + 1);
         total_amt += amt;
 
-        position.undo_move<NO_NNUE>(move, position.state_stack[ply], fifty);
+        position.undo_move(move, position.state_stack[ply], fifty);
 
         std::cout << move.get_uci(position) << ": " << amt << std::endl;
     }

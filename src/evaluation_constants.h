@@ -1,26 +1,21 @@
 
+#pragma once
 
-#ifndef ALTAIR_EVALUATION_CONSTANTS_H
-#define ALTAIR_EVALUATION_CONSTANTS_H
-
-#include "evaluation.h"
+#include "evaluation_classic.h"
 #include "types.h"
 
 constexpr int GAME_PHASE_SCORES[6] = {0, 1, 1, 2, 4, 0};
 
 constexpr int MVV_LVA_VALUES[6] = {  120, 430, 450, 620, 1400,   0};
 
-constexpr SCORE_TYPE CANONICAL_PIECE_VALUES[6] = {100, 310, 340, 500, 900, 0};
+constexpr Score CANONICAL_PIECE_VALUES[6] = {100, 310, 340, 500, 900, 0};
 
-constexpr SCORE_TYPE MAX_MINOR_PIECE_VALUE = CANONICAL_PIECE_VALUES[BISHOP];
-constexpr SCORE_TYPE MIN_MINOR_PIECE_VALUE = CANONICAL_PIECE_VALUES[KNIGHT];
+constexpr Score MAX_MINOR_PIECE_VALUE = CANONICAL_PIECE_VALUES[BISHOP];
+constexpr Score MIN_MINOR_PIECE_VALUE = CANONICAL_PIECE_VALUES[KNIGHT];
 
+constexpr Score PIECE_VALUES[6] = {S(   114,    84), S(   395,   218), S(   403,   199), S(   662,   312), S(  1566,   413), S(     0,     0)};
 
-
-
-constexpr SCORE_TYPE PIECE_VALUES[6] = {S(   114,    84), S(   395,   218), S(   403,   199), S(   662,   312), S(  1566,   413), S(     0,     0)};
-
-constexpr SCORE_TYPE PIECE_SQUARE_TABLES[6][64] = {
+constexpr Score PIECE_SQUARE_TABLES[6][64] = {
         {
                 S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0),
                 S(   155,   -18), S(    86,    25), S(   115,    30), S(   119,    10), S(    32,    28), S(    -9,    80), S(   -36,    64), S(    70,    28),
@@ -84,7 +79,7 @@ constexpr SCORE_TYPE PIECE_SQUARE_TABLES[6][64] = {
 };
 
 
-constexpr SCORE_TYPE MOBILITY_VALUES[4][28] = {
+constexpr Score MOBILITY_VALUES[4][28] = {
         {S(   -30,  -102), S(   -14,   -46), S(    -8,    -7), S(    -4,    13), S(     1,    23), S(     5,    34), S(     9,    34), S(    15,    32), S(    26,    20), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0)},
         {S(   -30,   -51), S(   -28,   -37), S(   -20,   -25), S(   -16,    -8), S(   -12,     2), S(    -9,     7), S(    -6,    10), S(    -3,    13), S(     1,    14), S(     7,    14), S(    14,    13), S(    26,    13), S(     4,    31), S(    71,     4), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0)},
         {S(   -40,   -68), S(   -33,   -25), S(   -32,   -11), S(   -28,     0), S(   -26,     9), S(   -23,    15), S(   -17,    14), S(   -10,    12), S(    -5,    19), S(     1,    19), S(    11,    16), S(    13,    13), S(    19,    14), S(    38,     4), S(   132,   -33), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0)},
@@ -92,14 +87,14 @@ constexpr SCORE_TYPE MOBILITY_VALUES[4][28] = {
 };
 
 
-constexpr SCORE_TYPE PASSED_PAWN_BONUSES[3][8] = {
+constexpr Score PASSED_PAWN_BONUSES[3][8] = {
         {S(     0,     0), S(   -65,    34), S(   -59,    29), S(   -44,    31), S(   -10,    29), S(   112,    13), S(   134,    75), S(     0,     0)},
         {S(     0,     0), S(     0,     0), S(   -54,    40), S(   -43,    38), S(     4,    50), S(   227,    42), S(   311,    83), S(     0,     0)},
         {S(     0,     0), S(     0,     0), S(   -79,    54), S(     0,     2), S(    47,    23), S(   379,   -17), S(    86,   -65), S(     0,     0)}
 };
 
 
-constexpr SCORE_TYPE PASSED_PAWN_BLOCKERS[6][8] = {
+constexpr Score PASSED_PAWN_BLOCKERS[6][8] = {
         {S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0)},
         {S(     0,     0), S(     0,     0), S(  -107,    36), S(    -2,     5), S(   -36,    -6), S(   -31,   -12), S(   -35,     2), S(  -222,     7)},
         {S(     0,     0), S(     0,     0), S(    18,   -64), S(     8,   -35), S(    17,   -44), S(    -9,   -61), S(   -20,   -80), S(    36,  -126)},
@@ -109,7 +104,7 @@ constexpr SCORE_TYPE PASSED_PAWN_BLOCKERS[6][8] = {
 };
 
 
-constexpr SCORE_TYPE PASSED_PAWN_BLOCKERS_2[6][8] = {
+constexpr Score PASSED_PAWN_BLOCKERS_2[6][8] = {
         {S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0), S(     0,     0)},
         {S(     0,     0), S(     0,     0), S(     0,     0), S(   -10,    12), S(    -7,     6), S(   -20,     8), S(    -9,    16), S(     6,    68)},
         {S(     0,     0), S(     0,     0), S(     0,     0), S(   -51,    23), S(   -10,   -18), S(     0,   -14), S(   -19,    -3), S(    -8,   -10)},
@@ -119,19 +114,19 @@ constexpr SCORE_TYPE PASSED_PAWN_BLOCKERS_2[6][8] = {
 };
 
 
-constexpr SCORE_TYPE PHALANX_PAWN_BONUSES[8] = {S(     0,     0), S(     2,    -5), S(    -3,    -5), S(    14,    14), S(    45,    55), S(    47,   153), S(   232,   153), S(     0,     0)};
+constexpr Score PHALANX_PAWN_BONUSES[8] = {S(     0,     0), S(     2,    -5), S(    -3,    -5), S(    14,    14), S(    45,    55), S(    47,   153), S(   232,   153), S(     0,     0)};
 
-constexpr SCORE_TYPE ISOLATED_PAWN_PENALTY = S(   -19,    -9);
+constexpr Score ISOLATED_PAWN_PENALTY = S(   -19,    -9);
 
-constexpr SCORE_TYPE BISHOP_PAIR_BONUS = S(    33,    38);
+constexpr Score BISHOP_PAIR_BONUS = S(    33,    38);
 
-constexpr SCORE_TYPE TEMPO_BONUS = S(    11,     4);
+constexpr Score TEMPO_BONUS = S(    11,     4);
 
-constexpr SCORE_TYPE SEMI_OPEN_FILE_VALUES[6] = {S(     0,     0), S(     0,     0), S(     0,     0), S(    18,     4), S(     3,     8), S(    -9,     6)};
+constexpr Score SEMI_OPEN_FILE_VALUES[6] = {S(     0,     0), S(     0,     0), S(     0,     0), S(    18,     4), S(     3,     8), S(    -9,     6)};
 
-constexpr SCORE_TYPE OPEN_FILE_VALUES[6] = {S(     0,     0), S(     0,     0), S(     0,     0), S(    25,    -2), S(    -4,    10), S(   -37,     3)};
+constexpr Score OPEN_FILE_VALUES[6] = {S(     0,     0), S(     0,     0), S(     0,     0), S(    25,    -2), S(    -4,    10), S(   -37,     3)};
 
-constexpr SCORE_TYPE PIECE_THREATS[6][6] = {
+constexpr Score PIECE_THREATS[6][6] = {
         {S(    17,   -44), S(    45,    40), S(    43,    51), S(    54,    36), S(    35,    10), S(     0,     0)},
         {S(    -7,    11), S(     0,     0), S(    29,    14), S(    56,     3), S(    19,    32), S(     0,     0)},
         {S(     1,    17), S(    17,    34), S(    12,    61), S(    55,    12), S(    39,    60), S(     0,     0)},
@@ -141,15 +136,15 @@ constexpr SCORE_TYPE PIECE_THREATS[6][6] = {
 };
 
 
-constexpr SCORE_TYPE KING_RING_ATTACKS[2][6] = {
+constexpr Score KING_RING_ATTACKS[2][6] = {
         {S(    18,    -7), S(    16,   -10), S(    25,    -2), S(    12,    -2), S(    18,     0), S(     0,     0)},
         {S(    13,    -5), S(    15,    -4), S(    14,    -2), S(     8,    -1), S(    11,     0), S(     0,     0)}
 };
 
 
-constexpr SCORE_TYPE TOTAL_KING_RING_ATTACKS[40] = {S(    31,     6), S(    16,   -15), S(     2,   -11), S(    -6,   -10), S(   -17,    -7), S(   -23,    -2), S(   -34,     1), S(   -38,     1), S(   -34,     1), S(   -35,    -1), S(   -33,    -2), S(   -29,    -2), S(   -24,    -2), S(   -17,    -2), S(   -14,     0), S(   -20,     7), S(   -12,     6), S(   -15,    12), S(    -2,     8), S(    -2,    13), S(   -28,    25), S(   -12,    22), S(    -5,    13), S(     6,    17), S(    35,    14), S(     8,    40), S(    15,    41), S(    75,     5), S(    77,    16), S(    61,    -9), S(    41,   -11), S(   125,    26), S(    26,   -14), S(   187,   -47), S(   104,   -36), S(    24,    71), S(  -363,  -267), S(   156,    77), S(   177,   188), S(  -105,  -133)};
+constexpr Score TOTAL_KING_RING_ATTACKS[40] = {S(    31,     6), S(    16,   -15), S(     2,   -11), S(    -6,   -10), S(   -17,    -7), S(   -23,    -2), S(   -34,     1), S(   -38,     1), S(   -34,     1), S(   -35,    -1), S(   -33,    -2), S(   -29,    -2), S(   -24,    -2), S(   -17,    -2), S(   -14,     0), S(   -20,     7), S(   -12,     6), S(   -15,    12), S(    -2,     8), S(    -2,    13), S(   -28,    25), S(   -12,    22), S(    -5,    13), S(     6,    17), S(    35,    14), S(     8,    40), S(    15,    41), S(    75,     5), S(    77,    16), S(    61,    -9), S(    41,   -11), S(   125,    26), S(    26,   -14), S(   187,   -47), S(   104,   -36), S(    24,    71), S(  -363,  -267), S(   156,    77), S(   177,   188), S(  -105,  -133)};
 
-constexpr SCORE_TYPE KING_PAWN_SHIELD[5][8] = {
+constexpr Score KING_PAWN_SHIELD[5][8] = {
         {S(     7,     7), S(    27,    -7), S(    18,   -20), S(     0,     0), S(     0,     0), S(     2,     1), S(    13,    -1), S(    -2,    -6)},
         {S(     3,    -5), S(    28,    -9), S(     9,    -7), S(     0,     0), S(     0,     0), S(    -3,    -9), S(    -5,    -6), S(     1,    -5)},
         {S(     1,     1), S(   -13,    -5), S(     1,     3), S(     0,     0), S(     0,     0), S(    -3,    -8), S(   -10,    -9), S(     8,    -8)},
@@ -158,7 +153,7 @@ constexpr SCORE_TYPE KING_PAWN_SHIELD[5][8] = {
 };
 
 
-constexpr SCORE_TYPE KING_PAWN_STORM[6][8] = {
+constexpr Score KING_PAWN_STORM[6][8] = {
         {S(    77,   -23), S(    72,    11), S(    89,     9), S(     0,     0), S(     0,     0), S(    51,    45), S(    50,    22), S(    44,    28)},
         {S(   -52,    13), S(   -48,    14), S(   -41,     8), S(     0,     0), S(     0,     0), S(   -64,    11), S(   -40,    19), S(     7,     5)},
         {S(     5,     8), S(    31,   -12), S(   -61,    13), S(     0,     0), S(     0,     0), S(     3,     9), S(    -1,    -3), S(    29,    -2)},
@@ -168,20 +163,16 @@ constexpr SCORE_TYPE KING_PAWN_STORM[6][8] = {
 };
 
 
-constexpr SCORE_TYPE OPP_KING_TROPISM[6] = {S(     0,     0), S(    -1,    -2), S(     2,    -1), S(    -7,     4), S(    -5,    -3), S(     0,     0)};
+constexpr Score OPP_KING_TROPISM[6] = {S(     0,     0), S(    -1,    -2), S(     2,    -1), S(    -7,     4), S(    -5,    -3), S(     0,     0)};
 
-constexpr SCORE_TYPE OUR_KING_TROPISM[6] = {S(     0,     0), S(     1,    -4), S(    -4,     1), S(    -6,     3), S(    -1,     2), S(     0,     0)};
+constexpr Score OUR_KING_TROPISM[6] = {S(     0,     0), S(     1,    -4), S(    -4,     1), S(    -6,     3), S(    -1,     2), S(     0,     0)};
 
-constexpr SCORE_TYPE DOUBLED_PAWN_PENALTY = S(   -28,   -24);
+constexpr Score DOUBLED_PAWN_PENALTY = S(   -28,   -24);
 
-constexpr SCORE_TYPE SQUARE_OF_THE_PAWN = S(     7,    -1);
+constexpr Score SQUARE_OF_THE_PAWN = S(     7,    -1);
 
-constexpr SCORE_TYPE BACKWARDS_PAWN_PENALTY[2] = {S(   -10,    -2), S(   -15,   -21)};
+constexpr Score BACKWARDS_PAWN_PENALTY[2] = {S(   -10,    -2), S(   -15,   -21)};
 
-constexpr SCORE_TYPE PASSED_OUR_DISTANCE[8] = {S(     0,     0), S(     1,     0), S(     2,    -2), S(     5,    -6), S(    -1,    -6), S(   -15,    -4), S(    -2,    -9), S(     0,     0)};
+constexpr Score PASSED_OUR_DISTANCE[8] = {S(     0,     0), S(     1,     0), S(     2,    -2), S(     5,    -6), S(    -1,    -6), S(   -15,    -4), S(    -2,    -9), S(     0,     0)};
 
-constexpr SCORE_TYPE PASSED_OPP_DISTANCE[8] = {S(     0,     0), S(     9,    -1), S(     7,     0), S(     4,     6), S(     8,    13), S(     9,    21), S(     3,    11), S(     0,     0)};
-
-
-
-#endif //ALTAIR_EVALUATION_CONSTANTS_H
+constexpr Score PASSED_OPP_DISTANCE[8] = {S(     0,     0), S(     9,    -1), S(     7,     0), S(     4,     6), S(     8,    13), S(     9,    21), S(     3,    11), S(     0,     0)};

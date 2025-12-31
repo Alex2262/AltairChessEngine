@@ -1,7 +1,5 @@
 
-
-#ifndef ALTAIR_TYPES_H
-#define ALTAIR_TYPES_H
+#pragma once
 
 #include <iostream>
 #include <cstdint>
@@ -109,8 +107,7 @@ constexpr Rank RANK_6 = 5;
 constexpr Rank RANK_7 = 6;
 constexpr Rank RANK_8 = 7;
 
-using PLY_TYPE = int16_t;
-using HASH_TYPE = uint64_t;
-using SCORE_TYPE = int32_t;
+using Ply = int16_t;
+using Hash = uint64_t;
+using Score = int32_t;
 
-#endif //ALTAIR_TYPES_H

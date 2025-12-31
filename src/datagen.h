@@ -1,7 +1,5 @@
 
-
-#ifndef ALTAIR_DATAGEN_H
-#define ALTAIR_DATAGEN_H
+#pragma once
 
 #include <chrono>
 #include <vector>
@@ -26,9 +24,9 @@ struct Datagen_Thread {
 
     std::string current_stage = "none";
 
-
     PRNG prng = PRNG(0);
 
+    FixedVector<ScoredMove, MAX_MOVES> scored_moves;
     std::unique_ptr<Engine> engine = std::make_unique<Engine>();
 
     inline Datagen_Thread() {
@@ -91,6 +89,3 @@ public:
 
     void merge();
 };
-
-
-#endif //ALTAIR_DATAGEN_H

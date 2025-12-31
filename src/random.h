@@ -1,7 +1,5 @@
 
-#ifndef ALTAIR_RANDOM_H
-#define ALTAIR_RANDOM_H
-
+#pragma once
 
 //A pseudorandom number generator inspired from Stockfish
 class PRNG {
@@ -16,6 +14,3 @@ public:
 
     PRNG(uint64_t seed) : s(seed) {}
 };
-
-
-#endif //ALTAIR_RANDOM_H

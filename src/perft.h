@@ -1,6 +1,5 @@
 
-#ifndef ALTAIR_PERFT_H
-#define ALTAIR_PERFT_H
+#pragma once
 
 #include "position.h"
 
@@ -13,11 +12,12 @@ struct Perft_Result_Type {
     int check_amount;
 };
 
-void debug_perft(Position& position, Perft_Result_Type& res, PLY_TYPE depth, PLY_TYPE ply);
+struct Perft {
+    std::array<FixedVector<ScoredMove, MAX_MOVES>, TOTAL_MAX_DEPTH> scored_moves;
+};
 
-long long fast_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply);
+void debug_perft(Perft& perft, Position& position, Perft_Result_Type& res, Ply depth, Ply ply);
 
-long long uci_perft(Position& position, PLY_TYPE depth, PLY_TYPE ply);
+uint64_t fast_perft(Perft& perft, Position& position, Ply depth, Ply ply);
 
-
-#endif //ALTAIR_PERFT_H
+uint64_t uci_perft(Perft& perft, Position& position, Ply depth, Ply ply);

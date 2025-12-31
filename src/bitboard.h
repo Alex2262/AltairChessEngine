@@ -1,25 +1,24 @@
 
-#ifndef ALTAIR_BITBOARD_H
-#define ALTAIR_BITBOARD_H
+#pragma once
 
 #include <cstdint>
 #include <cassert>
 #include <array>
 #include "types.h"
 
-using BITBOARD = uint64_t;
+using Bitboard = uint64_t;
 
-constexpr std::array<BITBOARD, 8> MASK_FILE = {
+constexpr std::array<Bitboard, 8> MASK_FILE = {
         0x101010101010101, 0x202020202020202, 0x404040404040404, 0x808080808080808,
         0x1010101010101010, 0x2020202020202020, 0x4040404040404040, 0x8080808080808080,
 };
 
-constexpr std::array<BITBOARD, 8> MASK_RANK = {
+constexpr std::array<Bitboard, 8> MASK_RANK = {
         0xff, 0xff00, 0xff0000, 0xff000000, 0xff00000000,
         0xff0000000000, 0xff000000000000, 0xff00000000000000
 };
 
-constexpr std::array<BITBOARD, 15> MASK_DIAGONAL = {
+constexpr std::array<Bitboard, 15> MASK_DIAGONAL = {
         0x80, 0x8040, 0x804020,
         0x80402010, 0x8040201008, 0x804020100804,
         0x80402010080402, 0x8040201008040201, 0x4020100804020100,
@@ -27,7 +26,7 @@ constexpr std::array<BITBOARD, 15> MASK_DIAGONAL = {
         0x402010000000000, 0x201000000000000, 0x100000000000000,
 };
 
-constexpr std::array<BITBOARD, 15> MASK_ANTI_DIAGONAL= {
+constexpr std::array<Bitboard, 15> MASK_ANTI_DIAGONAL= {
         0x1, 0x102, 0x10204,
         0x1020408, 0x102040810, 0x10204081020,
         0x1020408102040, 0x102040810204080, 0x204081020408000,
@@ -36,9 +35,9 @@ constexpr std::array<BITBOARD, 15> MASK_ANTI_DIAGONAL= {
 };
 
 
-void print_bitboard(BITBOARD bitboard);
+void print_bitboard(Bitboard bitboard);
 
-constexpr inline BITBOARD from_square(Square square) {
+constexpr inline Bitboard from_square(Square square) {
     return 1ULL << square;
 }
 
@@ -59,7 +58,7 @@ constexpr inline int32_t anti_diagonal_of(Square s) {
 }
 
 template<Direction D>
-constexpr BITBOARD shift(BITBOARD b) {
+constexpr Bitboard shift(Bitboard b) {
     if constexpr (D == NORTH) return b << 8;
     else if constexpr (D == SOUTH) return b >> 8;
     else if constexpr (D == NORTH + NORTH) return b << 16;
@@ -74,7 +73,7 @@ constexpr BITBOARD shift(BITBOARD b) {
 }
 
 template<Direction D>
-constexpr BITBOARD fill(BITBOARD b) {
+constexpr Bitboard fill(Bitboard b) {
     if constexpr (D == NORTH) {
         b |= (b << 8);
         b |= (b << 16);
@@ -86,7 +85,7 @@ constexpr BITBOARD fill(BITBOARD b) {
     }
 }
 
-constexpr inline BITBOARD fill(Direction D, BITBOARD b) {
+constexpr inline Bitboard fill(Direction D, Bitboard b) {
     if (D == NORTH) {
         b |= (b << 8);
         b |= (b << 16);
@@ -104,10 +103,9 @@ constexpr Square operator+(Square s, Direction d) {
     return Square(static_cast<int32_t>(s) + static_cast<int32_t>(d));
 }
 
-[[nodiscard]] Square lsb(BITBOARD bitboard);
-[[nodiscard]] Square msb(BITBOARD bitboard);
+[[nodiscard]] Square lsb(Bitboard bitboard);
+[[nodiscard]] Square msb(Bitboard bitboard);
 
-[[nodiscard]] uint32_t popcount(BITBOARD bitboard);
-[[nodiscard]] Square poplsb(BITBOARD& bitboard);
+[[nodiscard]] uint32_t popcount(Bitboard bitboard);
+[[nodiscard]] Square poplsb(Bitboard& bitboard);
 
-#endif //ALTAIR_BITBOARD_H

@@ -1,7 +1,5 @@
 
-
-#ifndef ALTAIR_ATTACKS_H
-#define ALTAIR_ATTACKS_H
+#pragma once
 
 #include <array>
 #include "bitboard.h"
@@ -9,7 +7,7 @@
 constexpr size_t ROOK_TABLE_SIZE = 4096;
 constexpr size_t BISHOP_TABLE_SIZE = 512;
 
-static constexpr std::array<BITBOARD, N_SQUARES> WHITE_PAWN_ATTACKS = {
+static constexpr std::array<Bitboard, N_SQUARES> WHITE_PAWN_ATTACKS = {
         0x200, 0x500, 0xa00, 0x1400,
         0x2800, 0x5000, 0xa000, 0x4000,
         0x20000, 0x50000, 0xa0000, 0x140000,
@@ -28,7 +26,7 @@ static constexpr std::array<BITBOARD, N_SQUARES> WHITE_PAWN_ATTACKS = {
         0x0, 0x0, 0x0, 0x0,
 };
 
-static constexpr std::array<BITBOARD, N_SQUARES> BLACK_PAWN_ATTACKS = {
+static constexpr std::array<Bitboard, N_SQUARES> BLACK_PAWN_ATTACKS = {
         0x0, 0x0, 0x0, 0x0,
         0x0, 0x0, 0x0, 0x0,
         0x2, 0x5, 0xa, 0x14,
@@ -47,7 +45,7 @@ static constexpr std::array<BITBOARD, N_SQUARES> BLACK_PAWN_ATTACKS = {
         0x28000000000000, 0x50000000000000, 0xa0000000000000, 0x40000000000000,
 };
 
-static constexpr std::array<BITBOARD, N_SQUARES> KNIGHT_ATTACKS = {
+static constexpr std::array<Bitboard, N_SQUARES> KNIGHT_ATTACKS = {
         0x20400, 0x50800, 0xa1100, 0x142200,
         0x284400, 0x508800, 0xa01000, 0x402000,
         0x2040004, 0x5080008, 0xa110011, 0x14220022,
@@ -66,7 +64,7 @@ static constexpr std::array<BITBOARD, N_SQUARES> KNIGHT_ATTACKS = {
         0x44280000000000, 0x0088500000000000, 0x0010a00000000000, 0x20400000000000
 };
 
-static constexpr std::array<BITBOARD, N_SQUARES> KING_ATTACKS = {
+static constexpr std::array<Bitboard, N_SQUARES> KING_ATTACKS = {
         0x302, 0x705, 0xe0a, 0x1c14,
         0x3828, 0x7050, 0xe0a0, 0xc040,
         0x30203, 0x70507, 0xe0a0e, 0x1c141c,
@@ -113,7 +111,7 @@ static constexpr std::array<int32_t, N_SQUARES> ROOK_SHIFTS = {
 
 
 // Magic hashes for bishops
-static constexpr std::array<BITBOARD, N_SQUARES> BISHOP_MAGICS = {
+static constexpr std::array<Bitboard, N_SQUARES> BISHOP_MAGICS = {
         0x0002020202020200, 0x0002020202020000, 0x0004010202000000, 0x0004040080000000,
         0x0001104000000000, 0x0000821040000000, 0x0000410410400000, 0x0000104104104000,
         0x0000040404040400, 0x0000020202020200, 0x0000040102020000, 0x0000040400800000,
@@ -133,7 +131,7 @@ static constexpr std::array<BITBOARD, N_SQUARES> BISHOP_MAGICS = {
 };
 
 // Magic hashes for rooks
-static constexpr std::array<BITBOARD, N_SQUARES> ROOK_MAGICS = {
+static constexpr std::array<Bitboard, N_SQUARES> ROOK_MAGICS = {
         0x0080001020400080, 0x0040001000200040, 0x0080081000200080, 0x0080040800100080,
         0x0080020400080080, 0x0080010200040080, 0x0080008001000200, 0x0080002040800100,
         0x0000800020400080, 0x0000400020005000, 0x0000801000200080, 0x0000800800100080,
@@ -154,7 +152,7 @@ static constexpr std::array<BITBOARD, N_SQUARES> ROOK_MAGICS = {
 
 
 // Get the edge opposite of a direction for calculating
-[[nodiscard]] constexpr BITBOARD board_edge(Direction D) {
+[[nodiscard]] constexpr Bitboard board_edge(Direction D) {
     if (D == NORTH) return MASK_RANK[RANK_8];
     else if (D == SOUTH) return MASK_RANK[RANK_1];
     else if (D == EAST) return MASK_FILE[FILE_H];
@@ -169,11 +167,11 @@ static constexpr std::array<BITBOARD, N_SQUARES> ROOK_MAGICS = {
 }
 
 template<Direction D>
-[[nodiscard]] constexpr BITBOARD generate_slow_sliding_attacks(Square square, BITBOARD occupancy) {
-    BITBOARD attacks{};
+[[nodiscard]] constexpr Bitboard generate_slow_sliding_attacks(Square square, Bitboard occupancy) {
+    Bitboard attacks{};
 
-    BITBOARD blockers = board_edge(D);
-    BITBOARD square_bb = from_square(square);
+    Bitboard blockers = board_edge(D);
+    Bitboard square_bb = from_square(square);
 
     if ((blockers & square_bb) != 0) return attacks;
 
@@ -187,12 +185,12 @@ template<Direction D>
     return attacks;
 }
 
-[[nodiscard]] constexpr std::array<BITBOARD, N_SQUARES> generate_bishop_relevant_blockers() {
-    std::array<BITBOARD, N_SQUARES> bishop_attack_masks{};
+[[nodiscard]] constexpr std::array<Bitboard, N_SQUARES> generate_bishop_relevant_blockers() {
+    std::array<Bitboard, N_SQUARES> bishop_attack_masks{};
     for (int square = a1; square < N_SQUARES; square++) {
-        BITBOARD edges = board_edge(NORTH) | board_edge(SOUTH) | board_edge(EAST) | board_edge(WEST);
+        Bitboard edges = board_edge(NORTH) | board_edge(SOUTH) | board_edge(EAST) | board_edge(WEST);
 
-        BITBOARD empty_board_bishop_attacks = MASK_DIAGONAL[diagonal_of(static_cast<Square>(square))] ^
+        Bitboard empty_board_bishop_attacks = MASK_DIAGONAL[diagonal_of(static_cast<Square>(square))] ^
                                               MASK_ANTI_DIAGONAL[anti_diagonal_of(static_cast<Square>(square))];
 
         bishop_attack_masks[square] = empty_board_bishop_attacks & ~edges;
@@ -200,13 +198,13 @@ template<Direction D>
     return bishop_attack_masks;
 }
 
-[[nodiscard]] constexpr std::array<BITBOARD, N_SQUARES> generate_rook_relevant_blockers() {
-    std::array<BITBOARD, N_SQUARES> rook_attack_masks{};
+[[nodiscard]] constexpr std::array<Bitboard, N_SQUARES> generate_rook_relevant_blockers() {
+    std::array<Bitboard, N_SQUARES> rook_attack_masks{};
     for (int square = a1; square < N_SQUARES; square++) {
-        BITBOARD edges = 	((board_edge(NORTH) | board_edge(SOUTH)) & ~MASK_RANK[rank_of(static_cast<Square>(square))]) |
+        Bitboard edges = 	((board_edge(NORTH) | board_edge(SOUTH)) & ~MASK_RANK[rank_of(static_cast<Square>(square))]) |
                             ((board_edge(EAST)  | board_edge(WEST))  & ~MASK_FILE[file_of(static_cast<Square>(square))]);
 
-        BITBOARD empty_board_rook_attacks = MASK_RANK[rank_of(static_cast<Square>(square))] ^
+        Bitboard empty_board_rook_attacks = MASK_RANK[rank_of(static_cast<Square>(square))] ^
                                             MASK_FILE[file_of(static_cast<Square>(square))];
 
         rook_attack_masks[square] = empty_board_rook_attacks & ~edges;
@@ -217,23 +215,23 @@ template<Direction D>
 static constexpr auto bishop_relevant_blockers = generate_bishop_relevant_blockers();
 static constexpr auto rook_relevant_blockers = generate_rook_relevant_blockers();
 
-[[nodiscard]] constexpr BITBOARD generate_slow_bishop_attacks(Square square, BITBOARD occupancy) {
+[[nodiscard]] constexpr Bitboard generate_slow_bishop_attacks(Square square, Bitboard occupancy) {
     return generate_slow_sliding_attacks<NORTH_EAST>(square, occupancy) |
            generate_slow_sliding_attacks<NORTH_WEST>(square, occupancy) |
            generate_slow_sliding_attacks<SOUTH_EAST>(square, occupancy) |
            generate_slow_sliding_attacks<SOUTH_WEST>(square, occupancy);
 }
 
-[[nodiscard]] constexpr BITBOARD generate_slow_rook_attacks(Square square, BITBOARD occupancy) {
+[[nodiscard]] constexpr Bitboard generate_slow_rook_attacks(Square square, Bitboard occupancy) {
     return generate_slow_sliding_attacks<NORTH>(square, occupancy) |
            generate_slow_sliding_attacks<SOUTH>(square, occupancy) |
            generate_slow_sliding_attacks<EAST>(square, occupancy) |
            generate_slow_sliding_attacks<WEST>(square, occupancy);
 }
 
-[[nodiscard]] constexpr std::array<std::array<BITBOARD, BISHOP_TABLE_SIZE>, N_SQUARES> generate_bishop_attack_table() {
-    std::array<std::array<BITBOARD, BISHOP_TABLE_SIZE>, N_SQUARES> bishop_attack_table{};
-    BITBOARD subset{}, index{};
+[[nodiscard]] constexpr std::array<std::array<Bitboard, BISHOP_TABLE_SIZE>, N_SQUARES> generate_bishop_attack_table() {
+    std::array<std::array<Bitboard, BISHOP_TABLE_SIZE>, N_SQUARES> bishop_attack_table{};
+    Bitboard subset{}, index{};
 
     for (int square = a1; square < N_SQUARES; square++) {
 
@@ -250,9 +248,9 @@ static constexpr auto rook_relevant_blockers = generate_rook_relevant_blockers()
     return bishop_attack_table;
 }
 
-[[nodiscard]] constexpr std::array<std::array<BITBOARD, ROOK_TABLE_SIZE>, N_SQUARES> generate_rook_attack_table() {
-    std::array<std::array<BITBOARD, ROOK_TABLE_SIZE>, N_SQUARES> rook_attack_table{};
-    BITBOARD subset{}, index{};
+[[nodiscard]] constexpr std::array<std::array<Bitboard, ROOK_TABLE_SIZE>, N_SQUARES> generate_rook_attack_table() {
+    std::array<std::array<Bitboard, ROOK_TABLE_SIZE>, N_SQUARES> rook_attack_table{};
+    Bitboard subset{}, index{};
 
     for (int square = a1; square < N_SQUARES; square++) {
 
@@ -272,26 +270,26 @@ static constexpr auto rook_relevant_blockers = generate_rook_relevant_blockers()
 static const auto bishop_attack_table = generate_bishop_attack_table();
 static const auto rook_attack_table = generate_rook_attack_table();
 
-constexpr BITBOARD get_bishop_attacks(Square square, BITBOARD occupancy) {
+constexpr Bitboard get_bishop_attacks(Square square, Bitboard occupancy) {
     size_t index = ((occupancy & bishop_relevant_blockers[square]) * BISHOP_MAGICS[square]) >> BISHOP_SHIFTS[square];
     return bishop_attack_table[square][index];
 }
 
-constexpr BITBOARD get_rook_attacks(Square square, BITBOARD occupancy) {
+constexpr Bitboard get_rook_attacks(Square square, Bitboard occupancy) {
     size_t index = ((occupancy & rook_relevant_blockers[square]) * ROOK_MAGICS[square]) >> ROOK_SHIFTS[square];
     return rook_attack_table[square][index];
 }
 
-constexpr BITBOARD get_queen_attacks(Square square, BITBOARD occupancy) {
+constexpr Bitboard get_queen_attacks(Square square, Bitboard occupancy) {
     return get_bishop_attacks(square, occupancy) | get_rook_attacks(square, occupancy);
 }
 
-constexpr BITBOARD get_pawn_attacks(Square square, Color color) {
+constexpr Bitboard get_pawn_attacks(Square square, Color color) {
     if (color == WHITE) return WHITE_PAWN_ATTACKS[square];
     return BLACK_PAWN_ATTACKS[square];
 }
 
-constexpr BITBOARD get_piece_attacks(Piece piece, Square square, BITBOARD occupancy) {
+constexpr Bitboard get_piece_attacks(Piece piece, Square square, Bitboard occupancy) {
     auto piece_type = static_cast<PieceType>(piece % COLOR_OFFSET);
     if (piece == WHITE_PAWN) return WHITE_PAWN_ATTACKS[square];
     else if (piece == BLACK_PAWN) return BLACK_PAWN_ATTACKS[square];
@@ -302,7 +300,7 @@ constexpr BITBOARD get_piece_attacks(Piece piece, Square square, BITBOARD occupa
     else return KING_ATTACKS[square];
 }
 
-constexpr BITBOARD get_regular_piece_type_attacks_nt(PieceType piece_type, Square square, BITBOARD occupancy) {
+constexpr Bitboard get_regular_piece_type_attacks_nt(PieceType piece_type, Square square, Bitboard occupancy) {
 
     if (piece_type == KNIGHT) return KNIGHT_ATTACKS[square];
     else if (piece_type == BISHOP) return get_bishop_attacks(square, occupancy);
@@ -312,7 +310,7 @@ constexpr BITBOARD get_regular_piece_type_attacks_nt(PieceType piece_type, Squar
 }
 
 template<PieceType piece_type>
-constexpr BITBOARD get_regular_piece_type_attacks(Square square, BITBOARD occupancy) {
+constexpr Bitboard get_regular_piece_type_attacks(Square square, Bitboard occupancy) {
 
     if constexpr (piece_type == KNIGHT) return KNIGHT_ATTACKS[square];
     else if constexpr (piece_type == BISHOP) return get_bishop_attacks(square, occupancy);
@@ -322,8 +320,8 @@ constexpr BITBOARD get_regular_piece_type_attacks(Square square, BITBOARD occupa
 }
 
 
-consteval std::array<std::array<BITBOARD, 64>, 2> generate_passed_pawn_masks() {
-    std::array<std::array<BITBOARD, 64>, 2> masks{};
+consteval std::array<std::array<Bitboard, 64>, 2> generate_passed_pawn_masks() {
+    std::array<std::array<Bitboard, 64>, 2> masks{};
 
     for (int i = 0; i < 64; i++) {
         masks[WHITE][i] = from_square(static_cast<Square>(i));
@@ -342,10 +340,7 @@ consteval std::array<std::array<BITBOARD, 64>, 2> generate_passed_pawn_masks() {
 
 constexpr auto passed_pawn_masks = generate_passed_pawn_masks();
 
-constexpr BITBOARD get_pawn_bitboard_attacks(BITBOARD pawns, Color color) {
-    BITBOARD attacks = color == WHITE ? shift<NORTH>(pawns) : shift<SOUTH>(pawns);
+constexpr Bitboard get_pawn_bitboard_attacks(Bitboard pawns, Color color) {
+    Bitboard attacks = color == WHITE ? shift<NORTH>(pawns) : shift<SOUTH>(pawns);
     return shift<WEST>(attacks) | shift<EAST>(attacks);
 }
-
-
-#endif //ALTAIR_ATTACKS_H

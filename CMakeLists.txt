@@ -38,12 +38,12 @@ add_executable(Altair
         src/see.cpp
         src/see.h
         src/types.h
-        src/bitboard.cpp
-        src/bitboard.h
+        src/Bitboard.cpp
+        src/Bitboard.h
         src/attacks.h
         src/fixed_vector.h
-        src/evaluation.cpp
-        src/evaluation.h
+        src/evaluation_classic.cpp
+        src/evaluation_classic.h
         src/evaluation_constants.h
         src/move_ordering.cpp
         src/move_ordering.h
@@ -52,6 +52,10 @@ add_executable(Altair
         src/nnue.cpp
         src/nnue.h
         src/incbin.h
-        src/wdl.h src/simd.h src/timeman.cpp src/timeman.h)
+        src/wdl.h
+        src/simd.h
+        src/timeman.cpp
+        src/timeman.h
+        src/search_parameters.h)
 
 target_link_libraries(Altair Threads::Threads)
