@@ -12,8 +12,12 @@ struct Perft_Result_Type {
     int check_amount;
 };
 
-void debug_perft(Position& position, Perft_Result_Type& res, Ply depth, Ply ply);
+struct Perft {
+    std::array<FixedVector<ScoredMove, MAX_MOVES>, TOTAL_MAX_DEPTH> scored_moves;
+};
 
-uint64_t fast_perft(Position& position, Ply depth, Ply ply);
+void debug_perft(Perft& perft, Position& position, Perft_Result_Type& res, Ply depth, Ply ply);
 
-uint64_t uci_perft(Position& position, Ply depth, Ply ply);
+uint64_t fast_perft(Perft& perft, Position& position, Ply depth, Ply ply);
+
+uint64_t uci_perft(Perft& perft, Position& position, Ply depth, Ply ply);

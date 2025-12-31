@@ -125,7 +125,8 @@ void UCI::parse_go() {
     }
 
     if (perft_depth > 0) {
-        uci_perft(position, perft_depth, 0);
+        Perft perft{};
+        uci_perft(perft,position, perft_depth, 0);
         return;
     }
     if (infinite || (d && tokens.size() == 3)) {
