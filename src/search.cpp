@@ -1328,7 +1328,7 @@ void iterative_search(Engine& engine, int thread_id) {
 
     uint64_t   original_soft_time_limit = engine.soft_time_limit;
     Move       best_move                = NO_MOVE;
-    Score low_depth_score          = 0;
+    Score      low_depth_score          = 0;
 
     while (running_depth <= engine.max_depth) {
         thread_state.current_search_depth = running_depth;

@@ -252,7 +252,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
     std::ofstream datagen_file(file_name);
 
     FixedVector<Move, MAX_MOVES> legal_moves{};
-    FixedVector<EvalFenStruct, MAX_GAME_LENGTH + 64> game_fens{};
+    FixedVector<EvalFenStruct, MAX_DG_GAME_LENGTH + 64> game_fens{};
 
     datagen_thread.engine->hard_time_limit = 2 * max_time_per_move;
     datagen_thread.engine->soft_time_limit = max_time_per_move;
@@ -349,7 +349,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
             // Draw adjudications
             if (datagen_thread.engine->thread_states[0].fifty_move >= 100
                 || datagen_thread.engine->thread_states[0].detect_repetition()
-                || datagen_thread.game_length >= MAX_GAME_LENGTH
+                || datagen_thread.game_length >= MAX_DG_GAME_LENGTH
                 || (datagen_thread.engine->thread_states[0].fifty_move >= 20 &&
                     evaluate_drawishness(position, evaluation_information) == 0.0))
                 game_result = 0.5;

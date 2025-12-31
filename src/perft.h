@@ -13,7 +13,9 @@ struct Perft_Result_Type {
 };
 
 struct Perft {
-    std::array<FixedVector<ScoredMove, MAX_MOVES>, TOTAL_MAX_DEPTH> scored_moves;
+    std::vector<FixedVector<ScoredMove, MAX_MOVES>> scored_moves;
+
+    Perft() : scored_moves(TOTAL_MAX_DEPTH) {}
 };
 
 void debug_perft(Perft& perft, Position& position, Perft_Result_Type& res, Ply depth, Ply ply);

@@ -104,7 +104,7 @@ public:
     Hash major_hash_key = 0;
     Hash minor_hash_key = 0;
 
-    std::array<State, TOTAL_MAX_DEPTH> state_stack{};
+    std::array<State, TOTAL_MAX_DEPTH + MAX_GAME_LENGTH> state_stack{};
 
 
     friend std::ostream& operator<<(std::ostream& os, const Position& position);

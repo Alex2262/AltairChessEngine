@@ -102,7 +102,7 @@ constexpr int32_t screlu(int16_t x) {
 class NNUE_State {
 public:
     explicit NNUE_State() {
-        accumulator_stack.reserve(TOTAL_MAX_DEPTH);
+        accumulator_stack.reserve(TOTAL_MAX_DEPTH + MAX_GAME_LENGTH);
     }
 
     ~NNUE_State() = default;
