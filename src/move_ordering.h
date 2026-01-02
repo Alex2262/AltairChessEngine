@@ -22,8 +22,9 @@ enum class MO_Margin : Score {
     castle = 1200
 };
 
-Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
-                      InformativeMove last_moves[]);
+Score score_all(Thread_State& thread_state, Move move, Move tt_move, InformativeMove last_moves[]);
+
+Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move, InformativeMove last_moves[]);
 
 template<bool qsearch>
 Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count);
@@ -47,7 +48,8 @@ namespace Stage {
     constexpr int Noisy = 2;    // Only play good noisy moves in this stage for negamax
     constexpr int GenQ_BN = 3;
     constexpr int Q_BN = 4;  // Quiet + Bad Noisy
-    constexpr int Terminated = 5;
+    constexpr int GenAll = 5;
+    constexpr int Terminated = 6;
 }
 
 class Generator {
@@ -63,6 +65,8 @@ public:
     Thread_State *thread_state;
     Position *position;
     InformativeMove last_moves[LAST_MOVE_COUNTS]{};
+
+    bool gen_all = false;
 
     int stage = Stage::TT_probe;
     size_t move_index = 0;
