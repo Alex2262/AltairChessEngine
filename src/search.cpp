@@ -425,11 +425,11 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
     }
 
     // Probe the transposition table
-    TT_Entry   tt_entry{};
-    short      tt_return_type = engine.probe_tt_entry_q(thread_id, position.hash_key, alpha, beta, tt_entry);
-    Move       tt_move        = tt_entry.move;
-    bool       tt_pv          = tt_entry.pv_node || pv_node;
-    Score      tt_value       = tt_entry.score;
+    TT_Entry tt_entry{};
+    short    tt_return_type = engine.probe_tt_entry_q(thread_id, position.hash_key, alpha, beta, tt_entry);
+    Move     tt_move        = tt_entry.move;
+    bool     tt_pv          = tt_entry.pv_node || pv_node;
+    Score    tt_value       = tt_entry.score;
 
     if (tt_return_type == RETURN_HASH_SCORE) {
         return tt_value;
@@ -621,12 +621,12 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
     position.set_state(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
     // TT probing
-    TT_Entry   tt_entry{};
-    short      tt_hash_flag   = HASH_FLAG_UPPER;
-    short      tt_return_type = engine.probe_tt_entry(thread_id, position.hash_key, alpha, beta, depth, tt_entry);
-    Move       tt_move        = tt_entry.move;
-    bool       tt_pv          = tt_entry.pv_node || pv_node;
-    Score tt_value       = tt_entry.score;
+    TT_Entry tt_entry{};
+    short    tt_hash_flag   = HASH_FLAG_UPPER;
+    short    tt_return_type = engine.probe_tt_entry(thread_id, position.hash_key, alpha, beta, depth, tt_entry);
+    Move     tt_move        = tt_entry.move;
+    bool     tt_pv          = tt_entry.pv_node || pv_node;
+    Score    tt_value       = tt_entry.score;
 
     /*
      * TT cutoffs
@@ -767,7 +767,7 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
 
     // Best score for fail soft, and best move for tt
     Score best_score = -SCORE_INF;
-    Move       best_move  = NO_MOVE;
+    Move  best_move  = NO_MOVE;
 
     // Other information for pruning / reductions
     int alpha_raised_count = 0;
