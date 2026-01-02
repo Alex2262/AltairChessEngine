@@ -331,8 +331,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
 
             Score score = datagen_thread.engine->search_results.score;
             Score objective_score = position.side == WHITE ? score : -score;
-            bool noisy = best_move.is_capture(position) || best_move.type() == MOVE_TYPE_EP ||
-                         best_move.type() == MOVE_TYPE_PROMOTION;
+            bool noisy = best_move.is_noisy(position);
 
             position.make_move(best_move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
             position.update_nnue(position.state_stack[0]);

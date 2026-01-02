@@ -45,6 +45,9 @@ public:
     }
 
     [[nodiscard]] bool is_capture(const Position& position) const;
+    [[nodiscard]] inline bool is_noisy(const Position& position) const {
+        return is_capture(position) || type() == MOVE_TYPE_PROMOTION || type() == MOVE_TYPE_EP;
+    }
 
     Move(const Position& position, std::string uci);
     [[nodiscard]] std::string get_uci(const Position& position) const;

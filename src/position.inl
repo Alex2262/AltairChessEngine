@@ -112,7 +112,7 @@ void Position::get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
         }
     }
 
-    if constexpr (movegen == Movegen::Noisy || movegen == Movegen::Qsearch) return;
+    if constexpr (movegen == Movegen::Qsearch) return;
 
     // Pawn Pushes
     Bitboard single_pushes = pawn_forward_squares & empty_squares;
@@ -124,22 +124,27 @@ void Position::get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
         bool promotion = (side == WHITE && new_square >= 56) || (side == BLACK && new_square <= 7);
 
         // Single Push Promotions
-        if (promotion) {
-            for (PromotionType promotionType: {PROMOTION_KNIGHT, PROMOTION_BISHOP, PROMOTION_ROOK, PROMOTION_QUEEN}) {
-                current_scored_moves.push_back({Move(new_square + down, new_square, MOVE_TYPE_PROMOTION, promotionType), 0});
+        if constexpr (movegen != Movegen::Quiet) {
+            if (promotion) {
+                for (PromotionType promotionType: {PROMOTION_KNIGHT, PROMOTION_BISHOP, PROMOTION_ROOK, PROMOTION_QUEEN}) {
+                    current_scored_moves.push_back({Move(new_square + down, new_square, MOVE_TYPE_PROMOTION, promotionType), 0});
+                }
+                continue;
             }
-            continue;
         }
 
         // Single Pushes
-        current_scored_moves.push_back({Move(new_square + down, new_square), 0});
+        if constexpr (movegen != Movegen::Noisy) {
+            current_scored_moves.push_back({Move(new_square + down, new_square), 0});
+        }
     }
+
+    if constexpr (movegen == Movegen::Noisy) return;
 
     while (double_pushes) {
         Square new_square = poplsb(double_pushes);
         current_scored_moves.push_back({Move(new_square + down + down, new_square), 0});
     }
-
 }
 
 template<Movegen movegen>

@@ -782,7 +782,7 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
         InformativeMove informative_move = InformativeMove(move, position.board[move.origin()], position.board[move.target()]);
         Score           move_score       = move == tt_move ? static_cast<Score>(MO_Margin::TT) : scored_move.score;
         bool            winning_capture  = scored_move.winning_capture;
-        bool            quiet            = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
+        bool            quiet            = !move.is_noisy(position);
 
         // Skip excluded moves
         if (    root
