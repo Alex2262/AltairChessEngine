@@ -22,12 +22,12 @@ inline ScoredMove Generator::next_move() {
 
     assert(stage != Stage::Terminated);
 
-    if (stage == Stage::TT_probe) [[unlikely]] {
+    if (stage == Stage::TT_probe) {
         stage = Stage::GenNoisy;
         if (position->is_pseudo_legal(tt_move)) return {tt_move, static_cast<Score>(MO_Margin::TT), true};
     }
 
-    if (stage == Stage::GenNoisy) [[unlikely]] {
+    if (stage == Stage::GenNoisy) {
         move_index = 0;
         good_capture_count = 0;
         good_capture_found = 0;
@@ -39,7 +39,7 @@ inline ScoredMove Generator::next_move() {
         stage = Stage::Noisy;
     }
 
-    if (stage == Stage::Noisy) [[likely]] {
+    if (stage == Stage::Noisy) {
         if (good_capture_found >= good_capture_count) {
             if constexpr (!qsearch) stage = Stage::GenQ_BN;
             else if (move_index >= scored_moves.size()) stage = Stage::Terminated;
@@ -54,7 +54,7 @@ inline ScoredMove Generator::next_move() {
         }
     }
 
-    if (stage == Stage::GenQ_BN) [[unlikely]] {
+    if (stage == Stage::GenQ_BN) {
         assert(!qsearch);
 
         position->get_pseudo_legal_moves<Movegen::Quiet, false>(scored_moves);
@@ -63,7 +63,7 @@ inline ScoredMove Generator::next_move() {
         stage = Stage::Q_BN;
     }
 
-    if (stage == Stage::Q_BN) [[likely]] {
+    if (stage == Stage::Q_BN) {
         assert(!qsearch);
 
         if (move_index >= scored_moves.size()) {
