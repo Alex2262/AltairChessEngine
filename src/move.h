@@ -45,9 +45,6 @@ public:
     }
 
     [[nodiscard]] bool is_capture(const Position& position) const;
-    [[nodiscard]] inline bool is_noisy(const Position& position) const {
-        return is_capture(position) || type() == MOVE_TYPE_PROMOTION || type() == MOVE_TYPE_EP;
-    }
 
     Move(const Position& position, std::string uci);
     [[nodiscard]] std::string get_uci(const Position& position) const;
@@ -57,6 +54,12 @@ public:
     [[nodiscard]] inline MoveType type() const { return MoveType((move >> 12) & 0x3); }
     [[nodiscard]] inline PromotionType promotion_type() const { return PromotionType((move >> 14) & 0x3); }
     [[nodiscard]] inline uint16_t internal_move() const { return move; };
+    [[nodiscard]] inline bool is_capture_or_ep(const Position& position) const {
+        return is_capture(position) || type() == MOVE_TYPE_EP;
+    }
+    [[nodiscard]] inline bool is_noisy(const Position& position) const {
+        return is_capture_or_ep(position) || type() == MOVE_TYPE_PROMOTION;
+    }
 
     bool operator==(Move a) const { return move == a.move; }
     bool operator!=(Move a) const { return move != a.move; }

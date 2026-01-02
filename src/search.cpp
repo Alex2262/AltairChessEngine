@@ -358,7 +358,7 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
         }
     }
 
-    else {
+    else if (move.is_capture_or_ep(position)) {
         update_history_entry(thread_state.capture_history[winning_capture][position.board[move.origin()]]
                              [position.board[move.target()]][move.target()],
                              bonus, search_params.H_max_noisy.v);
@@ -392,7 +392,7 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
 
         assert(temp_move != move);
 
-        if (temp_scored_move.winning_capture == winning_capture) {
+        if (temp_move.is_capture_or_ep(position) && temp_scored_move.winning_capture == winning_capture) {
             update_history_entry(thread_state.capture_history[temp_scored_move.winning_capture]
                                  [position.board[temp_move.origin()]]
                                  [position.board[temp_move.target()]]
@@ -429,7 +429,7 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
     short      tt_return_type = engine.probe_tt_entry_q(thread_id, position.hash_key, alpha, beta, tt_entry);
     Move       tt_move        = tt_entry.move;
     bool       tt_pv          = tt_entry.pv_node || pv_node;
-    Score tt_value       = tt_entry.score;
+    Score      tt_value       = tt_entry.score;
 
     if (tt_return_type == RETURN_HASH_SCORE) {
         return tt_value;
@@ -473,7 +473,7 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
 
     // Variables for getting information about the best score / best move
     Score best_score = eval;
-    Move       best_move  = NO_MOVE;
+    Move  best_move  = NO_MOVE;
 
     // Search loop
     for (generator.reset_qsearch(tt_move); generator.stage != Stage::Terminated;) {
@@ -523,18 +523,19 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
                 tt_hash_flag = HASH_FLAG_EXACT;
 
                 Score bonus = 2;
-                if (move.is_capture(position) || move.type() == MOVE_TYPE_EP) {
-                    update_history_entry(thread_state.capture_history[winning_capture]
-                                         [position.board[move.origin()]]
-                                         [position.board[move.target()]]
-                                         [move.target()],
-                                         bonus, search_params.H_max_noisy.v);
-                } else {
+                bool quiet = !move.is_noisy(position);
+                if (quiet) {
                     update_history_entry(thread_state.history_moves
                                          [position.board[move.origin()]][move.target()]
                                          [(position.threats >> move.origin()) & 1]
                                          [(position.threats >> move.target()) & 1],
                                          bonus, search_params.H_max_quiet.v);
+                } else if (move.is_capture(position) || move.type() == MOVE_TYPE_EP) {
+                    update_history_entry(thread_state.capture_history[winning_capture]
+                                         [position.board[move.origin()]]
+                                         [position.board[move.target()]]
+                                         [move.target()],
+                                         bonus, search_params.H_max_noisy.v);
                 }
 
                 if (return_eval >= beta) {
@@ -800,9 +801,13 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
                                         thread_state.history_moves[position.board[move.origin()]][move.target()]
                                                                   [(position.threats >> move.origin()) & 1]
                                                                   [(position.threats >> move.target()) & 1] :
+                                   move.is_capture_or_ep(position) ?
                                         // Capture Histories
                                         thread_state.capture_history
-                                        [winning_capture][position.board[move.origin()]][position.board[move.target()]][move.target()];
+                                        [winning_capture][position.board[move.origin()]][position.board[move.target()]][move.target()] :
+
+                                        // noisy moves that don't have a history table (promotions)
+                                        0;
 
         if (quiet) {
             for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
@@ -1110,14 +1115,13 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
 
     if (!singular_search) {
         if (!in_check
-            && (best_move == NO_MOVE || !(best_move.is_capture(position) || best_move.type() == MOVE_TYPE_EP))
+            && (best_move == NO_MOVE || !best_move.is_noisy(position))
             && !(tt_hash_flag == HASH_FLAG_LOWER && best_score <= position.state_stack[thread_state.search_ply].static_eval)
             && !(tt_hash_flag == HASH_FLAG_UPPER && best_score >= position.state_stack[thread_state.search_ply].static_eval)) {
             thread_state.update_correction_history_score(depth, best_score - position.state_stack[thread_state.search_ply].static_eval);
         }
 
-        engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth,
-                               raw_eval, tt_pv);
+        engine.record_tt_entry(thread_id, position.hash_key, best_score, tt_hash_flag, best_move, depth, raw_eval, tt_pv);
     }
 
     return best_score;

@@ -32,13 +32,14 @@ void debug_perft(Perft& perft, Position& position, Perft_Result_Type& res, Ply d
 
             if (move.is_capture(position)) {
                 res.capture_amount += 1;
-            }
-            else if (move_type == MOVE_TYPE_EP) {
+            } else if (move_type == MOVE_TYPE_EP) {
                 res.capture_amount += 1;
                 res.ep_amount += 1;
+            } else if (move_type == MOVE_TYPE_PROMOTION) {
+                res.promotion_amount += 1;
+            } else if (move_type == MOVE_TYPE_CASTLE) {
+                res.castle_amount += 1;
             }
-            else if (move_type == MOVE_TYPE_PROMOTION) res.promotion_amount += 1;
-            else if (move_type == MOVE_TYPE_CASTLE) res.castle_amount += 1;
 
             if (position.is_attacked(position.get_king_pos(position.side), position.side)) res.check_amount += 1;
         }

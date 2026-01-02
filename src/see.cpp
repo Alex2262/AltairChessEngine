@@ -107,7 +107,5 @@ Score get_static_exchange_evaluation(Position& position, Move move, Score thresh
     position.side = original_side;
 
     return exchange_flag;
-
-
 }
 

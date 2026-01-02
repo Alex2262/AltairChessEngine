@@ -6,8 +6,7 @@
 #include "search.h"
 #include "search_parameters.h"
 
-Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
-                      InformativeMove last_moves[]) {
+Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move, InformativeMove last_moves[]) {
     assert(move != NO_MOVE);
 
     if (move == tt_move) return static_cast<Score>(MO_Margin::TT);
@@ -34,7 +33,6 @@ Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
     }
 
     // No EP moves appear as Q_BN
-
     if (move.is_capture(position)) {
         auto occupied_type = get_piece_type(occupied, ~position.side);
         score += static_cast<Score>(MO_Margin::capture_scale) * MVV_LVA_VALUES[occupied_type] -
@@ -43,10 +41,7 @@ Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
         // All captures are not winning in Q_BN;
         score += thread_state.capture_history[false][selected][occupied][move.target()];
         score += static_cast<Score>(MO_Margin::base_capture);
-    }
-
-    else {
-
+    } else {
         InformativeMove informative_move = InformativeMove(move, selected, occupied);
 
         // score 1st and 2nd killer move
@@ -70,8 +65,7 @@ Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
 }
 
 template<bool qsearch>
-Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count) {
-
+Score score_noisy(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_noisy_count) {
     Move move = scored_move.move;
 
     assert(move != NO_MOVE);
@@ -86,43 +80,50 @@ Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt
     Piece occupied = position.board[move.target()];
     MoveType move_type = move.type();
 
-    bool winning_capture = get_static_exchange_evaluation(position, move, -search_params.SEE_MO_threshold.v);
-
-    if (winning_capture) {
-        score += static_cast<Score>(MO_Margin::winning_capture);
-        scored_move.winning_capture = true;
-        good_capture_count++;
-    }
-
-    else {
-        scored_move.winning_capture = false;
-        if constexpr (!qsearch) return -1000000;  // Skip scoring the bad capture currently, as it will be scored fully later
-    }
-
-    score += thread_state.capture_history[winning_capture][selected][occupied][move.target()];
-
-    if (move_type == MOVE_TYPE_EP) return score +
-        static_cast<Score>(MO_Margin::winning_capture) +
-        static_cast<Score>(MO_Margin::capture_scale) * (MVV_LVA_VALUES[PAWN] / 2);
-
-    auto selected_type = get_piece_type(selected, position.side);
-    auto occupied_type = get_piece_type(occupied, ~position.side);
-
     if (move_type == MOVE_TYPE_PROMOTION) {
         auto promotion_piece_type = static_cast<PieceType>(move.promotion_type() + 1);
         if (promotion_piece_type == QUEEN) score += static_cast<Score>(MO_Margin::queen_promotion);
         else score += static_cast<Score>(MO_Margin::other_promotion) + MVV_LVA_VALUES[promotion_piece_type];
     }
 
-    score += static_cast<Score>(MO_Margin::capture_scale) * MVV_LVA_VALUES[occupied_type] - MVV_LVA_VALUES[selected_type];
+    if (occupied == EMPTY) {
+        assert(move.type() == MOVE_TYPE_PROMOTION);
+        good_noisy_count++;
+        return score;
+    }
 
+    bool winning_capture = get_static_exchange_evaluation(position, move, -search_params.SEE_MO_threshold.v);
+
+    if (winning_capture) {
+        score += static_cast<Score>(MO_Margin::winning_capture);
+        scored_move.winning_capture = true;
+        good_noisy_count++;
+    }
+
+    else {
+        scored_move.winning_capture = false;
+        if constexpr (!qsearch) return BAD_SCORE;  // Skip scoring the bad capture currently, as it will be scored fully later
+    }
+
+    score += thread_state.capture_history[winning_capture][selected][occupied][move.target()];
+
+    if (move_type == MOVE_TYPE_EP) {
+        return score
+            + static_cast<Score>(MO_Margin::winning_capture)
+            + static_cast<Score>(MO_Margin::capture_scale) * (MVV_LVA_VALUES[PAWN] / 2);
+    }
+
+    auto selected_type = get_piece_type(selected, position.side);
+    auto occupied_type = get_piece_type(occupied, ~position.side);
+
+    score += static_cast<Score>(MO_Margin::capture_scale) * MVV_LVA_VALUES[occupied_type] - MVV_LVA_VALUES[selected_type];
     score += static_cast<Score>(MO_Margin::base_capture);
 
     return score;
 }
 
-template Score score_capture<true >(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count);
-template Score score_capture<false>(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count);
+template Score score_noisy<true >(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_noisy_count);
+template Score score_noisy<false>(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_noisy_count);
 
 void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                      Move tt_move, InformativeMove last_moves[], int start_index) {
@@ -133,18 +134,18 @@ void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOV
 }
 
 template<bool qsearch>
-void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
-                        Move tt_move, size_t& good_capture_count) {
+void get_noisy_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
+                        Move tt_move, size_t& good_noisy_count) {
     for (ScoredMove& scored_move : current_scored_moves) {
         assert(scored_move.move.type() != MOVE_TYPE_CASTLE);
-        scored_move.score = score_capture<qsearch>(thread_state, scored_move, tt_move, good_capture_count);
+        scored_move.score = score_noisy<qsearch>(thread_state, scored_move, tt_move, good_noisy_count);
     }
 }
 
-template void get_capture_scores<true >(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
-                                        Move tt_move, size_t& good_capture_count);
-template void get_capture_scores<false>(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
-                                        Move tt_move, size_t& good_capture_count);
+template void get_noisy_scores<true >(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
+                                        Move tt_move, size_t& good_noisy_count);
+template void get_noisy_scores<false>(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
+                                        Move tt_move, size_t& good_noisy_count);
 
 Generator::Generator(Thread_State& thread_state_passed) {
     thread_state = &thread_state_passed;
