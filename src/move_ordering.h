@@ -10,9 +10,6 @@ class Thread_State;
 constexpr Score BAD_SCORE = -1000000;
 
 
-constexpr Score BAD_SCORE = -1000000;
-
-
 enum class MO_Margin : Score {
     TT = 500000,
     winning_capture = 50000,
