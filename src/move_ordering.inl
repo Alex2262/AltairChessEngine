@@ -8,7 +8,7 @@ inline ScoredMove Generator::sort_next_move() {
         ScoredMove& scored_move = scored_moves[next_count];
 
         if constexpr (filter == Filter::Good) {
-            if (scored_move.score != BAD_SCORE) continue;
+            if (scored_move.score == BAD_SCORE) continue;
         }
 
         if (best_score < scored_move.score) {
@@ -52,11 +52,12 @@ inline ScoredMove Generator::next_move() {
             if constexpr (qsearch) picked = sort_next_move<Filter::None>();
             else picked = sort_next_move<Filter::Good>();
 
-            good_noisy_found++;
             move_index++;
 
             if (picked.move == tt_move) return next_move<qsearch>();
-            else return picked;
+
+            good_noisy_found++;
+            return picked;
         }
     }
 
@@ -71,8 +72,6 @@ inline ScoredMove Generator::next_move() {
 
     if (stage == Stage::Q_BN) {
         assert(!qsearch);
-
-        if (move_index < scored_moves.size() && scored_moves[move_index].move == tt_move) move_index++;
 
         if (move_index >= scored_moves.size()) {
             stage = Stage::Terminated;

@@ -7,6 +7,8 @@
 
 class Thread_State;
 
+constexpr Score BAD_SCORE = -1000000;
+
 
 constexpr Score BAD_SCORE = -1000000;
 
