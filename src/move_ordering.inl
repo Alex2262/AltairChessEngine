@@ -52,11 +52,12 @@ inline ScoredMove Generator::next_move() {
             if constexpr (qsearch) picked = sort_next_move<Filter::None>();
             else picked = sort_next_move<Filter::Good>();
 
-            good_capture_found++;
             move_index++;
 
             if (picked.move == tt_move) return next_move<qsearch>();
-            else return picked;
+
+            good_capture_found++;
+            return picked;
         }
     }
 
