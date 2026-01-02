@@ -23,8 +23,37 @@ inline ScoredMove Generator::next_move() {
     assert(stage != Stage::Terminated);
 
     if (stage == Stage::TT_probe) {
-        stage = Stage::GenNoisy;
+        if (gen_all) stage = Stage::GenAll;
+        else stage = Stage::GenNoisy;
         if (position->is_pseudo_legal(tt_move)) return {tt_move, static_cast<Score>(MO_Margin::TT), true};
+    }
+
+    if (stage == Stage::GenAll) {
+        assert(!qsearch);
+        move_index = 0;
+        position->get_pseudo_legal_moves<Movegen::All, true>(scored_moves);
+        get_all_scores(*thread_state, scored_moves, tt_move, last_moves);
+
+        std::stable_sort(scored_moves.begin(), scored_moves.end(), [](const ScoredMove& s1, const ScoredMove& s2){
+            return s1.score > s2.score || (s1.score == s2.score && s1.move.internal_move() < s2.move.internal_move());
+        });
+
+        stage = Stage::All;
+    }
+
+    if (stage == Stage::All) {
+        assert(!qsearch);
+        if (move_index >= scored_moves.size()) stage = Stage::Terminated;
+        else {
+            ScoredMove picked = scored_moves[move_index];
+            move_index++;
+
+            if (picked.move == tt_move) return next_move<qsearch>();
+
+            return picked;
+        }
+
+        return {NO_MOVE, 0, false};
     }
 
     if (stage == Stage::GenNoisy) {

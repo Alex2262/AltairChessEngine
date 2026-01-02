@@ -796,7 +796,9 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
 
 #endif
 
-    for (generator.reset_negamax(tt_move, last_moves); generator.stage != Stage::Terminated;) {
+    bool gen_all = tt_pv || (tt_entry.flag & 1);
+
+    for (generator.reset_negamax(tt_move, gen_all, last_moves); generator.stage != Stage::Terminated;) {
 
         ScoredMove scored_move = generator.next_move<false>();
         Move       move        = scored_move.move;

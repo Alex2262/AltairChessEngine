@@ -29,6 +29,9 @@ Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move, Informativ
 template<bool qsearch>
 Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count);
 
+void get_all_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
+                     Move tt_move, InformativeMove last_moves[]);
+
 void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                      Move tt_move, InformativeMove last_moves[], int start_index);
 
@@ -49,7 +52,8 @@ namespace Stage {
     constexpr int GenQ_BN = 3;
     constexpr int Q_BN = 4;  // Quiet + Bad Noisy
     constexpr int GenAll = 5;
-    constexpr int Terminated = 6;
+    constexpr int All = 6;
+    constexpr int Terminated = 7;
 }
 
 class Generator {
@@ -76,7 +80,7 @@ public:
     Ply search_ply = 0;
 
     void reset_qsearch(Move tt_move_passed);
-    void reset_negamax(Move tt_move_passed, InformativeMove last_moves_passed[]);
+    void reset_negamax(Move tt_move_passed, bool p_gen_all, InformativeMove last_moves_passed[]);
 
     inline ScoredMove sort_next_move();
 

@@ -56,10 +56,8 @@ Score score_all(Thread_State& thread_state, ScoredMove& scored_move, Move tt_mov
         InformativeMove informative_move = InformativeMove(move, selected, occupied);
 
         // score 1st and 2nd killer move
-        if (thread_state.killer_moves[0][thread_state.search_ply] == informative_move) score +=
-                                                                                               static_cast<Score>(MO_Margin::killer_1);
-        else if (thread_state.killer_moves[1][thread_state.search_ply] == informative_move) score +=
-                                                                                                    static_cast<Score>(MO_Margin::killer_2);
+        if (thread_state.killer_moves[0][thread_state.search_ply] == informative_move) score += static_cast<Score>(MO_Margin::killer_1);
+        else if (thread_state.killer_moves[1][thread_state.search_ply] == informative_move) score += static_cast<Score>(MO_Margin::killer_2);
 
         score += thread_state.history_moves[selected][move.target()]
         [(position.threats >> move.origin()) & 1]
@@ -170,9 +168,7 @@ Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt
 
     score += thread_state.capture_history[winning_capture][selected][occupied][move.target()];
 
-    if (move_type == MOVE_TYPE_EP) return score +
-        static_cast<Score>(MO_Margin::winning_capture) +
-        static_cast<Score>(MO_Margin::capture_scale) * (MVV_LVA_VALUES[PAWN] / 2);
+    if (move_type == MOVE_TYPE_EP) return score + static_cast<Score>(MO_Margin::capture_scale) * (MVV_LVA_VALUES[PAWN] / 2);
 
     auto selected_type = get_piece_type(selected, position.side);
     auto occupied_type = get_piece_type(occupied, ~position.side);
@@ -185,13 +181,19 @@ Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt
 
     score += static_cast<Score>(MO_Margin::capture_scale) * MVV_LVA_VALUES[occupied_type] - MVV_LVA_VALUES[selected_type];
 
-    score += static_cast<Score>(MO_Margin::base_capture);
-
     return score;
 }
 
 template Score score_capture<true >(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count);
 template Score score_capture<false>(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count);
+
+void get_all_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
+                    Move tt_move, InformativeMove last_moves[]) {
+    for (int i = 0; i < static_cast<int>(current_scored_moves.size()); i++) {
+        ScoredMove& scored_move = current_scored_moves[i];
+        scored_move.score = score_all(thread_state, scored_move, tt_move, last_moves);
+    }
+}
 
 void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                      Move tt_move, InformativeMove last_moves[], int start_index) {
@@ -227,9 +229,10 @@ void Generator::reset_qsearch(Move tt_move_passed) {
     move_index = 0;
 }
 
-void Generator::reset_negamax(Move tt_move_passed, InformativeMove last_moves_passed[]) {
+void Generator::reset_negamax(Move tt_move_passed, bool p_gen_all, InformativeMove last_moves_passed[]) {
     stage = Stage::TT_probe;
     tt_move = tt_move_passed;
+    gen_all = p_gen_all;
 
     move_index = 0;
 
