@@ -9,8 +9,8 @@
 #define ENGINE_VERSION              "7.2.1"
 #define ENGINE_AUTHOR               "Alexander Tian"
 
-#define FAIL_HIGH_STATS_COUNT       5
-#define ALPHA_RAISE_STATS_COUNT     5
+#define FAIL_HIGH_STATS_COUNT       10
+#define ALPHA_RAISE_STATS_COUNT     10
 
 #define BENCH_DEPTH                 14
 

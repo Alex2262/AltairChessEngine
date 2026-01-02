@@ -17,20 +17,36 @@ constexpr int correction_history_size = 16384;
 constexpr int correction_history_max = correction_history_grain * 64;
 
 
-struct TT_Entry {                          // 22 bytes --> 24 bytes
+struct TT_Entry {                     // 22 bytes --> 24 bytes
     Hash  key        = 0;             // 8 bytes
     Score score      = SCORE_NONE;    // 4 bytes
     Score evaluation = NO_EVALUATION; // 4 bytes
-    Move       move       = NO_MOVE;       // 2 bytes
+    Move  move       = NO_MOVE;       // 2 bytes
     Ply   depth      = 0;             // 2 bytes
-    short      flag       = 0;             // 1 byte
-    bool       pv_node    = false;         // 1 byte
+    short flag       = 0;             // 1 byte
+    bool  pv_node    = false;         // 1 byte
 };
 
 
 struct SearchResults {
     int num_searches = 1;
     uint64_t node_count = 0;
+
+    uint64_t tt_exact_count = 0;
+    uint64_t tt_all_count = 0;
+    uint64_t tt_cut_count = 0;
+    uint64_t tt_pv_count = 0;
+    uint64_t non_tt_pv_count = 0;
+
+    uint64_t tt_all_count_diffs[10]{};
+
+    uint64_t tt_exact_moves_iterated = 0;
+    uint64_t tt_all_moves_iterated = 0;
+    uint64_t tt_cut_moves_iterated = 0;
+    uint64_t tt_pv_moves_iterated = 0;
+    uint64_t non_tt_pv_moves_iterated = 0;
+
+    uint64_t tt_all_moves_iterated_diffs[10]{};
 
     uint64_t qsearch_fail_highs[FAIL_HIGH_STATS_COUNT]{};
     uint64_t search_fail_highs[FAIL_HIGH_STATS_COUNT]{};

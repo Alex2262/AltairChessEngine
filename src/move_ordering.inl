@@ -41,8 +41,8 @@ inline ScoredMove Generator::next_move() {
 
     if (stage == Stage::Noisy) {
         if (good_capture_found >= good_capture_count) {
-            if constexpr (!qsearch) stage = Stage::GenQ_BN;
-            else stage = Stage::Terminated;
+            if constexpr (qsearch) stage = Stage::Terminated;
+            else stage = Stage::GenQ_BN;
         } else {
             ScoredMove picked = sort_next_move();
             move_index++;

@@ -475,6 +475,10 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
     Score best_score = eval;
     Move  best_move  = NO_MOVE;
 
+#ifdef SHOW_STATISTICS
+    int legal_moves = 0;
+#endif
+
     // Search loop
     for (generator.reset_qsearch(tt_move); generator.stage != Stage::Terminated;) {
         ScoredMove scored_move = generator.next_move<true>();
@@ -499,6 +503,10 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
             position.undo_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
             continue;
         }
+
+#ifdef SHOW_STATISTICS
+        legal_moves++;
+#endif
 
         position.update_nnue(position.state_stack[thread_state.search_ply]);
 
@@ -772,12 +780,43 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
     int alpha_raised_count = 0;
     int legal_moves        = 0;
 
+#ifdef SHOW_STATISTICS
+    if (tt_return_type != NO_HASH_ENTRY) {
+        if (tt_entry.flag == HASH_FLAG_EXACT) engine.search_results.tt_exact_count++;
+        else if (tt_entry.flag == HASH_FLAG_UPPER) {
+            engine.search_results.tt_all_count++;
+            int diff = std::clamp(abs(depth - tt_entry.depth), 0, 9);
+            engine.search_results.tt_all_count_diffs[diff]++;
+        }
+        else engine.search_results.tt_cut_count++;
+    }
+
+    if (tt_pv) engine.search_results.tt_pv_count++;
+    else       engine.search_results.non_tt_pv_count++;
+
+#endif
+
     for (generator.reset_negamax(tt_move, last_moves); generator.stage != Stage::Terminated;) {
 
         ScoredMove scored_move = generator.next_move<false>();
         Move       move        = scored_move.move;
 
         if (move == NO_MOVE) break;
+
+#ifdef SHOW_STATISTICS
+        if (tt_return_type != NO_HASH_ENTRY) {
+            if (tt_entry.flag == HASH_FLAG_EXACT) engine.search_results.tt_exact_moves_iterated++;
+            else if (tt_entry.flag == HASH_FLAG_UPPER) {
+                engine.search_results.tt_all_moves_iterated++;
+                int diff = std::clamp(abs(depth - tt_entry.depth), 0, 9);
+                engine.search_results.tt_all_moves_iterated_diffs[diff]++;
+            }
+            else engine.search_results.tt_cut_moves_iterated++;
+        }
+
+        if (tt_pv) engine.search_results.tt_pv_moves_iterated++;
+        else       engine.search_results.non_tt_pv_moves_iterated++;
+#endif
 
         InformativeMove informative_move = InformativeMove(move, position.board[move.origin()], position.board[move.target()]);
         Score           move_score       = move == tt_move ? static_cast<Score>(MO_Margin::TT) : scored_move.score;
@@ -1483,6 +1522,25 @@ void print_statistics(SearchResults& res) {
     std::cout << "Average # of times alpha is raised per node: " <<
               static_cast<double>(res.alpha_raised_count) / static_cast<double>(res.node_count)
               << "\n\n";
+
+    uint64_t tt_node_count = res.tt_exact_count + res.tt_all_count + res.tt_cut_count;
+    uint64_t pv_node_count = res.tt_pv_count + res.non_tt_pv_count;
+
+    std::cout << "Proportion of Exact Nodes: " << static_cast<double>(res.tt_exact_count) / tt_node_count << "\n";
+    std::cout << "Proportion of All Nodes: " << static_cast<double>(res.tt_all_count) / tt_node_count << "\n";
+    std::cout << "Proportion of Cut Nodes: " << static_cast<double>(res.tt_cut_count) / tt_node_count << "\n";
+    std::cout << "Proportion of TTPV Nodes: " << static_cast<double>(res.tt_pv_count) / pv_node_count << "\n\n";
+
+    std::cout << "Average # of Moves Iterated in Exact Nodes: " << static_cast<double>(res.tt_exact_moves_iterated) / res.tt_exact_count << "\n";
+    std::cout << "Average # of Moves Iterated in All Nodes: " << static_cast<double>(res.tt_all_moves_iterated) / res.tt_all_count << "\n";
+    std::cout << "Average # of Moves Iterated in Cut Nodes: " << static_cast<double>(res.tt_cut_moves_iterated) / res.tt_cut_count << "\n";
+    std::cout << "Average # of Moves Iterated in TTPV Nodes: " << static_cast<double>(res.tt_pv_moves_iterated) / res.tt_pv_count << "\n";
+    std::cout << "Average # of Moves Iterated in Non-TTPV Nodes: " << static_cast<double>(res.non_tt_pv_moves_iterated) / res.non_tt_pv_count << "\n\n";
+
+    for (int diff = 0; diff < 10; diff++) {
+        std::cout << "Average # of Moves Iterated in All Nodes at Diff " << diff << " : " << static_cast<double>(res.tt_all_moves_iterated_diffs[diff]) / res.tt_all_count_diffs[diff] << "\n";
+    }
+    std::cout << "\n";
 
     uint64_t search_total = 0;
     for (unsigned long long e : res.search_alpha_raises) {

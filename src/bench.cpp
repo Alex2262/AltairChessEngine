@@ -75,7 +75,7 @@ void run_bench(Engine& engine, Ply depth) {
     uint64_t total_nodes = 0;
 
 #ifdef SHOW_STATISTICS
-    Search_Results bench_res{};
+    SearchResults bench_res{};
 #endif
 
     // Loop through the 50 fens
@@ -97,6 +97,23 @@ void run_bench(Engine& engine, Ply depth) {
         }
 
 #ifdef SHOW_STATISTICS
+        bench_res.tt_exact_count  += engine.search_results.tt_exact_count;
+        bench_res.tt_all_count    += engine.search_results.tt_all_count;
+        bench_res.tt_cut_count    += engine.search_results.tt_cut_count;
+        bench_res.tt_pv_count     += engine.search_results.tt_pv_count;
+        bench_res.non_tt_pv_count += engine.search_results.non_tt_pv_count;
+
+        bench_res.tt_exact_moves_iterated  += engine.search_results.tt_exact_moves_iterated;
+        bench_res.tt_all_moves_iterated    += engine.search_results.tt_all_moves_iterated;
+        bench_res.tt_cut_moves_iterated    += engine.search_results.tt_cut_moves_iterated;
+        bench_res.tt_pv_moves_iterated     += engine.search_results.tt_pv_moves_iterated;
+        bench_res.non_tt_pv_moves_iterated += engine.search_results.non_tt_pv_moves_iterated;
+
+        for (int diff = 0; diff < 10; diff++) {
+            bench_res.tt_all_count_diffs[diff] += engine.search_results.tt_all_count_diffs[diff];
+            bench_res.tt_all_moves_iterated_diffs[diff] += engine.search_results.tt_all_moves_iterated_diffs[diff];
+        }
+
         for (int i = 0; i < FAIL_HIGH_STATS_COUNT; i++) {
             bench_res.qsearch_fail_highs[i] += engine.search_results.qsearch_fail_highs[i];
             bench_res.search_fail_highs[i] += engine.search_results.search_fail_highs[i];
