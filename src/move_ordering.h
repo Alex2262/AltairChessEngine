@@ -13,7 +13,7 @@ constexpr Score BAD_SCORE = -1000000;
 enum class MO_Margin : Score {
     TT = 500000,
     winning_capture = 50000,
-    base_capture = -20000,
+    bad_capture = -50000,
     capture_scale = 3,
     queen_promotion = 100000,
     other_promotion = -30000,

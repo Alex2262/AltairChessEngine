@@ -42,7 +42,7 @@ Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
 
         // All captures are not winning in Q_BN;
         score += thread_state.capture_history[false][selected][occupied][move.target()];
-        score += static_cast<Score>(MO_Margin::base_capture);
+        score += static_cast<Score>(MO_Margin::bad_capture);
     }
 
     else {
@@ -101,9 +101,7 @@ Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt
 
     score += thread_state.capture_history[winning_capture][selected][occupied][move.target()];
 
-    if (move_type == MOVE_TYPE_EP) return score +
-        static_cast<Score>(MO_Margin::winning_capture) +
-        static_cast<Score>(MO_Margin::capture_scale) * (MVV_LVA_VALUES[PAWN] / 2);
+    if (move_type == MOVE_TYPE_EP) return score + static_cast<Score>(MO_Margin::capture_scale) * (MVV_LVA_VALUES[PAWN] / 2);
 
     auto selected_type = get_piece_type(selected, position.side);
     auto occupied_type = get_piece_type(occupied, ~position.side);
@@ -115,8 +113,6 @@ Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt
     }
 
     score += static_cast<Score>(MO_Margin::capture_scale) * MVV_LVA_VALUES[occupied_type] - MVV_LVA_VALUES[selected_type];
-
-    score += static_cast<Score>(MO_Margin::base_capture);
 
     return score;
 }
