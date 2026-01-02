@@ -7,6 +7,8 @@
 
 class Thread_State;
 
+constexpr Score BAD_SCORE = -1000000;
+
 
 enum class MO_Margin : Score {
     TT = 500000,
@@ -35,10 +37,7 @@ void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_
 
 enum class Filter : uint16_t {
     None,
-    Noisy,
-    Good,
-    GoodNoisy,
-    Quiet
+    Good
 };
 
 

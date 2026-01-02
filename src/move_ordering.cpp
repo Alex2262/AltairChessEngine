@@ -96,7 +96,7 @@ Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt
 
     else {
         scored_move.winning_capture = false;
-        if constexpr (!qsearch) return -1000000;  // Skip scoring the bad capture currently, as it will be scored fully later
+        if constexpr (!qsearch) return BAD_SCORE;  // Skip scoring the bad capture currently, as it will be scored fully later
     }
 
     score += thread_state.capture_history[winning_capture][selected][occupied][move.target()];

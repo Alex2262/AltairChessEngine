@@ -7,24 +7,9 @@ inline ScoredMove Generator::sort_next_move() {
     for (size_t next_count = move_index + 1; next_count < scored_moves.size(); next_count++) {
         ScoredMove& scored_move = scored_moves[next_count];
 
-        if constexpr (filter == Filter::Noisy) {
-            if (!scored_move.move.is_capture(*position)) continue;
+        if constexpr (filter == Filter::Good) {
+            if (scored_move.score == BAD_SCORE) continue;
         }
-
-        else if constexpr (filter == Filter::Good) {
-            if (!scored_move.winning_capture) continue;
-        }
-
-        else if constexpr (filter == Filter::GoodNoisy) {
-            if (!scored_move.move.is_capture(*position)) continue;
-            if (!scored_move.winning_capture) continue;
-        }
-
-        else if constexpr (filter == Filter::Quiet) {
-            if (scored_move.move.is_capture(*position)) continue;
-        }
-
-        if (scored_move.move == tt_move) continue;
 
         if (best_score < scored_move.score) {
             best_score = scored_move.score;
@@ -40,8 +25,6 @@ template<bool qsearch>
 inline ScoredMove Generator::next_move() {
 
     assert(stage != Stage::Terminated);
-
-    ScoredMove picked = {NO_MOVE, 0, false};
 
     if (stage == Stage::TT_probe) {
         stage = Stage::GenNoisy;
@@ -61,17 +44,19 @@ inline ScoredMove Generator::next_move() {
     }
 
     if (stage == Stage::Noisy) {
-        if (move_index < scored_moves.size() && scored_moves[move_index].move == tt_move) move_index++;
-
         if (good_capture_found >= good_capture_count) {
             if constexpr (!qsearch) stage = Stage::GenQ_BN;
             else if (move_index >= scored_moves.size()) stage = Stage::Terminated;
         } else {
+            ScoredMove picked;
             if constexpr (qsearch) picked = sort_next_move<Filter::None>();
             else picked = sort_next_move<Filter::Good>();
 
             good_capture_found++;
             move_index++;
+
+            if (picked.move == tt_move) return next_move<qsearch>();
+            else return picked;
         }
     }
 
@@ -87,17 +72,17 @@ inline ScoredMove Generator::next_move() {
     if (stage == Stage::Q_BN) {
         assert(!qsearch);
 
-        if (move_index < scored_moves.size() && scored_moves[move_index].move == tt_move) move_index++;
-
         if (move_index >= scored_moves.size()) {
             stage = Stage::Terminated;
         } else {
+            ScoredMove picked;
             picked = sort_next_move<Filter::None>();
             move_index++;
+
+            if (picked.move == tt_move) return next_move<qsearch>();
+            else return picked;
         }
     }
 
-    assert(stage != Stage::Noisy || picked.move.type() != MOVE_TYPE_CASTLE);
-
-    return picked;
+    return {NO_MOVE, 0, false};
 }
