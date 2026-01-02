@@ -74,8 +74,8 @@ public:
     void reset_qsearch(Move tt_move_passed);
     void reset_negamax(Move tt_move_passed, InformativeMove last_moves_passed[]);
 
-    template<Filter filter>
     inline ScoredMove sort_next_move();
+
     template<bool qsearch>
     inline ScoredMove next_move();
 };
