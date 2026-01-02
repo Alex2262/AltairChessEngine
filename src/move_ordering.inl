@@ -8,7 +8,7 @@ inline ScoredMove Generator::sort_next_move() {
         ScoredMove& scored_move = scored_moves[next_count];
 
         if constexpr (filter == Filter::Good) {
-            if (scored_move.score == BAD_SCORE) continue;
+            if (!scored_move.good_noisy) continue;
         }
 
         if (best_score < scored_move.score) {

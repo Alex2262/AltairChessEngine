@@ -24,7 +24,7 @@ constexpr int bishop_ordering_2[2][4] = {
 struct ScoredMove {
     Move move = NO_MOVE;
     Score score = 0;
-    bool winning_capture = false;
+    bool good_noisy = false;
 };
 
 struct NNUpdate {

@@ -88,6 +88,7 @@ Score score_noisy(Thread_State& thread_state, ScoredMove& scored_move, Move tt_m
 
     if (occupied == EMPTY) {
         assert(move.type() == MOVE_TYPE_PROMOTION);
+        scored_move.good_noisy = true;
         good_noisy_count++;
         return score;
     }
@@ -96,12 +97,12 @@ Score score_noisy(Thread_State& thread_state, ScoredMove& scored_move, Move tt_m
 
     if (winning_capture) {
         score += static_cast<Score>(MO_Margin::winning_capture);
-        scored_move.winning_capture = true;
+        scored_move.good_noisy = true;
         good_noisy_count++;
     }
 
     else {
-        scored_move.winning_capture = false;
+        scored_move.good_noisy = false;
         if constexpr (!qsearch) return BAD_SCORE;  // Skip scoring the bad capture currently, as it will be scored fully later
     }
 

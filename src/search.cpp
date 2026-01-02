@@ -392,8 +392,8 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
 
         assert(temp_move != move);
 
-        if (temp_move.is_capture_or_ep(position) && temp_scored_move.winning_capture == winning_capture) {
-            update_history_entry(thread_state.capture_history[temp_scored_move.winning_capture]
+        if (temp_move.is_capture_or_ep(position) && temp_scored_move.good_noisy == winning_capture) {
+            update_history_entry(thread_state.capture_history[temp_scored_move.good_noisy]
                                  [position.board[temp_move.origin()]]
                                  [position.board[temp_move.target()]]
                                  [temp_move.target()],
@@ -480,10 +480,10 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
         ScoredMove scored_move = generator.next_move<true>();
         Move move = scored_move.move;
 
-        bool winning_capture = scored_move.winning_capture;
+        bool good_noisy = scored_move.good_noisy;
 
         if (move == NO_MOVE) break;
-        if (!winning_capture) break;
+        if (!good_noisy) break;
 
         // SEE pruning
         if (eval + search_params.QSEE_base.v <= alpha && !get_static_exchange_evaluation(position, move, 1)) {
@@ -531,7 +531,7 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
                                          [(position.threats >> move.target()) & 1],
                                          bonus, search_params.H_max_quiet.v);
                 } else if (move.is_capture(position) || move.type() == MOVE_TYPE_EP) {
-                    update_history_entry(thread_state.capture_history[winning_capture]
+                    update_history_entry(thread_state.capture_history[good_noisy]
                                          [position.board[move.origin()]]
                                          [position.board[move.target()]]
                                          [move.target()],
@@ -782,7 +782,7 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
 
         InformativeMove informative_move = InformativeMove(move, position.board[move.origin()], position.board[move.target()]);
         Score           move_score       = move == tt_move ? static_cast<Score>(MO_Margin::TT) : scored_move.score;
-        bool            winning_capture  = scored_move.winning_capture;
+        bool            good_noisy       = scored_move.good_noisy;
         bool            quiet            = !move.is_noisy(position);
 
         // Skip excluded moves
@@ -804,7 +804,7 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
                                    move.is_capture_or_ep(position) ?
                                         // Capture Histories
                                         thread_state.capture_history
-                                        [winning_capture][position.board[move.origin()]][position.board[move.target()]][move.target()] :
+                                        [good_noisy][position.board[move.origin()]][position.board[move.target()]][move.target()] :
 
                                         // noisy moves that don't have a history table (promotions)
                                         0;
@@ -837,7 +837,7 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
 
             // History Pruning
             if (   !pv_node
-                && (quiet || !winning_capture)
+                && (quiet || !good_noisy)
                 && depth <= search_params.history_pruning_depth.v
                 && move_history_score <= (depth + improving) * -search_params.history_pruning_divisor.v) continue;
 
@@ -956,7 +956,7 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
         // later shouldn't be as good, and therefore we don't need to search them to a very high depth
         if (   legal_moves >= 1 + root + pv_node
             && depth >= 3
-            && (quiet || !winning_capture)) {
+            && (quiet || !good_noisy)) {
 
             // Get the base reduction based on depth and moves searched
             reduction = engine.LMR_REDUCTIONS_QUIET[depth][std::min(legal_moves, 63)];
@@ -1068,7 +1068,7 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
                 int depth_adjusted = depth + (alpha >= eval);
                 Score bonus   = depth_adjusted * (depth_adjusted + 1 + null_search + pv_node + improving) - 1;
 
-                update_histories(thread_state, informative_move, last_moves, quiet, winning_capture, bonus);
+                update_histories(thread_state, informative_move, last_moves, quiet, good_noisy, bonus);
 
 #ifdef SHOW_STATISTICS
                 engine.search_results.alpha_raised_count++;
