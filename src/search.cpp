@@ -941,7 +941,7 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
         thread_state.game_ply++;
         thread_state.repetition_table[thread_state.game_ply] = position.hash_key;
 
-        Score return_eval   = -SCORE_INF;
+        Score      return_eval   = -SCORE_INF;
         uint64_t   current_nodes = thread_state.node_count;
         int        reduction     = 0;
         bool       full_depth_zero_window;
