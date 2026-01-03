@@ -22,15 +22,10 @@ enum class MO_Margin : Score {
     castle = 1200
 };
 
-Score score_all(Thread_State& thread_state, Move move, Move tt_move, InformativeMove last_moves[]);
-
 Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move, InformativeMove last_moves[]);
 
 template<bool qsearch>
 Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count);
-
-void get_all_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
-                     Move tt_move, InformativeMove last_moves[]);
 
 void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                      Move tt_move, InformativeMove last_moves[], int start_index);
