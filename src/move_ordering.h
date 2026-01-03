@@ -22,11 +22,15 @@ enum class MO_Margin : Score {
     castle = 1200
 };
 
-Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
-                      InformativeMove last_moves[]);
+Score score_all(Thread_State& thread_state, Move move, Move tt_move, InformativeMove last_moves[]);
+
+Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move, InformativeMove last_moves[]);
 
 template<bool qsearch>
 Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count);
+
+void get_all_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
+                     Move tt_move, InformativeMove last_moves[]);
 
 void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                      Move tt_move, InformativeMove last_moves[], int start_index);
@@ -41,13 +45,34 @@ enum class Filter : uint16_t {
 };
 
 
+
+class MaxHeap {
+private:
+    bool ordered;
+
+    int current_size;
+    int start;
+
+    bool comp(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int ind1, int ind2);
+    void sift_down(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int parent);
+
+public:
+    MaxHeap();
+
+    void heapify(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int p_start);
+    ScoredMove extract(FixedVector<ScoredMove, MAX_MOVES>& scored_moves);
+};
+
+
 namespace Stage {
     constexpr int TT_probe = 0;
     constexpr int GenNoisy = 1;
     constexpr int Noisy = 2;    // Only play good noisy moves in this stage for negamax
     constexpr int GenQ_BN = 3;
     constexpr int Q_BN = 4;  // Quiet + Bad Noisy
-    constexpr int Terminated = 5;
+    constexpr int GenAll = 5;
+    constexpr int All = 6;
+    constexpr int Terminated = 7;
 }
 
 class Generator {
@@ -58,21 +83,26 @@ public:
     ~Generator() = default;
 
     FixedVector<ScoredMove, MAX_MOVES> scored_moves;
+    MaxHeap max_heap;
 
     Move tt_move;
     Thread_State *thread_state;
     Position *position;
     InformativeMove last_moves[LAST_MOVE_COUNTS]{};
 
+    bool gen_all = false;
+    bool heapified = false;
+
     int stage = Stage::TT_probe;
     size_t move_index = 0;
     size_t good_capture_count = 0;
     size_t good_capture_found = 0;
+    size_t q_bn_found = 0;
 
     Ply search_ply = 0;
 
     void reset_qsearch(Move tt_move_passed);
-    void reset_negamax(Move tt_move_passed, InformativeMove last_moves_passed[]);
+    void reset_negamax(Move tt_move_passed, bool p_gen_all, InformativeMove last_moves_passed[]);
 
     inline ScoredMove sort_next_move();
 

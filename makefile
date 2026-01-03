@@ -6,7 +6,11 @@ SOURCES      := src/evaluation_classic.cpp src/main.cpp src/move.cpp src/perft.c
 				src/useful.cpp src/uci.cpp src/bench.cpp src/see.cpp src/bitboard.cpp src/move_ordering.cpp \
 				src/datagen.cpp src/nnue.cpp src/timeman.cpp
 
+TEST_SOURCES 	   := tests/maxheap_test.cpp
+ENGINE_LIB_SOURCES := $(filter-out src/main.cpp, $(SOURCES))
+
 CXXFLAGS     := -O3 -std=c++20 -march=native -Wall -Wextra -pedantic -DNDEBUG -flto
+TEST_CXXFLAGS := -O0 -g -std=c++20 -Wall -Wextra -pedantic
 
 CXX          := clang++
 SUFFIX       :=
@@ -49,10 +53,18 @@ else
 endif
 
 OUT := $(EXE)$(SUFFIX)
-
+TEST_OUT := tests/heap_test$(SUFFIX)
 
 make:
 	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES)
 
+tests: $(TEST_OUT)
+$(TEST_OUT):
+	$(CXX) $(TEST_CXXFLAGS) -o $(TEST_OUT) $(TEST_SOURCES) $(ENGINE_LIB_SOURCES)
+
+test: $(TEST_OUT)
+	./$(TEST_OUT)
+
 clean:
 	rm -rf *.o
+

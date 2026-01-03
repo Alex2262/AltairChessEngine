@@ -6,6 +6,74 @@
 #include "search.h"
 #include "search_parameters.h"
 
+
+Score score_all(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, InformativeMove last_moves[]) {
+    Move move = scored_move.move;
+    assert(move != NO_MOVE);
+
+    if (move == tt_move) return static_cast<Score>(MO_Margin::TT);
+
+    Score score = 0;
+
+    Position& position = thread_state.position;
+
+    Piece selected = position.board[move.origin()];
+    Piece occupied = position.board[move.target()];
+
+    auto selected_type = get_piece_type(selected, position.side);
+
+    MoveType move_type = move.type();
+
+    if (move_type == MOVE_TYPE_PROMOTION) {
+        auto promotion_piece_type = static_cast<PieceType>(move.promotion_type() + 1);
+        if (promotion_piece_type == QUEEN) score += static_cast<Score>(MO_Margin::queen_promotion);
+        else score += static_cast<Score>(MO_Margin::other_promotion) + MVV_LVA_VALUES[promotion_piece_type];
+    }
+
+    else if (move_type == MOVE_TYPE_CASTLE) {
+        score += static_cast<Score>(MO_Margin::castle);
+    }
+
+    if (move.is_capture(position) || move_type == MOVE_TYPE_EP) {
+        bool winning_capture = get_static_exchange_evaluation(position, move, -search_params.SEE_MO_threshold.v);
+        scored_move.winning_capture = winning_capture;
+
+        if (winning_capture) score += static_cast<Score>(MO_Margin::winning_capture);
+        else score += static_cast<Score>(MO_Margin::base_capture);
+
+        score += thread_state.capture_history[false][selected][occupied][move.target()];
+
+        if (move_type == MOVE_TYPE_EP) {
+            score += static_cast<Score>(MO_Margin::capture_scale) * (MVV_LVA_VALUES[PAWN] / 2);
+        } else {
+            auto occupied_type = get_piece_type(occupied, ~position.side);
+            score += static_cast<Score>(MO_Margin::capture_scale) * MVV_LVA_VALUES[occupied_type] -
+                     MVV_LVA_VALUES[selected_type];
+        }
+    }
+
+    else {
+        InformativeMove informative_move = InformativeMove(move, selected, occupied);
+
+        // score 1st and 2nd killer move
+        if (thread_state.killer_moves[0][thread_state.search_ply] == informative_move) score += static_cast<Score>(MO_Margin::killer_1);
+        else if (thread_state.killer_moves[1][thread_state.search_ply] == informative_move) score += static_cast<Score>(MO_Margin::killer_2);
+
+        score += thread_state.history_moves[selected][move.target()]
+        [(position.threats >> move.origin()) & 1]
+        [(position.threats >> move.target()) & 1];
+
+        for (int last_move_index = 0; last_move_index < LAST_MOVE_COUNTS; last_move_index++) {
+            if (last_moves[last_move_index] != NO_INFORMATIVE_MOVE) {
+                score += thread_state.get_continuation_history_entry(last_moves[last_move_index], informative_move);
+            }
+        }
+    }
+
+    return score;
+}
+
+
 Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
                       InformativeMove last_moves[]) {
     assert(move != NO_MOVE);
@@ -34,7 +102,6 @@ Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
     }
 
     // No EP moves appear as Q_BN
-
     if (move.is_capture(position)) {
         auto occupied_type = get_piece_type(occupied, ~position.side);
         score += static_cast<Score>(MO_Margin::capture_scale) * MVV_LVA_VALUES[occupied_type] -
@@ -101,9 +168,7 @@ Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt
 
     score += thread_state.capture_history[winning_capture][selected][occupied][move.target()];
 
-    if (move_type == MOVE_TYPE_EP) return score +
-        static_cast<Score>(MO_Margin::winning_capture) +
-        static_cast<Score>(MO_Margin::capture_scale) * (MVV_LVA_VALUES[PAWN] / 2);
+    if (move_type == MOVE_TYPE_EP) return score + static_cast<Score>(MO_Margin::capture_scale) * (MVV_LVA_VALUES[PAWN] / 2);
 
     auto selected_type = get_piece_type(selected, position.side);
     auto occupied_type = get_piece_type(occupied, ~position.side);
@@ -116,13 +181,19 @@ Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt
 
     score += static_cast<Score>(MO_Margin::capture_scale) * MVV_LVA_VALUES[occupied_type] - MVV_LVA_VALUES[selected_type];
 
-    score += static_cast<Score>(MO_Margin::base_capture);
-
     return score;
 }
 
 template Score score_capture<true >(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count);
 template Score score_capture<false>(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count);
+
+void get_all_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
+                    Move tt_move, InformativeMove last_moves[]) {
+    for (int i = 0; i < static_cast<int>(current_scored_moves.size()); i++) {
+        ScoredMove& scored_move = current_scored_moves[i];
+        scored_move.score = score_all(thread_state, scored_move, tt_move, last_moves);
+    }
+}
 
 void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                      Move tt_move, InformativeMove last_moves[], int start_index) {
@@ -146,21 +217,80 @@ template void get_capture_scores<true >(Thread_State& thread_state, FixedVector<
 template void get_capture_scores<false>(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                                         Move tt_move, size_t& good_capture_count);
 
+
+MaxHeap::MaxHeap() {
+    ordered = false;
+}
+
+bool MaxHeap::comp(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int ind1, int ind2) {
+    int r1 = start + ind1;
+    int r2 = start + ind2;
+    Score s1 = scored_moves[r1].score;
+    Score s2 = scored_moves[r2].score;
+
+    return s1 > s2 || (s1 == s2 && scored_moves[r1].move.internal_move() < scored_moves[r2].move.internal_move());
+}
+
+void MaxHeap::sift_down(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int parent) {
+    while (true) {
+        int largest = parent;
+        int c1 = parent * 2 + 1;
+        int c2 = parent * 2 + 2;
+
+        if (c1 < current_size && comp(scored_moves, c1, largest)) largest = c1;
+        if (c2 < current_size && comp(scored_moves, c2, largest)) largest = c2;
+
+        if (largest == parent) break;
+
+        std::swap(scored_moves[start + parent], scored_moves[start + largest]);
+        parent = largest;
+    }
+}
+
+void MaxHeap::heapify(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int p_start) {
+    start = p_start;
+    current_size = scored_moves.size() - start;
+    for (int parent = current_size / 2 - 1; parent >= 0; parent--) {
+        sift_down(scored_moves, parent);
+    }
+    ordered = true;
+}
+
+ScoredMove MaxHeap::extract(FixedVector<ScoredMove, MAX_MOVES>& scored_moves) {
+    if (!ordered) {
+        scored_moves[start] = scored_moves[start + current_size - 1];
+        sift_down(scored_moves, 0);
+        current_size--;
+    }
+
+    ordered = false;
+
+    assert(current_size > 0);
+    return scored_moves[start];
+}
+
+
 Generator::Generator(Thread_State& thread_state_passed) {
     thread_state = &thread_state_passed;
     position = &thread_state->position;
+    scored_moves.clear();
+    max_heap = MaxHeap();
 }
 
 void Generator::reset_qsearch(Move tt_move_passed) {
     stage = Stage::TT_probe;
     tt_move = tt_move_passed;
+    gen_all = false;
+    heapified = false;
 
     move_index = 0;
 }
 
-void Generator::reset_negamax(Move tt_move_passed, InformativeMove last_moves_passed[]) {
+void Generator::reset_negamax(Move tt_move_passed, bool p_gen_all, InformativeMove last_moves_passed[]) {
     stage = Stage::TT_probe;
     tt_move = tt_move_passed;
+    gen_all = p_gen_all;
+    heapified = false;
 
     move_index = 0;
 
