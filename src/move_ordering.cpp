@@ -217,14 +217,67 @@ template void get_capture_scores<true >(Thread_State& thread_state, FixedVector<
 template void get_capture_scores<false>(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                                         Move tt_move, size_t& good_capture_count);
 
+
+MaxHeap::MaxHeap() {
+    ordered = false;
+}
+
+bool MaxHeap::comp(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int ind1, int ind2) {
+    Score s1 = scored_moves[ind1].score;
+    Score s2 = scored_moves[ind2].score;
+
+    return s1 > s2 || (s1 == s2 && scored_moves[ind1].move.internal_move() < scored_moves[ind2].move.internal_move());
+}
+
+void MaxHeap::sift_down(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int parent) {
+    while (true) {
+        int largest = parent;
+        int c1 = parent * 2 + 1;
+        int c2 = parent * 2 + 2;
+
+        if (c1 < current_size && comp(scored_moves, c1, largest)) largest = c1;
+        if (c2 < current_size && comp(scored_moves, c2, largest)) largest = c2;
+
+        if (largest == parent) break;
+
+        std::swap(scored_moves[parent], scored_moves[largest]);
+        parent = largest;
+    }
+}
+
+void MaxHeap::heapify(FixedVector<ScoredMove, MAX_MOVES>& scored_moves) {
+    current_size = scored_moves.size();
+    for (int parent = current_size / 2 - 1; parent >= 0; parent--) {
+        sift_down(scored_moves, parent);
+    }
+    ordered = true;
+}
+
+ScoredMove MaxHeap::extract(FixedVector<ScoredMove, MAX_MOVES>& scored_moves) {
+    if (!ordered) {
+        scored_moves[0] = scored_moves[current_size - 1];
+        sift_down(scored_moves, 0);
+        current_size--;
+    }
+
+    ordered = false;
+
+    assert(current_size > 0);
+    return scored_moves[0];
+}
+
+
 Generator::Generator(Thread_State& thread_state_passed) {
     thread_state = &thread_state_passed;
     position = &thread_state->position;
+    scored_moves.clear();
+    max_heap = MaxHeap();
 }
 
 void Generator::reset_qsearch(Move tt_move_passed) {
     stage = Stage::TT_probe;
     tt_move = tt_move_passed;
+    gen_all = false;
 
     move_index = 0;
 }

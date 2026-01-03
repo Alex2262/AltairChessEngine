@@ -34,10 +34,7 @@ inline ScoredMove Generator::next_move() {
         position->get_pseudo_legal_moves<Movegen::All, true>(scored_moves);
         get_all_scores(*thread_state, scored_moves, tt_move, last_moves);
 
-        std::stable_sort(scored_moves.begin(), scored_moves.end(), [](const ScoredMove& s1, const ScoredMove& s2){
-            return s1.score > s2.score || (s1.score == s2.score && s1.move.internal_move() < s2.move.internal_move());
-        });
-
+        max_heap.heapify(scored_moves);
         stage = Stage::All;
     }
 
@@ -45,11 +42,10 @@ inline ScoredMove Generator::next_move() {
         assert(!qsearch);
         if (move_index >= scored_moves.size()) stage = Stage::Terminated;
         else {
-            ScoredMove picked = scored_moves[move_index];
+            ScoredMove picked = max_heap.extract(scored_moves);
             move_index++;
 
             if (picked.move == tt_move) return next_move<qsearch>();
-
             return picked;
         }
 

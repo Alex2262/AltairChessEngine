@@ -45,6 +45,24 @@ enum class Filter : uint16_t {
 };
 
 
+
+class MaxHeap {
+private:
+    bool ordered;
+
+    int current_size;
+
+    bool comp(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int ind1, int ind2);
+    void sift_down(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int parent);
+
+public:
+    MaxHeap();
+
+    void heapify(FixedVector<ScoredMove, MAX_MOVES>& scored_moves);
+    ScoredMove extract(FixedVector<ScoredMove, MAX_MOVES>& scored_moves);
+};
+
+
 namespace Stage {
     constexpr int TT_probe = 0;
     constexpr int GenNoisy = 1;
@@ -64,6 +82,7 @@ public:
     ~Generator() = default;
 
     FixedVector<ScoredMove, MAX_MOVES> scored_moves;
+    MaxHeap max_heap;
 
     Move tt_move;
     Thread_State *thread_state;
