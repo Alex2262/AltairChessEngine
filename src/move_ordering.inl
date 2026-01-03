@@ -23,33 +23,8 @@ inline ScoredMove Generator::next_move() {
     assert(stage != Stage::Terminated);
 
     if (stage == Stage::TT_probe) {
-        if (gen_all) stage = Stage::GenAll;
-        else stage = Stage::GenNoisy;
+        stage = Stage::GenNoisy;
         if (position->is_pseudo_legal(tt_move)) return {tt_move, static_cast<Score>(MO_Margin::TT), true};
-    }
-
-    if (stage == Stage::GenAll) {
-        assert(!qsearch);
-        move_index = 0;
-        position->get_pseudo_legal_moves<Movegen::All, true>(scored_moves);
-        get_all_scores(*thread_state, scored_moves, tt_move, last_moves);
-
-        max_heap.heapify(scored_moves);
-        stage = Stage::All;
-    }
-
-    if (stage == Stage::All) {
-        assert(!qsearch);
-        if (move_index >= scored_moves.size()) stage = Stage::Terminated;
-        else {
-            ScoredMove picked = max_heap.extract(scored_moves);
-            move_index++;
-
-            if (picked.move == tt_move) return next_move<qsearch>();
-            return picked;
-        }
-
-        return {NO_MOVE, 0, false};
     }
 
     if (stage == Stage::GenNoisy) {
@@ -82,6 +57,8 @@ inline ScoredMove Generator::next_move() {
     if (stage == Stage::GenQ_BN) {
         assert(!qsearch);
 
+        q_bn_found = 0;
+
         position->get_pseudo_legal_moves<Movegen::Quiet, false>(scored_moves);
         get_q_bn_scores(*thread_state, scored_moves, tt_move, last_moves, move_index);
 
@@ -94,12 +71,18 @@ inline ScoredMove Generator::next_move() {
         if (move_index >= scored_moves.size()) {
             stage = Stage::Terminated;
         } else {
-            ScoredMove picked;
-            picked = sort_next_move();
+            if (!heapified && gen_all && q_bn_found == 1 && move_index + 8 < scored_moves.size()) {
+                max_heap.heapify(scored_moves, move_index);
+                heapified = true;
+            }
+
+            ScoredMove picked = heapified ? max_heap.extract(scored_moves) : sort_next_move();
             move_index++;
 
             if (picked.move == tt_move) return next_move<qsearch>();
-            else return picked;
+
+            q_bn_found++;
+            return picked;
         }
     }
 

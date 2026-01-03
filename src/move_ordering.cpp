@@ -223,10 +223,12 @@ MaxHeap::MaxHeap() {
 }
 
 bool MaxHeap::comp(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int ind1, int ind2) {
-    Score s1 = scored_moves[ind1].score;
-    Score s2 = scored_moves[ind2].score;
+    int r1 = start + ind1;
+    int r2 = start + ind2;
+    Score s1 = scored_moves[r1].score;
+    Score s2 = scored_moves[r2].score;
 
-    return s1 > s2 || (s1 == s2 && scored_moves[ind1].move.internal_move() < scored_moves[ind2].move.internal_move());
+    return s1 > s2 || (s1 == s2 && scored_moves[r1].move.internal_move() < scored_moves[r2].move.internal_move());
 }
 
 void MaxHeap::sift_down(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int parent) {
@@ -240,13 +242,14 @@ void MaxHeap::sift_down(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int pa
 
         if (largest == parent) break;
 
-        std::swap(scored_moves[parent], scored_moves[largest]);
+        std::swap(scored_moves[start + parent], scored_moves[start + largest]);
         parent = largest;
     }
 }
 
-void MaxHeap::heapify(FixedVector<ScoredMove, MAX_MOVES>& scored_moves) {
-    current_size = scored_moves.size();
+void MaxHeap::heapify(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int p_start) {
+    start = p_start;
+    current_size = scored_moves.size() - start;
     for (int parent = current_size / 2 - 1; parent >= 0; parent--) {
         sift_down(scored_moves, parent);
     }
@@ -255,7 +258,7 @@ void MaxHeap::heapify(FixedVector<ScoredMove, MAX_MOVES>& scored_moves) {
 
 ScoredMove MaxHeap::extract(FixedVector<ScoredMove, MAX_MOVES>& scored_moves) {
     if (!ordered) {
-        scored_moves[0] = scored_moves[current_size - 1];
+        scored_moves[start] = scored_moves[start + current_size - 1];
         sift_down(scored_moves, 0);
         current_size--;
     }
@@ -263,7 +266,7 @@ ScoredMove MaxHeap::extract(FixedVector<ScoredMove, MAX_MOVES>& scored_moves) {
     ordered = false;
 
     assert(current_size > 0);
-    return scored_moves[0];
+    return scored_moves[start];
 }
 
 
@@ -278,6 +281,7 @@ void Generator::reset_qsearch(Move tt_move_passed) {
     stage = Stage::TT_probe;
     tt_move = tt_move_passed;
     gen_all = false;
+    heapified = false;
 
     move_index = 0;
 }
@@ -286,6 +290,7 @@ void Generator::reset_negamax(Move tt_move_passed, bool p_gen_all, InformativeMo
     stage = Stage::TT_probe;
     tt_move = tt_move_passed;
     gen_all = p_gen_all;
+    heapified = false;
 
     move_index = 0;
 

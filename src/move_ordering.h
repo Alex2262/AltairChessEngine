@@ -51,6 +51,7 @@ private:
     bool ordered;
 
     int current_size;
+    int start;
 
     bool comp(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int ind1, int ind2);
     void sift_down(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int parent);
@@ -58,7 +59,7 @@ private:
 public:
     MaxHeap();
 
-    void heapify(FixedVector<ScoredMove, MAX_MOVES>& scored_moves);
+    void heapify(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int p_start);
     ScoredMove extract(FixedVector<ScoredMove, MAX_MOVES>& scored_moves);
 };
 
@@ -90,11 +91,13 @@ public:
     InformativeMove last_moves[LAST_MOVE_COUNTS]{};
 
     bool gen_all = false;
+    bool heapified = false;
 
     int stage = Stage::TT_probe;
     size_t move_index = 0;
     size_t good_capture_count = 0;
     size_t good_capture_found = 0;
+    size_t q_bn_found = 0;
 
     Ply search_ply = 0;
 

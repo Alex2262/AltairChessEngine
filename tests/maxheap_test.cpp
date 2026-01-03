@@ -27,7 +27,7 @@ int main() {
     FixedVector<ScoredMove, MAX_MOVES> copy = scored_moves;
 
     MaxHeap max_heap{};
-    max_heap.heapify(copy);
+    max_heap.heapify(copy, 0);
 
     std::cout << "Heapified\n";
 
