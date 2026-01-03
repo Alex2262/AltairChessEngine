@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <cstdint>
@@ -13,13 +12,18 @@ namespace SIMD {
         AUTO
     };
 
-#if defined(__AVX2__)
+#if defined(__AVX512F__) && defined(__AVX512BW__)
+    #include <immintrin.h>
+    constexpr Arch ARCH = Arch::AVX512;
+    constexpr size_t REGISTER_SIZE = 32;  // 32 x 16-bit integers
+
+#elif defined(__AVX2__)
     #include <immintrin.h>
     constexpr Arch ARCH = Arch::AVX2;
     constexpr size_t REGISTER_SIZE = 16;
 
 #elif defined(__ARM_NEON)
-    #include <arm_neon.h>
+#include <arm_neon.h>
     constexpr Arch ARCH = Arch::NEON;
     constexpr size_t REGISTER_SIZE = 8;
 
@@ -31,7 +35,9 @@ namespace SIMD {
 
     auto inline int16_load(auto data) {
 
-#if defined(__AVX2__)
+#if defined(__AVX512F__) && defined(__AVX512BW__)
+        return _mm512_loadu_si512(reinterpret_cast<const __m512i*>(data));
+#elif defined(__AVX2__)
         return _mm256_loadu_si256(reinterpret_cast<const __m256i*>(data));
 #elif defined(__ARM_NEON)
         return vld1q_s16(data);
@@ -43,7 +49,9 @@ namespace SIMD {
 
     auto inline get_int16_vec(auto data) {
 
-#if defined(__AVX2__)
+#if defined(__AVX512F__) && defined(__AVX512BW__)
+        return _mm512_set1_epi16(data);
+#elif defined(__AVX2__)
         return _mm256_set1_epi16(data);
 #elif defined(__ARM_NEON)
         return vdupq_n_s16(data);
@@ -55,12 +63,15 @@ namespace SIMD {
 
     auto inline vec_int16_clamp(auto vec, auto min_vec, auto max_vec) {
 
-#if defined(__AVX2__)
+#if defined(__AVX512F__) && defined(__AVX512BW__)
+        vec = _mm512_max_epi16(vec, min_vec);
+        vec = _mm512_min_epi16(vec, max_vec);
+        return vec;
+#elif defined(__AVX2__)
         vec = _mm256_max_epi16(vec, min_vec);
         vec = _mm256_min_epi16(vec, max_vec);
         return vec;
 #elif defined(__ARM_NEON)
-
         vec = vmaxq_s16(vec, min_vec);
         vec = vminq_s16(vec, max_vec);
         return vec;
@@ -72,7 +83,9 @@ namespace SIMD {
 
     auto inline vec_int16_multiply(auto vec1, auto vec2) {
 
-#if defined(__AVX2__)
+#if defined(__AVX512F__) && defined(__AVX512BW__)
+        return _mm512_mullo_epi16(vec1, vec2);
+#elif defined(__AVX2__)
         return _mm256_mullo_epi16(vec1, vec2);
 #elif defined(__ARM_NEON)
         return vmulq_s16(vec1, vec2);
@@ -84,7 +97,9 @@ namespace SIMD {
 
     auto inline vec_int32_zero() {
 
-#if defined(__AVX2__)
+#if defined(__AVX512F__)
+        return _mm512_setzero_si512();
+#elif defined(__AVX2__)
         return _mm256_setzero_si256();
 #elif defined(__ARM_NEON)
         return vdupq_n_s32(0);
@@ -95,7 +110,9 @@ namespace SIMD {
 
     auto inline vec_int32_add(auto vec1, auto vec2) {
 
-#if defined(__AVX2__)
+#if defined(__AVX512F__)
+        return _mm512_add_epi32(vec1, vec2);
+#elif defined(__AVX2__)
         return _mm256_add_epi32(vec1, vec2);
 #elif defined(__ARM_NEON)
         return vaddq_s32(vec1, vec2);
@@ -106,7 +123,9 @@ namespace SIMD {
 
     auto inline vec_int16_madd_int32(auto vec1, auto vec2) {
 
-#if defined(__AVX2__)
+#if defined(__AVX512F__) && defined(__AVX512BW__)
+        return _mm512_madd_epi16(vec1, vec2);
+#elif defined(__AVX2__)
         return _mm256_madd_epi16(vec1, vec2);
 #elif defined(__ARM_NEON)
         int32x4_t low_product  = vmull_s16(vget_low_s16 (vec1), vget_low_s16 (vec2));
@@ -121,7 +140,10 @@ namespace SIMD {
 
     auto inline vec_int32_hadd(auto vec) {
 
-#if defined(__AVX2__)
+#if defined(__AVX512F__)
+        // AVX512 horizontal add reduction
+        return _mm512_reduce_add_epi32(vec);
+#elif defined(__AVX2__)
         auto sum_into_4 = _mm256_hadd_epi32(vec, vec);
         auto sum_into_2 = _mm256_hadd_epi32(sum_into_4, sum_into_4);
 
