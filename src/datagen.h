@@ -48,7 +48,7 @@ class Datagen {
 
     const int initial_random_moves_dfrc     =     8;
     const int initial_random_moves_standard =     8;
-    const int opening_max_score             =  1000;
+    const int opening_max_score             =   300;
     const int dfrc_chance                   =    50; // Out of 100
     // const uint64_t opening_chance        =   100;  // Out of 100
 
