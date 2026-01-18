@@ -134,13 +134,13 @@ Score evaluate_pawns(Position& position, Color color, EvaluationInformation& eva
             // BLOCKERS
             auto blocker_square = square + up;
             if (from_square(blocker_square) & evaluation_information.pieces[~color]) {
-                score += PASSED_PAWN_BLOCKERS[get_piece_type(position.board[blocker_square], ~color)][rank_of(
+                score += PASSED_PAWN_BLOCKERS[get_piece_type(position.board[blocker_square])][rank_of(
                         get_white_relative_square(blocker_square, color))];
             }
 
             auto blocker_square_2 = blocker_square + up;
             if (relative_rank <= 5 && from_square(blocker_square_2) & evaluation_information.pieces[~color]) {
-                score += PASSED_PAWN_BLOCKERS_2[get_piece_type(position.board[blocker_square_2], ~color)][rank_of(
+                score += PASSED_PAWN_BLOCKERS_2[get_piece_type(position.board[blocker_square_2])][rank_of(
                         get_white_relative_square(blocker_square_2, color))];
             }
 
@@ -190,7 +190,7 @@ Score evaluate_pawns(Position& position, Color color, EvaluationInformation& eva
     }
 
     while (pawn_threats) {
-        score += PIECE_THREATS[PAWN][get_piece_type(position.board[poplsb(pawn_threats)], ~color)];
+        score += PIECE_THREATS[PAWN][get_piece_type(position.board[poplsb(pawn_threats)])];
     }
 
     return score;

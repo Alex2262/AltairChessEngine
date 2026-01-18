@@ -906,7 +906,7 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
         Ply extension = 0;
 
         // Pawn going to 7th rank must be passed
-        bool passed_pawn = get_piece_type(informative_move.selected(), original_side) == PAWN
+        bool passed_pawn = get_piece_type(informative_move.selected()) == PAWN
                            && static_cast<int>(rank_of(move.target())) == 6 - 5 * original_side;
         bool queen_promotion = move.type() == MOVE_TYPE_PROMOTION
                                && static_cast<PieceType>(move.promotion_type() + 1) == QUEEN;

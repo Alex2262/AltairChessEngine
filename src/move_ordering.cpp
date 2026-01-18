@@ -20,7 +20,7 @@ Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
     Piece selected = position.board[move.origin()];
     Piece occupied = position.board[move.target()];
 
-    auto selected_type = get_piece_type(selected, position.side);
+    auto selected_type = get_piece_type(selected);
 
     MoveType move_type = move.type();
 
@@ -36,7 +36,7 @@ Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
 
     // No EP moves appear as Q_BN
     if (move.is_capture(position)) {
-        auto occupied_type = get_piece_type(occupied, ~position.side);
+        auto occupied_type = get_piece_type(occupied);
         score += static_cast<Score>(MO_Margin::capture_scale) * MVV_LVA_VALUES[occupied_type] -
                  MVV_LVA_VALUES[selected_type];
 
@@ -103,8 +103,8 @@ Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt
 
     if (move_type == MOVE_TYPE_EP) return score + static_cast<Score>(MO_Margin::capture_scale) * (MVV_LVA_VALUES[PAWN] / 2);
 
-    auto selected_type = get_piece_type(selected, position.side);
-    auto occupied_type = get_piece_type(occupied, ~position.side);
+    auto selected_type = get_piece_type(selected);
+    auto occupied_type = get_piece_type(occupied);
 
     if (move_type == MOVE_TYPE_PROMOTION) {
         auto promotion_piece_type = static_cast<PieceType>(move.promotion_type() + 1);

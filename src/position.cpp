@@ -95,7 +95,7 @@ void Position::compute_hash_key() {
             Square square = poplsb(piece_bitboard);
             hash_key ^= ZobristHashKeys.piece_hash_keys[piece][square];
 
-            if (get_piece_type(static_cast<Piece>(piece), get_color(static_cast<Piece>(piece))) == PAWN) {
+            if (get_piece_type(static_cast<Piece>(piece)) == PAWN) {
                 pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[piece][square];
             }
 
@@ -279,7 +279,7 @@ FenInfo Position::set_fen(const std::string& fen_string) {
     return fen_info;
 }
 
-std::string Position::get_fen(Ply fifty_move) {
+std::string Position::get_fen(Ply fifty_move) const {
     std::string fen;
 
     int empty = 0;
@@ -393,7 +393,7 @@ void Position::set_dfrc(int index) {
 }
 
 
-bool Position::is_pseudo_legal(Move move) {
+bool Position::is_pseudo_legal(Move move) const {
 
     if (move == NO_MOVE) return false;
 
@@ -404,7 +404,7 @@ bool Position::is_pseudo_legal(Move move) {
     MoveType move_type = move.type();
 
     if (selected == EMPTY || get_color(selected) != side) return false;
-    PieceType selected_type = get_piece_type(selected, side);
+    PieceType selected_type = get_piece_type(selected);
 
     bool capture = false;
 
@@ -568,8 +568,8 @@ bool Position::make_move(Move move, State& state, Ply& fifty_move) {
     Piece occupied = board[target_square];
     MoveType move_type = move.type();
 
-    PieceType selected_type = get_piece_type(selected, side);
-    PieceType occupied_type = occupied == EMPTY ? NONE : get_piece_type(occupied, ~side);
+    PieceType selected_type = get_piece_type(selected);
+    PieceType occupied_type = occupied == EMPTY ? NONE : get_piece_type(occupied);
 
     state.move = InformativeMove(move, selected, occupied);
 
@@ -862,17 +862,23 @@ void Position::update_nnue(State& state) {
     if (state.king_bucket_update.update_necessary) {
         nnue_state.current_accumulator->king_buckets[bucket_side] = state.king_bucket_update.bucket;
         nnue_state.reset_side(*this, bucket_side);
-    }
 
-    for (NNUpdate& nn_update : state.activations) {
-        if (state.king_bucket_update.update_necessary)
+        for (NNUpdate& nn_update : state.activations) {
             nnue_state.update_feature_side<ACTIVATE>(nn_update.piece, nn_update.square, ~bucket_side);
-        else nnue_state.update_feature<ACTIVATE>(nn_update.piece, nn_update.square);
+        }
+
+        for (NNUpdate& nn_update : state.deactivations) {
+            nnue_state.update_feature_side<DEACTIVATE>(nn_update.piece, nn_update.square, ~bucket_side);
+        }
     }
 
-    for (NNUpdate& nn_update : state.deactivations) {
-        if (state.king_bucket_update.update_necessary)
-            nnue_state.update_feature_side<DEACTIVATE>(nn_update.piece, nn_update.square, ~bucket_side);
-        else nnue_state.update_feature<DEACTIVATE>(nn_update.piece, nn_update.square);
+    else {
+        for (NNUpdate& nn_update : state.activations) {
+            nnue_state.update_feature<ACTIVATE>(nn_update.piece, nn_update.square);
+        }
+
+        for (NNUpdate& nn_update : state.deactivations) {
+            nnue_state.update_feature<DEACTIVATE>(nn_update.piece, nn_update.square);
+        }
     }
 }

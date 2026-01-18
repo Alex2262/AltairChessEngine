@@ -138,11 +138,11 @@ public:
     void compute_hash_key();
     void compute_threats();
     FenInfo set_fen(const std::string& fen);
-    std::string get_fen(Ply fifty_move);
+    std::string get_fen(Ply fifty_move) const;
     void set_frc_side(Color color, int index);
     void set_dfrc(int index);
 
-    bool is_pseudo_legal(Move move);
+    bool is_pseudo_legal(Move move) const;
 
     void make_null_move(State& state, Ply& fifty_move);
     void undo_null_move(State& state, Ply& fifty_move);

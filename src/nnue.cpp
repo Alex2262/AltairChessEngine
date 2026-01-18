@@ -12,8 +12,8 @@
 
 #include "incbin.h"
 
-INCBIN(nnue, "src/ceres-net.bin");
-// INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/ceres-net.bin");
+// INCBIN(nnue, "src/ceres-net.bin");
+INCBIN(nnue, "/Users/alexandertian/CLionProjects/Altair/src/ceres-net.bin");
 
 const NNUE_Params &original_nnue_parameters = *reinterpret_cast<const NNUE_Params *>(gnnueData);
 const NNUE_Params nnue_parameters = get_nnue_parameters();
@@ -63,7 +63,7 @@ std::pair<size_t, size_t> NNUE_State::get_feature_indices(Piece piece, Square sq
     constexpr size_t piece_offset = 64;
 
     const Color color = get_color(piece);
-    const auto piece_type = get_piece_type(piece, color);
+    const auto piece_type = get_piece_type(piece);
 
     const auto white_idx = INPUT_SIZE * (current_accumulator->king_buckets[WHITE])
             +  color * color_offset + piece_type * piece_offset + static_cast<size_t>(sq);
