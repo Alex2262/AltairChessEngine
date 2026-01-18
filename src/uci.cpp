@@ -21,7 +21,7 @@ void UCI::initialize_uci() const {
     engine->thread_states.emplace_back();
 
     Position& position = engine->thread_states[0].position;
-    position.set_fen(START_FEN);
+    position.set_fen(START_FEN.data());
 }
 
 
@@ -36,7 +36,7 @@ void UCI::parse_position() {
     FenInfo fen_info;
 
     if (tokens[1] == "startpos") {
-        fen_info = position.set_fen(START_FEN);
+        fen_info = position.set_fen(START_FEN.data());
         next_idx = 2;
     }
 
@@ -46,7 +46,7 @@ void UCI::parse_position() {
             return;
         }
 
-        fen_info = position.set_fen(START_FEN);
+        fen_info = position.set_fen(START_FEN.data());
 
         int dfrc_index = std::stoi(tokens[2]);
         position.set_dfrc(dfrc_index);
@@ -273,7 +273,7 @@ void UCI::uci_loop() {
 
         else if (msg == "ucinewgame") {
             Position& position = engine->thread_states[0].position;
-            position.set_fen(START_FEN);
+            position.set_fen(START_FEN.data());
             engine->new_game();
         }
 

@@ -161,7 +161,7 @@ void Position::compute_threats() {
 
 FenInfo Position::set_fen(const std::string& fen_string) {
 
-    std::string reduced_fen_string = std::regex_replace(fen_string, std::regex("^ +| +$|( ) +"), "$1");
+    const std::string reduced_fen_string = std::regex_replace(fen_string, std::regex("^ +| +$|( ) +"), "$1");
     std::vector<std::string> fen_tokens = split(reduced_fen_string, ' ');
 
     if (fen_tokens.size() < 4) {
@@ -193,20 +193,14 @@ FenInfo Position::set_fen(const std::string& fen_string) {
         if (c == '/' ) {
             pos = static_cast<Square>(pos - 16);
         } else if (std::isdigit(c)) {
-
             for (int empty_amt = 0; empty_amt < c - '0'; empty_amt++) {
                 board[pos] = EMPTY;
                 pos = static_cast<Square>(pos + 1);
             }
-
-        }
-        else if (std::isalpha(c)) {
-
+        } else if (std::isalpha(c)) {
             Piece piece = piece_to_num(c);
             place_piece(piece, pos);
-
             pos = static_cast<Square>(pos + 1);
-
         }
     }
 
@@ -219,8 +213,8 @@ FenInfo Position::set_fen(const std::string& fen_string) {
     for (char c : castling) {
         if (fischer_random_chess) {
 
-            Color castle_flag_color = isupper(c) ? WHITE : BLACK;
-            char castle_flag = static_cast<char>(tolower(static_cast<char>(c)));
+            const Color castle_flag_color = isupper(c) ? WHITE : BLACK;
+            const char castle_flag = static_cast<char>(tolower(static_cast<char>(c)));
 
             if (castle_flag == 'k') {
                 starting_rook_pos[castle_flag_color][0] = msb(get_pieces(ROOK, castle_flag_color));
@@ -233,14 +227,13 @@ FenInfo Position::set_fen(const std::string& fen_string) {
             }
 
             else {
-                int rook_file = castle_flag - 'a';
-                int king_file = static_cast<int>(file_of(get_king_pos(castle_flag_color)));
+                const int rook_file = castle_flag - 'a';
+                const int king_file = static_cast<int>(file_of(get_king_pos(castle_flag_color)));
 
                 if (rook_file > king_file) {
                     starting_rook_pos[castle_flag_color][0] = static_cast<Square>(rook_file + 56 * castle_flag_color);
                     castle_ability_bits |= (castle_flag_color == WHITE) ? 1 : 4;
-                }
-                else {
+                } else {
                     starting_rook_pos[castle_flag_color][1] = static_cast<Square>(rook_file + 56 * castle_flag_color);
                     castle_ability_bits |= (castle_flag_color == WHITE) ? 2 : 8;
                 }
@@ -258,8 +251,7 @@ FenInfo Position::set_fen(const std::string& fen_string) {
     if (en_passant.size() > 1) {
         auto square = static_cast<Square>((en_passant[1] - '1') * 8 + en_passant[0] - 'a');
         ep_square = square;
-    }
-    else {
+    } else {
         ep_square = NO_SQUARE;
     }
 
@@ -273,10 +265,7 @@ FenInfo Position::set_fen(const std::string& fen_string) {
 
     nnue_state.reset_nnue(*this);
 
-    FenInfo fen_info = FenInfo{static_cast<Ply>(std::stoi(half_move_clock)),
-                               static_cast<Ply>(std::stoi(full_move_counter))};
-
-    return fen_info;
+    return {static_cast<Ply>(std::stoi(half_move_clock)), static_cast<Ply>(std::stoi(full_move_counter))};
 }
 
 std::string Position::get_fen(Ply fifty_move) const {
@@ -335,10 +324,10 @@ void Position::set_frc_side(Color color, int index) {
     for (int i = 0; i < 8; i++) empty_back_rank.push_back(i ^ 56 * color);
 
     // Bishops
-    Square bishop_1 = static_cast<Square>(bishop_ordering_1[color][index % 4]);
+    const Square bishop_1 = static_cast<Square>(bishop_ordering_1[color][index % 4]);
     index /= 4;
 
-    Square bishop_2 = static_cast<Square>(bishop_ordering_2[color][index % 4]);
+    const Square bishop_2 = static_cast<Square>(bishop_ordering_2[color][index % 4]);
     index /= 4;
 
     place_piece(get_piece(BISHOP, color), bishop_1);
@@ -397,14 +386,14 @@ bool Position::is_pseudo_legal(Move move) const {
 
     if (move == NO_MOVE) return false;
 
-    Square origin_square = move.origin();
-    Square target_square = move.target();
-    Piece selected = board[origin_square];
-    Piece occupied = board[target_square];
-    MoveType move_type = move.type();
+    const Square origin_square = move.origin();
+    const Square target_square = move.target();
+    const Piece selected = board[origin_square];
+    const Piece occupied = board[target_square];
+    const MoveType move_type = move.type();
 
     if (selected == EMPTY || get_color(selected) != side) return false;
-    PieceType selected_type = get_piece_type(selected);
+    const PieceType selected_type = get_piece_type(selected);
 
     bool capture = false;
 
@@ -422,11 +411,11 @@ bool Position::is_pseudo_legal(Move move) const {
         if (selected_type != KING) return false;
         if (rank_of(origin_square) != side * RANK_8) return false;
 
-        Square appropriate_target_square_q = static_cast<Square>(c1 ^ (56 * side));
-        Square appropriate_target_square_k = static_cast<Square>(g1 ^ (56 * side));
+        const Square appropriate_target_square_q = static_cast<Square>(c1 ^ (56 * side));
+        const Square appropriate_target_square_k = static_cast<Square>(g1 ^ (56 * side));
 
-        Square rook_target_square_q = appropriate_target_square_q + EAST;
-        Square rook_target_square_k = appropriate_target_square_k + WEST;
+        const Square rook_target_square_q = appropriate_target_square_q + EAST;
+        const Square rook_target_square_k = appropriate_target_square_k + WEST;
 
         if (target_square == appropriate_target_square_q) {
             if ((side == WHITE && (castle_ability_bits & 2) != 2) ||
@@ -532,9 +521,7 @@ void Position::make_null_move(State& state, Ply& fifty_move) {
 
     fifty_move = 0;
 
-    Bitboard temp_our_pieces = our_pieces;
-    our_pieces = opp_pieces;
-    opp_pieces = temp_our_pieces;
+    std::swap(our_pieces, opp_pieces);
 
     compute_threats();
 }
@@ -551,30 +538,25 @@ void Position::undo_null_move(State& state, Ply& fifty_move) {
     major_hash_key = state.current_major_hash_key;
     minor_hash_key = state.current_minor_hash_key;
 
-    Bitboard temp_our_pieces = our_pieces;
-    our_pieces = opp_pieces;
-    opp_pieces = temp_our_pieces;
+    std::swap(our_pieces, opp_pieces);
 }
 
 
 bool Position::make_move(Move move, State& state, Ply& fifty_move) {
 
-    Square castled_pos[2] = {NO_SQUARE, NO_SQUARE};
+    std::array<Square, 2> castled_pos {NO_SQUARE, NO_SQUARE};
 
     // Get move info
-    Square origin_square = move.origin();
-    Square target_square = move.target();
-    Piece selected = board[origin_square];
-    Piece occupied = board[target_square];
-    MoveType move_type = move.type();
-
-    PieceType selected_type = get_piece_type(selected);
-    PieceType occupied_type = occupied == EMPTY ? NONE : get_piece_type(occupied);
+    const Square    origin_square = move.origin();
+    const Square    target_square = move.target();
+    const Piece     selected      = board[origin_square];
+    const Piece     occupied      = board[target_square];
+    const MoveType  move_type     = move.type();
+    const PieceType selected_type = get_piece_type(selected);
+    const PieceType occupied_type = occupied == EMPTY ? NONE : get_piece_type(occupied);
 
     state.move = InformativeMove(move, selected, occupied);
-
     state.NNUE_pushed = false;
-
     state.activations.clear();
     state.deactivations.clear();
     state.king_bucket_update = {};
@@ -777,9 +759,7 @@ bool Position::make_move(Move move, State& state, Ply& fifty_move) {
     hash_key ^= ZobristHashKeys.side_hash_key;
     side = ~side;
 
-    Bitboard temp_our_pieces = our_pieces;
-    our_pieces = opp_pieces;
-    opp_pieces = temp_our_pieces;
+    std::swap(our_pieces, opp_pieces);
 
     compute_threats();
 
@@ -789,14 +769,14 @@ bool Position::make_move(Move move, State& state, Ply& fifty_move) {
 
 void Position::undo_move(Move move, State& state, Ply& fifty_move) {
 
-    Square castled_pos[2] = {NO_SQUARE, NO_SQUARE};
+    std::array<Square, 2> castled_pos {NO_SQUARE, NO_SQUARE};
 
     // Get move info
-    Square origin_square = move.origin();
-    Square target_square = move.target();
-    Piece selected = state.move.selected();
-    Piece occupied = state.move.occupied();
-    MoveType move_type = move.type();
+    const Square   origin_square = move.origin();
+    const Square   target_square = move.target();
+    const Piece    selected      = state.move.selected();
+    const Piece    occupied      = state.move.occupied();
+    const MoveType move_type     = move.type();
 
     if (state.NNUE_pushed) nnue_state.pop();
 
@@ -857,18 +837,20 @@ void Position::update_nnue(State& state) {
     state.NNUE_pushed = true;
     nnue_state.push();
 
-    Color bucket_side = state.king_bucket_update.side;
+    const Color bucket_side = state.king_bucket_update.side;
 
     if (state.king_bucket_update.update_necessary) {
         nnue_state.current_accumulator->king_buckets[bucket_side] = state.king_bucket_update.bucket;
         nnue_state.reset_side(*this, bucket_side);
 
+        const Color opp_bucket_side = ~bucket_side;
+
         for (NNUpdate& nn_update : state.activations) {
-            nnue_state.update_feature_side<ACTIVATE>(nn_update.piece, nn_update.square, ~bucket_side);
+            nnue_state.update_feature_side<ACTIVATE>(nn_update.piece, nn_update.square, opp_bucket_side);
         }
 
         for (NNUpdate& nn_update : state.deactivations) {
-            nnue_state.update_feature_side<DEACTIVATE>(nn_update.piece, nn_update.square, ~bucket_side);
+            nnue_state.update_feature_side<DEACTIVATE>(nn_update.piece, nn_update.square, opp_bucket_side);
         }
     }
 

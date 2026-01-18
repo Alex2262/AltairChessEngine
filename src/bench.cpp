@@ -5,7 +5,7 @@
 
 // A list of many fens that include famous positions from notable games, some of my personal games,
 // and other chess studies.
-constexpr std::array fens {
+static constexpr std::array<std::string_view, 35> fens {
 
         // Positions from my own games
         "r1r3k1/pb1nbppp/4p3/1p1pP2P/3p1B2/3P2P1/qPP1QPBN/2R1R1K1 w - - 0 18",
@@ -81,11 +81,11 @@ void run_bench(Engine& engine, Ply depth) {
     // Loop through the 50 fens
     for (int fen_count = 0; fen_count < static_cast<int>(fens.size()); fen_count++) {
 
-        std::string fen = fens[fen_count];
+        std::string_view fen = fens[fen_count];
         std::cout << "running position #" << fen_count + 1 << " fen: " << fen << std::endl;
 
         engine.new_game();
-        position.set_fen(fen);
+        position.set_fen(fen.data());
 
         engine.soft_time_limit = TIME_INF;
         engine.hard_time_limit = TIME_INF;
@@ -157,5 +157,5 @@ void run_bench(Engine& engine, Ply depth) {
     engine.soft_time_limit = old_soft;
     engine.hard_time_limit = old_hard;
 
-    position.set_fen(START_FEN);
+    position.set_fen(START_FEN.data());
 }

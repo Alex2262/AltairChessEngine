@@ -3,7 +3,7 @@
 #include "timeman.h"
 #include "search_parameters.h"
 
-double position_time_scale(Position& position) {
+double position_time_scale(const Position& position) {
 
     /*
      * We want to scale time based on the position and phase of the game.
@@ -15,9 +15,9 @@ double position_time_scale(Position& position) {
      * We also consider the number of pawns on the lower ranks of the board.
      */
 
-    int phase_scores[6] = {1, 3, 3, 7, 15, 0};
+    constexpr std::array<int, 6> phase_scores {1, 3, 3, 7, 15, 0};
+    constexpr int max_score = 2 * (8 * phase_scores[0] + 2 * phase_scores[1] + 2 * phase_scores[2] + 2 * phase_scores[3] + phase_scores[4]);
 
-    int max_score = 2 * (8 * phase_scores[0] + 2 * phase_scores[1] + 2 * phase_scores[2] + 2 * phase_scores[3] + phase_scores[4]);
     int current_score = 0;
 
     for (int piece = 0; piece < 12; piece++) {
@@ -67,9 +67,9 @@ void time_handler(Engine& engine, double self_time, double inc, double movetime,
 
     double movestogo_ratio = movestogo == 0 ? 0 : std::clamp(std::atan((movestogo + 20) / 24.0), 0.84, 1.1);
 
-    Position& position = engine.thread_states[0].position;
+    const Position& position = engine.thread_states[0].position;
 
-    double pts = position_time_scale(position);
+    const double pts = position_time_scale(position);
 
     // std::cout << movetime << std::endl;
 

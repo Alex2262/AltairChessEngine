@@ -43,7 +43,7 @@ std::string Move::get_uci(const Position& position) const {
 }
 
 
-Move::Move(const Position& position, std::string uci) {
+Move::Move(const Position& position, std::string& uci) {
     MoveType move_type = MOVE_TYPE_NORMAL;
     PromotionType promotion_type;
 

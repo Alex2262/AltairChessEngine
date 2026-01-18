@@ -56,7 +56,7 @@ enum PieceType : uint32_t {
 };
 
 constexpr inline PieceType get_piece_type(Piece piece) {
-    return static_cast<PieceType>(static_cast<int>(piece) % 6);
+    return static_cast<PieceType>(piece % COLOR_OFFSET);
 }
 
 constexpr inline Piece get_piece(PieceType piece_type, Color color) {
@@ -110,4 +110,10 @@ constexpr Rank RANK_8 = 7;
 using Ply = int16_t;
 using Hash = uint64_t;
 using Score = int32_t;
+
+enum NodeType {
+    Exact_Node,
+    Lower_Node,
+    Upper_Node
+};
 

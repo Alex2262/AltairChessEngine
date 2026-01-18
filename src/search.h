@@ -9,12 +9,12 @@
 // #define DO_SEARCH_TUNING
 // #define SHOW_STATISTICS
 
-constexpr double learning_rate = 0.002;
+inline constexpr double learning_rate = 0.002;
 
-constexpr int correction_history_grain = 256;
-constexpr int correction_history_weight_scale = 1024;
-constexpr int correction_history_size = 16384;
-constexpr int correction_history_max = correction_history_grain * 64;
+inline constexpr int correction_history_grain = 256;
+inline constexpr int correction_history_weight_scale = 1024;
+inline constexpr int correction_history_size = 16384;
+inline constexpr int correction_history_max = correction_history_grain * 64;
 
 
 struct TT_Entry {                     // 22 bytes --> 24 bytes

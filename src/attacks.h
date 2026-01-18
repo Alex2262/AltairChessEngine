@@ -152,16 +152,18 @@ static constexpr std::array<Bitboard, N_SQUARES> ROOK_MAGICS = {
 
 
 // Get the edge opposite of a direction for calculating
-[[nodiscard]] constexpr Bitboard board_edge(Direction D) {
-    if (D == NORTH) return MASK_RANK[RANK_8];
-    else if (D == SOUTH) return MASK_RANK[RANK_1];
-    else if (D == EAST) return MASK_FILE[FILE_H];
-    else if (D == WEST) return MASK_FILE[FILE_A];
 
-    else if (D == NORTH_EAST) return MASK_RANK[RANK_8] | MASK_FILE[FILE_H];
-    else if (D == NORTH_WEST) return MASK_RANK[RANK_8] | MASK_FILE[FILE_A];
-    else if (D == SOUTH_EAST) return MASK_RANK[RANK_1] | MASK_FILE[FILE_H];
-    else if (D == SOUTH_WEST) return MASK_RANK[RANK_1] | MASK_FILE[FILE_A];
+template<Direction D>
+[[nodiscard]] constexpr Bitboard board_edge() {
+    if      constexpr (D == NORTH) return MASK_RANK[RANK_8];
+    else if constexpr (D == SOUTH) return MASK_RANK[RANK_1];
+    else if constexpr (D == EAST) return MASK_FILE[FILE_H];
+    else if constexpr (D == WEST) return MASK_FILE[FILE_A];
+
+    else if constexpr (D == NORTH_EAST) return MASK_RANK[RANK_8] | MASK_FILE[FILE_H];
+    else if constexpr (D == NORTH_WEST) return MASK_RANK[RANK_8] | MASK_FILE[FILE_A];
+    else if constexpr (D == SOUTH_EAST) return MASK_RANK[RANK_1] | MASK_FILE[FILE_H];
+    else if constexpr (D == SOUTH_WEST) return MASK_RANK[RANK_1] | MASK_FILE[FILE_A];
 
     return 0;
 }
@@ -170,10 +172,10 @@ template<Direction D>
 [[nodiscard]] constexpr Bitboard generate_slow_sliding_attacks(Square square, Bitboard occupancy) {
     Bitboard attacks{};
 
-    Bitboard blockers = board_edge(D);
+    Bitboard blockers = board_edge<D>();
     Bitboard square_bb = from_square(square);
 
-    if ((blockers & square_bb) != 0) return attacks;
+    if (blockers & square_bb) return attacks;
 
     blockers |= occupancy;
 
@@ -188,7 +190,7 @@ template<Direction D>
 [[nodiscard]] constexpr std::array<Bitboard, N_SQUARES> generate_bishop_relevant_blockers() {
     std::array<Bitboard, N_SQUARES> bishop_attack_masks{};
     for (int square = a1; square < N_SQUARES; square++) {
-        Bitboard edges = board_edge(NORTH) | board_edge(SOUTH) | board_edge(EAST) | board_edge(WEST);
+        Bitboard edges = board_edge<NORTH>() | board_edge<SOUTH>() | board_edge<EAST>() | board_edge<WEST>();
 
         Bitboard empty_board_bishop_attacks = MASK_DIAGONAL[diagonal_of(static_cast<Square>(square))] ^
                                               MASK_ANTI_DIAGONAL[anti_diagonal_of(static_cast<Square>(square))];
@@ -201,8 +203,8 @@ template<Direction D>
 [[nodiscard]] constexpr std::array<Bitboard, N_SQUARES> generate_rook_relevant_blockers() {
     std::array<Bitboard, N_SQUARES> rook_attack_masks{};
     for (int square = a1; square < N_SQUARES; square++) {
-        Bitboard edges = 	((board_edge(NORTH) | board_edge(SOUTH)) & ~MASK_RANK[rank_of(static_cast<Square>(square))]) |
-                            ((board_edge(EAST)  | board_edge(WEST))  & ~MASK_FILE[file_of(static_cast<Square>(square))]);
+        Bitboard edges = 	((board_edge<NORTH>() | board_edge<SOUTH>()) & ~MASK_RANK[rank_of(static_cast<Square>(square))]) |
+                            ((board_edge<EAST>()  | board_edge<WEST>())  & ~MASK_FILE[file_of(static_cast<Square>(square))]);
 
         Bitboard empty_board_rook_attacks = MASK_RANK[rank_of(static_cast<Square>(square))] ^
                                             MASK_FILE[file_of(static_cast<Square>(square))];

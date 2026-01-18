@@ -1,26 +1,26 @@
 
 
 inline bool Position::is_attacked(Square square, Color color) const {
-    Bitboard occupancy = all_pieces & (~from_square(square));
+    const Bitboard occupancy = all_pieces & (~from_square(square));
 
     // Treat square like a pawn
-    Bitboard pawn_attacks = color == WHITE ? WHITE_PAWN_ATTACKS[square] : BLACK_PAWN_ATTACKS[square];
+    const Bitboard pawn_attacks = color == WHITE ? WHITE_PAWN_ATTACKS[square] : BLACK_PAWN_ATTACKS[square];
     if (pawn_attacks & get_pieces(PAWN, ~color)) return true;
 
     // Treat square like a knight
-    Bitboard knight_attacks = KNIGHT_ATTACKS[square];
+    const Bitboard knight_attacks = KNIGHT_ATTACKS[square];
     if (knight_attacks & get_pieces(KNIGHT, ~color)) return true;
 
     // Treat square like a bishop
-    Bitboard bishop_attacks = get_bishop_attacks(square, occupancy);
+    const Bitboard bishop_attacks = get_bishop_attacks(square, occupancy);
     if (bishop_attacks & (get_pieces(BISHOP, ~color) | get_pieces(QUEEN, ~color))) return true;
 
     // Treat square like a rook
-    Bitboard rook_attacks = get_rook_attacks(square, occupancy);
+    const Bitboard rook_attacks = get_rook_attacks(square, occupancy);
     if (rook_attacks & (get_pieces(ROOK, ~color) | get_pieces(QUEEN, ~color))) return true;
 
     // Treat square like a king
-    Bitboard king_attacks = KING_ATTACKS[square];
+    const Bitboard king_attacks = KING_ATTACKS[square];
     if (king_attacks & (get_pieces(KING, ~color))) return true;
 
     return false;
@@ -43,7 +43,7 @@ void Position::get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
 
     Bitboard pawns = get_pieces(PAWN, side);
     Bitboard pawn_forward_squares = side == WHITE ? shift<NORTH>(pawns) : shift<SOUTH>(pawns);
-    Direction down = side == WHITE ? SOUTH : NORTH;
+    const Direction down = side == WHITE ? SOUTH : NORTH;
 
     if constexpr (movegen == Movegen::Qsearch) {
         pawn_forward_squares &= ~(MASK_RANK[RANK_1] | MASK_RANK[RANK_8]);
@@ -54,11 +54,11 @@ void Position::get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
 
     if constexpr (movegen != Movegen::Quiet) {
         while (west_attacks) {
-            Square new_square = poplsb(west_attacks);
+            const Square new_square = poplsb(west_attacks);
 
             // Promotion Captures
             if constexpr (movegen != Movegen::Qsearch) {
-                bool promotion = (side == WHITE && new_square >= 56) || (side == BLACK && new_square <= 7);
+                const bool promotion = (side == WHITE && new_square >= 56) || (side == BLACK && new_square <= 7);
 
                 if (promotion) {
                     for (PromotionType promotionType : {PROMOTION_KNIGHT, PROMOTION_BISHOP, PROMOTION_ROOK, PROMOTION_QUEEN}) {
@@ -76,11 +76,11 @@ void Position::get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
         }
 
         while (east_attacks) {
-            Square new_square = poplsb(east_attacks);
+            const Square new_square = poplsb(east_attacks);
 
             // Promotion Captures
             if constexpr (movegen != Movegen::Qsearch) {
-                bool promotion = (side == WHITE && new_square >= 56) || (side == BLACK && new_square <= 7);
+                const bool promotion = (side == WHITE && new_square >= 56) || (side == BLACK && new_square <= 7);
 
                 if (promotion) {
                     for (PromotionType promotionType: {PROMOTION_KNIGHT, PROMOTION_BISHOP, PROMOTION_ROOK,
@@ -105,7 +105,7 @@ void Position::get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
                         (side == WHITE ? BLACK_PAWN_ATTACKS[ep_square] : WHITE_PAWN_ATTACKS[ep_square]) & pawns;
 
                 while (ep_pawns) {
-                    Square square = poplsb(ep_pawns);
+                    const Square square = poplsb(ep_pawns);
                     current_scored_moves.push_back({Move(square, ep_square, MOVE_TYPE_EP), 0});
                 }
             }
@@ -120,8 +120,8 @@ void Position::get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
                                             : shift<SOUTH>(single_pushes) & MASK_RANK[RANK_5]) & empty_squares;
 
     while (single_pushes) {
-        Square new_square = poplsb(single_pushes);
-        bool promotion = (side == WHITE && new_square >= 56) || (side == BLACK && new_square <= 7);
+        const Square new_square = poplsb(single_pushes);
+        const bool promotion = (side == WHITE && new_square >= 56) || (side == BLACK && new_square <= 7);
 
         // Single Push Promotions
         if (promotion) {
@@ -136,7 +136,7 @@ void Position::get_pawn_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
     }
 
     while (double_pushes) {
-        Square new_square = poplsb(double_pushes);
+        const Square new_square = poplsb(double_pushes);
         current_scored_moves.push_back({Move(new_square + down + down, new_square), 0});
     }
 
@@ -153,12 +153,12 @@ void Position::get_knight_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scor
     }();
 
     while (knights) {
-        Square square = poplsb(knights);
+        const Square square = poplsb(knights);
 
         Bitboard bitboard = KNIGHT_ATTACKS[square] & mask;
 
         while (bitboard) {
-            Square new_square = poplsb(bitboard);
+            const Square new_square = poplsb(bitboard);
             current_scored_moves.push_back({Move(square, new_square), 0});
         }
     }
@@ -175,13 +175,13 @@ void Position::get_bishop_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scor
     }();
 
     while (bishops) {
-        Square square = poplsb(bishops);
+        const Square square = poplsb(bishops);
 
         Bitboard bishop_attacks = get_bishop_attacks(square, all_pieces);
         Bitboard bishop_moves = bishop_attacks & mask;
 
         while (bishop_moves) {
-            Square new_square = poplsb(bishop_moves);
+            const Square new_square = poplsb(bishop_moves);
             current_scored_moves.push_back({Move(square, new_square), 0});
         }
     }
@@ -190,7 +190,7 @@ void Position::get_bishop_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scor
 template<Movegen movegen>
 void Position::get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const {
     Bitboard rooks = get_pieces(ROOK, side);
-    Square king_pos = get_king_pos(side);
+    const Square king_pos = get_king_pos(side);
 
     const Bitboard mask = [this]() -> Bitboard {
         if constexpr (movegen == Movegen::Quiet) return empty_squares;
@@ -199,13 +199,13 @@ void Position::get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
     }();
 
     while (rooks) {
-        Square square = poplsb(rooks);
+        const Square square = poplsb(rooks);
 
         Bitboard rook_attacks = get_rook_attacks(square, all_pieces);
         Bitboard rook_moves = rook_attacks & mask;
 
         while (rook_moves) {
-            Square new_square = poplsb(rook_moves);
+            const Square new_square = poplsb(rook_moves);
             current_scored_moves.push_back({Move(square, new_square), 0});
         }
 
@@ -214,14 +214,14 @@ void Position::get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
         // -- Generate Castling moves --
         if (!(rook_attacks & get_pieces(KING, side))) continue;  // Guard clause
 
-        Square starting_rook_pos_k = starting_rook_pos[side][0];
-        Square starting_rook_pos_q = starting_rook_pos[side][1];
+        const Square starting_rook_pos_k = starting_rook_pos[side][0];
+        const Square starting_rook_pos_q = starting_rook_pos[side][1];
 
-        Square target_pos_k = side == WHITE ? g1 : g8;
-        Square target_pos_q = side == WHITE ? c1 : c8;
+        const Square target_pos_k = side == WHITE ? g1 : g8;
+        const Square target_pos_q = side == WHITE ? c1 : c8;
 
-        Square important_pos_k = target_pos_k + WEST;  // F1 square for FRC (the square the rook will go to)
-        Square important_pos_q = target_pos_q + EAST;  // D1 square for FRC (the square the rook will go to)
+        const Square important_pos_k = target_pos_k + WEST;  // F1 square for FRC (the square the rook will go to)
+        const Square important_pos_q = target_pos_q + EAST;  // D1 square for FRC (the square the rook will go to)
 
         // King side Castling
         if (((side == WHITE && (castle_ability_bits & 1) == 1) || (side == BLACK && (castle_ability_bits & 4) == 4))
@@ -295,13 +295,13 @@ void Position::get_queen_moves(FixedVector<ScoredMove, MAX_MOVES>& current_score
     }();
 
     while (queens) {
-        Square square = poplsb(queens);
+        const Square square = poplsb(queens);
 
         Bitboard queen_attacks = get_queen_attacks(square, all_pieces);
         Bitboard queen_moves = queen_attacks & mask;
 
         while (queen_moves) {
-            Square new_square = poplsb(queen_moves);
+            const Square new_square = poplsb(queen_moves);
             current_scored_moves.push_back({Move(square, new_square), 0});
         }
     }
@@ -309,7 +309,7 @@ void Position::get_queen_moves(FixedVector<ScoredMove, MAX_MOVES>& current_score
 
 template<Movegen movegen>
 void Position::get_king_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves) const {
-    Square square = get_king_pos(side);
+    const Square square = get_king_pos(side);
 
     const Bitboard mask = [this]() -> Bitboard {
         if constexpr (movegen == Movegen::Quiet) return empty_squares;
@@ -319,7 +319,7 @@ void Position::get_king_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
 
     Bitboard king_moves = KING_ATTACKS[square] & mask;
     while (king_moves) {
-        Square new_square = poplsb(king_moves);
+        const Square new_square = poplsb(king_moves);
         current_scored_moves.push_back({Move(square, new_square), 0});
     }
 }

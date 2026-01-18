@@ -5,7 +5,7 @@
 #include "move.h"
 
 
-void debug_perft(Perft& perft, Position& position, Perft_Result_Type& res, Ply depth, Ply ply) {
+void debug_perft(Perft& perft, Position& position, PerftResultType& res, Ply depth, Ply ply) {
     if (depth == 0) {
         res.total_amount += 1;
         return;
@@ -17,10 +17,8 @@ void debug_perft(Perft& perft, Position& position, Perft_Result_Type& res, Ply d
     position.get_pseudo_legal_moves<Movegen::All, true>(perft.scored_moves[ply]);
 
     for (ScoredMove& scored_move : perft.scored_moves[ply]) {
-
-        Move move = scored_move.move;
-
-        bool attempt = position.make_move(move, position.state_stack[ply], fifty);
+        const Move move = scored_move.move;
+        const bool attempt = position.make_move(move, position.state_stack[ply], fifty);
 
         if (!attempt) {
             position.undo_move(move, position.state_stack[ply], fifty);
@@ -28,11 +26,9 @@ void debug_perft(Perft& perft, Position& position, Perft_Result_Type& res, Ply d
         }
 
         if (depth == 1) {
-            int move_type = move.type();
+            const MoveType move_type = move.type();
 
-            if (move.is_capture(position)) {
-                res.capture_amount += 1;
-            }
+            if (move.is_capture(position)) res.capture_amount += 1;
             else if (move_type == MOVE_TYPE_EP) {
                 res.capture_amount += 1;
                 res.ep_amount += 1;
@@ -57,13 +53,11 @@ uint64_t fast_perft(Perft& perft, Position& position, Ply depth, Ply ply) {
     position.set_state(position.state_stack[ply], fifty);
     position.get_pseudo_legal_moves<Movegen::All, true>(perft.scored_moves[ply]);
 
-    long long amt = 0;
+    uint64_t amt = 0;
 
     for (ScoredMove& scored_move : perft.scored_moves[ply]) {
-
-        Move move = scored_move.move;
-
-        bool attempt = position.make_move(move, position.state_stack[ply], fifty);
+        const Move move = scored_move.move;
+        const bool attempt = position.make_move(move, position.state_stack[ply], fifty);
 
         if (!attempt) {
             position.undo_move(move, position.state_stack[ply], fifty);
@@ -82,22 +76,18 @@ uint64_t fast_perft(Perft& perft, Position& position, Ply depth, Ply ply) {
 uint64_t uci_perft(Perft& perft, Position& position, Ply depth, Ply ply) {
     Ply fifty = 0;
 
-    auto start_time = std::chrono::high_resolution_clock::now();
+    const auto start_time = std::chrono::high_resolution_clock::now();
 
-    if (depth == 0) {
-        return 1;
-    }
+    if (depth == 0) return 1;
 
     position.set_state(position.state_stack[ply], fifty);
     position.get_pseudo_legal_moves<Movegen::All, true>(perft.scored_moves[ply]);
 
-    long long total_amt = 0;
+    uint64_t total_amt = 0;
 
     for (ScoredMove& scored_move : perft.scored_moves[ply]) {
-
-        Move move = scored_move.move;
-
-        bool attempt = position.make_move(move, position.state_stack[ply], fifty);
+        const Move move = scored_move.move;
+        const bool attempt = position.make_move(move, position.state_stack[ply], fifty);
 
         if (!attempt) {
             position.undo_move(move, position.state_stack[ply], fifty);
@@ -112,9 +102,8 @@ uint64_t uci_perft(Perft& perft, Position& position, Ply depth, Ply ply) {
         std::cout << move.get_uci(position) << ": " << amt << std::endl;
     }
 
-    auto end_time = std::chrono::high_resolution_clock::now();
-
-    auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    const auto end_time = std::chrono::high_resolution_clock::now();
+    const auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
     std::cout << "Nodes searched: " << total_amt << std::endl;
     std::cout << "Perft speed: " << double(total_amt) / ms_int.count() / 1000 << "mn/s" << std::endl;

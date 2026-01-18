@@ -5,7 +5,7 @@
 #include <iostream>
 #include "see.h"
 
-Bitboard get_all_attackers(Position& position, Square square) {
+Bitboard get_all_attackers(const Position& position, Square square) {
 
     // Treat square like a pawn
     Bitboard pawn_attackers = (WHITE_PAWN_ATTACKS[square] & position.get_pieces(PAWN, BLACK)) |

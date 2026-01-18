@@ -11,12 +11,12 @@
 #include "nnue.h"
 
 
-constexpr int bishop_ordering_1[2][4] = {
+inline constexpr int bishop_ordering_1[2][4] = {
         { 1,  3,  5,  7},
         {57, 59, 61, 63}
 };
 
-constexpr int bishop_ordering_2[2][4] = {
+inline constexpr int bishop_ordering_2[2][4] = {
         { 0,  2,  4,  6},
         {56, 58, 60, 62}
 };

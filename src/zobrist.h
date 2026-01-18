@@ -17,7 +17,7 @@ public:
     Hash side_hash_key = 0;
 
     ZobristKeysClass() {
-        for (auto & piece_hash_key : piece_hash_keys) {
+        for (auto& piece_hash_key : piece_hash_keys) {
             for (uint64_t& j : piece_hash_key) {
                 j = prng.rand64();
             }

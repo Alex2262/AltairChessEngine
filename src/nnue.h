@@ -12,26 +12,26 @@
 
 class Position;
 
-constexpr size_t INPUT_SIZE = 768;
-constexpr size_t LAYER1_SIZE = 1024;
+inline constexpr size_t INPUT_SIZE = 768;
+inline constexpr size_t LAYER1_SIZE = 1024;
 
-constexpr size_t KING_INPUT_BUCKETS = 5;
-constexpr size_t MATERIAL_OUTPUT_BUCKETS = 8;
-constexpr int    MATERIAL_OUTPUT_BUCKET_DIVISOR = 32 / MATERIAL_OUTPUT_BUCKETS;
+inline constexpr size_t KING_INPUT_BUCKETS = 5;
+inline constexpr size_t MATERIAL_OUTPUT_BUCKETS = 8;
+inline constexpr int    MATERIAL_OUTPUT_BUCKET_DIVISOR = 32 / MATERIAL_OUTPUT_BUCKETS;
 
-constexpr int16_t CRELU_MIN = 0;
+inline constexpr int16_t CRELU_MIN = 0;
 
-constexpr Score SCALE = 400;
+inline constexpr Score SCALE = 400;
 
-constexpr int16_t QA = 255;
-constexpr int16_t QB = 64;
+inline constexpr int16_t QA = 255;
+inline constexpr int16_t QB = 64;
 
-constexpr int16_t QAB = QA * QB;
+inline constexpr int16_t QAB = QA * QB;
 
-const auto CRELU_MIN_VEC = SIMD::get_int16_vec(CRELU_MIN);
-const auto QA_VEC        = SIMD::get_int16_vec(QA);
+inline const auto CRELU_MIN_VEC = SIMD::get_int16_vec(CRELU_MIN);
+inline const auto QA_VEC        = SIMD::get_int16_vec(QA);
 
-const int KING_BUCKET_MAP[64] = {
+inline const int KING_BUCKET_MAP[64] = {
         0, 0, 0, 1, 1, 2, 2, 2,
         0, 0, 1, 1, 1, 1, 2, 2,
         0, 3, 3, 3, 4, 4, 4, 2,
@@ -77,7 +77,7 @@ extern const NNUE_Params nnue_parameters;
 template <size_t hidden_size>
 struct alignas(64) Accumulator {
 
-    int king_buckets[2] = {0, 0};
+    std::array<int, 2> king_buckets {0, 0};
 
     std::array<int16_t, hidden_size> white;
     std::array<int16_t, hidden_size> black;
@@ -113,9 +113,9 @@ public:
     void push();
     void pop();
 
-    void reset_side(Position& position, Color color);
+    void reset_side(const Position& position, Color color);
 
-    Score evaluate(Position& position, Color color);
+    Score evaluate(const Position& position, Color color) const;
 
     std::pair<size_t, size_t> get_feature_indices(Piece piece, Square sq);
 
@@ -129,7 +129,7 @@ public:
                                        const std::array<int16_t, LAYER1_SIZE * 2 * MATERIAL_OUTPUT_BUCKETS> &weights,
                                        int output_bucket);
 
-    void reset_nnue(Position& position);
+    void reset_nnue(const Position& position);
 
     template <bool Activate>
     inline void update_feature(Piece piece, Square square) {
@@ -151,7 +151,7 @@ public:
         const auto [white_idx, black_idx] = get_feature_indices(piece, square);
 
         auto& accumulator = color == WHITE ? current_accumulator->white : current_accumulator->black;
-        auto index = color == WHITE ? white_idx : black_idx;
+        const auto index = color == WHITE ? white_idx : black_idx;
 
         if constexpr (Activate) {
             activate_all(accumulator, index * LAYER1_SIZE);
