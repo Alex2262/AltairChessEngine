@@ -6,7 +6,7 @@
 #include "random.h"
 #include "search.h"
 
-constexpr int MAX_DG_GAME_LENGTH = 600;
+inline constexpr int MAX_DG_GAME_LENGTH = 600;
 
 struct EvalFenStruct {
     std::string fen;
@@ -48,7 +48,7 @@ class Datagen {
 
     const int initial_random_moves_dfrc     =     8;
     const int initial_random_moves_standard =     8;
-    const int opening_max_score             =  1000;
+    const int opening_max_score             =   300;
     const int dfrc_chance                   =    50; // Out of 100
     // const uint64_t opening_chance        =   100;  // Out of 100
 
@@ -79,7 +79,7 @@ public:
     void integrity_check_process();
     void start_datagen();
 
-    std::string write_fen(Datagen_Thread& datagen_thread, EvalFenStruct eval_fen, double game_result);
+    std::string write_fen(Datagen_Thread& datagen_thread, const EvalFenStruct& eval_fen, double game_result);
 
     bool randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move, MAX_MOVES>& legal_moves) const;
 

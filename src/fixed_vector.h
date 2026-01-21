@@ -15,8 +15,8 @@ private:
 public:
     FixedVector() = default;
 
-    inline size_t size() { return current_index; }
-    inline bool empty() { return current_index == 0; }
+    inline size_t size() const { return current_index; }
+    inline bool empty() const { return current_index == 0; }
 
     inline auto begin() { return fixed_vector.begin(); }
     inline auto end() { return begin() + current_index; }

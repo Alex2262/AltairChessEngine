@@ -29,24 +29,24 @@ void NNUE_State::pop() {
 }
 
 
-void NNUE_State::reset_side(Position& position, Color color) {
+void NNUE_State::reset_side(const Position& position, Color color) {
     current_accumulator->init_side(nnue_parameters.feature_bias, color);
 
     for (int piece = WHITE_PAWN; piece < static_cast<int>(EMPTY); piece++) {
         Bitboard piece_bb = position.pieces[piece];
         while (piece_bb) {
-            Square square = poplsb(piece_bb);
+            const Square square = poplsb(piece_bb);
             update_feature_side<true>(static_cast<Piece>(piece), square, color);
         }
     }
 }
 
 
-Score NNUE_State::evaluate(Position& position, Color color) {
+Score NNUE_State::evaluate(const Position& position, Color color) const {
 
     const int output_bucket = (popcount(position.all_pieces) - 2) / MATERIAL_OUTPUT_BUCKET_DIVISOR;
 
-    const auto flatten = []() {
+    constexpr auto flatten = []() {
         if constexpr (SIMD::ARCH == SIMD::Arch::AUTO) return screlu_flatten;
         return screlu_flatten_simd;
     }();
@@ -63,7 +63,7 @@ std::pair<size_t, size_t> NNUE_State::get_feature_indices(Piece piece, Square sq
     constexpr size_t piece_offset = 64;
 
     const Color color = get_color(piece);
-    const auto piece_type = get_piece_type(piece, color);
+    const auto piece_type = get_piece_type(piece);
 
     const auto white_idx = INPUT_SIZE * (current_accumulator->king_buckets[WHITE])
             +  color * color_offset + piece_type * piece_offset + static_cast<size_t>(sq);
@@ -123,7 +123,7 @@ int32_t NNUE_State::screlu_flatten_simd(const std::array<int16_t, LAYER1_SIZE> &
     return SIMD::vec_int32_hadd(sum) / QA;
 }
 
-void NNUE_State::reset_nnue(Position& position) {
+void NNUE_State::reset_nnue(const Position& position) {
     accumulator_stack.clear();
     current_accumulator = &accumulator_stack.emplace_back();
 

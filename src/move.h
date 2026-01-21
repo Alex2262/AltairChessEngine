@@ -46,7 +46,7 @@ public:
 
     [[nodiscard]] bool is_capture(const Position& position) const;
 
-    Move(const Position& position, std::string uci);
+    Move(const Position& position, std::string& uci);
     [[nodiscard]] std::string get_uci(const Position& position) const;
 
     [[nodiscard]] inline Square target() const { return Square(move & 0x3f); }

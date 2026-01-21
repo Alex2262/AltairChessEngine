@@ -7,7 +7,7 @@
 
 class Thread_State;
 
-constexpr Score BAD_SCORE = -1000000;
+inline constexpr Score BAD_SCORE = -1000000;
 
 
 enum class MO_Margin : Score {
@@ -33,13 +33,6 @@ void get_q_bn_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOV
 template<bool qsearch>
 void get_capture_scores(Thread_State& thread_state, FixedVector<ScoredMove, MAX_MOVES>& current_scored_moves,
                         Move tt_move, size_t& good_capture_count);
-
-enum class Filter : uint16_t {
-    None,
-    Good
-};
-
-
 
 class MaxHeap {
 private:

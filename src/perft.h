@@ -3,7 +3,7 @@
 
 #include "position.h"
 
-struct Perft_Result_Type {
+struct PerftResultType {
     int total_amount;
     int capture_amount;
     int ep_amount;
@@ -18,7 +18,7 @@ struct Perft {
     Perft() : scored_moves(TOTAL_MAX_DEPTH) {}
 };
 
-void debug_perft(Perft& perft, Position& position, Perft_Result_Type& res, Ply depth, Ply ply);
+void debug_perft(Perft& perft, Position& position, PerftResultType& res, Ply depth, Ply ply);
 
 uint64_t fast_perft(Perft& perft, Position& position, Ply depth, Ply ply);
 

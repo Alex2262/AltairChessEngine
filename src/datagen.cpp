@@ -19,8 +19,8 @@ void Datagen::integrity_check() {
     std::cout << "-----------------------------" << std::endl;
 
     for (Datagen_Thread& datagen_thread : datagen_threads) {
-        std::string status_color = datagen_thread.paused ? YELLOW : datagen_thread.ping ? GREEN : RED;
-        std::string status = datagen_thread.paused ? "paused" : datagen_thread.ping ? "running" : "stalled";
+        const std::string_view status_color = datagen_thread.paused ? YELLOW : datagen_thread.ping ? GREEN : RED;
+        const std::string_view status = datagen_thread.paused ? "paused" : datagen_thread.ping ? "running" : "stalled";
 
         std::cout << "Thread " << datagen_thread.thread_id << " [" << status_color << status << RESET << "]\n";
 
@@ -33,13 +33,11 @@ void Datagen::integrity_check() {
         datagen_thread.ping = false;
     }
 
-    // uint64_t included_fens = 0;
     uint64_t total_fens = 0;
     uint64_t total_games = 0;
     for (Datagen_Thread& datagen_thread : datagen_threads) {
         total_fens  += datagen_thread.total_fens;
         total_games += datagen_thread.total_games;
-        // if (!datagen_thread.paused) included_fens += datagen_thread.total_fens;
     }
     uint64_t elapsed_fens = total_fens - interval_start_fens;
 
@@ -148,11 +146,9 @@ void Datagen::start_datagen() {
     search_threads.back().join();
 
     std::cout << "All threads joined" << std::endl;
-
-    // merge();
 }
 
-std::string Datagen::write_fen(Datagen_Thread& datagen_thread, EvalFenStruct eval_fen, double game_result) {
+std::string Datagen::write_fen(Datagen_Thread& datagen_thread, const EvalFenStruct& eval_fen, double game_result) {
     std::string resulting_fen = eval_fen.fen;
     resulting_fen += " | ";
     resulting_fen += std::to_string(eval_fen.eval);
@@ -168,8 +164,8 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
     datagen_thread.game_length = 0;
 
     Position& position = datagen_thread.engine->thread_states[0].position;
-    int num_random_moves = (position.fischer_random_chess ? initial_random_moves_dfrc : initial_random_moves_standard) +
-                           (datagen_thread.total_fens % 2);  // To balance even/odd number of starting moves
+    const int num_random_moves = (position.fischer_random_chess ? initial_random_moves_dfrc : initial_random_moves_standard) +
+                                 (datagen_thread.total_fens % 2);  // To balance even/odd number of starting moves
 
     for (int random_move_count = 0; random_move_count < num_random_moves; random_move_count++) {
 
@@ -178,8 +174,8 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
 
         legal_moves.clear();
 
-        for (ScoredMove &scored_move: datagen_thread.scored_moves) {
-            Move move = scored_move.move;
+        for (const ScoredMove& scored_move: datagen_thread.scored_moves) {
+            const Move move = scored_move.move;
             bool attempt = position.make_move(move, position.state_stack[0],
                                                        datagen_thread.engine->thread_states[0].fifty_move);
 
@@ -190,7 +186,7 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
 
         if (legal_moves.empty()) return false;
 
-        Move random_move = legal_moves[datagen_thread.prng.rand64() % legal_moves.size()];
+        const Move random_move = legal_moves[datagen_thread.prng.rand64() % legal_moves.size()];
 
         position.make_move(random_move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
         position.update_nnue(position.state_stack[0]);
@@ -203,7 +199,7 @@ bool Datagen::randomize_opening(Datagen_Thread& datagen_thread, FixedVector<Move
 
     bool terminated = true;
 
-    for (ScoredMove& scored_move : datagen_thread.scored_moves) {
+    for (const ScoredMove& scored_move : datagen_thread.scored_moves) {
         bool attempt = position.make_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
         position.undo_move(scored_move.move, position.state_stack[0], datagen_thread.engine->thread_states[0].fifty_move);
 
@@ -245,7 +241,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
 
     if (datagen_thread.thread_id == 0) std::cout << "Max fens per thread: " << thread_fens_max << std::endl;
 
-    position.set_fen(START_FEN);
+    position.set_fen(START_FEN.data());
 
     std::string file_name = "AltairData/data" + std::to_string(datagen_thread.thread_id) + ".txt";
 
@@ -276,7 +272,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
         datagen_thread.current_stage = "new game";
 
         datagen_thread.engine->new_game();
-        position.set_fen(START_FEN);
+        position.set_fen(START_FEN.data());
 
         // DFRC
         if (static_cast<int>(datagen_thread.prng.rand64() % 100) <= dfrc_chance) {
@@ -301,8 +297,8 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
             datagen_thread.engine->soft_time_limit = max_time_per_move;
             datagen_thread.engine->search_results.best_move = NO_MOVE;
 
-            bool in_check = position.is_attacked(position.get_king_pos(position.side), position.side);
-            std::string current_fen = position.get_fen(datagen_thread.engine->thread_states[0].fifty_move);
+            const bool in_check = position.is_attacked(position.get_king_pos(position.side), position.side);
+            const std::string current_fen = position.get_fen(datagen_thread.engine->thread_states[0].fifty_move);
 
             // Termination Check
             bool terminated = true;
@@ -358,8 +354,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
 
             // Filter
             if (!noisy && !in_check) {
-                game_fens.push_back({current_fen,
-                                     objective_score});
+                game_fens.push_back({current_fen, objective_score});
             }
 
             datagen_thread.game_length++;
@@ -375,7 +370,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
 
         if (fens_per_game == 0) {
             for (EvalFenStruct& eval_fen : game_fens) {
-                auto resulting_fen = write_fen(datagen_thread, eval_fen, game_result);
+                std::string resulting_fen = write_fen(datagen_thread, eval_fen, game_result);
                 datagen_file << resulting_fen << std::endl;
                 fens_picked++;
             }
@@ -384,7 +379,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
         else {
             while (fens_picked < fens_to_pick) {
                 auto next_fen_index = datagen_thread.prng.rand64() % game_fens.size();
-                auto next_eval_fen = game_fens[next_fen_index];
+                auto& next_eval_fen = game_fens[next_fen_index];
 
                 game_fens.pop(next_fen_index);
 
@@ -400,7 +395,7 @@ void Datagen::datagen(Datagen_Thread& datagen_thread) {
     datagen_file.close();
 }
 
-std::vector<std::string> Datagen::get_file_fens(const std::string &file_name) {
+std::vector<std::string> Datagen::get_file_fens(const std::string& file_name) {
     std::ifstream infile(file_name);
     std::string basic_fen, side, castling, ep, fifty, result;
     std::vector<std::string> fens;

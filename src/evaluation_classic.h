@@ -25,7 +25,7 @@ struct EvaluationInformation {
     Bitboard piece_relative_occupancies[2][6]{};
 };
 
-void initialize_evaluation_information(Position& position, EvaluationInformation& evaluation_information);
+void initialize_evaluation_information(const Position& position, EvaluationInformation& evaluation_information);
 
 Square get_white_relative_square(Square square, Color color);
 Square get_black_relative_square(Square square, Color color);
@@ -33,13 +33,15 @@ Square get_black_relative_square(Square square, Color color);
 
 Score evaluate_king_pawn(File file, Color color, EvaluationInformation& evaluation_information);
 
-Score evaluate_piece(Position& position, PieceType piece_type, Color color, int& game_phase);
-Score evaluate_pieces(Position& position, int& game_phase);
+Score evaluate_pawns(const Position& position, Color color, EvaluationInformation& evaluation_information);
 
-double evaluate_drawishness(Position& position, EvaluationInformation& evaluation_information);
-double evaluate_opposite_colored_bishop_endgames(Position& position, EvaluationInformation& evaluation_information);
+Score evaluate_piece(const Position& position, PieceType piece_type, Color color, int& game_phase);
+Score evaluate_pieces(const Position& position, int& game_phase);
 
-Score evaluate_classic(Position& position);
+double evaluate_drawishness(const Position& position, EvaluationInformation& evaluation_information);
+double evaluate_opposite_colored_bishop_endgames(const Position& position, EvaluationInformation& evaluation_information);
+
+Score evaluate_classic(const Position& position);
 
 
 constexpr Score S(int mg, int eg) {

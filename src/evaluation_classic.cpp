@@ -3,7 +3,7 @@
 #include "evaluation_classic.h"
 #include "evaluation_constants.h"
 
-void initialize_evaluation_information(Position& position, EvaluationInformation& evaluation_information) {
+void initialize_evaluation_information(const Position& position, EvaluationInformation& evaluation_information) {
     evaluation_information.game_phase = 0;
 
     evaluation_information.total_king_ring_attacks[WHITE] = 0;
@@ -86,7 +86,7 @@ Score evaluate_king_pawn(File file, Color color, EvaluationInformation& evaluati
     return score;
 }
 
-Score evaluate_pawns(Position& position, Color color, EvaluationInformation& evaluation_information) {
+Score evaluate_pawns(const Position& position, Color color, EvaluationInformation& evaluation_information) {
 
     Direction up = color == WHITE ? NORTH : SOUTH;
 
@@ -134,13 +134,13 @@ Score evaluate_pawns(Position& position, Color color, EvaluationInformation& eva
             // BLOCKERS
             auto blocker_square = square + up;
             if (from_square(blocker_square) & evaluation_information.pieces[~color]) {
-                score += PASSED_PAWN_BLOCKERS[get_piece_type(position.board[blocker_square], ~color)][rank_of(
+                score += PASSED_PAWN_BLOCKERS[get_piece_type(position.board[blocker_square])][rank_of(
                         get_white_relative_square(blocker_square, color))];
             }
 
             auto blocker_square_2 = blocker_square + up;
             if (relative_rank <= 5 && from_square(blocker_square_2) & evaluation_information.pieces[~color]) {
-                score += PASSED_PAWN_BLOCKERS_2[get_piece_type(position.board[blocker_square_2], ~color)][rank_of(
+                score += PASSED_PAWN_BLOCKERS_2[get_piece_type(position.board[blocker_square_2])][rank_of(
                         get_white_relative_square(blocker_square_2, color))];
             }
 
@@ -190,14 +190,14 @@ Score evaluate_pawns(Position& position, Color color, EvaluationInformation& eva
     }
 
     while (pawn_threats) {
-        score += PIECE_THREATS[PAWN][get_piece_type(position.board[poplsb(pawn_threats)], ~color)];
+        score += PIECE_THREATS[PAWN][get_piece_type(position.board[poplsb(pawn_threats)])];
     }
 
     return score;
 }
 
 template<PieceType piece_type>
-Score evaluate_piece(Position& position, Color color, EvaluationInformation& evaluation_information) {
+Score evaluate_piece(const Position& position, Color color, EvaluationInformation& evaluation_information) {
     Score score = 0;
     Bitboard pieces = position.get_pieces(piece_type, color);
 
@@ -282,7 +282,7 @@ Score evaluate_piece(Position& position, Color color, EvaluationInformation& eva
     return score;
 }
 
-Score evaluate_pieces(Position& position, EvaluationInformation& evaluation_information) {
+Score evaluate_pieces(const Position& position, EvaluationInformation& evaluation_information) {
     Score score = 0;
 
     score += evaluate_pawns(position, WHITE, evaluation_information);
@@ -307,7 +307,7 @@ Score evaluate_pieces(Position& position, EvaluationInformation& evaluation_info
 }
 
 
-double evaluate_drawishness(Position& position, EvaluationInformation& evaluation_information) {
+double evaluate_drawishness(const Position& position, EvaluationInformation& evaluation_information) {
 
     // This function returns a decimal from 0.0 - 1.0 that will be used to scale the total evaluation
 
@@ -471,7 +471,7 @@ double evaluate_drawishness(Position& position, EvaluationInformation& evaluatio
 }
 
 
-double evaluate_opposite_colored_bishop_endgames(Position& position, EvaluationInformation& evaluation_information) {
+double evaluate_opposite_colored_bishop_endgames(const Position& position, EvaluationInformation& evaluation_information) {
 
     bool opposite_colored_bishops = evaluation_information.piece_counts[WHITE][BISHOP] == 1 &&
                                     evaluation_information.piece_counts[BLACK][BISHOP] == 1 &&
@@ -531,7 +531,7 @@ double evaluate_opposite_colored_bishop_endgames(Position& position, EvaluationI
 }
 
 
-Score evaluate_classic(Position& position) {
+Score evaluate_classic(const Position& position) {
 
     EvaluationInformation evaluation_information{};
     initialize_evaluation_information(position, evaluation_information);

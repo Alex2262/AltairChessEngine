@@ -7,25 +7,24 @@
 #include "search_parameters.h"
 
 
-Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
-                      InformativeMove last_moves[]) {
+Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move, InformativeMove last_moves[]) {
     assert(move != NO_MOVE);
 
     if (move == tt_move) return static_cast<Score>(MO_Margin::TT);
 
     Score score = 0;
 
-    Position& position = thread_state.position;
+    const Position& position = thread_state.position;
 
-    Piece selected = position.board[move.origin()];
-    Piece occupied = position.board[move.target()];
+    const Piece selected = position.board[move.origin()];
+    const Piece occupied = position.board[move.target()];
 
-    auto selected_type = get_piece_type(selected, position.side);
+    const auto selected_type = get_piece_type(selected);
 
-    MoveType move_type = move.type();
+    const MoveType move_type = move.type();
 
     if (move_type == MOVE_TYPE_PROMOTION) {
-        auto promotion_piece_type = static_cast<PieceType>(move.promotion_type() + 1);
+        const auto promotion_piece_type = static_cast<PieceType>(move.promotion_type() + 1);
         if (promotion_piece_type == QUEEN) score += static_cast<Score>(MO_Margin::queen_promotion);
         else score += static_cast<Score>(MO_Margin::other_promotion) + MVV_LVA_VALUES[promotion_piece_type];
     }
@@ -36,7 +35,7 @@ Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
 
     // No EP moves appear as Q_BN
     if (move.is_capture(position)) {
-        auto occupied_type = get_piece_type(occupied, ~position.side);
+        const auto occupied_type = get_piece_type(occupied);
         score += static_cast<Score>(MO_Margin::capture_scale) * MVV_LVA_VALUES[occupied_type] -
                  MVV_LVA_VALUES[selected_type];
 
@@ -46,8 +45,7 @@ Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
     }
 
     else {
-
-        InformativeMove informative_move = InformativeMove(move, selected, occupied);
+        const InformativeMove informative_move = InformativeMove(move, selected, occupied);
 
         // score 1st and 2nd killer move
         if (thread_state.killer_moves[0][thread_state.search_ply] == informative_move) score +=
@@ -72,7 +70,7 @@ Score score_q_bn(Thread_State& thread_state, Move move, Move tt_move,
 template<bool qsearch>
 Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt_move, size_t& good_capture_count) {
 
-    Move move = scored_move.move;
+    const Move move = scored_move.move;
 
     assert(move != NO_MOVE);
 
@@ -82,11 +80,11 @@ Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt
 
     Position& position = thread_state.position;
 
-    Piece selected = position.board[move.origin()];
-    Piece occupied = position.board[move.target()];
-    MoveType move_type = move.type();
+    const Piece selected = position.board[move.origin()];
+    const Piece occupied = position.board[move.target()];
+    const MoveType move_type = move.type();
 
-    bool winning_capture = get_static_exchange_evaluation(position, move, -search_params.SEE_MO_threshold.v);
+    const bool winning_capture = get_static_exchange_evaluation(position, move, -search_params.SEE_MO_threshold.v);
 
     if (winning_capture) {
         score += static_cast<Score>(MO_Margin::winning_capture);
@@ -103,8 +101,8 @@ Score score_capture(Thread_State& thread_state, ScoredMove& scored_move, Move tt
 
     if (move_type == MOVE_TYPE_EP) return score + static_cast<Score>(MO_Margin::capture_scale) * (MVV_LVA_VALUES[PAWN] / 2);
 
-    auto selected_type = get_piece_type(selected, position.side);
-    auto occupied_type = get_piece_type(occupied, ~position.side);
+    const auto selected_type = get_piece_type(selected);
+    const auto occupied_type = get_piece_type(occupied);
 
     if (move_type == MOVE_TYPE_PROMOTION) {
         auto promotion_piece_type = static_cast<PieceType>(move.promotion_type() + 1);
@@ -149,10 +147,10 @@ MaxHeap::MaxHeap() {
 }
 
 bool MaxHeap::comp(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int ind1, int ind2) {
-    int r1 = start + ind1;
-    int r2 = start + ind2;
-    Score s1 = scored_moves[r1].score;
-    Score s2 = scored_moves[r2].score;
+    const int r1 = start + ind1;
+    const int r2 = start + ind2;
+    const Score s1 = scored_moves[r1].score;
+    const Score s2 = scored_moves[r2].score;
 
     return s1 > s2 || (s1 == s2 && scored_moves[r1].move.internal_move() < scored_moves[r2].move.internal_move());
 }
@@ -160,8 +158,8 @@ bool MaxHeap::comp(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int ind1, i
 void MaxHeap::sift_down(FixedVector<ScoredMove, MAX_MOVES>& scored_moves, int parent) {
     while (true) {
         int largest = parent;
-        int c1 = parent * 2 + 1;
-        int c2 = parent * 2 + 2;
+        const int c1 = parent * 2 + 1;
+        const int c2 = parent * 2 + 2;
 
         if (c1 < current_size && comp(scored_moves, c1, largest)) largest = c1;
         if (c2 < current_size && comp(scored_moves, c2, largest)) largest = c2;

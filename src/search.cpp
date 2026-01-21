@@ -29,10 +29,10 @@ void Engine::initialize_lmr_reductions() {
 
 
 void Engine::resize_tt(uint64_t mb) {
-    size_t entries = static_cast<size_t>(mb) * 1048576 / 24;
+    const size_t entries = static_cast<size_t>(mb) * 1048576 / 24;
 
-    uint64_t exponent = std::floor(std::log2(entries));
-    size_t new_entries = std::pow(2, exponent);
+    const uint64_t exponent = std::floor(std::log2(entries));
+    const size_t new_entries = std::pow(2, exponent);
 
     transposition_table.resize(new_entries);
 }
@@ -130,8 +130,8 @@ Score& Thread_State::get_continuation_history_entry(InformativeMove last_move, I
 
 
 void Thread_State::update_correction_history_entry(Score& c_hist_entry, Ply depth, Score diff) {
-    int scaled_diff = diff * correction_history_grain;
-    int new_weight = std::min((1 + depth) * (1 + depth), 144);
+    const int scaled_diff = diff * correction_history_grain;
+    const int new_weight = std::min((1 + depth) * (1 + depth), 144);
 
     c_hist_entry = (c_hist_entry * (correction_history_weight_scale - new_weight) + scaled_diff * new_weight) /
                    correction_history_weight_scale;
@@ -173,7 +173,7 @@ Score Thread_State::correct_evaluation(Score evaluation) {
 // Probes the transposition table for a matching entry based on the position's hash key and other factors.
 short Engine::probe_tt_entry(int thread_id, Hash hash_key, Score alpha, Score beta, Ply depth,
                              TT_Entry& return_entry) {
-    TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
+    const TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (tt_entry.key == hash_key) {
         return_entry.move = tt_entry.move;
@@ -229,7 +229,7 @@ void Engine::record_tt_entry(int thread_id, Hash hash_key, Score score, short tt
 // Probes the transposition table for a matching entry (only for quiescence search)
 short Engine::probe_tt_entry_q(int thread_id, Hash hash_key, Score alpha, Score beta,
                                TT_Entry& return_entry) {
-    TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
+    const TT_Entry& tt_entry = transposition_table[hash_key & (transposition_table.size() - 1)];
 
     if (tt_entry.key == hash_key) {
         return_entry.move  = tt_entry.move;
@@ -276,8 +276,7 @@ void Engine::record_tt_entry_q(int thread_id, Hash hash_key, Score score, short 
 
 // Probes the transposition table for an evaluation
 Score Engine::probe_tt_evaluation(Hash hash_key) {
-    TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
-
+    const TT_Entry& tt_entry = transposition_table[hash_key % transposition_table.size()];
     if (tt_entry.key == hash_key && tt_entry.evaluation != NO_EVALUATION) return tt_entry.evaluation;
     return NO_EVALUATION;
 }
@@ -289,8 +288,8 @@ void Engine::tt_prefetch_read(Hash hash_key) {
 
 
 bool Engine::check_time() {
-    auto time = std::chrono::high_resolution_clock::now();
-    uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>
+    const auto time = std::chrono::high_resolution_clock::now();
+    const uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::time_point_cast<std::chrono::milliseconds>(time).time_since_epoch()).count();
 
     if (current_time - start_time >= hard_time_limit) {
@@ -318,7 +317,7 @@ bool Engine::check_nodes() {
 
 
 Score Engine::evaluate(int thread_id) {
-    Position& position = thread_states[thread_id].position;
+    const Position& position = thread_states[thread_id].position;
 
     if (use_nnue) return position.nnue_state.evaluate(position, position.side);
     return evaluate_classic(position);
@@ -336,11 +335,11 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
                       InformativeMove last_moves[], bool quiet, bool winning_capture,
                       int bonus) {
 
-    auto& searched_quiets = thread_state.searched_quiets[thread_state.search_ply];
-    auto& searched_noisy  = thread_state.searched_noisy [thread_state.search_ply];
+    const auto& searched_quiets = thread_state.searched_quiets[thread_state.search_ply];
+    const auto& searched_noisy  = thread_state.searched_noisy [thread_state.search_ply];
 
-    Position& position = thread_state.position;
-    Move      move     = informative_move.normal_move();
+    const Position& position = thread_state.position;
+    const Move      move     = informative_move.normal_move();
 
     const bool threat_origin = (position.threats >> move.origin()) & 1;
     const bool threat_target = (position.threats >> move.target()) & 1;
@@ -366,8 +365,8 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
 
     // Deduct bonus for moves that don't raise alpha
     for (int failed_index = 0; failed_index < static_cast<int>(searched_quiets.size()) - 1; failed_index++) {
-        ScoredMove& temp_scored_move = searched_quiets[failed_index];
-        Move        temp_move        = temp_scored_move.move;
+        const ScoredMove& temp_scored_move = searched_quiets[failed_index];
+        const Move        temp_move        = temp_scored_move.move;
 
         const bool temp_threat_origin = (position.threats >> temp_move.origin()) & 1;
         const bool temp_threat_target = (position.threats >> temp_move.target()) & 1;
@@ -387,8 +386,8 @@ void update_histories(Thread_State& thread_state, InformativeMove informative_mo
     }
 
     for (int failed_index = 0; failed_index < static_cast<int>(searched_noisy.size()) - 1; failed_index++) {
-        ScoredMove& temp_scored_move = searched_noisy[failed_index];
-        Move        temp_move        = temp_scored_move.move;
+        const ScoredMove& temp_scored_move = searched_noisy[failed_index];
+        const Move        temp_move        = temp_scored_move.move;
 
         assert(temp_move != move);
 
@@ -413,7 +412,7 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
     Position&     position     = thread_state.position;
     Generator&    generator    = thread_state.generators[thread_state.search_ply];
 
-    bool pv_node = alpha != beta - 1;
+    const bool pv_node = alpha != beta - 1;
 
     // Check the remaining time
     if (    engine.stopped
@@ -425,11 +424,11 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
     }
 
     // Probe the transposition table
-    TT_Entry tt_entry{};
-    short    tt_return_type = engine.probe_tt_entry_q(thread_id, position.hash_key, alpha, beta, tt_entry);
-    Move     tt_move        = tt_entry.move;
-    bool     tt_pv          = tt_entry.pv_node || pv_node;
-    Score    tt_value       = tt_entry.score;
+    TT_Entry    tt_entry{};
+    const short tt_return_type = engine.probe_tt_entry_q(thread_id, position.hash_key, alpha, beta, tt_entry);
+    const Move  tt_move        = tt_entry.move;
+    const bool  tt_pv          = tt_entry.pv_node || pv_node;
+    const Score tt_value       = tt_entry.score;
 
     if (tt_return_type == RETURN_HASH_SCORE) {
         return tt_value;
@@ -439,7 +438,7 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
     Score raw_eval = engine.probe_tt_evaluation(position.hash_key);
     if (raw_eval == NO_EVALUATION) raw_eval = engine.evaluate(thread_id);
 
-    Score eval = thread_state.correct_evaluation(raw_eval);
+    const Score eval = thread_state.correct_evaluation(raw_eval);
 
     // Return the evaluation if we have reached a stand-pat, or we have reached the maximum depth
     if (depth == 0 || eval >= beta) {
@@ -481,10 +480,10 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
 
     // Search loop
     for (generator.reset_qsearch(tt_move); generator.stage != Stage::Terminated;) {
-        ScoredMove scored_move = generator.next_move<true>();
-        Move move = scored_move.move;
+        const ScoredMove scored_move = generator.next_move<true>();
+        const Move move = scored_move.move;
 
-        bool winning_capture = scored_move.winning_capture;
+        const bool winning_capture = scored_move.winning_capture;
 
         if (move == NO_MOVE) break;
         if (!winning_capture) break;
@@ -496,7 +495,7 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
         }
 
         // Attempt the current pseudo-legal move
-        bool attempt = position.make_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+        const bool attempt = position.make_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
         engine.tt_prefetch_read(position.hash_key);
 
         if (!attempt) {
@@ -513,7 +512,7 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
         thread_state.node_count++;
         thread_state.search_ply++;
 
-        Score return_eval = -qsearch(engine, -beta, -alpha, depth - 1, thread_id);
+        const Score return_eval = -qsearch(engine, -beta, -alpha, depth - 1, thread_id);
 
         thread_state.search_ply--;
 
@@ -530,7 +529,7 @@ Score qsearch(Engine& engine, Score alpha, Score beta, Ply depth, int thread_id)
                 alpha = return_eval;
                 tt_hash_flag = HASH_FLAG_EXACT;
 
-                Score bonus = 2;
+                constexpr Score bonus = 2;
                 if (move.is_capture(position) || move.type() == MOVE_TYPE_EP) {
                     update_history_entry(thread_state.capture_history[winning_capture]
                                          [position.board[move.origin()]]
@@ -579,10 +578,10 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
     Position&     position     = thread_state.position;
     Generator&    generator    = thread_state.generators[thread_state.search_ply];
 
-    bool root            = !thread_state.search_ply;
-    bool pv_node         = alpha != beta - 1;
-    bool singular_search = position.state_stack[thread_state.search_ply].excluded_move != NO_MOVE;
-    bool null_search     = !do_null && !root;
+    const bool root            = !thread_state.search_ply;
+    const bool pv_node         = alpha != beta - 1;
+    const bool singular_search = position.state_stack[thread_state.search_ply].excluded_move != NO_MOVE;
+    const bool null_search     = !do_null && !root;
     bool in_check;
 
     Score eval     = NO_EVALUATION;
@@ -628,12 +627,12 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
     position.set_state(position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
     // TT probing
-    TT_Entry tt_entry{};
-    short    tt_hash_flag   = HASH_FLAG_UPPER;
-    short    tt_return_type = engine.probe_tt_entry(thread_id, position.hash_key, alpha, beta, depth, tt_entry);
-    Move     tt_move        = tt_entry.move;
-    bool     tt_pv          = tt_entry.pv_node || pv_node;
-    Score    tt_value       = tt_entry.score;
+    TT_Entry       tt_entry{};
+    short          tt_hash_flag   = HASH_FLAG_UPPER;
+    const short    tt_return_type = engine.probe_tt_entry(thread_id, position.hash_key, alpha, beta, depth, tt_entry);
+    const Move     tt_move        = tt_entry.move;
+    const bool     tt_pv          = tt_entry.pv_node || pv_node;
+    const Score    tt_value       = tt_entry.score;
 
     /*
      * TT cutoffs
@@ -796,12 +795,12 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
 
 #endif
 
-    bool gen_all = tt_pv || tt_entry.flag == HASH_FLAG_EXACT;
+    const bool gen_all = tt_pv || tt_entry.flag == HASH_FLAG_EXACT;
 
     for (generator.reset_negamax(tt_move, gen_all, last_moves); generator.stage != Stage::Terminated;) {
 
-        ScoredMove scored_move = generator.next_move<false>();
-        Move       move        = scored_move.move;
+        const ScoredMove scored_move = generator.next_move<false>();
+        const Move       move        = scored_move.move;
 
         if (move == NO_MOVE) break;
 
@@ -820,10 +819,10 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
         else       engine.search_results.non_tt_pv_moves_iterated++;
 #endif
 
-        InformativeMove informative_move = InformativeMove(move, position.board[move.origin()], position.board[move.target()]);
-        Score           move_score       = move == tt_move ? static_cast<Score>(MO_Margin::TT) : scored_move.score;
-        bool            winning_capture  = scored_move.winning_capture;
-        bool            quiet            = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
+        const InformativeMove informative_move = InformativeMove(move, position.board[move.origin()], position.board[move.target()]);
+        const Score           move_score       = move == tt_move ? static_cast<Score>(MO_Margin::TT) : scored_move.score;
+        const bool            winning_capture  = scored_move.winning_capture;
+        const bool            quiet            = !move.is_capture(position) && move.type() != MOVE_TYPE_EP;
 
         // Skip excluded moves
         if (    root
@@ -890,10 +889,10 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
 
         }
 
-        Color original_side = position.side;
+        const Color original_side = position.side;
 
         // Make the move
-        bool attempt = position.make_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
+        const bool attempt = position.make_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
         engine.tt_prefetch_read(position.hash_key);
 
         if (!attempt) {
@@ -906,12 +905,12 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
         Ply extension = 0;
 
         // Pawn going to 7th rank must be passed
-        bool passed_pawn = get_piece_type(informative_move.selected(), original_side) == PAWN
-                           && static_cast<int>(rank_of(move.target())) == 6 - 5 * original_side;
-        bool queen_promotion = move.type() == MOVE_TYPE_PROMOTION
-                               && static_cast<PieceType>(move.promotion_type() + 1) == QUEEN;
+        const bool passed_pawn = get_piece_type(informative_move.selected()) == PAWN
+                                 && static_cast<int>(rank_of(move.target())) == 6 - 5 * original_side;
+        const bool queen_promotion = move.type() == MOVE_TYPE_PROMOTION
+                                     && static_cast<PieceType>(move.promotion_type() + 1) == QUEEN;
 
-        Ply double_extensions = root ? 0 : position.state_stack[thread_state.search_ply].double_extensions;
+        const Ply double_extensions = root ? 0 : position.state_stack[thread_state.search_ply].double_extensions;
 
         // Checking for singularity
         if (   !root
@@ -924,13 +923,13 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
 
             position.undo_move(move, position.state_stack[thread_state.search_ply], thread_state.fifty_move);
 
-            int singular_beta = tt_entry.score - depth;
+            const int singular_beta = tt_entry.score - depth;
 
             thread_state.search_ply++;
 
             position.state_stack[thread_state.search_ply].excluded_move = move;
-            Score return_eval = negamax(engine, singular_beta - 1, singular_beta, (depth - 1) / 2,
-                                                   false, cutnode, thread_id);
+            const Score return_eval = negamax(engine, singular_beta - 1, singular_beta, (depth - 1) / 2,
+                                              false, cutnode, thread_id);
             position.state_stack[thread_state.search_ply].excluded_move = NO_MOVE;
 
             thread_state.search_ply--;
@@ -972,10 +971,10 @@ Score negamax(Engine& engine, Score alpha, Score beta, Ply depth, bool do_null, 
         // Prepare for recursive searching
         position.update_nnue(position.state_stack[thread_state.search_ply]);
 
-        bool move_gives_check = position.is_attacked(position.get_king_pos(position.side), position.side);
-        bool is_killer_move   = informative_move == thread_state.killer_moves[0][thread_state.search_ply] ||
-                                informative_move == thread_state.killer_moves[1][thread_state.search_ply];
-        bool interesting      = passed_pawn || queen_promotion || move_gives_check || is_killer_move;
+        const bool move_gives_check = position.is_attacked(position.get_king_pos(position.side), position.side);
+        const bool is_killer_move   = informative_move == thread_state.killer_moves[0][thread_state.search_ply] ||
+                                      informative_move == thread_state.killer_moves[1][thread_state.search_ply];
+        const bool interesting      = passed_pawn || queen_promotion || move_gives_check || is_killer_move;
 
         position.state_stack[thread_state.search_ply + 1].in_check = static_cast<int>(move_gives_check);
         thread_state.search_ply++;
