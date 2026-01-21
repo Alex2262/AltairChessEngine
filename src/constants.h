@@ -31,7 +31,7 @@ inline constexpr Score MATE_BOUND    = 99000;
 
 inline constexpr Ply MAX_AB_DEPTH    = 256;
 inline constexpr Ply MAX_QS_DEPTH    = 64;
-inline constexpr Ply TOTAL_MAX_DEPTH = (MAX_AB_DEPTH + MAX_QS_DEPTH);
+inline constexpr Ply TOTAL_MAX_DEPTH = MAX_AB_DEPTH + MAX_QS_DEPTH;
 inline constexpr Ply MAX_GAME_LENGTH = 1536;
 
 inline constexpr int DEFAULT_TT_SIZE = 16;

@@ -11,17 +11,26 @@ inline bool Position::is_attacked(Square square, Color color) const {
     const Bitboard knight_attacks = KNIGHT_ATTACKS[square];
     if (knight_attacks & get_pieces(KNIGHT, ~color)) return true;
 
-    // Treat square like a bishop
-    const Bitboard bishop_attacks = get_bishop_attacks(square, occupancy);
-    if (bishop_attacks & (get_pieces(BISHOP, ~color) | get_pieces(QUEEN, ~color))) return true;
-
-    // Treat square like a rook
-    const Bitboard rook_attacks = get_rook_attacks(square, occupancy);
-    if (rook_attacks & (get_pieces(ROOK, ~color) | get_pieces(QUEEN, ~color))) return true;
-
     // Treat square like a king
     const Bitboard king_attacks = KING_ATTACKS[square];
     if (king_attacks & (get_pieces(KING, ~color))) return true;
+
+
+    const Bitboard opp_queens = get_pieces(QUEEN, ~color);
+
+    // Treat square like a bishop
+    const Bitboard opp_diagonals = get_pieces(BISHOP, ~color) | opp_queens;
+    if (opp_diagonals) {
+        const Bitboard bishop_attacks = get_bishop_attacks(square, occupancy);
+        if (bishop_attacks & opp_diagonals) return true;
+    }
+
+    // Treat square like a rook
+    const Bitboard opp_orthogonals = get_pieces(ROOK, ~color) | opp_queens;
+    if (opp_orthogonals) {
+        const Bitboard rook_attacks = get_rook_attacks(square, occupancy);
+        if (rook_attacks & opp_orthogonals) return true;
+    }
 
     return false;
 }

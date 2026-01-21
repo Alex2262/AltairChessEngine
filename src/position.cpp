@@ -130,12 +130,13 @@ void Position::compute_threats() {
 
     const Color opp = ~side;
 
-    const Bitboard occupancy = get_all_pieces();
+    const Bitboard occupancy = all_pieces;
+    const Bitboard queens    = get_pieces(QUEEN, opp);
 
     Bitboard pawns      = get_pieces(PAWN, opp);
     Bitboard knights    = get_pieces(KNIGHT, opp);
-    Bitboard diagonal   = get_pieces(QUEEN, opp) | get_pieces(BISHOP, opp);
-    Bitboard horizontal = get_pieces(QUEEN, opp) | get_pieces(ROOK, opp);
+    Bitboard diagonal   = queens | get_pieces(BISHOP, opp);
+    Bitboard horizontal = queens | get_pieces(ROOK, opp);
 
     Bitboard pawn_forward_squares = opp == WHITE ? shift<NORTH>(pawns) : shift<SOUTH>(pawns);
     threats |= shift<WEST>(pawn_forward_squares) | shift<EAST>(pawn_forward_squares);
@@ -369,7 +370,7 @@ void Position::set_dfrc(int index) {
         pieces[piece] = 0ULL;
     }
 
-    for (auto & square : board) {
+    for (auto& square : board) {
         if (square == WHITE_PAWN || square == BLACK_PAWN) continue;
         square = EMPTY;
     }
@@ -399,20 +400,18 @@ bool Position::is_pseudo_legal(Move move) const {
 
     if (occupied != EMPTY) {
         if (get_color(occupied) == side) {
-            if (!(fischer_random_chess && selected_type == KING &&
-                    (occupied == get_piece(ROOK, side) || occupied == selected)
-                    && move_type == MOVE_TYPE_CASTLE)) return false;
-
+            if (!(fischer_random_chess && move_type == MOVE_TYPE_CASTLE && selected_type == KING
+                  && (occupied == get_piece(ROOK, side) || occupied == selected))) return false;
         } else capture = true;
     }
 
     if (move_type == MOVE_TYPE_CASTLE) {
-
         if (selected_type != KING) return false;
         if (rank_of(origin_square) != side * RANK_8) return false;
 
-        const Square appropriate_target_square_q = static_cast<Square>(c1 ^ (56 * side));
-        const Square appropriate_target_square_k = static_cast<Square>(g1 ^ (56 * side));
+        const int color_shift = 56 * side;
+        const Square appropriate_target_square_q = static_cast<Square>(c1 ^ color_shift);
+        const Square appropriate_target_square_k = static_cast<Square>(g1 ^ color_shift);
 
         const Square rook_target_square_q = appropriate_target_square_q + EAST;
         const Square rook_target_square_k = appropriate_target_square_k + WEST;
@@ -476,8 +475,12 @@ bool Position::is_pseudo_legal(Move move) const {
         if ((side == WHITE && target_square <= origin_square) ||
             (side == BLACK && target_square >= origin_square)) return false;
 
-        if (move_type == MOVE_TYPE_PROMOTION && rank_of(target_square) != ~side * RANK_8) return false;
-        if (move_type != MOVE_TYPE_PROMOTION && rank_of(target_square) == ~side * RANK_8) return false;
+        const Rank end_rank = ~side * RANK_8;
+        const Rank target_rank = rank_of(target_square);
+        const Rank origin_rank = rank_of(origin_square);
+
+        if (move_type == MOVE_TYPE_PROMOTION && target_rank != end_rank) return false;
+        if (move_type != MOVE_TYPE_PROMOTION && target_rank == end_rank) return false;
 
         if (file_of(target_square) == file_of(origin_square)) {
             if (capture) return false;
@@ -486,19 +489,18 @@ bool Position::is_pseudo_legal(Move move) const {
             if (!(get_pawn_attacks(origin_square, side) & from_square(target_square))) return false;
         }
 
-        int rank_diff = abs(static_cast<int>(rank_of(target_square)) - static_cast<int>(rank_of(origin_square)));
+        int rank_diff = abs(static_cast<int>(target_rank) - static_cast<int>(origin_rank));
         if (rank_diff > 2) return false;
         else if (rank_diff == 2) {
             if (side == WHITE &&
-                (rank_of(origin_square) != RANK_2 || board[origin_square + NORTH] != EMPTY)) return false;
+                (origin_rank != RANK_2 || board[origin_square + NORTH] != EMPTY)) return false;
             if (side == BLACK &&
-                (rank_of(origin_square) != RANK_7 || board[origin_square + SOUTH] != EMPTY)) return false;
+                (origin_rank != RANK_7 || board[origin_square + SOUTH] != EMPTY)) return false;
         }
     }
 
     else {
         if (move_type != MOVE_TYPE_NORMAL) return false;
-
         Bitboard attacks = get_regular_piece_type_attacks_nt(selected_type, origin_square, all_pieces);
         if (!(attacks & from_square(target_square))) return false;
     }
@@ -544,7 +546,8 @@ void Position::undo_null_move(State& state, Ply& fifty_move) {
 
 bool Position::make_move(Move move, State& state, Ply& fifty_move) {
 
-    std::array<Square, 2> castled_pos {NO_SQUARE, NO_SQUARE};
+    Square castled_pos_origin = NO_SQUARE;
+    Square castled_pos_target = NO_SQUARE;
 
     // Get move info
     const Square    origin_square = move.origin();
@@ -565,15 +568,19 @@ bool Position::make_move(Move move, State& state, Ply& fifty_move) {
 
     fifty_move++;
 
+    const Hash selected_origin_hash = ZobristHashKeys.piece_hash_keys[selected][origin_square];
+    const Hash selected_target_hash = ZobristHashKeys.piece_hash_keys[selected][target_square];
+    const Hash occupied_target_hash = ZobristHashKeys.piece_hash_keys[occupied][target_square];
+
     // Handle captures
     if (move.is_capture(*this)) {
         remove_piece(occupied, target_square);
         state.deactivations.push_back({occupied, target_square});
-        hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
-        if (occupied_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
-        else np_hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
-        if (is_major(occupied)) major_hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
-        else if (is_minor(occupied)) minor_hash_key ^= ZobristHashKeys.piece_hash_keys[occupied][target_square];
+        hash_key ^= occupied_target_hash;
+        if (occupied_type == PAWN) pawn_hash_key ^= occupied_target_hash;
+        else np_hash_key ^= occupied_target_hash;
+        if (is_major(occupied)) major_hash_key ^= occupied_target_hash;
+        else if (is_minor(occupied)) minor_hash_key ^= occupied_target_hash;
 
         fifty_move = 0;
     }
@@ -582,25 +589,28 @@ bool Position::make_move(Move move, State& state, Ply& fifty_move) {
     if (move_type == MOVE_TYPE_NORMAL) {
         place_piece(selected, target_square);
         state.activations.push_back({selected, target_square});
-        hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
-        if (selected_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
-        else np_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
-        if (is_major(selected)) major_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
-        else if (is_minor(selected)) minor_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
+        hash_key ^= selected_target_hash;
+        if (selected_type == PAWN) pawn_hash_key ^= selected_target_hash;
+        else np_hash_key ^= selected_target_hash;
+        if (is_major(selected)) major_hash_key ^= selected_target_hash;
+        else if (is_minor(selected)) minor_hash_key ^= selected_target_hash;
     }
 
     else if (move_type == MOVE_TYPE_EP) {
         place_piece(selected, target_square);
         state.activations.push_back({selected, target_square});
-        hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
-        pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
+        hash_key ^= selected_target_hash;
+        pawn_hash_key ^= selected_target_hash;
 
         // Find and remove the captured EP pawn
-        auto captured_square = static_cast<Square>(target_square + static_cast<Square>(side == WHITE ? SOUTH : NORTH));
-        state.deactivations.push_back({board[captured_square], captured_square});
-        hash_key ^= ZobristHashKeys.piece_hash_keys[board[captured_square]][captured_square];
-        pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[board[captured_square]][captured_square];
-        remove_piece(board[captured_square], captured_square);
+        const auto captured_square = static_cast<Square>(target_square + static_cast<Square>(side == WHITE ? SOUTH : NORTH));
+        const Piece captured_pawn  = board[captured_square];
+        state.deactivations.push_back({captured_pawn, captured_square});
+
+        const Hash captured_pawn_hash = ZobristHashKeys.piece_hash_keys[captured_pawn][captured_square];
+        hash_key ^= captured_pawn_hash;
+        pawn_hash_key ^= captured_pawn_hash;
+        remove_piece(captured_pawn, captured_square);
     }
 
     else if (move_type == MOVE_TYPE_CASTLE) {
@@ -608,34 +618,38 @@ bool Position::make_move(Move move, State& state, Ply& fifty_move) {
 
         // Get rook locations
         if (target_square == c1 || target_square == c8) {   // Queen side
-            castled_pos[0] = starting_rook_pos[side][1];                // Rook origin square
-            castled_pos[1] = static_cast<Square>(target_square + 1);    // Rook target square
+            castled_pos_origin = starting_rook_pos[side][1];                // Rook origin square
+            castled_pos_target = static_cast<Square>(target_square + 1);    // Rook target square
         } else {                                            // King side
-            castled_pos[0] = starting_rook_pos[side][0];                // Rook origin square
-            castled_pos[1] = static_cast<Square>(target_square - 1);    // Rook target square
+            castled_pos_origin = starting_rook_pos[side][0];                // Rook origin square
+            castled_pos_target = static_cast<Square>(target_square - 1);    // Rook target square
         }
 
         // Move the Rook
-        if (castled_pos[0] != castled_pos[1]) {
-            state.deactivations.push_back({board[castled_pos[0]], castled_pos[0]});
-            state.activations.push_back({board[castled_pos[0]], castled_pos[1]});
-            hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[0]];
-            hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[1]];
-            np_hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[0]];
-            np_hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[1]];
-            major_hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[0]];
-            major_hash_key ^= ZobristHashKeys.piece_hash_keys[board[castled_pos[0]]][castled_pos[1]];
-            remove_piece(board[castled_pos[0]], castled_pos[0]);
-            place_piece(get_piece(ROOK, side), castled_pos[1]);
+        if (castled_pos_origin != castled_pos_target) {
+            const Piece origin_rook = board[castled_pos_origin];
+            state.deactivations.push_back({origin_rook, castled_pos_origin});
+            state.activations.push_back({origin_rook, castled_pos_target});
+
+            const Hash origin_rook_hash = ZobristHashKeys.piece_hash_keys[origin_rook][castled_pos_origin];
+            const Hash target_rook_hash = ZobristHashKeys.piece_hash_keys[origin_rook][castled_pos_target];
+            hash_key ^= origin_rook_hash;
+            hash_key ^= target_rook_hash;
+            np_hash_key ^= origin_rook_hash;
+            np_hash_key ^= target_rook_hash;
+            major_hash_key ^= origin_rook_hash;
+            major_hash_key ^= target_rook_hash;
+            remove_piece(origin_rook, castled_pos_origin);
+            place_piece(get_piece(ROOK, side), castled_pos_target);
         }
 
         // Move the king now (after moving the rook due to FRC edge-cases where the king and rook swap places)
         if (origin_square != target_square) {
             place_piece(selected, target_square);
             state.activations.push_back({selected, target_square});
-            hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
-            np_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
-            major_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
+            hash_key ^= selected_target_hash;
+            np_hash_key ^= selected_target_hash;
+            major_hash_key ^= selected_target_hash;
         }
     }
 
@@ -644,9 +658,9 @@ bool Position::make_move(Move move, State& state, Ply& fifty_move) {
         place_piece(promotion_piece, target_square);
         state.activations.push_back({promotion_piece, target_square});
         hash_key ^= ZobristHashKeys.piece_hash_keys[promotion_piece][target_square];
-        np_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
-        if (is_major(promotion_piece)) major_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
-        else if (is_minor(promotion_piece)) minor_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][target_square];
+        np_hash_key ^= selected_target_hash;
+        if (is_major(promotion_piece)) major_hash_key ^= selected_target_hash;
+        else if (is_minor(promotion_piece)) minor_hash_key ^= selected_target_hash;
     }
 
     // Remove the piece from the source square except for some FRC edge cases
@@ -655,15 +669,15 @@ bool Position::make_move(Move move, State& state, Ply& fifty_move) {
         remove_piece(selected, origin_square);
 
         state.deactivations.push_back({selected, origin_square});
-        hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
-        if (selected_type == PAWN) pawn_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
-        else np_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
-        if (is_major(selected)) major_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
-        else if (is_minor(selected)) minor_hash_key ^= ZobristHashKeys.piece_hash_keys[selected][origin_square];
+        hash_key ^= selected_origin_hash;
+        if (selected_type == PAWN) pawn_hash_key ^= selected_origin_hash;
+        else np_hash_key ^= selected_origin_hash;
+        if (is_major(selected)) major_hash_key ^= selected_origin_hash;
+        else if (is_minor(selected)) minor_hash_key ^= selected_origin_hash;
 
         // The rook and king have swapped in FRC, and we just removed the piece on the rook's target square,
         // so we need to set the rook back onto this location
-        if (castled_pos[1] == origin_square) board[castled_pos[1]] = get_piece(ROOK, side);
+        if (castled_pos_target == origin_square) board[castled_pos_target] = get_piece(ROOK, side);
     }
 
     // -- Legal move checking --
@@ -678,7 +692,7 @@ bool Position::make_move(Move move, State& state, Ply& fifty_move) {
 
     // Continue legal move checking
     if (is_attacked(get_king_pos(side), side)) return false;
-    if (castled_pos[0] != NO_SQUARE) {
+    if (castled_pos_origin != NO_SQUARE) {
         // We need to check all the squares in between the king's destination square and original square, excluding
         // the original square since we already checked that earlier.
         if (target_square == c1 || target_square == c8) {  // Queen side castling
@@ -713,16 +727,17 @@ bool Position::make_move(Move move, State& state, Ply& fifty_move) {
 
     // -- Update Castling Rights --
     // Reset the castling rights first
-    hash_key       ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
-    np_hash_key    ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
-    major_hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    const Hash cab_hash_pre = ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    hash_key       ^= cab_hash_pre;
+    np_hash_key    ^= cab_hash_pre;
+    major_hash_key ^= cab_hash_pre;
 
     // King moves
     if (selected == WHITE_KING) {
         castle_ability_bits &= ~(1 << 0);
         castle_ability_bits &= ~(1 << 1);
 
-        int king_bucket = KING_BUCKET_MAP[target_square];
+        const int king_bucket = KING_BUCKET_MAP[target_square];
         if (king_bucket != nnue_state.current_accumulator->king_buckets[side]) {
             state.king_bucket_update.update_necessary = true;
             state.king_bucket_update.side = WHITE;
@@ -733,7 +748,7 @@ bool Position::make_move(Move move, State& state, Ply& fifty_move) {
         castle_ability_bits &= ~(1 << 2);
         castle_ability_bits &= ~(1 << 3);
 
-        int king_bucket = KING_BUCKET_MAP[target_square ^ 56];
+        const int king_bucket = KING_BUCKET_MAP[target_square ^ 56];
         if (king_bucket != nnue_state.current_accumulator->king_buckets[side]) {
             state.king_bucket_update.update_necessary = true;
             state.king_bucket_update.side = BLACK;
@@ -752,9 +767,10 @@ bool Position::make_move(Move move, State& state, Ply& fifty_move) {
         target_square == starting_rook_pos[BLACK][1]) castle_ability_bits &= ~(1 << 3);
 
     // Hash it back
-    hash_key       ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
-    np_hash_key    ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
-    major_hash_key ^= ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    const Hash cab_hash_post = ZobristHashKeys.castle_hash_keys[castle_ability_bits];
+    hash_key       ^= cab_hash_post;
+    np_hash_key    ^= cab_hash_post;
+    major_hash_key ^= cab_hash_post;
 
     hash_key ^= ZobristHashKeys.side_hash_key;
     side = ~side;
@@ -769,7 +785,8 @@ bool Position::make_move(Move move, State& state, Ply& fifty_move) {
 
 void Position::undo_move(Move move, State& state, Ply& fifty_move) {
 
-    std::array<Square, 2> castled_pos {NO_SQUARE, NO_SQUARE};
+    Square castled_pos_origin = NO_SQUARE;
+    Square castled_pos_target = NO_SQUARE;
 
     // Get move info
     const Square   origin_square = move.origin();
@@ -802,20 +819,20 @@ void Position::undo_move(Move move, State& state, Ply& fifty_move) {
     else if (move_type == MOVE_TYPE_CASTLE) {
         // Get rook locations
         if (target_square == c1 || target_square == c8) {   // Queen side
-            castled_pos[0] = starting_rook_pos[side][1];                // Rook origin square
-            castled_pos[1] = static_cast<Square>(target_square + 1);    // Rook target square
+            castled_pos_origin = starting_rook_pos[side][1];                // Rook origin square
+            castled_pos_target = static_cast<Square>(target_square + 1);    // Rook target square
         } else {                                            // King side
-            castled_pos[0] = starting_rook_pos[side][0];                // Rook origin square
-            castled_pos[1] = static_cast<Square>(target_square - 1);    // Rook target square
+            castled_pos_origin = starting_rook_pos[side][0];                // Rook origin square
+            castled_pos_target = static_cast<Square>(target_square - 1);    // Rook target square
         }
 
         // Move the Rook back
-        remove_piece(board[castled_pos[1]], castled_pos[1]);
-        place_piece(get_piece(ROOK, side), castled_pos[0]);
+        remove_piece(board[castled_pos_target], castled_pos_target);
+        place_piece(get_piece(ROOK, side), castled_pos_origin);
     }
 
     // Set the occupied piece back except in FRC edge cases
-    if (castled_pos[0] == target_square) {
+    if (castled_pos_origin == target_square) {
         // The rook and king have swapped in FRC, and the rook has been placed in this square; however,
         // the king in the Bitboard hasn't been removed yet and must be removed.
         pieces[selected] &= ~(1ULL << target_square);
