@@ -22,7 +22,12 @@ int main(int argc, char* argv[]) {
     }
 
     if (bench_flag) {
-        run_bench(*main_uci.engine, BENCH_DEPTH);
+        Ply depth = BENCH_DEPTH;
+        if (argc >= 3) {
+            std::string input_depth = argv[2];
+            depth = std::stoi(input_depth);
+        }
+        run_bench(*main_uci.engine, depth);
         return 0;
     }
 

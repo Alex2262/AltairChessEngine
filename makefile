@@ -58,6 +58,25 @@ TEST_OUT := tests/heap_test$(SUFFIX)
 make:
 	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES)
 
+pgo:
+ifeq ($(PGO), true)
+	$(CXX) $(CXXFLAGS) -fprofile-instr-generate -o $(OUT) $(SOURCES)
+
+ifeq ($(OS), Windows_NT)
+	$(OUT) bench 20
+else
+	./$(OUT) bench 20
+endif
+
+	$(LLVM_PROF_CMD) merge -output="Altair.profdata" *.profraw
+	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES) -fprofile-instr-use="Altair.profdata"
+	rm "Altair.profdata"
+	rm *.profraw
+
+else
+	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES)
+endif
+
 tests: $(TEST_OUT)
 $(TEST_OUT):
 	$(CXX) $(TEST_CXXFLAGS) -o $(TEST_OUT) $(TEST_SOURCES) $(ENGINE_LIB_SOURCES)
