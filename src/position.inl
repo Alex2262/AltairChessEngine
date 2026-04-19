@@ -268,7 +268,7 @@ void Position::get_rook_moves(FixedVector<ScoredMove, MAX_MOVES>& current_scored
                 // The rook is to the left of the D1 square
                 if (king_pos < important_pos_q) {
                     // Guard certain cases
-                    if (board[target_pos_q] != EMPTY && board[target_pos_q] != WHITE_KING) continue;
+                    if (board[target_pos_q] != EMPTY && board[target_pos_q] != get_piece(KING, side)) continue;
                     if (board[important_pos_q] != EMPTY) continue;
                 }
 

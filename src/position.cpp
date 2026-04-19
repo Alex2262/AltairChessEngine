@@ -428,7 +428,7 @@ bool Position::is_pseudo_legal(Move move) const {
 
             if (fischer_random_chess) {
                 if (origin_square < rook_target_square_q) {
-                    if (board[appropriate_target_square_q] != EMPTY && board[appropriate_target_square_q] != WHITE_KING) return false;
+                    if (board[appropriate_target_square_q] != EMPTY && board[appropriate_target_square_q] != get_piece(KING, side)) return false;
                     if (board[rook_target_square_q] != EMPTY) return false;
                 } else if (origin_square > rook_target_square_q) {
                     for (int temp_square = target_square; temp_square < static_cast<int>(starting_rook_pos[side][1]); temp_square++) {

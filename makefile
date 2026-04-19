@@ -9,7 +9,7 @@ SOURCES      := src/evaluation_classic.cpp src/main.cpp src/move.cpp src/perft.c
 TEST_SOURCES 	   := tests/maxheap_test.cpp
 ENGINE_LIB_SOURCES := $(filter-out src/main.cpp, $(SOURCES))
 
-CXXFLAGS     := -O3 -std=c++20 -march=native -Wall -Wextra -pedantic -DNDEBUG -flto
+CXXFLAGS     := -O3 -std=c++20 -march=native -Wall -Wextra -pedantic -DNDEBUG -flto -DALTAIR_SRC_DIR=\"src/\"
 TEST_CXXFLAGS := -O0 -g -std=c++20 -Wall -Wextra -pedantic
 
 CXX          := clang++

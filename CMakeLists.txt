@@ -59,3 +59,5 @@ add_executable(Altair
         src/search_parameters.h)
 
 target_link_libraries(Altair Threads::Threads)
+
+target_compile_definitions(Altair PRIVATE ALTAIR_SRC_DIR="${CMAKE_CURRENT_SOURCE_DIR}/src/")
