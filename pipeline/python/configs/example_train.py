@@ -28,8 +28,17 @@ KING_BUCKET_MAP = (
     3, 3, 3, 3, 4, 4, 4, 4,
     3, 3, 3, 3, 4, 4, 4, 4,
 )
+
 NUM_OUTPUT_BUCKETS = 8
 OUTPUT_BUCKET_DIVISOR = 4  # 32 / 8
+
+
+BATCH_SIZE = 65536
+NUM_WORKERS = 4
+
+HIDDEN_SIZE = 1024
+
+LR = 1e-3
 
 
 def build_run() -> TrainingRun:
@@ -38,26 +47,26 @@ def build_run() -> TrainingRun:
 
     train_loader = create_data_loader(
         train_dataset,
-        batch_size=4096,
+        batch_size=BATCH_SIZE,
         shuffle=True,
-        num_workers=4,
+        num_workers=NUM_WORKERS,
         pin_memory=True,
     )
     val_loader = create_data_loader(
         val_dataset,
-        batch_size=4096,
+        batch_size=BATCH_SIZE,
         shuffle=False,
-        num_workers=4,
+        num_workers=NUM_WORKERS,
         pin_memory=True,
     )
 
     model = SparseBucketNNUE(
-        hidden_size=1024,
+        hidden_size=HIDDEN_SIZE,
         king_bucket_map=KING_BUCKET_MAP,
         num_output_buckets=NUM_OUTPUT_BUCKETS,
         output_bucket_divisor=OUTPUT_BUCKET_DIVISOR,
     )
-    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=LR)
     objective = ScheduledObjective(
         MixedEvalWDLObjective(eval_weight=0.5, wdl_weight=0.5),
         PureWDLObjective(),

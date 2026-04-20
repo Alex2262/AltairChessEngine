@@ -48,17 +48,15 @@ class Trainer:
     def fit(self, train_loader, val_loader=None) -> list[dict[str, EpochResult]]:
         history = []
 
-        print("Starting training for %d epoch(s) on device=%s", self.config.epochs, self.device)
+        print(f"Starting training for {self.config.epochs} epoch(s) on device={self.device}")
 
         for epoch in range(self.config.epochs):
-            print("Epoch %d/%d", epoch + 1, self.config.epochs)
+            print(f"Epoch {epoch + 1}/{self.config.epochs}")
 
             train_result = self._run_epoch(train_loader, training=True, epoch=epoch)
             epoch_result = {"train": train_result}
 
-            print("Epoch %d train | loss=%.6f%s%s",
-                  epoch + 1,
-                  train_result.loss,
+            print(f"Epoch {epoch + 1} train | loss={train_result.loss:.6f}",
                   self._format_named_values(" | criteria", train_result.criterion),
                   self._format_named_values(" | metrics", train_result.metrics))
 
@@ -66,9 +64,7 @@ class Trainer:
                 val_result = self._run_epoch(val_loader, training=False, epoch=epoch)
                 epoch_result["val"] = val_result
 
-                print("Epoch %d val   | loss=%.6f%s%s",
-                      epoch + 1,
-                      val_result.loss,
+                print(f"Epoch {epoch + 1} val | loss={val_result.loss:.6f}",
                       self._format_named_values(" | criteria", val_result.criterion),
                       self._format_named_values(" | metrics", val_result.metrics))
 

@@ -9,10 +9,7 @@ import sys
 from pathlib import Path
 
 import torch
-try:
-    from tqdm import tqdm
-except ImportError:  # pragma: no cover - optional dependency
-    tqdm = None
+from tqdm import tqdm
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
@@ -20,8 +17,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from pipeline.python.data import DirectoryShardDataset, create_data_loader
 from pipeline.python.models import SparseBucketNNUE
-from pipeline.python.train import WDLCriterion, WDLAccuracy
-
+from pipeline.python.train import WDLCriterion, WDLAccuracy, EvalMAE
 
 DEFAULT_KING_BUCKET_MAP = (
     0, 0, 0, 1, 1, 2, 2, 2,
@@ -75,14 +71,18 @@ def main() -> None:
     model.to(args.device)
     model.eval()
 
-    criterion = WDLCriterion()
-    metric = WDLAccuracy()
+    criteria = [WDLCriterion()]
+    metrics = [WDLAccuracy(), EvalMAE()]
 
     total_records = 0
-    total_wdl_mse = 0.0
-    total_wdl_accuracy = 0.0
+
+    criterion_totals = {criterion.name: 0.0 for criterion in criteria}
+    metric_totals = {metric.name: 0.0 for metric in metrics}
+
     total_target = min(len(dataset), args.max_records) if args.max_records > 0 else len(dataset)
     progress_bar = tqdm(total=total_target, unit="pos", desc="Evaluating") if tqdm is not None else None
+
+    total_batches = 0
 
     with torch.no_grad():
         for batch in loader:
@@ -91,23 +91,31 @@ def main() -> None:
 
             batch_size = int(batch["stm"].shape[0])
             total_records += batch_size
-            total_wdl_mse += float(criterion(predictions, batch).item()) * batch_size
-            total_wdl_accuracy += float(metric(predictions, batch).item()) * batch_size
-            running_mse = total_wdl_mse / max(total_records, 1)
-            running_accuracy = total_wdl_accuracy / max(total_records, 1)
+            total_batches += 1
 
-            if progress_bar is not None:
-                progress_bar.update(batch_size)
-                progress_bar.set_postfix(
-                    wdl_mse=f"{running_mse:.6f}",
-                    wdl_acc=f"{running_accuracy:.4f}",
-                )
-            elif args.progress_every > 0 and total_records % args.progress_every < batch_size:
-                print(f"Processed {total_records:,} / {len(dataset):,} records...", file=sys.stderr)
-                print(
-                    f"  running wdl_mse={running_mse:.6f} wdl_accuracy={running_accuracy:.4f}",
-                    file=sys.stderr,
-                )
+            for criterion in criteria:
+                value = float(criterion(predictions, batch).detach().cpu().item())
+                criterion_totals[criterion.name] += value
+
+            for metric in metrics:
+                value = float(metric(predictions, batch).detach().cpu().item())
+                metric_totals[metric.name] += value
+
+            avg_criteria = {
+                name: value / total_batches for name, value in criterion_totals.items()
+            }
+            avg_metrics = {
+                name: value / total_batches for name, value in metric_totals.items()
+            }
+
+            postfix = {}
+            for name, value in avg_criteria.items():
+                postfix[name] = f"{value:.4f}"
+            for name, value in avg_metrics.items():
+                postfix[name] = f"{value:.4f}"
+
+            progress_bar.update(batch_size)
+            progress_bar.set_postfix(postfix)
 
             if 0 < args.max_records <= total_records:
                 break
