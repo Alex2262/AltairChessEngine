@@ -1,0 +1,16 @@
+[project]
+name = "altair-pipeline-python"
+version = "0.1.0"
+description = "Python training and analysis tooling for the Altair data pipeline"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "torch>=2.2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = false

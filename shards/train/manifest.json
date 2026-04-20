@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "format": "packed_board_v2",
+  "record_size": 36,
+  "total_records": 82853367,
+  "shards": [
+    {"file": "shard_0000.bin", "records": 29826162},
+    {"file": "shard_0001.bin", "records": 29826162},
+    {"file": "shard_0002.bin", "records": 23201043}
+  ]
+}

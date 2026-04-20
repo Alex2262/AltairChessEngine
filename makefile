@@ -6,11 +6,11 @@ SOURCES      := src/evaluation_classic.cpp src/main.cpp src/move.cpp src/perft.c
 				src/useful.cpp src/uci.cpp src/bench.cpp src/see.cpp src/bitboard.cpp src/move_ordering.cpp \
 				src/datagen.cpp src/nnue.cpp src/timeman.cpp
 
-TEST_SOURCES 	   := tests/maxheap_test.cpp
+TEST_SOURCES 	   := tests/engine_tests.cpp
 ENGINE_LIB_SOURCES := $(filter-out src/main.cpp, $(SOURCES))
 
 CXXFLAGS     := -O3 -std=c++20 -march=native -Wall -Wextra -pedantic -DNDEBUG -flto -DALTAIR_SRC_DIR=\"src/\"
-TEST_CXXFLAGS := -O0 -g -std=c++20 -Wall -Wextra -pedantic
+TEST_CXXFLAGS := -O3 -g -std=c++20 -Wall -Wextra -pedantic -DALTAIR_SRC_DIR=\"src/\"
 
 CXX          := clang++
 SUFFIX       :=
@@ -49,13 +49,15 @@ else
     	override PGO := false
     endif
 	CXXFLAGS += -pthread
+	TEST_CXXFLAGS += -pthread
 
 endif
 
 OUT := $(EXE)$(SUFFIX)
-TEST_OUT := tests/heap_test$(SUFFIX)
+TEST_OUT := tests/engine_tests$(SUFFIX)
 
-make:
+make: $(OUT)
+$(OUT): $(SOURCES)
 	$(CXX) $(CXXFLAGS) -o $(OUT) $(SOURCES)
 
 pgo:
@@ -78,7 +80,7 @@ else
 endif
 
 tests: $(TEST_OUT)
-$(TEST_OUT):
+$(TEST_OUT): $(TEST_SOURCES) $(ENGINE_LIB_SOURCES)
 	$(CXX) $(TEST_CXXFLAGS) -o $(TEST_OUT) $(TEST_SOURCES) $(ENGINE_LIB_SOURCES)
 
 test: $(TEST_OUT)
@@ -86,4 +88,3 @@ test: $(TEST_OUT)
 
 clean:
 	rm -rf *.o
-

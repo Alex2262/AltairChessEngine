@@ -1,0 +1,28 @@
+# macOS / editors
+.DS_Store
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# CMake / build outputs
+build/
+cmake-build-debug/
+cmake-build-debug-event-trace/
+cmake-build-release/
+pipeline/build/
+pipeline/Testing/
+
+# Pipeline generated outputs
+analytics_output/
+pipeline/analytics_output/
+AltairDataBaseAnalysis/
+AltairDataTest2Analysis/
+*.bin
+
+# Local engine binaries
+Altair
+Altair_pgo
+main.out
