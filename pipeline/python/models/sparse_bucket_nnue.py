@@ -90,15 +90,13 @@ class SparseBucketNNUE(ValueNet):
 
         stm_hidden_unactivated = stm_hidden
         ntm_hidden_unactivated = ntm_hidden
-        stm_hidden = torch.clamp(stm_hidden, 0, self.qa).square()
-        ntm_hidden = torch.clamp(ntm_hidden, 0, self.qa).square()
+        stm_hidden = torch.clamp(stm_hidden, 0.0, 1.0).square()
+        ntm_hidden = torch.clamp(ntm_hidden, 0.0, 1.0).square()
         hidden = torch.cat([stm_hidden, ntm_hidden], dim=1)
 
         weights = self.output_weights.index_select(0, output_bucket)
         bias = self.output_bias.index_select(0, output_bucket)
-        output = hidden.mul(weights).sum(dim=1) / float(self.qa)
-        quantized_sum = output + bias
-        value_logit = quantized_sum / float(self.qa * self.qb)
+        value_logit = hidden.mul(weights).sum(dim=1) + bias
         value_cp = value_logit * self.scale
 
         return {
@@ -111,10 +109,10 @@ class SparseBucketNNUE(ValueNet):
         }
 
     def export_engine_format(self, path: str) -> None:
-        feature_weights = torch.round(self.feature_weights.detach().cpu()).to(torch.int16).reshape(-1)
-        feature_bias = torch.round(self.feature_bias.detach().cpu()).to(torch.int16).reshape(-1)
-        output_weights = torch.round(self.output_weights.detach().cpu().transpose(0, 1)).to(torch.int16).reshape(-1)
-        output_bias = torch.round(self.output_bias.detach().cpu()).to(torch.int16).reshape(-1)
+        feature_weights = torch.round(self.feature_weights.detach().cpu() * float(self.qa)).to(torch.int16).reshape(-1)
+        feature_bias = torch.round(self.feature_bias.detach().cpu() * float(self.qa)).to(torch.int16).reshape(-1)
+        output_weights = torch.round(self.output_weights.detach().cpu().transpose(0, 1) * float(self.qb)).to(torch.int16).reshape(-1)
+        output_bias = torch.round(self.output_bias.detach().cpu() * float(self.qa * self.qb)).to(torch.int16).reshape(-1)
 
         with open(path, "wb") as handle:
             handle.write(feature_weights.numpy().tobytes())
@@ -196,10 +194,10 @@ class SparseBucketNNUE(ValueNet):
             scale=scale,
         )
         with torch.no_grad():
-            model.feature_weights.copy_(feature_weights)
-            model.feature_bias.copy_(feature_bias)
-            model.output_weights.copy_(output_weights)
-            model.output_bias.copy_(output_bias)
+            model.feature_weights.copy_(feature_weights / float(qa))
+            model.feature_bias.copy_(feature_bias / float(qa))
+            model.output_weights.copy_(output_weights / float(qb))
+            model.output_bias.copy_(output_bias / float(qa * qb))
         model._engine_padding = trailing_padding
 
         return model
