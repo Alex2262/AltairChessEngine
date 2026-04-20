@@ -291,6 +291,8 @@ std::string Position::get_fen(Ply fifty_move) const {
         }
     }
 
+    if (empty) fen += std::to_string(empty);
+
     fen += " ";
     fen += side == WHITE ? "w" : "b";
 
@@ -305,8 +307,8 @@ std::string Position::get_fen(Ply fifty_move) const {
     fen += " ";
     if (ep_square == NO_SQUARE) fen += "-";
     else {
-        fen += char(ep_square % 8 + 'a');
-        fen += char(ep_square / 8 + '1');
+        fen += static_cast<char>(ep_square % 8 + 'a');
+        fen += static_cast<char>(ep_square / 8 + '1');
     }
 
     fen += " ";

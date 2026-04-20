@@ -16,13 +16,14 @@ pipeline/build/
 pipeline/Testing/
 
 # Pipeline generated outputs
-analytics_output/
-pipeline/analytics_output/
-AltairDataBaseAnalysis/
-AltairDataTest2Analysis/
+data_analysis_outputs/
+original_data_fens/
 *.bin
 
 # Local engine binaries
 Altair
 Altair_pgo
 main.out
+
+.claude/
+pipeline/python/uv.lock
