@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -46,63 +45,36 @@ class Trainer:
         self.device = torch.device(self.config.device)
         self.model.to(self.device)
 
-        self.logger = self._build_logger()
-
-    def _build_logger(self) -> logging.Logger:
-        logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-        logger.setLevel(logging.INFO)
-
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            handler.setLevel(logging.INFO)
-            formatter = logging.Formatter(
-                "[%(asctime)s] %(levelname)s - %(message)s",
-                datefmt="%H:%M:%S",
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-
-        logger.propagate = False
-        return logger
-
     def fit(self, train_loader, val_loader=None) -> list[dict[str, EpochResult]]:
         history = []
 
-        self.logger.info(
-            "Starting training for %d epoch(s) on device=%s",
-            self.config.epochs,
-            self.device,
-        )
+        print("Starting training for %d epoch(s) on device=%s", self.config.epochs, self.device)
 
         for epoch in range(self.config.epochs):
-            self.logger.info("Epoch %d/%d", epoch + 1, self.config.epochs)
+            print("Epoch %d/%d", epoch + 1, self.config.epochs)
 
             train_result = self._run_epoch(train_loader, training=True, epoch=epoch)
             epoch_result = {"train": train_result}
 
-            self.logger.info(
-                "Epoch %d train | loss=%.6f%s%s",
-                epoch + 1,
-                train_result.loss,
-                self._format_named_values(" | criteria", train_result.criterion),
-                self._format_named_values(" | metrics", train_result.metrics),
-                )
+            print("Epoch %d train | loss=%.6f%s%s",
+                  epoch + 1,
+                  train_result.loss,
+                  self._format_named_values(" | criteria", train_result.criterion),
+                  self._format_named_values(" | metrics", train_result.metrics))
 
             if val_loader is not None:
                 val_result = self._run_epoch(val_loader, training=False, epoch=epoch)
                 epoch_result["val"] = val_result
 
-                self.logger.info(
-                    "Epoch %d val   | loss=%.6f%s%s",
-                    epoch + 1,
-                    val_result.loss,
-                    self._format_named_values(" | criteria", val_result.criterion),
-                    self._format_named_values(" | metrics", val_result.metrics),
-                    )
+                print("Epoch %d val   | loss=%.6f%s%s",
+                      epoch + 1,
+                      val_result.loss,
+                      self._format_named_values(" | criteria", val_result.criterion),
+                      self._format_named_values(" | metrics", val_result.metrics))
 
             history.append(epoch_result)
 
-        self.logger.info("Training complete.")
+        print("Training complete.")
         return history
 
     def _run_epoch(self, loader, training: bool, epoch: int) -> EpochResult:
@@ -169,19 +141,6 @@ class Trainer:
             for name, value in avg_metrics.items():
                 postfix[name] = f"{value:.4f}"
             iterator.set_postfix(postfix)
-
-            if self.config.log_every > 0 and (batch_index % self.config.log_every == 0):
-                batch_total = num_batches if num_batches is not None else "?"
-                self.logger.info(
-                    "Epoch %d [%s] batch %s/%s | loss=%.6f%s%s",
-                    epoch + 1,
-                    split,
-                    batch_index,
-                    batch_total,
-                    avg_loss,
-                    self._format_named_values(" | criteria", avg_criteria),
-                    self._format_named_values(" | metrics", avg_metrics),
-                    )
 
         return EpochResult(
             split=split,
