@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import torch
 
-from pipeline.python.data import DirectoryShardDataset, create_data_loader
+from pipeline.python.data import create_shard_epoch_loader
 from pipeline.python.models import SparseBucketNNUE
 from pipeline.python.train import (
     BlendedValueObjective,
@@ -32,7 +32,9 @@ OUTPUT_BUCKET_DIVISOR = 4  # 32 / 8
 
 EPOCHS = 5
 BATCH_SIZE = 65536
-NUM_WORKERS = 4
+SHARD_PREPARE_CHUNK_SIZE = 131072
+PREFETCH_CHUNKS = 1
+SHUFFLE_SEED = 0
 
 HIDDEN_SIZE = 1024
 
@@ -43,29 +45,32 @@ EVAL_SCALE = 400.0
 
 
 def build_run() -> TrainingRun:
-    train_dataset = DirectoryShardDataset("shards/train", preload=False)
-    val_dataset = DirectoryShardDataset("shards/val", preload=False)
-
-    train_loader = create_data_loader(
-        train_dataset,
-        batch_size=BATCH_SIZE,
-        shuffle=True,
-        num_workers=NUM_WORKERS,
-        pin_memory=True,
-    )
-    val_loader = create_data_loader(
-        val_dataset,
-        batch_size=BATCH_SIZE,
-        shuffle=False,
-        num_workers=NUM_WORKERS,
-        pin_memory=True,
-    )
-
     model = SparseBucketNNUE(
         hidden_size=HIDDEN_SIZE,
         king_bucket_map=KING_BUCKET_MAP,
         num_output_buckets=NUM_OUTPUT_BUCKETS,
         output_bucket_divisor=OUTPUT_BUCKET_DIVISOR,
+    )
+
+    train_loader = create_shard_epoch_loader(
+        "shards/train",
+        batch_size=BATCH_SIZE,
+        prepare_batch_fn=model.prepare_shard_batch,
+        shuffle_shards=True,
+        shuffle_records=True,
+        seed=SHUFFLE_SEED,
+        prepare_chunk_size=SHARD_PREPARE_CHUNK_SIZE,
+        prefetch_chunks=PREFETCH_CHUNKS,
+    )
+    val_loader = create_shard_epoch_loader(
+        "shards/val",
+        batch_size=BATCH_SIZE,
+        prepare_batch_fn=model.prepare_shard_batch,
+        shuffle_shards=False,
+        shuffle_records=False,
+        seed=SHUFFLE_SEED,
+        prepare_chunk_size=SHARD_PREPARE_CHUNK_SIZE,
+        prefetch_chunks=PREFETCH_CHUNKS,
     )
     optimizer = torch.optim.AdamW(model.parameters(), lr=LR)
     objective = BlendedValueObjective(

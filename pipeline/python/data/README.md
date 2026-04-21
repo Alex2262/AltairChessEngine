@@ -8,7 +8,7 @@ Its job is to take compact packed-board shards and turn them into tensors that a
 
 `data/` is responsible for:
 - reading shard metadata and binary records
-- building PyTorch datasets and dataloaders
+- building shard-wise training/evaluation loaders
 - unpacking packed boards
 - deriving sparse white/black perspective features
 - exposing helpers for manual train/validation/test shard selection
@@ -25,8 +25,10 @@ It is not responsible for:
   - binary constants shared by the reader and feature code
 - [shard_reader.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/shard_reader.py:1)
   - low-level shard loading and manifest reading
-- [shard_dataset.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/shard_dataset.py:1)
-  - datasets and collate function
+- [batching.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/batching.py:1)
+  - record-to-batch conversion helpers
+- [shard_epoch_loader.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/shard_epoch_loader.py:1)
+  - shard-wise loader that shuffles shards, prepares large vectorized chunks, and yields minibatches by slicing prepared tensors
 - [feature_extractor.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/feature_extractor.py:1)
   - torch-native packed-board unpacking and sparse feature extraction
 - [splits.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/splits.py:1)
@@ -47,9 +49,9 @@ The reader can:
 - list shard files in a directory
 - memory-map or load shard records
 
-## Dataset Contract
+## Loader Contract
 
-The dataset returns:
+The shard loader returns:
 - `packed_boards`
 - `stm`
 - `wdl`
@@ -57,7 +59,7 @@ The dataset returns:
 
 This is deliberate.
 
-The dataset does not emit:
+The loader does not emit:
 - white dense 768-vectors
 - black dense 768-vectors
 - precomputed king buckets
@@ -117,7 +119,7 @@ Use:
 - `shard_paths_from_directory(...)`
 - `shard_paths_from_directories(...)`
 
-or instantiate datasets directly from the directories you want.
+or instantiate shard loaders directly from the directories you want.
 
 That lets you keep:
 - train shards

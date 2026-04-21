@@ -15,7 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from pipeline.python.data import DirectoryShardDataset, EMPTY, create_data_loader
+from pipeline.python.data import EMPTY, create_shard_epoch_loader
 from pipeline.python.models import SparseBucketNNUE
 from pipeline.python.train import EvalMAE, WDLCriterion, WDLAccuracy
 
@@ -50,13 +50,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--shards", default="shards/val", help="Directory containing validation shards")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--batch-size", type=int, default=8192)
-    parser.add_argument("--num-workers", type=int, default=0)
     parser.add_argument("--hidden-size", type=int, default=1024)
     parser.add_argument("--num-output-buckets", type=int, default=8)
     parser.add_argument("--output-bucket-divisor", type=int, default=4)
     parser.add_argument("--max-records", type=int, default=0, help="Optional cap for quick spot checks")
     parser.add_argument("--collapse-window", type=float, default=0.05, help="Window around 0.5 to count as draw-collapse")
     parser.add_argument("--hist-bins", type=int, default=10, help="Number of histogram bins over [0, 1]")
+    parser.add_argument("--prepare-chunk-size", type=int, default=65536)
     return parser.parse_args()
 
 
@@ -107,18 +107,6 @@ def evaluate_sanity_positions(model: SparseBucketNNUE, device: str) -> list[dict
 def main() -> None:
     args = parse_args()
 
-    dataset = DirectoryShardDataset(args.shards, preload=False)
-    if len(dataset) == 0:
-        raise ValueError(f"No shard records found in {args.shards}")
-
-    loader = create_data_loader(
-        dataset,
-        batch_size=args.batch_size,
-        shuffle=False,
-        num_workers=args.num_workers,
-        pin_memory=args.device.startswith("cuda"),
-    )
-
     model = SparseBucketNNUE.load_from_engine_bin(
         args.net,
         hidden_size=args.hidden_size,
@@ -128,6 +116,17 @@ def main() -> None:
     )
     model.to(args.device)
     model.eval()
+
+    loader = create_shard_epoch_loader(
+        args.shards,
+        batch_size=args.batch_size,
+        prepare_batch_fn=model.prepare_shard_batch,
+        shuffle_shards=False,
+        shuffle_records=False,
+        prepare_chunk_size=args.prepare_chunk_size,
+    )
+    if loader.total_records == 0:
+        raise ValueError(f"No shard records found in {args.shards}")
 
     criterion = WDLCriterion()
     accuracy = WDLAccuracy()
@@ -147,7 +146,7 @@ def main() -> None:
     upper = 0.5 + args.collapse_window
     collapse_count = 0
 
-    total_target = min(len(dataset), args.max_records) if args.max_records > 0 else len(dataset)
+    total_target = min(loader.total_records, args.max_records) if args.max_records > 0 else loader.total_records
     progress_bar = tqdm(total=total_target, unit="pos", desc="Diagnosing")
 
     with torch.no_grad():

@@ -12,6 +12,7 @@ import torch.nn.functional as F
 from ..data.feature_extractor import (
     extract_input_buckets,
     extract_output_buckets,
+    extract_stm_ntm_compact_features,
     extract_stm_ntm_features,
     unpack_packed_boards_torch,
 )
@@ -55,6 +56,9 @@ class SparseBucketNNUE(ValueNet):
         self.output_weights = nn.Parameter(torch.empty(self.num_output_buckets, hidden_size * 2))
         self.output_bias = nn.Parameter(torch.zeros(self.num_output_buckets))
         self._engine_padding = b""
+        self.register_buffer("_square_indices", torch.arange(64, dtype=torch.long), persistent=False)
+        self.register_buffer("_flipped_square_indices", torch.arange(64, dtype=torch.long) ^ 56, persistent=False)
+        self.register_buffer("_king_bucket_tensor", torch.tensor(self.king_bucket_map, dtype=torch.long), persistent=False)
 
         nn.init.normal_(self.feature_weights, std=init_std)
         nn.init.normal_(self.output_weights, std=init_std)
@@ -75,21 +79,82 @@ class SparseBucketNNUE(ValueNet):
         )
         return hidden + self.feature_bias.unsqueeze(0)
 
+    @staticmethod
+    def _flatten_compact_features(padded: torch.Tensor, counts: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        offsets = torch.cat([
+            torch.zeros(1, dtype=torch.long, device=counts.device),
+            counts.cumsum(dim=0)[:-1],
+        ])
+        if padded.shape[1] == 0:
+            return padded.reshape(-1), offsets
+        valid_mask = torch.arange(padded.shape[1], device=padded.device).unsqueeze(0) < counts.unsqueeze(1)
+        return padded.masked_select(valid_mask), offsets
+
+    def prepare_shard_batch(self, batch: dict) -> dict:
+        with torch.no_grad():
+            boards = unpack_packed_boards_torch(batch["packed_boards"])
+            compact_features = extract_stm_ntm_compact_features(
+                boards,
+                batch["stm"],
+                squares=self._square_indices,
+                flipped_squares=self._flipped_square_indices,
+            )
+            input_buckets = extract_input_buckets(
+                boards,
+                batch["stm"],
+                king_bucket_tensor=self._king_bucket_tensor,
+            )
+            output_bucket = extract_output_buckets(boards, self.num_output_buckets, self.output_bucket_divisor)
+
+        return {
+            "stm_padded": compact_features.stm_padded.to(torch.int32),
+            "ntm_padded": compact_features.ntm_padded.to(torch.int32),
+            "counts": compact_features.counts.to(torch.int16),
+            "stm_input_bucket": input_buckets.stm.to(torch.int16),
+            "ntm_input_bucket": input_buckets.ntm.to(torch.int16),
+            "output_bucket": output_bucket.to(torch.int16),
+            "stm": batch["stm"],
+            "wdl": batch["wdl"],
+            "eval": batch["eval"],
+        }
+
     def forward(self, batch: dict) -> dict:
-        boards = unpack_packed_boards_torch(batch["packed_boards"])
-        side_features = extract_stm_ntm_features(boards, batch["stm"])
-        input_buckets = extract_input_buckets(boards, batch["stm"], self.king_bucket_map)
-        output_bucket = extract_output_buckets(boards, self.num_output_buckets, self.output_bucket_divisor)
+        if "stm_padded" in batch:
+            counts = batch["counts"].to(torch.long)
+            stm_indices, stm_offsets = self._flatten_compact_features(batch["stm_padded"].to(torch.long), counts)
+            ntm_indices, ntm_offsets = self._flatten_compact_features(batch["ntm_padded"].to(torch.long), counts)
+            input_bucket_stm = batch["stm_input_bucket"].to(torch.long)
+            input_bucket_ntm = batch["ntm_input_bucket"].to(torch.long)
+            output_bucket = batch["output_bucket"].to(torch.long)
+        else:
+            boards = unpack_packed_boards_torch(batch["packed_boards"])
+            side_features = extract_stm_ntm_features(
+                boards,
+                batch["stm"],
+                squares=self._square_indices,
+                flipped_squares=self._flipped_square_indices,
+            )
+            input_buckets = extract_input_buckets(
+                boards,
+                batch["stm"],
+                king_bucket_tensor=self._king_bucket_tensor,
+            )
+            counts = side_features.counts
+            stm_indices = side_features.stm_indices
+            stm_offsets = side_features.stm_offsets
+            ntm_indices = side_features.ntm_indices
+            ntm_offsets = side_features.ntm_offsets
+            input_bucket_stm = input_buckets.stm
+            input_bucket_ntm = input_buckets.ntm
+            output_bucket = extract_output_buckets(boards, self.num_output_buckets, self.output_bucket_divisor)
 
         stm_hidden = self._accumulate_side(
-            side_features.stm_indices, side_features.stm_offsets, side_features.counts, input_buckets.stm
+            stm_indices, stm_offsets, counts, input_bucket_stm
         )
         ntm_hidden = self._accumulate_side(
-            side_features.ntm_indices, side_features.ntm_offsets, side_features.counts, input_buckets.ntm
+            ntm_indices, ntm_offsets, counts, input_bucket_ntm
         )
 
-        stm_hidden_unactivated = stm_hidden
-        ntm_hidden_unactivated = ntm_hidden
         stm_hidden = torch.clamp(stm_hidden, 0.0, 1.0).square()
         ntm_hidden = torch.clamp(ntm_hidden, 0.0, 1.0).square()
         hidden = torch.cat([stm_hidden, ntm_hidden], dim=1)
@@ -102,10 +167,6 @@ class SparseBucketNNUE(ValueNet):
         return {
             "value_logit": value_logit,
             "value_cp": value_cp,
-            "stm_hidden": stm_hidden_unactivated,
-            "ntm_hidden": ntm_hidden_unactivated,
-            "input_bucket": input_buckets.stm,
-            "output_bucket": output_bucket,
         }
 
     def export_engine_format(self, path: str) -> None:

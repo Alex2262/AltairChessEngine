@@ -129,10 +129,10 @@ This is exactly the accumulator idea used by the engine.
 
 ### SCReLU
 
-The activation is squared clipped ReLU:
+The engine activation is squared clipped ReLU:
 
 ```text
-screlu(x) = clamp(x, 0, QA)^2
+screlu_int(x) = clamp(x, 0, QA)^2
 ```
 
 with:
@@ -140,12 +140,13 @@ with:
 
 This matches the engine definition in [src/nnue.h](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/src/nnue.h:91).
 
-The Python model performs:
+The Python model trains in dequantized float space, so it performs the equivalent normalized form:
 
 ```text
-stm_hidden = clamp(stm_hidden, 0, QA)^2
-ntm_hidden = clamp(ntm_hidden, 0, QA)^2
+screlu_float(x) = clamp(x, 0, 1)^2
 ```
+
+That is the same activation after dividing the quantized accumulator by `QA`.
 
 ### Concatenation
 
@@ -190,29 +191,24 @@ This mirrors the engine's:
 
 ### Scalar output
 
-The model outputs a single scalar.
+The model outputs a single scalar `value_logit`.
 
-In engine-style quantized math:
+In Python training, parameters live in dequantized float space:
 
 ```text
-raw = sum(hidden * W1[bucket]) / QA
-quantized_sum = raw + b1[bucket]
-value_logit = quantized_sum / (QA * QB)
+value_logit = dot(hidden, W1[bucket]) + b1[bucket]
 value_cp = value_logit * SCALE
 ```
 
 with:
-- `QA = 255`
-- `QB = 64`
 - `SCALE = 400`
 
-This is designed to match:
+At export time, the weights are quantized back into the engine format:
+- first-layer weights and bias by `QA`
+- output weights by `QB`
+- output bias by `QA * QB`
 
-```cpp
-(output + output_bias[bucket]) * SCALE / (QA * QB)
-```
-
-from the engine.
+So the Python forward pass is float-native, while the saved `.bin` matches the engine's integer arithmetic exactly.
 
 ## How WDL Is Handled
 

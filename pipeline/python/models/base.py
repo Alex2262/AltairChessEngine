@@ -13,6 +13,9 @@ class ValueNet(nn.Module, ABC):
     def forward(self, batch: dict) -> dict:
         """Run a forward pass and return a prediction dictionary."""
 
+    def prepare_shard_batch(self, batch: dict) -> dict:
+        return batch
+
     def export_engine_format(self, path: str) -> None:
         raise NotImplementedError(f"{self.__class__.__name__} does not support engine export")
 

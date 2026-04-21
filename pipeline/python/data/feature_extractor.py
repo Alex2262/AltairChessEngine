@@ -49,6 +49,14 @@ class SideFeatureBatch:
 
 
 @dataclass
+class CompactSideFeatureBatch:
+    stm_padded: torch.Tensor
+    ntm_padded: torch.Tensor
+    counts: torch.Tensor
+    stm_is_white: torch.Tensor
+
+
+@dataclass
 class InputBucketBatch:
     white: torch.Tensor
     black: torch.Tensor
@@ -56,7 +64,11 @@ class InputBucketBatch:
     ntm: torch.Tensor
 
 
-def _perspective_feature_indices(boards: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+def _perspective_feature_indices(
+        boards: torch.Tensor,
+        squares: torch.Tensor | None = None,
+        flipped_squares: torch.Tensor | None = None,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     valid_mask = boards.ne(EMPTY)
     counts = valid_mask.sum(dim=1, dtype=torch.long)
     if torch.any(counts > 32):
@@ -64,12 +76,17 @@ def _perspective_feature_indices(boards: torch.Tensor) -> tuple[torch.Tensor, to
 
     batch_size = boards.shape[0]
     device = boards.device
-    squares = torch.arange(64, device=device, dtype=torch.long).unsqueeze(0).expand(batch_size, -1)
+    if squares is None:
+        squares = torch.arange(64, device=device, dtype=torch.long)
+    if flipped_squares is None:
+        flipped_squares = squares ^ 56
+    squares = squares.unsqueeze(0).expand(batch_size, -1)
+    flipped_squares = flipped_squares.unsqueeze(0).expand(batch_size, -1)
     piece_type = boards.remainder(6)
     color = torch.div(boards, 6, rounding_mode="floor").clamp(0, 1)
 
     white_indices = color * 384 + piece_type * 64 + squares
-    black_indices = (1 - color) * 384 + piece_type * 64 + (squares ^ 56)
+    black_indices = (1 - color) * 384 + piece_type * 64 + flipped_squares
     return white_indices, black_indices, counts
 
 
@@ -80,9 +97,13 @@ def _offsets_from_counts(counts: torch.Tensor) -> torch.Tensor:
     ])
 
 
-def extract_perspective_features(boards: torch.Tensor) -> PerspectiveFeatureBatch:
+def extract_perspective_features(
+        boards: torch.Tensor,
+        squares: torch.Tensor | None = None,
+        flipped_squares: torch.Tensor | None = None,
+) -> PerspectiveFeatureBatch:
     """Extract white/black perspective sparse feature lists from unpacked boards."""
-    white_indices, black_indices, counts = _perspective_feature_indices(boards)
+    white_indices, black_indices, counts = _perspective_feature_indices(boards, squares, flipped_squares)
     valid_mask = boards.ne(EMPTY)
     white_padded = torch.full_like(white_indices, -1)
     black_padded = torch.full_like(black_indices, -1)
@@ -95,9 +116,14 @@ def extract_perspective_features(boards: torch.Tensor) -> PerspectiveFeatureBatc
     )
 
 
-def extract_stm_ntm_features(boards: torch.Tensor, stm: torch.Tensor) -> SideFeatureBatch:
+def extract_stm_ntm_features(
+        boards: torch.Tensor,
+        stm: torch.Tensor,
+        squares: torch.Tensor | None = None,
+        flipped_squares: torch.Tensor | None = None,
+) -> SideFeatureBatch:
     """Extract STM/NTM sparse feature lists from unpacked boards."""
-    perspective = extract_perspective_features(boards)
+    perspective = extract_perspective_features(boards, squares, flipped_squares)
     stm_is_white = stm.eq(0)
     valid_mask = perspective.white_padded.ge(0)
     stm_padded = torch.where(stm_is_white.unsqueeze(1), perspective.white_padded, perspective.black_padded)
@@ -117,13 +143,56 @@ def extract_stm_ntm_features(boards: torch.Tensor, stm: torch.Tensor) -> SideFea
     )
 
 
-def extract_input_buckets(boards: torch.Tensor, stm: torch.Tensor, king_bucket_map: Sequence[int]) -> InputBucketBatch:
-    """Extract white/black and STM/NTM input buckets from unpacked boards."""
-    if len(king_bucket_map) != 64:
-        raise ValueError("king_bucket_map must contain 64 entries")
+def _compact_feature_rows(indices: torch.Tensor, valid_mask: torch.Tensor, counts: torch.Tensor) -> torch.Tensor:
+    batch_size = indices.shape[0]
+    max_features = int(counts.max().item()) if batch_size > 0 else 0
+    compact = torch.full((batch_size, max_features), -1, dtype=torch.long, device=indices.device)
+    if max_features == 0:
+        return compact
 
-    device = boards.device
-    king_bucket_tensor = torch.tensor(list(king_bucket_map), dtype=torch.long, device=device)
+    positions = (valid_mask.cumsum(dim=1) - 1).masked_select(valid_mask)
+    batch_indices = (
+        torch.arange(batch_size, device=indices.device, dtype=torch.long)
+        .unsqueeze(1)
+        .expand_as(indices)
+        .masked_select(valid_mask)
+    )
+    compact[batch_indices, positions] = indices.masked_select(valid_mask)
+    return compact
+
+
+def extract_stm_ntm_compact_features(
+        boards: torch.Tensor,
+        stm: torch.Tensor,
+        squares: torch.Tensor | None = None,
+        flipped_squares: torch.Tensor | None = None,
+) -> CompactSideFeatureBatch:
+    perspective = extract_perspective_features(boards, squares, flipped_squares)
+    stm_is_white = stm.eq(0)
+    valid_mask = perspective.white_padded.ge(0)
+    stm_rows = torch.where(stm_is_white.unsqueeze(1), perspective.white_padded, perspective.black_padded)
+    ntm_rows = torch.where(stm_is_white.unsqueeze(1), perspective.black_padded, perspective.white_padded)
+
+    return CompactSideFeatureBatch(
+        stm_padded=_compact_feature_rows(stm_rows, valid_mask, perspective.counts),
+        ntm_padded=_compact_feature_rows(ntm_rows, valid_mask, perspective.counts),
+        counts=perspective.counts,
+        stm_is_white=stm_is_white,
+    )
+
+
+def extract_input_buckets(
+        boards: torch.Tensor,
+        stm: torch.Tensor,
+        king_bucket_map: Sequence[int] | None = None,
+        king_bucket_tensor: torch.Tensor | None = None,
+) -> InputBucketBatch:
+    """Extract white/black and STM/NTM input buckets from unpacked boards."""
+    if king_bucket_tensor is None:
+        if king_bucket_map is None or len(king_bucket_map) != 64:
+            raise ValueError("king_bucket_map must contain 64 entries")
+        device = boards.device
+        king_bucket_tensor = torch.tensor(list(king_bucket_map), dtype=torch.long, device=device)
     white_king_mask = boards.eq(5)
     black_king_mask = boards.eq(11)
     if torch.any(white_king_mask.sum(dim=1) != 1) or torch.any(black_king_mask.sum(dim=1) != 1):

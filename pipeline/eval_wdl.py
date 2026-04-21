@@ -15,7 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from pipeline.python.data import DirectoryShardDataset, create_data_loader
+from pipeline.python.data import create_shard_epoch_loader
 from pipeline.python.models import SparseBucketNNUE
 from pipeline.python.train import WDLCriterion, WDLAccuracy, EvalMAE
 
@@ -37,29 +37,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--shards", default="shards/val", help="Directory containing validation shards")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--batch-size", type=int, default=8192)
-    parser.add_argument("--num-workers", type=int, default=0)
     parser.add_argument("--hidden-size", type=int, default=1024)
     parser.add_argument("--num-output-buckets", type=int, default=8)
     parser.add_argument("--output-bucket-divisor", type=int, default=4)
-    parser.add_argument("--progress-every", type=int, default=1_000_000, help="Print progress every N records")
     parser.add_argument("--max-records", type=int, default=0, help="Optional cap for quick spot checks")
+    parser.add_argument("--prepare-chunk-size", type=int, default=2 ** 18)
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-
-    dataset = DirectoryShardDataset(args.shards, preload=False)
-    if len(dataset) == 0:
-        raise ValueError(f"No shard records found in {args.shards}")
-
-    loader = create_data_loader(
-        dataset,
-        batch_size=args.batch_size,
-        shuffle=False,
-        num_workers=args.num_workers,
-        pin_memory=args.device.startswith("cuda"),
-    )
 
     model = SparseBucketNNUE.load_from_engine_bin(
         args.net,
@@ -71,6 +58,17 @@ def main() -> None:
     model.to(args.device)
     model.eval()
 
+    loader = create_shard_epoch_loader(
+        args.shards,
+        batch_size=args.batch_size,
+        prepare_batch_fn=model.prepare_shard_batch,
+        shuffle_shards=False,
+        shuffle_records=False,
+        prepare_chunk_size=args.prepare_chunk_size,
+    )
+    if loader.total_records == 0:
+        raise ValueError(f"No shard records found in {args.shards}")
+
     criteria = [WDLCriterion()]
     metrics = [WDLAccuracy(), EvalMAE()]
 
@@ -79,7 +77,7 @@ def main() -> None:
     criterion_totals = {criterion.name: 0.0 for criterion in criteria}
     metric_totals = {metric.name: 0.0 for metric in metrics}
 
-    total_target = min(len(dataset), args.max_records) if args.max_records > 0 else len(dataset)
+    total_target = min(loader.total_records, args.max_records) if args.max_records > 0 else loader.total_records
     progress_bar = tqdm(total=total_target, unit="pos", desc="Evaluating")
 
     total_batches = 0
