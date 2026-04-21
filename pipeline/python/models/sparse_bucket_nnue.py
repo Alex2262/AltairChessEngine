@@ -63,6 +63,15 @@ class SparseBucketNNUE(ValueNet):
         nn.init.normal_(self.feature_weights, std=init_std)
         nn.init.normal_(self.output_weights, std=init_std)
 
+    def _feature_helper_tensors(self, device: torch.device | str) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        if self._square_indices.device == torch.device(device):
+            return self._square_indices, self._flipped_square_indices, self._king_bucket_tensor
+
+        square_indices = torch.arange(64, dtype=torch.long, device=device)
+        flipped_square_indices = square_indices ^ 56
+        king_bucket_tensor = torch.tensor(self.king_bucket_map, dtype=torch.long, device=device)
+        return square_indices, flipped_square_indices, king_bucket_tensor
+
     def _accumulate_side(self,
                          indices: torch.Tensor,
                          offsets: torch.Tensor,
@@ -93,16 +102,17 @@ class SparseBucketNNUE(ValueNet):
     def prepare_shard_batch(self, batch: dict) -> dict:
         with torch.no_grad():
             boards = unpack_packed_boards_torch(batch["packed_boards"])
+            square_indices, flipped_square_indices, king_bucket_tensor = self._feature_helper_tensors(boards.device)
             compact_features = extract_stm_ntm_compact_features(
                 boards,
                 batch["stm"],
-                squares=self._square_indices,
-                flipped_squares=self._flipped_square_indices,
+                squares=square_indices,
+                flipped_squares=flipped_square_indices,
             )
             input_buckets = extract_input_buckets(
                 boards,
                 batch["stm"],
-                king_bucket_tensor=self._king_bucket_tensor,
+                king_bucket_tensor=king_bucket_tensor,
             )
             output_bucket = extract_output_buckets(boards, self.num_output_buckets, self.output_bucket_divisor)
 
