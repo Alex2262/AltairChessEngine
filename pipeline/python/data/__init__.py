@@ -10,7 +10,7 @@ from .feature_extractor import (
     unpack_packed_boards_torch,
 )
 from .shard_format import EMPTY, INPUT_FEATURES, PIECE_NIBBLE_COUNT, RECORD_DTYPE, SHARD_MAGIC, SHARD_VERSION
-from .shard_epoch_loader import ShardEpochLoader, create_shard_epoch_loader
+from .shard_loader import ShardIterableDataset, create_shard_loader
 from .shard_reader import list_shards, load_manifest, read_shard_records
 from .splits import shard_paths_from_directories, shard_paths_from_directory
 
@@ -21,7 +21,7 @@ __all__ = [
     "RECORD_DTYPE",
     "SHARD_MAGIC",
     "SHARD_VERSION",
-    "ShardEpochLoader",
+    "ShardIterableDataset",
     "records_to_batch",
     "extract_perspective_features",
     "extract_stm_ntm_features",
@@ -31,7 +31,7 @@ __all__ = [
     "list_shards",
     "load_manifest",
     "read_shard_records",
-    "create_shard_epoch_loader",
+    "create_shard_loader",
     "shard_paths_from_directory",
     "shard_paths_from_directories",
     "unpack_packed_boards_torch",

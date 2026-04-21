@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 import os
 from typing import Sequence
 
@@ -23,6 +24,43 @@ from .base import ValueNet
 def _aligned_struct_size(size_bytes: int, alignment: int = 64) -> int:
     remainder = size_bytes % alignment
     return size_bytes if remainder == 0 else size_bytes + alignment - remainder
+
+
+def prepare_sparse_bucket_batch(
+        batch: dict,
+        king_bucket_map: Sequence[int],
+        num_output_buckets: int,
+        output_bucket_divisor: int,
+) -> dict:
+    with torch.no_grad():
+        boards = unpack_packed_boards_torch(batch["packed_boards"])
+        square_indices = torch.arange(64, dtype=torch.long, device=boards.device)
+        flipped_square_indices = square_indices ^ 56
+        king_bucket_tensor = torch.tensor(tuple(int(x) for x in king_bucket_map), dtype=torch.long, device=boards.device)
+        compact_features = extract_stm_ntm_compact_features(
+            boards,
+            batch["stm"],
+            squares=square_indices,
+            flipped_squares=flipped_square_indices,
+        )
+        input_buckets = extract_input_buckets(
+            boards,
+            batch["stm"],
+            king_bucket_tensor=king_bucket_tensor,
+        )
+        output_bucket = extract_output_buckets(boards, num_output_buckets, output_bucket_divisor)
+
+    return {
+        "stm_padded": compact_features.stm_padded.to(torch.int32),
+        "ntm_padded": compact_features.ntm_padded.to(torch.int32),
+        "counts": compact_features.counts.to(torch.int16),
+        "stm_input_bucket": input_buckets.stm.to(torch.int16),
+        "ntm_input_bucket": input_buckets.ntm.to(torch.int16),
+        "output_bucket": output_bucket.to(torch.int16),
+        "stm": batch["stm"],
+        "wdl": batch["wdl"],
+        "eval": batch["eval"],
+    }
 
 class SparseBucketNNUE(ValueNet):
     def __init__(self,
@@ -72,6 +110,14 @@ class SparseBucketNNUE(ValueNet):
         king_bucket_tensor = torch.tensor(self.king_bucket_map, dtype=torch.long, device=device)
         return square_indices, flipped_square_indices, king_bucket_tensor
 
+    def create_batch_preparer(self):
+        return functools.partial(
+            prepare_sparse_bucket_batch,
+            king_bucket_map=self.king_bucket_map,
+            num_output_buckets=self.num_output_buckets,
+            output_bucket_divisor=self.output_bucket_divisor,
+        )
+
     def _accumulate_side(self,
                          indices: torch.Tensor,
                          offsets: torch.Tensor,
@@ -100,33 +146,12 @@ class SparseBucketNNUE(ValueNet):
         return padded.masked_select(valid_mask), offsets
 
     def prepare_shard_batch(self, batch: dict) -> dict:
-        with torch.no_grad():
-            boards = unpack_packed_boards_torch(batch["packed_boards"])
-            square_indices, flipped_square_indices, king_bucket_tensor = self._feature_helper_tensors(boards.device)
-            compact_features = extract_stm_ntm_compact_features(
-                boards,
-                batch["stm"],
-                squares=square_indices,
-                flipped_squares=flipped_square_indices,
-            )
-            input_buckets = extract_input_buckets(
-                boards,
-                batch["stm"],
-                king_bucket_tensor=king_bucket_tensor,
-            )
-            output_bucket = extract_output_buckets(boards, self.num_output_buckets, self.output_bucket_divisor)
-
-        return {
-            "stm_padded": compact_features.stm_padded.to(torch.int32),
-            "ntm_padded": compact_features.ntm_padded.to(torch.int32),
-            "counts": compact_features.counts.to(torch.int16),
-            "stm_input_bucket": input_buckets.stm.to(torch.int16),
-            "ntm_input_bucket": input_buckets.ntm.to(torch.int16),
-            "output_bucket": output_bucket.to(torch.int16),
-            "stm": batch["stm"],
-            "wdl": batch["wdl"],
-            "eval": batch["eval"],
-        }
+        return prepare_sparse_bucket_batch(
+            batch,
+            king_bucket_map=self.king_bucket_map,
+            num_output_buckets=self.num_output_buckets,
+            output_bucket_divisor=self.output_bucket_divisor,
+        )
 
     def forward(self, batch: dict) -> dict:
         if "stm_padded" in batch:

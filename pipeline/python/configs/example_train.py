@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import torch
 
-from pipeline.python.data import create_shard_epoch_loader
+from pipeline.python.data import create_shard_loader
 from pipeline.python.models import SparseBucketNNUE
 from pipeline.python.train import (
     BlendedValueObjective,
@@ -33,8 +33,9 @@ OUTPUT_BUCKET_DIVISOR = 4  # 32 / 8
 EPOCHS = 5
 BATCH_SIZE = 65536
 SHARD_PREPARE_CHUNK_SIZE = 131072
-PREFETCH_CHUNKS = 1
 SHUFFLE_SEED = 0
+NUM_WORKERS = 4
+PREFETCH_FACTOR = 2
 
 HIDDEN_SIZE = 1024
 
@@ -52,25 +53,31 @@ def build_run() -> TrainingRun:
         output_bucket_divisor=OUTPUT_BUCKET_DIVISOR,
     )
 
-    train_loader = create_shard_epoch_loader(
+    train_loader = create_shard_loader(
         "shards/train",
         batch_size=BATCH_SIZE,
-        prepare_batch_fn=model.prepare_shard_batch,
+        prepare_batch_fn=model.create_batch_preparer(),
         shuffle_shards=True,
         shuffle_records=True,
         seed=SHUFFLE_SEED,
         prepare_chunk_size=SHARD_PREPARE_CHUNK_SIZE,
-        prefetch_chunks=PREFETCH_CHUNKS,
+        num_workers=NUM_WORKERS,
+        pin_memory=True,
+        persistent_workers=True,
+        prefetch_factor=PREFETCH_FACTOR,
     )
-    val_loader = create_shard_epoch_loader(
+    val_loader = create_shard_loader(
         "shards/val",
         batch_size=BATCH_SIZE,
-        prepare_batch_fn=model.prepare_shard_batch,
+        prepare_batch_fn=model.create_batch_preparer(),
         shuffle_shards=False,
         shuffle_records=False,
         seed=SHUFFLE_SEED,
         prepare_chunk_size=SHARD_PREPARE_CHUNK_SIZE,
-        prefetch_chunks=PREFETCH_CHUNKS,
+        num_workers=NUM_WORKERS,
+        pin_memory=True,
+        persistent_workers=True,
+        prefetch_factor=PREFETCH_FACTOR,
     )
     optimizer = torch.optim.AdamW(model.parameters(), lr=LR)
     objective = BlendedValueObjective(

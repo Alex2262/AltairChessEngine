@@ -8,7 +8,7 @@ Its job is to take compact packed-board shards and turn them into tensors that a
 
 `data/` is responsible for:
 - reading shard metadata and binary records
-- building shard-wise training/evaluation loaders
+- building shard-wise training/evaluation DataLoaders
 - unpacking packed boards
 - deriving sparse white/black perspective features
 - exposing helpers for manual train/validation/test shard selection
@@ -27,8 +27,8 @@ It is not responsible for:
   - low-level shard loading and manifest reading
 - [batching.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/batching.py:1)
   - record-to-batch conversion helpers
-- [shard_epoch_loader.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/shard_epoch_loader.py:1)
-  - shard-wise loader that shuffles shards, prepares large vectorized chunks, and yields minibatches by slicing prepared tensors
+- [shard_loader.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/shard_loader.py:1)
+  - shard-wise `IterableDataset` and `DataLoader` helpers with worker-aware shard partitioning and chunk-level vectorized preparation
 - [feature_extractor.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/feature_extractor.py:1)
   - torch-native packed-board unpacking and sparse feature extraction
 - [splits.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/splits.py:1)

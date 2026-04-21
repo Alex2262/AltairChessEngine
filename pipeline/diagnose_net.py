@@ -15,7 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from pipeline.python.data import EMPTY, create_shard_epoch_loader
+from pipeline.python.data import EMPTY, create_shard_loader
 from pipeline.python.models import SparseBucketNNUE
 from pipeline.python.train import EvalMAE, WDLCriterion, WDLAccuracy
 
@@ -57,6 +57,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--collapse-window", type=float, default=0.05, help="Window around 0.5 to count as draw-collapse")
     parser.add_argument("--hist-bins", type=int, default=10, help="Number of histogram bins over [0, 1]")
     parser.add_argument("--prepare-chunk-size", type=int, default=65536)
+    parser.add_argument("--num-workers", type=int, default=0)
+    parser.add_argument("--prefetch-factor", type=int, default=2)
     return parser.parse_args()
 
 
@@ -117,13 +119,17 @@ def main() -> None:
     model.to(args.device)
     model.eval()
 
-    loader = create_shard_epoch_loader(
+    loader = create_shard_loader(
         args.shards,
         batch_size=args.batch_size,
-        prepare_batch_fn=model.prepare_shard_batch,
+        prepare_batch_fn=model.create_batch_preparer(),
         shuffle_shards=False,
         shuffle_records=False,
         prepare_chunk_size=args.prepare_chunk_size,
+        num_workers=args.num_workers,
+        pin_memory=args.device.startswith("cuda"),
+        persistent_workers=True,
+        prefetch_factor=args.prefetch_factor,
     )
     if loader.total_records == 0:
         raise ValueError(f"No shard records found in {args.shards}")

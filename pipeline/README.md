@@ -279,8 +279,8 @@ The current training path uses:
 
 ### Python
 
-- [python/data/shard_epoch_loader.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/shard_epoch_loader.py:1)
-  - shard-wise loader used for training and validation
+- [python/data/shard_loader.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/shard_loader.py:1)
+  - shard-wise `IterableDataset` and `DataLoader` helpers used for training, evaluation, and diagnostics
 - [python/data/batching.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/batching.py:1)
   - low-level record-to-batch conversion helpers
 - [python/data/feature_extractor.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/feature_extractor.py:1)
