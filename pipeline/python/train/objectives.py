@@ -34,6 +34,7 @@ class MixedEvalWDLObjective(LossObjective):
         self.name = f"mixed_eval_wdl({eval_weight:.2f},{wdl_weight:.2f})"
 
     def __call__(self, predictions: dict, batch: dict, progress: float = 0.0) -> torch.Tensor:
-        eval_loss = F.smooth_l1_loss(predictions["value_cp"], batch["eval"])
+        # TODO: try smooth l1 loss instead
+        eval_loss = F.mse_loss(predictions["value_cp"], batch["eval"])
         wdl_loss = F.mse_loss(torch.sigmoid(predictions["value_logit"]), wdl_target(batch))
         return self.eval_weight * eval_loss + self.wdl_weight * wdl_loss

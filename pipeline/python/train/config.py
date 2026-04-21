@@ -18,6 +18,7 @@ class TrainingRun:
     criteria: list[object] = field(default_factory=list)
     metrics: list[object] = field(default_factory=list)
     name: str = "unnamed_run"
+    export_engine_path: str | None = None
 
 
 def build_run_from_module(module) -> TrainingRun:

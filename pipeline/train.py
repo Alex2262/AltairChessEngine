@@ -45,6 +45,12 @@ def main() -> None:
     )
     history = trainer.fit(run.train_loader, run.val_loader)
 
+    if run.export_engine_path is not None:
+        export_path = Path(run.export_engine_path).resolve()
+        export_path.parent.mkdir(parents=True, exist_ok=True)
+        run.model.export_engine_format(str(export_path))
+        print(f"Exported engine net to {export_path}")
+
     print(f"Run: {run.name}")
     for epoch, results in enumerate(history, 1):
         print(f"Epoch {epoch}")

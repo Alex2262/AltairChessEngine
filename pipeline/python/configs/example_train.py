@@ -8,10 +8,10 @@ from pipeline.python.data import DirectoryShardDataset, create_data_loader
 from pipeline.python.models import SparseBucketNNUE
 from pipeline.python.train import (
     EvalMAE,
+    InterpolatedObjective,
     LinearInterpolationSchedule,
     MixedEvalWDLObjective,
     PureWDLObjective,
-    ScheduledObjective,
     TrainerConfig,
     TrainingRun,
     WDLCriterion,
@@ -32,13 +32,13 @@ KING_BUCKET_MAP = (
 NUM_OUTPUT_BUCKETS = 8
 OUTPUT_BUCKET_DIVISOR = 4  # 32 / 8
 
-
+EPOCHS = 5
 BATCH_SIZE = 65536
 NUM_WORKERS = 4
 
 HIDDEN_SIZE = 1024
 
-LR = 1e-3
+LR = 1e-2
 
 
 def build_run() -> TrainingRun:
@@ -67,8 +67,8 @@ def build_run() -> TrainingRun:
         output_bucket_divisor=OUTPUT_BUCKET_DIVISOR,
     )
     optimizer = torch.optim.AdamW(model.parameters(), lr=LR)
-    objective = ScheduledObjective(
-        MixedEvalWDLObjective(eval_weight=0.5, wdl_weight=0.5),
+    objective = InterpolatedObjective(
+        MixedEvalWDLObjective(eval_weight=0.25, wdl_weight=0.75),
         PureWDLObjective(),
         LinearInterpolationSchedule(0.0, 1.0),
     )
@@ -83,10 +83,11 @@ def build_run() -> TrainingRun:
         criteria=[WDLCriterion()],
         metrics=[WDLAccuracy(), EvalMAE()],
         trainer_config=TrainerConfig(
-            epochs=4,
+            epochs=EPOCHS,
             device="cuda",
             grad_clip_norm=1.0,
             log_every=100,
             checkpoint_dir=None,
         ),
+        export_engine_path="checkpoints/example_sparse_bucket_nnue.bin",
     )

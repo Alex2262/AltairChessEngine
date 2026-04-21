@@ -80,7 +80,7 @@ def main() -> None:
     metric_totals = {metric.name: 0.0 for metric in metrics}
 
     total_target = min(len(dataset), args.max_records) if args.max_records > 0 else len(dataset)
-    progress_bar = tqdm(total=total_target, unit="pos", desc="Evaluating") if tqdm is not None else None
+    progress_bar = tqdm(total=total_target, unit="pos", desc="Evaluating")
 
     total_batches = 0
 
@@ -120,20 +120,7 @@ def main() -> None:
             if 0 < args.max_records <= total_records:
                 break
 
-    if progress_bar is not None:
-        progress_bar.close()
-
-    results = {
-        "net": args.net,
-        "shards": args.shards,
-        "device": args.device,
-        "records": total_records,
-        "wdl_mse": total_wdl_mse / max(total_records, 1),
-        "wdl_accuracy": total_wdl_accuracy / max(total_records, 1),
-    }
-
-    print(json.dumps(results, indent=2, sort_keys=True))
-
+    progress_bar.close()
 
 if __name__ == "__main__":
     main()
