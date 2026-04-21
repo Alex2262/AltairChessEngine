@@ -1,6 +1,6 @@
 """Packed-board shard data pipeline for Altair NNUE training."""
 
-from .batching import records_to_batch
+from .batching import batch_to_numpy, ensure_torch_batch, records_to_batch
 from .feature_extractor import (
     extract_input_buckets,
     extract_output_buckets,
@@ -22,6 +22,8 @@ __all__ = [
     "SHARD_MAGIC",
     "SHARD_VERSION",
     "ShardIterableDataset",
+    "batch_to_numpy",
+    "ensure_torch_batch",
     "records_to_batch",
     "extract_perspective_features",
     "extract_stm_ntm_features",

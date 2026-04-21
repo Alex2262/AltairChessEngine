@@ -258,9 +258,25 @@ The Python side owns:
 
 The current training path uses:
 - packed board shards
+- a worker-based shard loader built on PyTorch `DataLoader`
 - torch-native unpacking and sparse feature construction
 - a `SparseBucketNNUE` model that mirrors the engine architecture
 - config-driven experiments through `train.py`
+
+### How batches are prepared
+
+The current data path is intentionally simple:
+- shards are storage files, not precomputed feature caches
+- workers stream one minibatch at a time from their assigned shards
+- optional model-aware preparation happens per minibatch
+- PyTorch handles worker queueing through `num_workers` and `prefetch_factor`
+
+In practice this means the main knobs are:
+- `batch_size`
+- `num_workers`
+- `prefetch_factor`
+
+The pipeline no longer depends on a custom chunk-prefetch loader. The active path uses ordinary PyTorch worker machinery so training, evaluation, and diagnostics all go through the same loader model.
 
 ## Important Files
 

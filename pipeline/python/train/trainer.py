@@ -8,6 +8,8 @@ from pathlib import Path
 import torch
 from tqdm.auto import tqdm
 
+from ..data import ensure_torch_batch
+
 
 @dataclass
 class TrainerConfig:
@@ -92,6 +94,7 @@ class Trainer:
         )
 
         for batch_index, batch in iterator:
+            batch = ensure_torch_batch(batch)
             batch = {key: value.to(self.device, non_blocking=True) for key, value in batch.items()}
 
             epoch_progress = (epoch + ((batch_index - 1) / max(num_batches, 1))) / max(self.config.epochs, 1)

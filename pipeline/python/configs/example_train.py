@@ -32,7 +32,6 @@ OUTPUT_BUCKET_DIVISOR = 4  # 32 / 8
 
 EPOCHS = 5
 BATCH_SIZE = 65536
-SHARD_PREPARE_CHUNK_SIZE = 131072
 SHUFFLE_SEED = 0
 NUM_WORKERS = 4
 PREFETCH_FACTOR = 2
@@ -60,7 +59,6 @@ def build_run() -> TrainingRun:
         shuffle_shards=True,
         shuffle_records=True,
         seed=SHUFFLE_SEED,
-        prepare_chunk_size=SHARD_PREPARE_CHUNK_SIZE,
         num_workers=NUM_WORKERS,
         pin_memory=True,
         persistent_workers=True,
@@ -73,7 +71,6 @@ def build_run() -> TrainingRun:
         shuffle_shards=False,
         shuffle_records=False,
         seed=SHUFFLE_SEED,
-        prepare_chunk_size=SHARD_PREPARE_CHUNK_SIZE,
         num_workers=NUM_WORKERS,
         pin_memory=True,
         persistent_workers=True,

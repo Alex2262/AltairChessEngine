@@ -28,7 +28,7 @@ It is not responsible for:
 - [batching.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/batching.py:1)
   - record-to-batch conversion helpers
 - [shard_loader.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/shard_loader.py:1)
-  - shard-wise `IterableDataset` and `DataLoader` helpers with worker-aware shard partitioning and chunk-level vectorized preparation
+  - shard-wise `IterableDataset` and `DataLoader` helpers with worker-aware shard partitioning and batch-wise preparation
 - [feature_extractor.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/feature_extractor.py:1)
   - torch-native packed-board unpacking and sparse feature extraction
 - [splits.py](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/splits.py:1)
@@ -51,7 +51,17 @@ The reader can:
 
 ## Loader Contract
 
-The shard loader returns:
+The active training and evaluation path is [create_shard_loader(...)](/Users/alexandertian/workspace/projects/games/chess/dev/Altair/pipeline/python/data/shard_loader.py:84).
+
+It works like this:
+- PyTorch starts `num_workers` worker processes
+- each worker gets a disjoint subset of shard files
+- shard order can be shuffled once per epoch
+- record order inside each shard can also be shuffled
+- each worker reads one minibatch worth of raw records at a time
+- optional model-aware preparation then converts that minibatch into the tensors the model actually wants
+
+The raw batch shape is:
 - `packed_boards`
 - `stm`
 - `wdl`
@@ -65,6 +75,22 @@ The loader does not emit:
 - precomputed king buckets
 
 Those are derived later in a model-aware way.
+
+### Main tuning knobs
+
+- `batch_size`
+  - how many positions the model trains on at once
+- `num_workers`
+  - how many CPU worker processes prepare future minibatches
+- `prefetch_factor`
+  - how many minibatches each worker tries to keep queued ahead
+- `pin_memory`
+  - whether PyTorch places CPU batches in pinned memory before GPU transfer
+
+This keeps the system much easier to reason about than the older chunk-based loader experiments:
+- workers prepare batches
+- the DataLoader queues batches
+- the trainer copies batches to GPU
 
 ## Sparse Feature Extraction
 

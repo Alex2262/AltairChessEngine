@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import math
-import random
 from pathlib import Path
 from typing import Callable, Sequence
 
 import numpy as np
 from torch.utils.data import DataLoader, IterableDataset, get_worker_info
 
-from .batching import records_to_batch
+from .batching import batch_to_numpy, records_to_batch
 from .shard_reader import list_shards, read_shard_records
 
 
@@ -27,7 +26,6 @@ class ShardIterableDataset(IterableDataset):
             shuffle_shards: bool = True,
             shuffle_records: bool = True,
             seed: int = 0,
-            prepare_chunk_size: int = 262144,
     ):
         super().__init__()
         self.shard_paths = [Path(path) for path in shard_paths]
@@ -36,7 +34,6 @@ class ShardIterableDataset(IterableDataset):
         self.shuffle_shards = shuffle_shards
         self.shuffle_records = shuffle_records
         self.seed = seed
-        self.prepare_chunk_size = prepare_chunk_size
         self._epoch = 0
         self._shard_sizes = [len(read_shard_records(path, copy=False)) for path in self.shard_paths]
         self._total_records = sum(self._shard_sizes)
@@ -52,20 +49,22 @@ class ShardIterableDataset(IterableDataset):
         worker_info = get_worker_info()
         worker_id = worker_info.id if worker_info is not None else 0
         num_workers = worker_info.num_workers if worker_info is not None else 1
+        return_numpy = worker_info is not None
 
         epoch = self._epoch
         self._epoch += 1
-        rng = random.Random(self.seed + epoch)
+        rng = np.random.default_rng(self.seed + epoch)
 
         shard_paths = list(self.shard_paths)
         if self.shuffle_shards:
-            rng.shuffle(shard_paths)
+            order = rng.permutation(len(shard_paths))
+            shard_paths = [shard_paths[index] for index in order]
 
         worker_shards = shard_paths[worker_id::num_workers]
         for shard_path in worker_shards:
-            yield from self._iter_shard_batches(shard_path, rng)
+            yield from self._iter_shard_batches(shard_path, rng, return_numpy=return_numpy)
 
-    def _iter_shard_batches(self, shard_path: Path, rng: random.Random):
+    def _iter_shard_batches(self, shard_path: Path, rng: np.random.Generator, return_numpy: bool):
         records = read_shard_records(shard_path, copy=False)
         num_records = len(records)
         if num_records == 0:
@@ -75,38 +74,16 @@ class ShardIterableDataset(IterableDataset):
         if self.shuffle_records:
             rng.shuffle(shard_indices)
 
-        chunk_size = self.prepare_chunk_size if self.prepare_chunk_size > 0 else num_records
-        chunk_size = max(chunk_size, self.batch_size)
-
-        for start in range(0, num_records, chunk_size):
-            stop = min(start + chunk_size, num_records)
-            chunk_indices = shard_indices[start:stop]
-            chunk_records = records[chunk_indices]
-            prepared = records_to_batch(chunk_records)
+        for start in range(0, num_records, self.batch_size):
+            stop = min(start + self.batch_size, num_records)
+            batch_indices = shard_indices[start:stop]
+            batch_records = records[batch_indices]
+            prepared = records_to_batch(batch_records)
             if self.prepare_batch_fn is not None:
                 prepared = self.prepare_batch_fn(prepared)
-
-            chunk_batch_size = self._batch_size_from_prepared(prepared)
-            for batch_start in range(0, chunk_batch_size, self.batch_size):
-                batch_stop = min(batch_start + self.batch_size, chunk_batch_size)
-                yield self._slice_prepared(prepared, batch_start, batch_stop)
-
-    @staticmethod
-    def _batch_size_from_prepared(prepared: dict) -> int:
-        for value in prepared.values():
-            if hasattr(value, "shape") and len(value.shape) > 0:
-                return int(value.shape[0])
-        return 0
-
-    @staticmethod
-    def _slice_prepared(prepared: dict, start: int, stop: int) -> dict:
-        sliced = {}
-        for key, value in prepared.items():
-            if hasattr(value, "shape") and len(value.shape) > 0:
-                sliced[key] = value[start:stop]
-            else:
-                sliced[key] = value
-        return sliced
+            if return_numpy:
+                prepared = batch_to_numpy(prepared)
+            yield prepared
 
 
 def create_shard_loader(
@@ -116,7 +93,6 @@ def create_shard_loader(
         shuffle_shards: bool = True,
         shuffle_records: bool = True,
         seed: int = 0,
-        prepare_chunk_size: int = 262144,
         num_workers: int = 0,
         pin_memory: bool = True,
         persistent_workers: bool = True,
@@ -132,7 +108,6 @@ def create_shard_loader(
         shuffle_shards=shuffle_shards,
         shuffle_records=shuffle_records,
         seed=seed,
-        prepare_chunk_size=prepare_chunk_size,
     )
 
     loader_kwargs = {

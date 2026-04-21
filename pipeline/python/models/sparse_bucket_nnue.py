@@ -101,15 +101,6 @@ class SparseBucketNNUE(ValueNet):
         nn.init.normal_(self.feature_weights, std=init_std)
         nn.init.normal_(self.output_weights, std=init_std)
 
-    def _feature_helper_tensors(self, device: torch.device | str) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        if self._square_indices.device == torch.device(device):
-            return self._square_indices, self._flipped_square_indices, self._king_bucket_tensor
-
-        square_indices = torch.arange(64, dtype=torch.long, device=device)
-        flipped_square_indices = square_indices ^ 56
-        king_bucket_tensor = torch.tensor(self.king_bucket_map, dtype=torch.long, device=device)
-        return square_indices, flipped_square_indices, king_bucket_tensor
-
     def create_batch_preparer(self):
         return functools.partial(
             prepare_sparse_bucket_batch,

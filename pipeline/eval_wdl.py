@@ -15,7 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from pipeline.python.data import create_shard_loader
+from pipeline.python.data import create_shard_loader, ensure_torch_batch
 from pipeline.python.models import SparseBucketNNUE
 from pipeline.python.train import WDLCriterion, WDLAccuracy, EvalMAE
 
@@ -41,7 +41,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-output-buckets", type=int, default=8)
     parser.add_argument("--output-bucket-divisor", type=int, default=4)
     parser.add_argument("--max-records", type=int, default=0, help="Optional cap for quick spot checks")
-    parser.add_argument("--prepare-chunk-size", type=int, default=2 ** 18)
     parser.add_argument("--num-workers", type=int, default=0)
     parser.add_argument("--prefetch-factor", type=int, default=2)
     return parser.parse_args()
@@ -66,7 +65,6 @@ def main() -> None:
         prepare_batch_fn=model.create_batch_preparer(),
         shuffle_shards=False,
         shuffle_records=False,
-        prepare_chunk_size=args.prepare_chunk_size,
         num_workers=args.num_workers,
         pin_memory=args.device.startswith("cuda"),
         persistent_workers=True,
@@ -90,6 +88,7 @@ def main() -> None:
 
     with torch.no_grad():
         for batch in loader:
+            batch = ensure_torch_batch(batch)
             batch = {key: value.to(args.device, non_blocking=True) for key, value in batch.items()}
             predictions = model(batch)
 
