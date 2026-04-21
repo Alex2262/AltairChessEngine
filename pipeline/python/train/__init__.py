@@ -3,8 +3,8 @@
 from .config import TrainingRun, build_run_from_module
 from .criteria import Criterion, EvalCriterion, WDLCriterion
 from .metrics import EvalMAE, Metric, WDLAccuracy
-from .objectives import LossObjective, MixedEvalWDLObjective, PureWDLObjective
-from .schedules import ConstantSchedule, InterpolatedObjective, LinearInterpolationSchedule, ScheduledObjective
+from .objectives import BlendedValueObjective, LossObjective
+from .schedules import ConstantSchedule, LinearInterpolationSchedule
 from .trainer import Trainer, TrainerConfig
 
 __all__ = [
@@ -17,12 +17,9 @@ __all__ = [
     "EvalMAE",
     "WDLAccuracy",
     "LossObjective",
-    "MixedEvalWDLObjective",
-    "PureWDLObjective",
+    "BlendedValueObjective",
     "ConstantSchedule",
-    "InterpolatedObjective",
     "LinearInterpolationSchedule",
-    "ScheduledObjective",
     "Trainer",
     "TrainerConfig",
 ]

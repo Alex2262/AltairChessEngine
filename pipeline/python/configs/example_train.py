@@ -7,11 +7,9 @@ import torch
 from pipeline.python.data import DirectoryShardDataset, create_data_loader
 from pipeline.python.models import SparseBucketNNUE
 from pipeline.python.train import (
+    BlendedValueObjective,
     EvalMAE,
-    InterpolatedObjective,
     LinearInterpolationSchedule,
-    MixedEvalWDLObjective,
-    PureWDLObjective,
     TrainerConfig,
     TrainingRun,
     WDLCriterion,
@@ -38,7 +36,10 @@ NUM_WORKERS = 4
 
 HIDDEN_SIZE = 1024
 
-LR = 1e-2
+LR = 1e-3
+WDL_PROPORTION_START = 0.75
+WDL_PROPORTION_END = 0.75
+EVAL_SCALE = 400.0
 
 
 def build_run() -> TrainingRun:
@@ -67,10 +68,9 @@ def build_run() -> TrainingRun:
         output_bucket_divisor=OUTPUT_BUCKET_DIVISOR,
     )
     optimizer = torch.optim.AdamW(model.parameters(), lr=LR)
-    objective = InterpolatedObjective(
-        MixedEvalWDLObjective(eval_weight=0.25, wdl_weight=0.75),
-        PureWDLObjective(),
-        LinearInterpolationSchedule(0.0, 1.0),
+    objective = BlendedValueObjective(
+        wdl_schedule=LinearInterpolationSchedule(WDL_PROPORTION_START, WDL_PROPORTION_END),
+        eval_scale=EVAL_SCALE,
     )
 
     return TrainingRun(
